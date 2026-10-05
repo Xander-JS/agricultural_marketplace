@@ -72,49 +72,14 @@ class _CaptureFrontScreenState extends State<CaptureFrontScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            const StepProgressBar(totalSteps: 3, currentStep: 2),
+            const StepProgressBar(totalSteps: 4, currentStep: 3),
 
             Padding(
               padding: const EdgeInsets.all(24.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.infoLight,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.verified_user,
-                              size: 14,
-                              color: AppColors.info,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              l10n.capture_front_identity_verification,
-                              style: AppTextStyles.labelSmall.copyWith(
-                                color: AppColors.info,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Spacer(),
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
+
                   Text(
                     l10n.capture_front_title,
                     style: AppTextStyles.displaySmall.copyWith(

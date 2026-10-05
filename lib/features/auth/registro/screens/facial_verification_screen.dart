@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/app_bar/custom_app_bar.dart';
+import '../../../../core/widgets/progress/step_progress_bar.dart';
 import '../../../../core/widgets/info/tip_pill.dart';
 import '../../../../core/widgets/buttons/camera_button.dart';
 import '../models/registration_data.dart';
@@ -57,6 +58,7 @@ class _FacialVerificationScreenState extends State<FacialVerificationScreen> {
       body: SafeArea(
         child: Column(
           children: [
+            const StepProgressBar(totalSteps: 4, currentStep: 4),
             Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: 24.0,
@@ -65,13 +67,7 @@ class _FacialVerificationScreenState extends State<FacialVerificationScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    l10n.facial_verification_title,
-                    style: AppTextStyles.displaySmall.copyWith(
-                      color: AppColors.lightTextPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
+
                   Text(
                     l10n.facial_verification_description,
                     style: AppTextStyles.bodyMedium.copyWith(

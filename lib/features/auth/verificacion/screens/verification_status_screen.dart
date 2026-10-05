@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:agricultural_marketplace/core/localization/app_localizations.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/loading/app_loading.dart';
+import '../../../../core/widgets/loading/loading_indicator.dart';
 import '../services/verification_service.dart';
 
 class VerificationStatusScreen extends StatefulWidget {
@@ -12,28 +15,14 @@ class VerificationStatusScreen extends StatefulWidget {
       _VerificationStatusScreenState();
 }
 
-class _VerificationStatusScreenState extends State<VerificationStatusScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
+class _VerificationStatusScreenState extends State<VerificationStatusScreen> {
   final VerificationService _service = VerificationService();
-
   late Future<VerificationStatusData> _statusFuture;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat();
-
     _statusFuture = _service.getCurrentVerificationStatus();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
   }
 
   void _retry() {
@@ -44,53 +33,34 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.loadingBackground,
-      body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 24.0,
-              vertical: 32.0,
-            ),
-            child: FutureBuilder<VerificationStatusData>(
-              future: _statusFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return _buildLoadingState();
-                }
+    return AppLoading(
+      child: FutureBuilder<VerificationStatusData>(
+        future: _statusFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return _buildLoadingState(context);
+          }
 
-                if (snapshot.hasError) {
-                  return _buildErrorState(snapshot.error.toString());
-                }
+          if (snapshot.hasError) {
+            return _buildErrorState(context, snapshot.error.toString());
+          }
 
-                final data = snapshot.data!;
-                return _buildStatusState(data);
-              },
-            ),
-          ),
-        ),
+          final data = snapshot.data!;
+          return _buildStatusState(context, data);
+        },
       ),
     );
   }
 
-  Widget _buildLoadingState() {
+  Widget _buildLoadingState(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        RotationTransition(
-          turns: _controller,
-          child: Image.asset(
-            'assets/images/logo_lg.png',
-            width: 80,
-            height: 80,
-            errorBuilder: (context, error, stackTrace) =>
-                const Icon(Icons.eco, color: Colors.white, size: 80),
-          ),
-        ),
+        const LoadingIndicator(isSpinning: true),
         const SizedBox(height: 32),
         Text(
-          'Consultando estado...',
+          l10n.verification_status_checking,
           textAlign: TextAlign.center,
           style: AppTextStyles.titleMedium.copyWith(color: Colors.white),
         ),
@@ -98,8 +68,8 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
     );
   }
 
-  Widget _buildErrorState(String error) {
-    // Remove "Exception: " prefix if present
+  Widget _buildErrorState(BuildContext context, String error) {
+    final l10n = AppLocalizations.of(context)!;
     final cleanError = error.replaceAll('Exception: ', '');
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -107,7 +77,7 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
         const Icon(Icons.error_outline, color: AppColors.error, size: 80),
         const SizedBox(height: 32),
         Text(
-          'Ha ocurrido un error',
+          l10n.verification_status_error_title,
           textAlign: TextAlign.center,
           style: AppTextStyles.headlineMedium.copyWith(color: Colors.white),
         ),
@@ -125,14 +95,14 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
             foregroundColor: AppColors.loadingBackground,
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
           ),
-          child: const Text('Reintentar'),
+          child: Text(l10n.verification_status_retry),
         ),
       ],
     );
   }
 
-  Widget _buildStatusState(VerificationStatusData data) {
-    // Determine the text, icon, and colors based on status
+  Widget _buildStatusState(BuildContext context, VerificationStatusData data) {
+    final l10n = AppLocalizations.of(context)!;
     String title = '';
     String description = '';
     IconData iconData = Icons.info_outline;
@@ -140,82 +110,61 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
 
     switch (data.status) {
       case 'pendiente':
-        title = 'Pendiente de Documentos';
-        description = 'Has completado el registro inicial mediante número telefónico. Aún debes enviar tus documentos para verificar tu identidad y acceder a todas las funcionalidades.';
+        title = l10n.verification_status_pending_title;
+        description = l10n.verification_status_pending_desc;
         iconData = Icons.hourglass_empty;
         statusColor = Colors.orange;
         break;
       case 'en_revision_ia':
-        title = 'En Revisión';
-        description = 'Tus documentos fueron enviados y están siendo validados por nuestro sistema y equipo de moderación. No puedes modificar los documentos mientras estén en revisión.';
+        title = l10n.verification_status_review_title;
+        description = l10n.verification_status_review_desc;
         iconData = Icons.analytics_outlined;
         statusColor = AppColors.info;
         break;
       case 'aprobado':
-        title = 'Verificación Aprobada';
-        description = 'El moderador validó satisfactoriamente tu identidad. Tu perfil aparece como verificado y tienes acceso a las funcionalidades correspondientes a tu rol.';
+        title = l10n.verification_status_approved_title;
+        description = l10n.verification_status_approved_desc;
         iconData = Icons.check_circle_outline;
         statusColor = AppColors.success;
         break;
       case 'rechazado':
-        title = 'Verificación Rechazada';
-        description = data.rejectionReason ?? 'La verificación no fue aprobada debido a inconsistencias en la documentación. Por favor, corrige la información y vuelve a intentar.';
+        title = l10n.verification_status_rejected_title;
+        description = data.rejectionReason ?? l10n.verification_status_default_reject_reason;
         iconData = Icons.cancel_outlined;
         statusColor = AppColors.error;
         break;
       case 'suspendido':
-        title = 'Cuenta Suspendida';
-        description = 'Tu cuenta ha sido suspendida mediante una acción administrativa temporalmente. Se restringen las funcionalidades comerciales.';
+        title = l10n.verification_status_suspended_title;
+        description = l10n.verification_status_suspended_desc;
         iconData = Icons.block;
         statusColor = AppColors.error;
         break;
       default:
-        title = 'Estado Desconocido';
-        description = 'No pudimos determinar el estado de verificación. Por favor, contacta a soporte.';
+        title = l10n.verification_status_unknown_title;
+        description = l10n.verification_status_unknown_desc;
         iconData = Icons.help_outline;
         statusColor = Colors.grey;
     }
 
-    // Determine if we should show the success text mentioned in instructions
     final showSuccessText =
         data.status == 'pendiente' || data.status == 'en_revision_ia';
+    final isSpinning = data.status == 'en_revision_ia' || data.status == 'pendiente';
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // Keep the spinning animation alive if it's processing, else stop or show static
-        if (data.status == 'en_revision_ia' || data.status == 'pendiente')
-          RotationTransition(
-            turns: _controller,
-            child: Image.asset(
-              'assets/images/logo_lg.png',
-              width: 80,
-              height: 80,
-              errorBuilder: (context, error, stackTrace) =>
-                  const Icon(Icons.eco, color: Colors.white, size: 80),
-            ),
-          )
-        else
-          Image.asset(
-            'assets/images/logo_lg.png',
-            width: 80,
-            height: 80,
-            errorBuilder: (context, error, stackTrace) =>
-                const Icon(Icons.eco, color: Colors.white, size: 80),
-          ),
-
+        LoadingIndicator(isSpinning: isSpinning),
         const SizedBox(height: 32),
 
         if (showSuccessText) ...[
           Text(
-            'Tu registro fue exitoso y estamos revisando tu información...',
+            l10n.verification_status_success_msg,
             textAlign: TextAlign.center,
             style: AppTextStyles.titleMedium.copyWith(color: Colors.white),
           ),
           const SizedBox(height: 48),
         ],
 
-        // The Mini Cuadro
         Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
@@ -243,7 +192,7 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
               Text(
                 title,
                 textAlign: TextAlign.center,
-                style: AppTextStyles.headlineSmall.copyWith(
+                style: AppTextStyles.headlineMedium.copyWith(
                   color: AppColors.lightTextPrimary,
                 ),
               ),
@@ -264,7 +213,6 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
         if (data.status == 'rechazado' || data.status == 'pendiente')
           ElevatedButton(
             onPressed: () {
-              // Navegar para corregir la información (por implementar en el futuro)
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Funcionalidad de re-carga en desarrollo.'),
@@ -276,12 +224,11 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
               foregroundColor: AppColors.loadingBackground,
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
             ),
-            child: const Text('Subir Documentos'),
+            child: Text(l10n.verification_status_upload_docs),
           )
         else if (data.status == 'aprobado')
           ElevatedButton(
             onPressed: () {
-              // Navegar a la app principal (por implementar en el futuro)
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Navegando a la aplicación principal...'),
@@ -293,14 +240,14 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
               foregroundColor: AppColors.loadingBackground,
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
             ),
-            child: const Text('Entrar a la aplicación'),
+            child: Text(l10n.verification_status_enter_app),
           )
         else
           TextButton(
             onPressed: _retry,
-            child: const Text(
-              'Actualizar estado',
-              style: TextStyle(color: Colors.white70),
+            child: Text(
+              l10n.verification_status_update_status,
+              style: const TextStyle(color: Colors.white70),
             ),
           ),
       ],

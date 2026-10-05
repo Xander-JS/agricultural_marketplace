@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:agricultural_marketplace/core/localization/app_localizations.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/app_bar/custom_app_bar.dart';
+import '../../../../core/widgets/progress/step_progress_bar.dart';
+import '../../../../core/widgets/buttons/primary_action_button.dart';
 import '../models/registration_data.dart';
 import 'document_selection_screen.dart';
 
@@ -23,6 +27,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   }
 
   void _onNext() {
+    final l10n = AppLocalizations.of(context)!;
     if (_selectedRole != null) {
       widget.data.role = _selectedRole;
       Navigator.of(context).push(
@@ -32,70 +37,28 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor, selecciona un rol')),
+        SnackBar(content: Text(l10n.role_selection_error_no_role)),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
-      appBar: AppBar(
-        backgroundColor: AppColors.lightBackground,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios,
-            color: AppColors.lightTextPrimary,
-          ),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text(
-          'Account Credentials',
-          style: AppTextStyles.headlineMedium.copyWith(
-            color: AppColors.lightTextPrimary,
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: CircleAvatar(backgroundColor: AppColors.success, radius: 16),
-          ),
-        ],
-      ),
+      appBar: CustomAppBar(title: l10n.role_selection_header_title),
       body: SafeArea(
         child: Column(
           children: [
-            // Progress Bar
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 8.0,
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(height: 4, color: AppColors.success),
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Container(height: 4, color: AppColors.success),
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Container(height: 4, color: AppColors.lightBorder),
-                  ),
-                ],
-              ),
-            ),
+            const StepProgressBar(totalSteps: 3, currentStep: 2),
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.all(24.0),
                 children: [
                   Text(
-                    'Choose the role that best describes your activity on the platform.',
+                    l10n.role_selection_title,
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.lightTextSecondary,
                     ),
@@ -104,17 +67,17 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
 
                   _buildRoleCard(
                     role: 'agricultor',
-                    title: 'Producer',
-                    subtitle: 'Sell & Distribute',
-                    description: 'Direct marketplace listing & analytics',
+                    title: l10n.role_selection_producer,
+                    subtitle: l10n.role_selection_producer_subtitle,
+                    description: l10n.role_selection_producer_description,
                     icon: Icons.agriculture,
                   ),
                   const SizedBox(height: 16),
                   _buildRoleCard(
                     role: 'comprador',
-                    title: 'Buyer',
-                    subtitle: 'Source & Purchase',
-                    description: 'Transparent logistics & batch provenance',
+                    title: l10n.role_selection_buyer,
+                    subtitle: l10n.role_selection_buyer_subtitle,
+                    description: l10n.role_selection_buyer_description,
                     icon: Icons.shopping_basket_outlined,
                   ),
                   const SizedBox(height: 24),
@@ -129,7 +92,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'KYC Verification applies after role selection',
+                        l10n.role_selection_kyc_notice,
                         style: AppTextStyles.caption.copyWith(
                           color: AppColors.lightTextSecondary,
                         ),
@@ -141,19 +104,9 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
             ),
             Padding(
               padding: const EdgeInsets.all(24.0),
-              child: SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: _onNext,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.success,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: const Icon(Icons.arrow_forward, color: Colors.white),
-                ),
+              child: PrimaryActionButton(
+                onPressed: _onNext,
+                icon: Icons.arrow_forward,
               ),
             ),
           ],

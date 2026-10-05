@@ -1,10 +1,15 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:agricultural_marketplace/core/localization/app_localizations.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/app_bar/custom_app_bar.dart';
+import '../../../../core/widgets/progress/step_progress_bar.dart';
+import '../../../../core/widgets/info/tip_pill.dart';
+import '../../../../core/widgets/buttons/camera_button.dart';
 import '../models/registration_data.dart';
 import 'capture_back_screen.dart';
 
@@ -59,65 +64,15 @@ class _CaptureFrontScreenState extends State<CaptureFrontScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
-      appBar: AppBar(
-        backgroundColor: AppColors.lightBackground,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios,
-            color: AppColors.lightTextPrimary,
-          ),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text(
-          'Verification Code',
-          style: AppTextStyles.headlineMedium.copyWith(
-            color: AppColors.lightTextPrimary,
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: CircleAvatar(
-              backgroundColor: AppColors.success,
-              radius: 16,
-              child: const Icon(
-                Icons.person_outline,
-                size: 20,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ],
-      ),
+      appBar: CustomAppBar(title: l10n.capture_front_header_title),
       body: SafeArea(
         child: Column(
           children: [
-            // Progress Bar
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 8.0,
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(height: 4, color: AppColors.success),
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Container(height: 4, color: AppColors.lightBorder),
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Container(height: 4, color: AppColors.lightBorder),
-                  ),
-                ],
-              ),
-            ),
+            const StepProgressBar(totalSteps: 3, currentStep: 2),
 
             Padding(
               padding: const EdgeInsets.all(24.0),
@@ -144,7 +99,7 @@ class _CaptureFrontScreenState extends State<CaptureFrontScreen> {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              'Identity Verification',
+                              l10n.capture_front_identity_verification,
                               style: AppTextStyles.labelSmall.copyWith(
                                 color: AppColors.info,
                               ),
@@ -161,14 +116,14 @@ class _CaptureFrontScreenState extends State<CaptureFrontScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Capture Front Side',
+                    l10n.capture_front_title,
                     style: AppTextStyles.displaySmall.copyWith(
                       color: AppColors.lightTextPrimary,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Position the front side of your document within the frame. Ensure good lighting and that all text is clearly readable.',
+                    l10n.capture_front_description,
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.lightTextSecondary,
                     ),
@@ -205,9 +160,9 @@ class _CaptureFrontScreenState extends State<CaptureFrontScreen> {
                                 color: Colors.black54,
                                 borderRadius: BorderRadius.circular(16),
                               ),
-                              child: const Text(
-                                'Hold still — aligning document...',
-                                style: TextStyle(
+                              child: Text(
+                                l10n.capture_front_aligning,
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 12,
                                 ),
@@ -230,9 +185,9 @@ class _CaptureFrontScreenState extends State<CaptureFrontScreen> {
                                   size: 16,
                                 ),
                                 const SizedBox(width: 8),
-                                const Text(
-                                  'Auto-capture ready',
-                                  style: TextStyle(
+                                Text(
+                                  l10n.capture_front_auto_capture,
+                                  style: const TextStyle(
                                     color: AppColors.success,
                                     fontSize: 12,
                                   ),
@@ -251,15 +206,15 @@ class _CaptureFrontScreenState extends State<CaptureFrontScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _buildTipPill(Icons.light_mode, 'Good light'),
-                  _buildTipPill(Icons.aspect_ratio, 'Fit frame'),
-                  _buildTipPill(Icons.blur_off, 'No glare'),
+                  TipPill(icon: Icons.light_mode, text: l10n.capture_front_tip_light),
+                  TipPill(icon: Icons.aspect_ratio, text: l10n.capture_front_tip_fit),
+                  TipPill(icon: Icons.blur_off, text: l10n.capture_front_tip_glare),
                 ],
               ),
             ),
 
             Text(
-              'Tap button below to capture',
+              l10n.capture_front_tap_to_capture,
               style: AppTextStyles.bodySmall.copyWith(
                 color: AppColors.lightTextSecondary,
               ),
@@ -277,26 +232,7 @@ class _CaptureFrontScreenState extends State<CaptureFrontScreen> {
                   ),
                 ),
                 const SizedBox(width: 32),
-                GestureDetector(
-                  onTap: _takePicture,
-                  child: Container(
-                    width: 72,
-                    height: 72,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: AppColors.success.withOpacity(0.3),
-                        width: 4,
-                      ),
-                      color: AppColors.success,
-                    ),
-                    child: const Icon(
-                      Icons.camera_alt,
-                      color: Colors.white,
-                      size: 32,
-                    ),
-                  ),
-                ),
+                CameraButton(onTap: _takePicture),
                 const SizedBox(width: 32),
                 IconButton(
                   onPressed: _pickGallery,
@@ -310,28 +246,6 @@ class _CaptureFrontScreenState extends State<CaptureFrontScreen> {
             const SizedBox(height: 24),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildTipPill(IconData icon, String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppColors.lightSecondary,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: AppColors.success),
-          const SizedBox(width: 4),
-          Text(
-            text,
-            style: AppTextStyles.labelSmall.copyWith(
-              color: AppColors.lightTextSecondary,
-            ),
-          ),
-        ],
       ),
     );
   }

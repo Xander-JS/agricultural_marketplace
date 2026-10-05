@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:agricultural_marketplace/core/localization/app_localizations.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/app_bar/custom_app_bar.dart';
+import '../../../../core/widgets/progress/step_progress_bar.dart';
+import '../../../../core/widgets/inputs/custom_text_field.dart';
+import '../../../../core/widgets/buttons/primary_action_button.dart';
 import '../models/registration_data.dart';
 import 'role_selection_screen.dart';
 
@@ -52,67 +57,17 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
-      appBar: AppBar(
-        backgroundColor: AppColors.lightBackground,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios,
-            color: AppColors.lightTextPrimary,
-          ),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text(
-          'Personal Details',
-          style: AppTextStyles.headlineMedium.copyWith(
-            color: AppColors.lightTextPrimary,
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: CircleAvatar(
-              backgroundColor: AppColors.success,
-              radius: 16,
-              child: const Icon(
-                Icons.person_outline,
-                size: 20,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ],
-      ),
+      appBar: CustomAppBar(title: l10n.personal_info_title),
       body: SafeArea(
         child: Form(
           key: _formKey,
           child: Column(
             children: [
-              // Progress Bar
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                  vertical: 8.0,
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Container(height: 4, color: AppColors.success),
-                    ),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Container(height: 4, color: AppColors.lightBorder),
-                    ),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Container(height: 4, color: AppColors.lightBorder),
-                    ),
-                  ],
-                ),
-              ),
+              const StepProgressBar(totalSteps: 3, currentStep: 1),
               Expanded(
                 child: ListView(
                   padding: const EdgeInsets.all(24.0),
@@ -121,7 +76,7 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Personal Information',
+                          l10n.personal_info_title,
                           style: AppTextStyles.displaySmall.copyWith(
                             color: AppColors.lightTextPrimary,
                           ),
@@ -136,7 +91,7 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Text(
-                            'Active',
+                            l10n.personal_info_active,
                             style: AppTextStyles.labelSmall.copyWith(
                               color: AppColors.success,
                             ),
@@ -146,40 +101,34 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
                     ),
                     const SizedBox(height: 32),
 
-                    _buildLabel('Phone Number'),
-                    TextFormField(
+                    CustomTextField(
+                      label: l10n.personal_info_phone,
+                      hint: l10n.personal_info_phone_hint,
+                      icon: Icons.phone_android,
                       controller: _phoneController,
                       keyboardType: TextInputType.phone,
-                      decoration: _inputDecoration(
-                        hint: '(555) 000-0000',
-                        icon: Icons.phone_android,
-                      ),
                       validator: (value) =>
-                          value == null || value.isEmpty ? 'Requerido' : null,
+                          value == null || value.isEmpty ? l10n.personal_info_required : null,
                     ),
                     const SizedBox(height: 24),
 
-                    _buildLabel('First Name'),
-                    TextFormField(
+                    CustomTextField(
+                      label: l10n.personal_info_first_name,
+                      hint: l10n.personal_info_first_name_hint,
+                      icon: Icons.badge_outlined,
                       controller: _firstNameController,
-                      decoration: _inputDecoration(
-                        hint: 'e.g. John',
-                        icon: Icons.badge_outlined,
-                      ),
                       validator: (value) =>
-                          value == null || value.isEmpty ? 'Requerido' : null,
+                          value == null || value.isEmpty ? l10n.personal_info_required : null,
                     ),
                     const SizedBox(height: 24),
 
-                    _buildLabel('Last Name'),
-                    TextFormField(
+                    CustomTextField(
+                      label: l10n.personal_info_last_name,
+                      hint: l10n.personal_info_last_name_hint,
+                      icon: Icons.person_outline,
                       controller: _lastNameController,
-                      decoration: _inputDecoration(
-                        hint: 'e.g. Appleseed',
-                        icon: Icons.person_outline,
-                      ),
                       validator: (value) =>
-                          value == null || value.isEmpty ? 'Requerido' : null,
+                          value == null || value.isEmpty ? l10n.personal_info_required : null,
                     ),
                     const SizedBox(height: 32),
 
@@ -198,7 +147,7 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              'We\'ll send a 6-digit verification code to confirm your number on the next step.',
+                              l10n.personal_info_verification_description,
                               style: AppTextStyles.bodySmall.copyWith(
                                 color: AppColors.lightTextSecondary,
                               ),
@@ -212,68 +161,14 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
               ),
               Padding(
                 padding: const EdgeInsets.all(24.0),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: _onNext,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.success,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    child: const Icon(Icons.arrow_forward, color: Colors.white),
-                  ),
+                child: PrimaryActionButton(
+                  onPressed: _onNext,
+                  icon: Icons.arrow_forward,
                 ),
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildLabel(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: Row(
-        children: [
-          Text(
-            text,
-            style: AppTextStyles.labelMedium.copyWith(
-              color: AppColors.lightTextPrimary,
-            ),
-          ),
-          const Text(' *', style: TextStyle(color: AppColors.success)),
-        ],
-      ),
-    );
-  }
-
-  InputDecoration _inputDecoration({
-    required String hint,
-    required IconData icon,
-  }) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: AppTextStyles.bodyMedium.copyWith(
-        color: AppColors.lightTextDisabled,
-      ),
-      suffixIcon: Icon(icon, color: AppColors.lightTextDisabled),
-      filled: true,
-      fillColor: AppColors.lightSurface,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: AppColors.lightBorder),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: AppColors.lightBorder),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: AppColors.success),
       ),
     );
   }

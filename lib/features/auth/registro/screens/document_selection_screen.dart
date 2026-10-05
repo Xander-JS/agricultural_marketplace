@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:agricultural_marketplace/core/localization/app_localizations.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/app_bar/custom_app_bar.dart';
+import '../../../../core/widgets/progress/step_progress_bar.dart';
+import '../../../../core/widgets/buttons/primary_action_button.dart';
 import '../models/registration_data.dart';
 import 'capture_front_screen.dart';
 
@@ -25,6 +29,7 @@ class _DocumentSelectionScreenState extends State<DocumentSelectionScreen> {
   }
 
   void _onNext() {
+    final l10n = AppLocalizations.of(context)!;
     if (_selectedDocument != null) {
       widget.data.documentType = _selectedDocument;
       Navigator.of(context).push(
@@ -34,8 +39,8 @@ class _DocumentSelectionScreenState extends State<DocumentSelectionScreen> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Por favor, selecciona un tipo de documento'),
+        SnackBar(
+          content: Text(l10n.document_selection_error_no_doc),
         ),
       );
     }
@@ -43,78 +48,28 @@ class _DocumentSelectionScreenState extends State<DocumentSelectionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
-      appBar: AppBar(
-        backgroundColor: AppColors.lightBackground,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios,
-            color: AppColors.lightTextPrimary,
-          ),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text(
-          'Verification Code', // It says 'Verification Code' in the mockup header but 'Document Verification' as title
-          style: AppTextStyles.headlineMedium.copyWith(
-            color: AppColors.lightTextPrimary,
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: CircleAvatar(
-              backgroundColor: AppColors.success,
-              radius: 16,
-              child: const Icon(
-                Icons.person_outline,
-                size: 20,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ],
-      ),
+      appBar: CustomAppBar(title: l10n.document_selection_header_title),
       body: SafeArea(
         child: Column(
           children: [
-            // Progress Bar
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 8.0,
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(height: 4, color: AppColors.success),
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Container(height: 4, color: AppColors.lightBorder),
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Container(height: 4, color: AppColors.lightBorder),
-                  ),
-                ],
-              ),
-            ),
+            const StepProgressBar(totalSteps: 3, currentStep: 2),
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.all(24.0),
                 children: [
                   Text(
-                    'Document Verification',
+                    l10n.document_selection_title,
                     style: AppTextStyles.displaySmall.copyWith(
                       color: AppColors.lightTextPrimary,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'We need to confirm your legal identity before activating your account.',
+                    l10n.document_selection_description,
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.lightTextSecondary,
                     ),
@@ -122,7 +77,7 @@ class _DocumentSelectionScreenState extends State<DocumentSelectionScreen> {
                   const SizedBox(height: 32),
 
                   Text(
-                    'SELECT YOUR ID TYPE',
+                    l10n.document_selection_select_id,
                     style: AppTextStyles.labelMedium.copyWith(
                       color: AppColors.lightTextSecondary,
                     ),
@@ -131,15 +86,15 @@ class _DocumentSelectionScreenState extends State<DocumentSelectionScreen> {
 
                   _buildDocCard(
                     type: 'CC',
-                    title: 'CC',
-                    subtitle: 'Cédula de Ciudadanía / National ID',
+                    title: l10n.document_selection_cc,
+                    subtitle: l10n.document_selection_cc_desc,
                     icon: Icons.badge_outlined,
                   ),
                   const SizedBox(height: 16),
                   _buildDocCard(
                     type: 'Driver License',
-                    title: 'Driver\'s License',
-                    subtitle: 'Official state or national driving permit',
+                    title: l10n.document_selection_driver_license,
+                    subtitle: l10n.document_selection_driver_license_desc,
                     icon: Icons.directions_car_outlined,
                   ),
                   const SizedBox(height: 32),
@@ -154,7 +109,7 @@ class _DocumentSelectionScreenState extends State<DocumentSelectionScreen> {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        '256-bit encrypted identity verification',
+                        l10n.document_selection_encryption_notice,
                         style: AppTextStyles.caption.copyWith(
                           color: AppColors.lightTextSecondary,
                         ),
@@ -166,19 +121,9 @@ class _DocumentSelectionScreenState extends State<DocumentSelectionScreen> {
             ),
             Padding(
               padding: const EdgeInsets.all(24.0),
-              child: SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: _onNext,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.success,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: const Icon(Icons.arrow_forward, color: Colors.white),
-                ),
+              child: PrimaryActionButton(
+                onPressed: _onNext,
+                icon: Icons.arrow_forward,
               ),
             ),
           ],

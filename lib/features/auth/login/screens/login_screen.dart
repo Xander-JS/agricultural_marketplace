@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:agricultural_marketplace/core/localization/app_localizations.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/inputs/custom_text_field.dart';
+import '../../../../core/widgets/buttons/primary_action_button.dart';
 import '../../registro/screens/welcome_screen.dart';
 import '../services/login_service.dart';
 import '../../verificacion/screens/verification_status_screen.dart';
@@ -68,13 +71,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
       body: SafeArea(
         top: false,
         child: Column(
           children: [
-            // Topographic pattern simulation area
             Expanded(
               flex: 4,
               child: Container(
@@ -85,11 +89,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     bottomRight: Radius.circular(60),
                   ),
                 ),
-                // Since we don't have the topographic SVG, we'll keep the shape
               ),
             ),
-
-            // Login Form Area
             Expanded(
               flex: 6,
               child: SingleChildScrollView(
@@ -101,7 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       const SizedBox(height: 16),
                       Text(
-                        'Sign in',
+                        l10n.login_title,
                         style: AppTextStyles.displayLarge.copyWith(
                           color: AppColors.lightTextPrimary,
                         ),
@@ -115,49 +116,44 @@ class _LoginScreenState extends State<LoginScreen> {
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
-
-                      _buildLabel('Phone'),
-                      TextFormField(
+                      CustomTextField(
+                        label: l10n.login_phone,
+                        hint: l10n.login_phone_hint,
+                        icon: Icons.mail_outline,
                         controller: _phoneController,
-                        // Even though it says phone, the mockup has an email icon and hint
-                        keyboardType: TextInputType.text,
-                        decoration: _inputDecoration(
-                          hint: 'demo@email.com',
-                          icon: Icons.mail_outline,
-                        ),
+                        filled: false,
+                        isUnderlineBorder: true,
+                        isRequired: false, // In original there was no star indicator explicitly, but it was required
                         validator: (value) =>
-                            value == null || value.isEmpty ? 'Requerido' : null,
+                            value == null || value.isEmpty ? l10n.login_required : null,
                       ),
                       const SizedBox(height: 24),
-
-                      _buildLabel('Password'),
-                      TextFormField(
+                      CustomTextField(
+                        label: l10n.login_password,
+                        hint: l10n.login_password_hint,
+                        icon: Icons.lock_outline,
                         controller: _passwordController,
                         obscureText: !_isPasswordVisible,
-                        decoration:
-                            _inputDecoration(
-                              hint: '••••••••••••',
-                              icon: Icons.lock_outline,
-                            ).copyWith(
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  _isPasswordVisible
-                                      ? Icons.visibility_outlined
-                                      : Icons.visibility_off_outlined,
-                                  color: AppColors.lightTextDisabled,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _isPasswordVisible = !_isPasswordVisible;
-                                  });
-                                },
-                              ),
-                            ),
+                        filled: false,
+                        isUnderlineBorder: true,
+                        isRequired: false,
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _isPasswordVisible
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                            color: AppColors.lightTextDisabled,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _isPasswordVisible = !_isPasswordVisible;
+                            });
+                          },
+                        ),
                         validator: (value) =>
-                            value == null || value.isEmpty ? 'Requerido' : null,
+                            value == null || value.isEmpty ? l10n.login_required : null,
                       ),
                       const SizedBox(height: 16),
-
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -178,7 +174,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                'Remember Me',
+                                l10n.login_remember_me,
                                 style: AppTextStyles.bodyMedium.copyWith(
                                   color: AppColors.lightTextSecondary,
                                 ),
@@ -188,7 +184,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           TextButton(
                             onPressed: () {},
                             child: Text(
-                              'Forgot Password?',
+                              l10n.login_forgot_password,
                               style: AppTextStyles.labelMedium.copyWith(
                                 color: AppColors.success,
                               ),
@@ -197,37 +193,17 @@ class _LoginScreenState extends State<LoginScreen> {
                         ],
                       ),
                       const SizedBox(height: 32),
-
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _handleLogin,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.success,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          child: _isLoading
-                              ? const CircularProgressIndicator(
-                                  color: Colors.white,
-                                )
-                              : Text(
-                                  'Sign in',
-                                  style: AppTextStyles.buttonMedium.copyWith(
-                                    color: Colors.white,
-                                  ),
-                                ),
-                        ),
+                      PrimaryActionButton(
+                        onPressed: _handleLogin,
+                        text: l10n.login_login_button,
+                        isLoading: _isLoading,
                       ),
                       const SizedBox(height: 32),
-
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            'Don\'t have an Account ? ',
+                            l10n.login_no_account,
                             style: AppTextStyles.bodyMedium.copyWith(
                               color: AppColors.lightTextSecondary,
                             ),
@@ -241,7 +217,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               );
                             },
                             child: Text(
-                              'Sign up',
+                              l10n.login_register,
                               style: AppTextStyles.labelMedium.copyWith(
                                 color: AppColors.success,
                               ),
@@ -257,45 +233,6 @@ class _LoginScreenState extends State<LoginScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildLabel(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: Text(
-        text,
-        style: AppTextStyles.labelMedium.copyWith(
-          color: AppColors.lightTextPrimary,
-        ),
-      ),
-    );
-  }
-
-  InputDecoration _inputDecoration({
-    required String hint,
-    required IconData icon,
-  }) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: AppTextStyles.bodyMedium.copyWith(
-        color: AppColors.lightTextDisabled,
-      ),
-      prefixIcon: Icon(icon, color: AppColors.lightTextDisabled),
-      border: UnderlineInputBorder(
-        borderSide: BorderSide(color: AppColors.lightBorder),
-      ),
-      enabledBorder: UnderlineInputBorder(
-        borderSide: BorderSide(color: AppColors.lightBorder),
-      ),
-      focusedBorder: UnderlineInputBorder(
-        borderSide: BorderSide(color: AppColors.success),
-      ),
-      // To exactly match the mockup, the fields look like they have underlines or very faint borders
-      // Actually, looking at Mockup 2 closely:
-      // Phone field has a mail icon on the left, hint "demo@email.com". Bottom border.
-      // Password field has a lock icon on the left, hint "••••••••••••", eye icon on the right. Bottom border.
-      filled: false,
     );
   }
 }

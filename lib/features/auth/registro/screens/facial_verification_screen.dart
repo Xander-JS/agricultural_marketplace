@@ -1,10 +1,14 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:agricultural_marketplace/core/localization/app_localizations.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/app_bar/custom_app_bar.dart';
+import '../../../../core/widgets/info/tip_pill.dart';
+import '../../../../core/widgets/buttons/camera_button.dart';
 import '../models/registration_data.dart';
 import 'processing_screen.dart';
 
@@ -45,40 +49,11 @@ class _FacialVerificationScreenState extends State<FacialVerificationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
-      appBar: AppBar(
-        backgroundColor: AppColors.lightBackground,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios,
-            color: AppColors.lightTextPrimary,
-          ),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text(
-          'Verification Code',
-          style: AppTextStyles.headlineMedium.copyWith(
-            color: AppColors.lightTextPrimary,
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: CircleAvatar(
-              backgroundColor: AppColors.success,
-              radius: 16,
-              child: const Icon(
-                Icons.person_outline,
-                size: 20,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ],
-      ),
+      appBar: CustomAppBar(title: l10n.facial_verification_header_title),
       body: SafeArea(
         child: Column(
           children: [
@@ -91,14 +66,14 @@ class _FacialVerificationScreenState extends State<FacialVerificationScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Facial Verification',
+                    l10n.facial_verification_title,
                     style: AppTextStyles.displaySmall.copyWith(
                       color: AppColors.lightTextPrimary,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Center your face within the guide. Blink gently and hold still in balanced natural light.',
+                    l10n.facial_verification_description,
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.lightTextSecondary,
                     ),
@@ -148,9 +123,9 @@ class _FacialVerificationScreenState extends State<FacialVerificationScreen> {
                                     size: 10,
                                   ),
                                   const SizedBox(width: 8),
-                                  const Text(
-                                    'Face detected • Perfect match',
-                                    style: TextStyle(
+                                  Text(
+                                    l10n.facial_verification_face_detected,
+                                    style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 12,
                                     ),
@@ -178,9 +153,9 @@ class _FacialVerificationScreenState extends State<FacialVerificationScreen> {
                                     size: 16,
                                   ),
                                   const SizedBox(width: 8),
-                                  const Text(
-                                    'Live Liveness Detection Active',
-                                    style: TextStyle(
+                                  Text(
+                                    l10n.facial_verification_liveness,
+                                    style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 12,
                                     ),
@@ -200,9 +175,9 @@ class _FacialVerificationScreenState extends State<FacialVerificationScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _buildTipPill(Icons.light_mode, 'Good light'),
-                  _buildTipPill(Icons.visibility_off, 'No glasses'),
-                  _buildTipPill(Icons.face, 'Look straight'),
+                  TipPill(icon: Icons.light_mode, text: l10n.facial_verification_tip_light),
+                  TipPill(icon: Icons.visibility_off, text: l10n.facial_verification_tip_glasses),
+                  TipPill(icon: Icons.face, text: l10n.facial_verification_tip_straight),
                 ],
               ),
             ),
@@ -218,26 +193,7 @@ class _FacialVerificationScreenState extends State<FacialVerificationScreen> {
                   ),
                 ),
                 const SizedBox(width: 32),
-                GestureDetector(
-                  onTap: _takePicture,
-                  child: Container(
-                    width: 72,
-                    height: 72,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: AppColors.success.withOpacity(0.3),
-                        width: 4,
-                      ),
-                      color: AppColors.success,
-                    ),
-                    child: const Icon(
-                      Icons.camera_alt,
-                      color: Colors.white,
-                      size: 32,
-                    ),
-                  ),
-                ),
+                CameraButton(onTap: _takePicture),
                 const SizedBox(width: 32),
                 IconButton(
                   onPressed: () {},
@@ -260,7 +216,7 @@ class _FacialVerificationScreenState extends State<FacialVerificationScreen> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Biometric data is 256-bit encrypted and never shared.',
+                  l10n.facial_verification_encryption_notice,
                   style: AppTextStyles.caption.copyWith(
                     color: AppColors.lightTextSecondary,
                   ),
@@ -270,28 +226,6 @@ class _FacialVerificationScreenState extends State<FacialVerificationScreen> {
             const SizedBox(height: 24),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildTipPill(IconData icon, String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppColors.lightSecondary,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: AppColors.success),
-          const SizedBox(width: 4),
-          Text(
-            text,
-            style: AppTextStyles.labelSmall.copyWith(
-              color: AppColors.lightTextSecondary,
-            ),
-          ),
-        ],
       ),
     );
   }

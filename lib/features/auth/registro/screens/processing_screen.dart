@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:agricultural_marketplace/core/localization/app_localizations.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/loading/app_loading.dart';
+import '../../../../core/widgets/loading/loading_content.dart';
 import '../models/registration_data.dart';
 import '../services/registration_service.dart';
 import '../../verificacion/screens/verification_status_screen.dart';
@@ -14,26 +15,30 @@ class ProcessingScreen extends StatefulWidget {
   State<ProcessingScreen> createState() => _ProcessingScreenState();
 }
 
-class _ProcessingScreenState extends State<ProcessingScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
+class _ProcessingScreenState extends State<ProcessingScreen> {
   final RegistrationService _service = RegistrationService();
 
-  String _statusMessage = 'Procesando tu información...';
+  late String _statusMessage;
   bool _hasError = false;
+  bool _isSpinning = true;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat();
-
-    _submitData();
+  }
+  
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Initialize text using localization
+    if (!_hasError) {
+      _statusMessage = AppLocalizations.of(context)!.processing_default_message;
+      _submitData();
+    }
   }
 
   Future<void> _submitData() async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       if (!widget.data.isPersonalInfoValid ||
           !widget.data.isRoleValid ||
@@ -41,12 +46,14 @@ class _ProcessingScreenState extends State<ProcessingScreen>
           !widget.data.isDocumentFrontValid ||
           !widget.data.isDocumentBackValid ||
           !widget.data.isSelfieValid) {
-        throw Exception('Faltan datos requeridos para el registro.');
+        throw Exception(l10n.processing_missing_data);
       }
 
-      setState(() {
-        _statusMessage = 'Creando usuario...';
-      });
+      if (mounted) {
+        setState(() {
+          _statusMessage = l10n.processing_creating_user;
+        });
+      }
 
       await _service.registerUser(
         phone: widget.data.phone!,
@@ -59,10 +66,12 @@ class _ProcessingScreenState extends State<ProcessingScreen>
         selfie: widget.data.selfie!,
       );
 
-      setState(() {
-        _statusMessage = '¡Registro completado con éxito!';
-        _controller.stop();
-      });
+      if (mounted) {
+        setState(() {
+          _statusMessage = l10n.processing_success;
+          _isSpinning = false;
+        });
+      }
 
       // Navigate to Verification Status Screen
       Future.delayed(const Duration(seconds: 2), () {
@@ -71,90 +80,44 @@ class _ProcessingScreenState extends State<ProcessingScreen>
             MaterialPageRoute(
               builder: (_) => const VerificationStatusScreen(),
             ),
-            (route) => false, // Remove all previous routes to prevent going back to registration
+            (route) => false,
           );
         }
       });
     } catch (e) {
-      setState(() {
-        _hasError = true;
-        _statusMessage = 'Ocurrió un error:\n${e.toString()}';
-        _controller.stop();
-      });
+      if (mounted) {
+        setState(() {
+          _hasError = true;
+          _statusMessage = '${l10n.processing_error_prefix}${e.toString()}';
+          _isSpinning = false;
+        });
+      }
     }
   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+  void _onRetry() {
+    final l10n = AppLocalizations.of(context)!;
+    setState(() {
+      _hasError = false;
+      _statusMessage = l10n.processing_retrying;
+      _isSpinning = true;
+    });
+    _submitData();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.loadingBackground,
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (!_hasError)
-                RotationTransition(
-                  turns: _controller,
-                  child: Image.asset(
-                    'assets/images/logo_lg.png',
-                    width: 80,
-                    height: 80,
-                    errorBuilder: (context, error, stackTrace) =>
-                        const Icon(Icons.eco, color: Colors.white, size: 80),
-                  ),
-                )
-              else
-                const Icon(
-                  Icons.error_outline,
-                  color: AppColors.error,
-                  size: 80,
-                ),
+    final l10n = AppLocalizations.of(context)!;
 
-              const SizedBox(height: 32),
-
-              Text(
-                _statusMessage,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.titleMedium.copyWith(color: Colors.white),
-              ),
-
-              if (_hasError) ...[
-                const SizedBox(height: 32),
-                ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      _hasError = false;
-                      _statusMessage = 'Reintentando...';
-                      _controller.repeat();
-                    });
-                    _submitData();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: AppColors.loadingBackground,
-                  ),
-                  child: const Text('Reintentar'),
-                ),
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text(
-                    'Volver atrás',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
+    return AppLoading(
+      child: LoadingContent(
+        message: _statusMessage,
+        isError: _hasError,
+        isSpinning: _isSpinning,
+        onRetry: _hasError ? _onRetry : null,
+        onBack: _hasError ? () => Navigator.of(context).pop() : null,
+        retryText: l10n.processing_retry,
+        backText: l10n.processing_back,
       ),
     );
   }

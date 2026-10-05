@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:agricultural_marketplace/core/localization/app_localizations.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -9,13 +10,14 @@ class WelcomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Topographic pattern simulation or empty space for mockup design
             Expanded(
               flex: 3,
               child: Container(
@@ -28,7 +30,6 @@ class WelcomeScreen extends StatelessWidget {
                 ),
               ),
             ),
-
             Expanded(
               flex: 2,
               child: Padding(
@@ -41,14 +42,14 @@ class WelcomeScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     Text(
-                      'Welcome',
+                      l10n.welcome_title,
                       style: AppTextStyles.displayLarge.copyWith(
                         color: AppColors.lightTextPrimary,
                       ),
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Lorem ipsum dolor sit amet consectetur.\nEgestas dolor amet malesuada laoreet.',
+                      l10n.welcome_description,
                       style: AppTextStyles.bodyMedium.copyWith(
                         color: AppColors.lightTextSecondary,
                       ),
@@ -60,7 +61,7 @@ class WelcomeScreen extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            'Continue',
+                            l10n.welcome_continue,
                             style: AppTextStyles.buttonMedium.copyWith(
                               color: AppColors.lightTextPrimary,
                             ),

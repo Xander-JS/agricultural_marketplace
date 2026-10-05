@@ -22,6 +22,9 @@ abstract final class AppColors {
   static const Color lightDivider = Color(0xFFE0E5DD);
   static const Color lightBorder = Color(0xFFD0D7CC);
 
+  // Loading Screen Color
+  static const Color loadingBackground = Color(0xFF04894D);
+
   // ---------------------------------------------------------
   // Dark Palette (Secondary Theme)
   // ---------------------------------------------------------

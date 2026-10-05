@@ -51,7 +51,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get personal_info_last_name_hint => 'ej. Pérez';
 
   @override
-  String get role_selection_header_title => 'Credenciales de la cuenta';
+  String get role_selection_header_title => 'Selección tipo';
 
   @override
   String get role_selection_title =>
@@ -85,7 +85,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get role_selection_error_no_role => 'Por favor, selecciona un rol';
 
   @override
-  String get document_selection_header_title => 'Código de verificación';
+  String get document_selection_header_title => 'Identificación documento';
 
   @override
   String get document_selection_title => 'Verificación de documento';
@@ -120,7 +120,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'Por favor, selecciona un tipo de documento';
 
   @override
-  String get capture_front_header_title => 'Código de verificación';
+  String get capture_front_header_title => 'Identificación documento';
 
   @override
   String get capture_front_title => 'Capturar parte frontal';
@@ -153,7 +153,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'Toca el botón abajo para capturar';
 
   @override
-  String get capture_back_header_title => 'Código de verificación';
+  String get capture_back_header_title => 'Identificación documento';
 
   @override
   String get capture_back_title => 'Capturar parte trasera';
@@ -178,7 +178,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get capture_back_tap_to_capture => 'Toca el botón abajo para capturar';
 
   @override
-  String get facial_verification_header_title => 'Código de verificación';
+  String get facial_verification_header_title => 'Verificación facial';
 
   @override
   String get facial_verification_title => 'Verificación Facial';

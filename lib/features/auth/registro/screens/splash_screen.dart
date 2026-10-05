@@ -52,12 +52,12 @@ class _SplashScreenState extends State<SplashScreen>
         child: ScaleTransition(
           scale: _animation,
           child: Image.asset(
-            'assets/images/logo_xl.png', // Fallback handled by flutter if not found? No, it will crash.
+            'assets/images/app_movil_only_lg.png', // Fallback handled by flutter if not found? No, it will crash.
             // Using errorBuilder to prevent crash if asset doesn't exist
             errorBuilder: (context, error, stackTrace) =>
-                const Icon(Icons.eco, color: Colors.white, size: 100),
-            width: 120,
-            height: 120,
+                const Icon(Icons.eco, color: Colors.white, size: 120),
+            width: 180,
+            height: 180,
           ),
         ),
       ),

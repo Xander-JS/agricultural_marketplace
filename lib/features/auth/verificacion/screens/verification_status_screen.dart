@@ -243,7 +243,7 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
               Text(
                 title,
                 textAlign: TextAlign.center,
-                style: AppTextStyles.headlineSmall.copyWith(
+                style: AppTextStyles.headlineMedium.copyWith(
                   color: AppColors.lightTextPrimary,
                 ),
               ),

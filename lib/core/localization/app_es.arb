@@ -10,7 +10,7 @@
   "personal_info_verification_description": "En el siguiente paso enviaremos un código de verificación de 6 dígitos para confirmar tu número.",
   "personal_info_active": "Activo",
   "personal_info_required": "Requerido",
-  "personal_info_phone_hint": "(555) 000-0000",
+  "personal_info_phone_hint": "315-000-0000",
   "personal_info_first_name_hint": "ej. Juan",
   "personal_info_last_name_hint": "ej. Pérez",
   "role_selection_header_title": "Selección tipo",

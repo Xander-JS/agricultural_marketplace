@@ -54,5 +54,5 @@ abstract final class AppColors {
   static const Color successLight = Color(0xFFE8F5E9);
   static const Color warningLight = Color(0xFFFFF3E0);
   static const Color errorLight = Color(0xFFFFEBEE);
-  static const Color infoLight = Color(0xFFE1F5FE);
+  static const Color infoLight = Color(0xFF2A5324);
 }

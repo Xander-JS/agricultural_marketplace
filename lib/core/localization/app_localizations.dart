@@ -161,7 +161,7 @@ abstract class AppLocalizations {
   /// No description provided for @personal_info_phone_hint.
   ///
   /// In es, this message translates to:
-  /// **'(555) 000-0000'**
+  /// **'315-000-0000'**
   String get personal_info_phone_hint;
 
   /// No description provided for @personal_info_first_name_hint.

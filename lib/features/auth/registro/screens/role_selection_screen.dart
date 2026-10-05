@@ -127,7 +127,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
         ? AppColors.lightSecondary
         : AppColors.infoLight.withOpacity(0.3);
     final borderColor = isSelected ? AppColors.success : Colors.transparent;
-    final iconBgColor = isSelected ? AppColors.success : AppColors.infoLight;
+    final iconBgColor = isSelected ? AppColors.success : Colors.transparent;
     final iconColor = isSelected ? Colors.white : AppColors.lightTextPrimary;
 
     return GestureDetector(
@@ -151,7 +151,10 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: iconBgColor,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(12),
+                    border: isSelected
+                        ? null
+                        : Border.all(color: AppColors.lightTextPrimary),
                   ),
                   child: Icon(icon, color: iconColor),
                 ),

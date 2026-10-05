@@ -4,6 +4,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../models/registration_data.dart';
 import '../services/registration_service.dart';
+import '../../verificacion/screens/verification_status_screen.dart';
 
 class ProcessingScreen extends StatefulWidget {
   final RegistrationData data;
@@ -63,25 +64,14 @@ class _ProcessingScreenState extends State<ProcessingScreen>
         _controller.stop();
       });
 
-      // Navigate to success or home
+      // Navigate to Verification Status Screen
       Future.delayed(const Duration(seconds: 2), () {
         if (mounted) {
-          // Temporarily pop to root or show a success dialog
-          showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (_) => AlertDialog(
-              title: const Text('Registro Exitoso'),
-              content: const Text('Tus datos han sido enviados a revisión.'),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).popUntil((route) => route.isFirst);
-                  },
-                  child: const Text('Finalizar'),
-                ),
-              ],
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(
+              builder: (_) => const VerificationStatusScreen(),
             ),
+            (route) => false, // Remove all previous routes to prevent going back to registration
           );
         }
       });

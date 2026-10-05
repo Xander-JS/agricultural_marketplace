@@ -4,6 +4,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../registro/screens/welcome_screen.dart';
 import '../services/login_service.dart';
+import '../../verificacion/screens/verification_status_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -42,9 +43,10 @@ class _LoginScreenState extends State<LoginScreen> {
         );
 
         if (!mounted) return;
-        // Navigation to home should go here
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('¡Inicio de sesión exitoso!')),
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => const VerificationStatusScreen(),
+          ),
         );
       } catch (e) {
         if (!mounted) return;

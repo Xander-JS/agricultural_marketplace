@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'core/config/supabase_client.dart';
 import 'core/localization/localization_config.dart';
 import 'core/theme/app_theme.dart';
+import 'features/auth/registro/screens/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,13 +43,9 @@ class AgriculturalMarketplaceApp extends StatelessWidget {
       localeResolutionCallback: LocalizationConfig.localeResolutionCallback,
 
       // ---------------------------------------------------------
-      // Placeholder base temporal sin lógica de módulos
+      // Punto de entrada de la app
       // ---------------------------------------------------------
-      home: const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      ),
+      home: const SplashScreen(),
     );
   }
 }

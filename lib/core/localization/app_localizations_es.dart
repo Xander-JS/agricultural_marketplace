@@ -42,7 +42,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get personal_info_required => 'Requerido';
 
   @override
-  String get personal_info_phone_hint => '(555) 000-0000';
+  String get personal_info_phone_hint => '315-000-0000';
 
   @override
   String get personal_info_first_name_hint => 'ej. Juan';

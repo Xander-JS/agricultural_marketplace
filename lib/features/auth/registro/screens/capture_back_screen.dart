@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/app_bar/custom_app_bar.dart';
+import '../../../../core/widgets/progress/step_progress_bar.dart';
 import '../../../../core/widgets/info/tip_pill.dart';
 import '../../../../core/widgets/buttons/camera_button.dart';
 import '../models/registration_data.dart';
@@ -70,27 +71,13 @@ class _CaptureBackScreenState extends State<CaptureBackScreen> {
       body: SafeArea(
         child: Column(
           children: [
+            const StepProgressBar(totalSteps: 4, currentStep: 3),
             Padding(
               padding: const EdgeInsets.all(24.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back),
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
-                      const Spacer(),
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () =>
-                            Navigator.of(context)
-                                .popUntil((route) => route.isFirst),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
+
                   Text(
                     l10n.capture_back_title,
                     style: AppTextStyles.displaySmall.copyWith(

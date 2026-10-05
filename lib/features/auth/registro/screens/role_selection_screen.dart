@@ -52,7 +52,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            const StepProgressBar(totalSteps: 3, currentStep: 2),
+            const StepProgressBar(totalSteps: 4, currentStep: 2),
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.all(24.0),

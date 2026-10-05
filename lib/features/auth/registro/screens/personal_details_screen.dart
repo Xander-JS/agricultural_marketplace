@@ -67,39 +67,12 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
           key: _formKey,
           child: Column(
             children: [
-              const StepProgressBar(totalSteps: 3, currentStep: 1),
+              const StepProgressBar(totalSteps: 4, currentStep: 1),
               Expanded(
                 child: ListView(
                   padding: const EdgeInsets.all(24.0),
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          l10n.personal_info_title,
-                          style: AppTextStyles.displaySmall.copyWith(
-                            color: AppColors.lightTextPrimary,
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.successLight,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Text(
-                            l10n.personal_info_active,
-                            style: AppTextStyles.labelSmall.copyWith(
-                              color: AppColors.success,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 32),
+
 
                     CustomTextField(
                       label: l10n.personal_info_phone,

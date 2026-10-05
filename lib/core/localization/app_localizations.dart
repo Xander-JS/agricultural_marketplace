@@ -179,7 +179,7 @@ abstract class AppLocalizations {
   /// No description provided for @role_selection_header_title.
   ///
   /// In es, this message translates to:
-  /// **'Credenciales de la cuenta'**
+  /// **'Selección tipo'**
   String get role_selection_header_title;
 
   /// No description provided for @role_selection_title.
@@ -239,7 +239,7 @@ abstract class AppLocalizations {
   /// No description provided for @document_selection_header_title.
   ///
   /// In es, this message translates to:
-  /// **'Código de verificación'**
+  /// **'Identificación documento'**
   String get document_selection_header_title;
 
   /// No description provided for @document_selection_title.
@@ -299,7 +299,7 @@ abstract class AppLocalizations {
   /// No description provided for @capture_front_header_title.
   ///
   /// In es, this message translates to:
-  /// **'Código de verificación'**
+  /// **'Identificación documento'**
   String get capture_front_header_title;
 
   /// No description provided for @capture_front_title.
@@ -359,7 +359,7 @@ abstract class AppLocalizations {
   /// No description provided for @capture_back_header_title.
   ///
   /// In es, this message translates to:
-  /// **'Código de verificación'**
+  /// **'Identificación documento'**
   String get capture_back_header_title;
 
   /// No description provided for @capture_back_title.
@@ -407,7 +407,7 @@ abstract class AppLocalizations {
   /// No description provided for @facial_verification_header_title.
   ///
   /// In es, this message translates to:
-  /// **'Código de verificación'**
+  /// **'Verificación facial'**
   String get facial_verification_header_title;
 
   /// No description provided for @facial_verification_title.

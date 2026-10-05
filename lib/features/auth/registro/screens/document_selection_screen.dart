@@ -56,18 +56,12 @@ class _DocumentSelectionScreenState extends State<DocumentSelectionScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            const StepProgressBar(totalSteps: 3, currentStep: 2),
+            const StepProgressBar(totalSteps: 4, currentStep: 3),
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.all(24.0),
                 children: [
-                  Text(
-                    l10n.document_selection_title,
-                    style: AppTextStyles.displaySmall.copyWith(
-                      color: AppColors.lightTextPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
+
                   Text(
                     l10n.document_selection_description,
                     style: AppTextStyles.bodyMedium.copyWith(

@@ -36,20 +36,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       centerTitle: true,
       actions: [
-        if (showProfileIcon)
-          const Padding(
-            padding: EdgeInsets.only(right: 16.0),
-            child: CircleAvatar(
-              backgroundColor: AppColors.success,
-              radius: 16,
-              child: Icon(
-                Icons.person_outline,
-                size: 20,
-                color: Colors.white,
-              ),
-            ),
-          )
-        else if (trailingIcon != null)
+        if (trailingIcon != null)
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
             child: trailingIcon,

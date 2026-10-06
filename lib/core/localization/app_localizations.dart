@@ -311,7 +311,7 @@ abstract class AppLocalizations {
   /// No description provided for @capture_front_description.
   ///
   /// In es, this message translates to:
-  /// **'Posiciona la parte frontal de tu documento dentro del marco. Asegúrate de tener buena iluminación y que todo el texto sea legible.'**
+  /// **'Posiciona la parte frontal de tu documento dentro del marco.'**
   String get capture_front_description;
 
   /// No description provided for @capture_front_identity_verification.
@@ -371,7 +371,7 @@ abstract class AppLocalizations {
   /// No description provided for @capture_back_description.
   ///
   /// In es, this message translates to:
-  /// **'Ahora voltea tu documento y posiciona la parte trasera dentro del marco. Asegúrate de que la banda magnética o código de barras sea completamente visible.'**
+  /// **'Gira tu documento y posiciona la parte trasera dentro del marco.'**
   String get capture_back_description;
 
   /// No description provided for @capture_back_steady.
@@ -395,7 +395,7 @@ abstract class AppLocalizations {
   /// No description provided for @capture_back_tip_barcode.
   ///
   /// In es, this message translates to:
-  /// **'Código claro'**
+  /// **'codigo claro'**
   String get capture_back_tip_barcode;
 
   /// No description provided for @capture_back_tap_to_capture.

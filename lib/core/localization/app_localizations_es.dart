@@ -127,7 +127,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get capture_front_description =>
-      'Posiciona la parte frontal de tu documento dentro del marco. Asegúrate de tener buena iluminación y que todo el texto sea legible.';
+      'Posiciona la parte frontal de tu documento dentro del marco.';
 
   @override
   String get capture_front_identity_verification => 'Verificación de Identidad';
@@ -160,7 +160,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get capture_back_description =>
-      'Ahora voltea tu documento y posiciona la parte trasera dentro del marco. Asegúrate de que la banda magnética o código de barras sea completamente visible.';
+      'Gira tu documento y posiciona la parte trasera dentro del marco.';
 
   @override
   String get capture_back_steady => 'Parte trasera detectada — mantente firme';
@@ -172,7 +172,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get capture_back_tip_fit => 'Encuadrar';
 
   @override
-  String get capture_back_tip_barcode => 'Código claro';
+  String get capture_back_tip_barcode => 'codigo claro';
 
   @override
   String get capture_back_tap_to_capture => 'Toca el botón abajo para capturar';

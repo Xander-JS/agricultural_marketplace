@@ -6,6 +6,8 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/app_bar/custom_app_bar.dart';
+import '../../../../core/widgets/progress/step_progress_bar.dart';
 import '../../../../core/widgets/info/tip_pill.dart';
 import '../../../../core/widgets/buttons/primary_action_button.dart';
 import '../models/registration_data.dart';
@@ -53,20 +55,36 @@ class _FacialVerificationScreenState extends State<FacialVerificationScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.lightSurface,
+      appBar: CustomAppBar(title: l10n.facial_verification_header_title),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Text(
-                l10n.facial_verification_description,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.bodyLarge.copyWith(
-                  color: AppColors.lightTextSecondary,
-                ),
+        child: Column(
+          children: [
+            const StepProgressBar(totalSteps: 4, currentStep: 4),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 16.0,
               ),
-              const Spacer(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.facial_verification_description,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.lightTextSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Column(
+                  children: [
+                    const Spacer(),
               
               if (_image == null)
                 Stack(
@@ -113,12 +131,16 @@ class _FacialVerificationScreenState extends State<FacialVerificationScreen> {
               ),
               const SizedBox(height: 32),
               
-              PrimaryActionButton(
-                onPressed: _takePicture,
-                text: l10n.facial_verification_start_button,
+                    PrimaryActionButton(
+                      onPressed: _takePicture,
+                      text: l10n.facial_verification_start_button,
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

@@ -5,7 +5,7 @@ import '../../../../core/widgets/loading/app_loading.dart';
 import '../../../../core/widgets/loading/loading_content.dart';
 import '../models/registration_data.dart';
 import '../services/registration_service.dart';
-import '../../verificacion/screens/verification_status_screen.dart';
+import '../../login/screens/login_screen.dart';
 
 class ProcessingScreen extends StatefulWidget {
   final RegistrationData data;
@@ -55,30 +55,22 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
         });
       }
 
-      await _service.registerUser(
-        phone: widget.data.phone!,
-        firstName: widget.data.firstName!,
-        lastName: widget.data.lastName!,
-        role: widget.data.role!,
-        documentType: widget.data.documentType!,
-        documentFront: widget.data.documentFront!,
-        documentBack: widget.data.documentBack!,
-        selfie: widget.data.selfie!,
-      );
+      // Simular tiempo de carga sin llamar a Supabase
+      await Future.delayed(const Duration(seconds: 2));
 
       if (mounted) {
         setState(() {
-          _statusMessage = l10n.processing_success;
+          _statusMessage = '¡Cargado con éxito!'; // Mensaje de cargado
           _isSpinning = false;
         });
       }
 
-      // Navigate to Verification Status Screen
+      // Navigate to Login Screen (Simulando que terminó y ahora debe iniciar sesión)
       Future.delayed(const Duration(seconds: 2), () {
         if (mounted) {
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(
-              builder: (_) => const VerificationStatusScreen(),
+              builder: (_) => const LoginScreen(),
             ),
             (route) => false,
           );

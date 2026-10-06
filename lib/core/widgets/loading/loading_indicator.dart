@@ -12,16 +12,23 @@ class LoadingIndicator extends StatefulWidget {
 class _LoadingIndicatorState extends State<LoadingIndicator>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
+  late Animation<double> _animation;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 2),
+      duration: const Duration(milliseconds: 1500),
     );
+    
+    _animation = Tween<double>(
+      begin: 0.8,
+      end: 1.2,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+
     if (widget.isSpinning) {
-      _controller.repeat();
+      _controller.repeat(reverse: true);
     }
   }
 
@@ -30,7 +37,7 @@ class _LoadingIndicatorState extends State<LoadingIndicator>
     super.didUpdateWidget(oldWidget);
     if (widget.isSpinning != oldWidget.isSpinning) {
       if (widget.isSpinning) {
-        _controller.repeat();
+        _controller.repeat(reverse: true);
       } else {
         _controller.stop();
       }
@@ -46,7 +53,7 @@ class _LoadingIndicatorState extends State<LoadingIndicator>
   @override
   Widget build(BuildContext context) {
     Widget logo = Image.asset(
-      'assets/images/logo_lg.png',
+      'assets/images/app_movil_only_sm.png',
       width: 80,
       height: 80,
       errorBuilder: (context, error, stackTrace) =>
@@ -54,8 +61,8 @@ class _LoadingIndicatorState extends State<LoadingIndicator>
     );
 
     if (widget.isSpinning) {
-      return RotationTransition(
-        turns: _controller,
+      return ScaleTransition(
+        scale: _animation,
         child: logo,
       );
     }

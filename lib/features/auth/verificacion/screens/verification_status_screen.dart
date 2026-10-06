@@ -5,6 +5,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/loading/app_loading.dart';
 import '../../../../core/widgets/loading/loading_indicator.dart';
+import '../../../dashboard/screens/main_dashboard_screen.dart';
 import '../services/verification_service.dart';
 
 class VerificationStatusScreen extends StatefulWidget {
@@ -229,9 +230,11 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen> {
         else if (data.status == 'aprobado')
           ElevatedButton(
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Navegando a la aplicación principal...'),
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: (_) => MainDashboardScreen(
+                    role: data.role ?? 'desconocido',
+                  ),
                 ),
               );
             },

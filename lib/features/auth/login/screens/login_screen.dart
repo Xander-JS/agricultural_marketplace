@@ -8,6 +8,7 @@ import '../../../../core/widgets/buttons/primary_action_button.dart';
 import '../../registro/screens/welcome_screen.dart';
 import '../services/login_service.dart';
 import '../../verificacion/screens/verification_status_screen.dart';
+import '../widgets/topo_header.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -79,17 +80,9 @@ class _LoginScreenState extends State<LoginScreen> {
         top: false,
         child: Column(
           children: [
-            Expanded(
+            const Expanded(
               flex: 4,
-              child: Container(
-                decoration: const BoxDecoration(
-                  color: AppColors.lightSecondary,
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(60),
-                    bottomRight: Radius.circular(60),
-                  ),
-                ),
-              ),
+              child: TopoHeader(),
             ),
             Expanded(
               flex: 6,

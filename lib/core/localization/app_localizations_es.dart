@@ -332,4 +332,20 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get verification_status_default_reject_reason =>
       'La verificación no fue aprobada debido a inconsistencias en la documentación. Por favor, corrige la información y vuelve a intentar.';
+
+  @override
+  String get otp_verification_title => 'Ingresa tu código';
+
+  @override
+  String get otp_verification_subtitle =>
+      'Se ha enviado un código de 6 dígitos a tu celular.';
+
+  @override
+  String get otp_verification_didnt_receive => '¿No recibiste el código? ';
+
+  @override
+  String get otp_verification_resend => 'Reenviar.';
+
+  @override
+  String get otp_verification_appbar_title => 'Verificación SMS';
 }

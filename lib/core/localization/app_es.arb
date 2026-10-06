@@ -98,5 +98,10 @@
   "verification_status_upload_docs": "Subir Documentos",
   "verification_status_enter_app": "Entrar a la aplicación",
   "verification_status_update_status": "Actualizar estado",
-  "verification_status_default_reject_reason": "La verificación no fue aprobada debido a inconsistencias en la documentación. Por favor, corrige la información y vuelve a intentar."
+  "verification_status_default_reject_reason": "La verificación no fue aprobada debido a inconsistencias en la documentación. Por favor, corrige la información y vuelve a intentar.",
+  "otp_verification_title": "Ingresa tu código",
+  "otp_verification_subtitle": "Se ha enviado un código de 6 dígitos a tu celular.",
+  "otp_verification_didnt_receive": "¿No recibiste el código? ",
+  "otp_verification_resend": "Reenviar.",
+  "otp_verification_appbar_title": "Verificación SMS"
 }

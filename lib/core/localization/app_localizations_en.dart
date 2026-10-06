@@ -181,7 +181,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get facial_verification_description =>
-      'Center your face within the guide. Blink gently and hold still in balanced natural light.';
+      'We need to take a scan of your face to verify that you are a real person.';
 
   @override
   String get facial_verification_face_detected =>
@@ -202,6 +202,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get facial_verification_encryption_notice =>
       'Biometric data is 256-bit encrypted and never shared.';
+
+  @override
+  String get facial_verification_start_button => 'Start';
 
   @override
   String get processing_missing_data =>

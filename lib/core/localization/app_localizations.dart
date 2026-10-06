@@ -419,7 +419,7 @@ abstract class AppLocalizations {
   /// No description provided for @facial_verification_description.
   ///
   /// In es, this message translates to:
-  /// **'Centra tu rostro dentro de la guía. Parpadea suavemente y mantente quieto con luz natural equilibrada.'**
+  /// **'Necesitamos escanear tu rostro para verificar que eres una persona real.'**
   String get facial_verification_description;
 
   /// No description provided for @facial_verification_face_detected.
@@ -457,6 +457,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Los datos biométricos están encriptados a 256 bits y nunca se comparten.'**
   String get facial_verification_encryption_notice;
+
+  /// No description provided for @facial_verification_start_button.
+  ///
+  /// In es, this message translates to:
+  /// **'Comenzar'**
+  String get facial_verification_start_button;
 
   /// No description provided for @processing_missing_data.
   ///

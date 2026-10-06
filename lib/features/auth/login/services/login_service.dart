@@ -5,9 +5,12 @@ class LoginService {
 
   Future<void> signIn({required String phone, required String password}) async {
     try {
-      final cleanPhone = phone.trim().replaceAll(RegExp(r'\s+'), '');
+      final cleanInput = phone.trim().replaceAll(RegExp(r'\s+'), '');
+      final isEmail = cleanInput.contains('@');
+      final emailToUse = isEmail ? cleanInput : '$cleanInput@agromarket.com';
+      
       final response = await _supabase.auth.signInWithPassword(
-        email: '$cleanPhone@agromarket.com',
+        email: emailToUse,
         password: password,
       );
 

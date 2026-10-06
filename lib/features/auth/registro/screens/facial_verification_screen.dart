@@ -9,7 +9,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/app_bar/custom_app_bar.dart';
 import '../../../../core/widgets/progress/step_progress_bar.dart';
 import '../../../../core/widgets/info/tip_pill.dart';
-import '../../../../core/widgets/buttons/camera_button.dart';
+import '../../../../core/widgets/buttons/primary_action_button.dart';
 import '../models/registration_data.dart';
 import 'processing_screen.dart';
 
@@ -39,6 +39,7 @@ class _FacialVerificationScreenState extends State<FacialVerificationScreen> {
       widget.data.selfie = _image;
 
       Future.delayed(const Duration(milliseconds: 500), () {
+        if (!mounted) return;
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) => ProcessingScreen(data: widget.data),
@@ -53,12 +54,13 @@ class _FacialVerificationScreenState extends State<FacialVerificationScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: AppColors.lightBackground,
+      backgroundColor: AppColors.lightSurface,
       appBar: CustomAppBar(title: l10n.facial_verification_header_title),
       body: SafeArea(
         child: Column(
           children: [
             const StepProgressBar(totalSteps: 4, currentStep: 4),
+
             Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: 24.0,
@@ -67,7 +69,6 @@ class _FacialVerificationScreenState extends State<FacialVerificationScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
                   Text(
                     l10n.facial_verification_description,
                     style: AppTextStyles.bodyMedium.copyWith(
@@ -77,152 +78,68 @@ class _FacialVerificationScreenState extends State<FacialVerificationScreen> {
                 ],
               ),
             ),
-
+            
             Expanded(
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 24),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Column(
+                  children: [
+                    const Spacer(),
+              
+              Container(
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.darkSurfaceVariant,
-                  borderRadius: BorderRadius.circular(20),
-                  image: _image != null
-                      ? DecorationImage(
-                          image: FileImage(_image!),
-                          fit: BoxFit.cover,
-                        )
-                      : null,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: AppColors.lightTextSecondary,
+                    width: 4,
+                  ),
                 ),
-                child: _image == null
-                    ? Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          const Icon(
-                            Icons.face_retouching_natural,
-                            size: 200,
-                            color: AppColors.success,
+                child: Container(
+                  width: 250,
+                  height: 250,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    image: _image != null
+                        ? DecorationImage(
+                            image: FileImage(_image!),
+                            fit: BoxFit.cover,
+                          )
+                        : const DecorationImage(
+                            image: AssetImage('assets/images/face_id.png'),
+                            fit: BoxFit.contain,
                           ),
-                          Positioned(
-                            top: 16,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.black54,
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(
-                                    Icons.circle,
-                                    color: AppColors.success,
-                                    size: 10,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    l10n.facial_verification_face_detected,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            bottom: 20,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.black54,
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(
-                                    Icons.verified_user,
-                                    color: AppColors.success,
-                                    size: 16,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    l10n.facial_verification_liveness,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      )
-                    : null,
+                  ),
+                ),
               ),
-            ),
 
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 24.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              const Spacer(),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  TipPill(icon: Icons.light_mode, text: l10n.facial_verification_tip_light),
-                  TipPill(icon: Icons.visibility_off, text: l10n.facial_verification_tip_glasses),
-                  TipPill(icon: Icons.face, text: l10n.facial_verification_tip_straight),
+                  TipPill(icon: Icons.light_mode_outlined, text: l10n.facial_verification_tip_light),
+                  const SizedBox(width: 8),
+                  TipPill(icon: Icons.visibility_off_outlined, text: l10n.facial_verification_tip_glasses),
+                  const SizedBox(width: 8),
+                  TipPill(icon: Icons.sentiment_satisfied_alt, text: l10n.facial_verification_tip_straight),
                 ],
               ),
+              const SizedBox(height: 32),
+              
+                    PrimaryActionButton(
+                      onPressed: _takePicture,
+                      text: l10n.facial_verification_start_button,
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
             ),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.flash_off),
-                  style: IconButton.styleFrom(
-                    backgroundColor: AppColors.lightSecondary,
-                  ),
-                ),
-                const SizedBox(width: 32),
-                CameraButton(onTap: _takePicture),
-                const SizedBox(width: 32),
-                IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.flip_camera_ios),
-                  style: IconButton.styleFrom(
-                    backgroundColor: AppColors.lightSecondary,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.lock_outline,
-                  size: 16,
-                  color: AppColors.success,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  l10n.facial_verification_encryption_notice,
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.lightTextSecondary,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
           ],
         ),
       ),
     );
   }
 }
+

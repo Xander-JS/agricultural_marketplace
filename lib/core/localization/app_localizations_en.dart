@@ -125,7 +125,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get capture_front_description =>
-      'Position the front side of your document within the frame. Ensure good lighting and that all text is clearly readable.';
+      'Position the front side of your document within the frame.';
 
   @override
   String get capture_front_identity_verification => 'Identity Verification';
@@ -156,7 +156,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get capture_back_description =>
-      'Now flip your document and position the back side within the frame. Make sure the magnetic stripe or barcode is fully visible.';
+      'Turn your document and position the back side within the frame.';
 
   @override
   String get capture_back_steady => 'Back side detected — hold steady';
@@ -168,7 +168,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get capture_back_tip_fit => 'Fit frame';
 
   @override
-  String get capture_back_tip_barcode => 'Barcode clear';
+  String get capture_back_tip_barcode => 'clear code';
 
   @override
   String get capture_back_tap_to_capture => 'Tap button below to capture';
@@ -181,7 +181,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get facial_verification_description =>
-      'Center your face within the guide. Blink gently and hold still in balanced natural light.';
+      'We need to take a scan of your face to verify that you are a real person.';
 
   @override
   String get facial_verification_face_detected =>
@@ -202,6 +202,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get facial_verification_encryption_notice =>
       'Biometric data is 256-bit encrypted and never shared.';
+
+  @override
+  String get facial_verification_start_button => 'Start';
 
   @override
   String get processing_missing_data =>

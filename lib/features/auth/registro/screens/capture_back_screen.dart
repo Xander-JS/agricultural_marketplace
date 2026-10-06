@@ -9,7 +9,8 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/app_bar/custom_app_bar.dart';
 import '../../../../core/widgets/progress/step_progress_bar.dart';
 import '../../../../core/widgets/info/tip_pill.dart';
-import '../../../../core/widgets/buttons/camera_button.dart';
+import '../../../../core/widgets/buttons/primary_action_button.dart';
+import '../../../../core/widgets/misc/viewfinder_painter.dart';
 import '../models/registration_data.dart';
 import 'facial_verification_screen.dart';
 
@@ -34,24 +35,7 @@ class _CaptureBackScreenState extends State<CaptureBackScreen> {
       widget.data.documentBack = _image;
 
       Future.delayed(const Duration(milliseconds: 500), () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => FacialVerificationScreen(data: widget.data),
-          ),
-        );
-      });
-    }
-  }
-
-  Future<void> _pickGallery() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      setState(() {
-        _image = File(image.path);
-      });
-      widget.data.documentBack = _image;
-
-      Future.delayed(const Duration(milliseconds: 500), () {
+        if (!mounted) return;
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) => FacialVerificationScreen(data: widget.data),
@@ -66,25 +50,18 @@ class _CaptureBackScreenState extends State<CaptureBackScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: AppColors.lightBackground,
+      backgroundColor: AppColors.lightSurface,
       appBar: CustomAppBar(title: l10n.capture_back_header_title),
       body: SafeArea(
         child: Column(
           children: [
             const StepProgressBar(totalSteps: 4, currentStep: 3),
+
             Padding(
               padding: const EdgeInsets.all(24.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
-                  Text(
-                    l10n.capture_back_title,
-                    style: AppTextStyles.displaySmall.copyWith(
-                      color: AppColors.lightTextPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
                   Text(
                     l10n.capture_back_description,
                     style: AppTextStyles.bodyMedium.copyWith(
@@ -96,106 +73,73 @@ class _CaptureBackScreenState extends State<CaptureBackScreen> {
             ),
 
             Expanded(
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 24),
-                decoration: BoxDecoration(
-                  color: AppColors.darkSurfaceVariant,
-                  borderRadius: BorderRadius.circular(20),
-                  image: _image != null
-                      ? DecorationImage(
-                          image: FileImage(_image!),
-                          fit: BoxFit.cover,
-                        )
-                      : null,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Column(
+                  children: [
+                    const Spacer(),
+              
+              CustomPaint(
+                foregroundPainter: ViewfinderPainter(
+                  color: AppColors.lightTextSecondary,
                 ),
-                child: _image == null
-                    ? Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          const Icon(
-                            Icons.crop_free,
-                            size: 200,
-                            color: AppColors.success,
-                          ),
-                          Positioned(
-                            bottom: 20,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Container(
+                    width: double.infinity,
+                    height: 220,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      image: _image != null
+                          ? DecorationImage(
+                              image: FileImage(_image!),
+                              fit: BoxFit.cover,
+                            )
+                          : DecorationImage(
+                              image: AssetImage(
+                                  widget.data.documentType == 'CC'
+                                      ? 'assets/images/cc_reverso.png'
+                                      : 'assets/images/licencia_reverso.png',
                               ),
-                              decoration: BoxDecoration(
-                                color: AppColors.successLight,
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(
-                                    Icons.check_circle,
-                                    color: AppColors.success,
-                                    size: 16,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    l10n.capture_back_steady,
-                                    style: const TextStyle(
-                                      color: AppColors.success,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                              fit: BoxFit.contain,
                             ),
-                          ),
-                        ],
-                      )
-                    : null,
+                    ),
+                  ),
+                ),
               ),
-            ),
 
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 24.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              const Spacer(),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  TipPill(icon: Icons.light_mode, text: l10n.capture_back_tip_light),
+                  TipPill(icon: Icons.light_mode_outlined, text: l10n.capture_back_tip_light),
+                  const SizedBox(width: 8),
                   TipPill(icon: Icons.aspect_ratio, text: l10n.capture_back_tip_fit),
-                  TipPill(icon: Icons.qr_code_scanner, text: l10n.capture_back_tip_barcode),
+                  const SizedBox(width: 8),
+                  TipPill(icon: Icons.auto_awesome, text: l10n.capture_back_tip_barcode),
                 ],
               ),
-            ),
-
-            Text(
-              l10n.capture_back_tap_to_capture,
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.lightTextSecondary,
+              
+              const SizedBox(height: 32),
+              
+              Text(
+                l10n.capture_back_tap_to_capture,
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.lightTextSecondary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+                    PrimaryActionButton(
+                      onPressed: _takePicture,
+                      icon: Icons.document_scanner_outlined,
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                ),
               ),
             ),
-            const SizedBox(height: 16),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.flash_off),
-                  style: IconButton.styleFrom(
-                    backgroundColor: AppColors.lightSecondary,
-                  ),
-                ),
-                const SizedBox(width: 32),
-                CameraButton(onTap: _takePicture),
-                const SizedBox(width: 32),
-                IconButton(
-                  onPressed: _pickGallery,
-                  icon: const Icon(Icons.photo_library),
-                  style: IconButton.styleFrom(
-                    backgroundColor: AppColors.lightSecondary,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
           ],
         ),
       ),

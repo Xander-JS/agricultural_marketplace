@@ -87,19 +87,29 @@ class _FacialVerificationScreenState extends State<FacialVerificationScreen> {
                     const Spacer(),
               
               Container(
-                width: double.infinity,
-                height: 250,
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  image: _image != null
-                      ? DecorationImage(
-                          image: FileImage(_image!),
-                          fit: BoxFit.cover,
-                        )
-                      : const DecorationImage(
-                          image: AssetImage('assets/images/face_id.png'),
-                          fit: BoxFit.contain,
-                        ),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: AppColors.lightTextSecondary,
+                    width: 4,
+                  ),
+                ),
+                child: Container(
+                  width: 250,
+                  height: 250,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    image: _image != null
+                        ? DecorationImage(
+                            image: FileImage(_image!),
+                            fit: BoxFit.cover,
+                          )
+                        : const DecorationImage(
+                            image: AssetImage('assets/images/face_id.png'),
+                            fit: BoxFit.contain,
+                          ),
+                  ),
                 ),
               ),
 

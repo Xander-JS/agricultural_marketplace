@@ -10,6 +10,7 @@ import '../../../../core/widgets/app_bar/custom_app_bar.dart';
 import '../../../../core/widgets/progress/step_progress_bar.dart';
 import '../../../../core/widgets/info/tip_pill.dart';
 import '../../../../core/widgets/buttons/primary_action_button.dart';
+import '../../../../core/widgets/misc/viewfinder_painter.dart';
 import '../models/registration_data.dart';
 import 'facial_verification_screen.dart';
 
@@ -78,24 +79,32 @@ class _CaptureBackScreenState extends State<CaptureBackScreen> {
                   children: [
                     const Spacer(),
               
-              Container(
-                width: double.infinity,
-                height: 220,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  image: _image != null
-                      ? DecorationImage(
-                          image: FileImage(_image!),
-                          fit: BoxFit.cover,
-                        )
-                      : DecorationImage(
-                          image: AssetImage(
-                              widget.data.documentType == 'CC'
-                                  ? 'assets/images/cc_reverso.png'
-                                  : 'assets/images/licencia_reverso.png',
-                          ),
-                          fit: BoxFit.contain,
-                        ),
+              CustomPaint(
+                foregroundPainter: ViewfinderPainter(
+                  color: AppColors.lightTextSecondary,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Container(
+                    width: double.infinity,
+                    height: 220,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      image: _image != null
+                          ? DecorationImage(
+                              image: FileImage(_image!),
+                              fit: BoxFit.cover,
+                            )
+                          : DecorationImage(
+                              image: AssetImage(
+                                  widget.data.documentType == 'CC'
+                                      ? 'assets/images/cc_reverso.png'
+                                      : 'assets/images/licencia_reverso.png',
+                              ),
+                              fit: BoxFit.contain,
+                            ),
+                    ),
+                  ),
                 ),
               ),
 

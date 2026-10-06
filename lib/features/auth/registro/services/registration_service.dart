@@ -20,8 +20,9 @@ class RegistrationService {
       // Since the mockup doesn't have a password field, we use a temporary password.
       // In a real scenario, this might use OTP, but we need the user ID immediately
       // to insert into profiles and verification_attempts as per the instructions.
+      final cleanPhone = phone.trim().replaceAll(RegExp(r'\s+'), '');
       final AuthResponse authRes = await _supabase.auth.signUp(
-        phone: phone,
+        email: '$cleanPhone@agromarket.com',
         password: 'TempPassword123!', // Placeholder since no password in UI
       );
 

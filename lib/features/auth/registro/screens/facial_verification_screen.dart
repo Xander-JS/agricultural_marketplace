@@ -86,36 +86,22 @@ class _FacialVerificationScreenState extends State<FacialVerificationScreen> {
                   children: [
                     const Spacer(),
               
-              if (_image == null)
-                Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    SizedBox(
-                      width: 200,
-                      height: 250,
-                      child: CustomPaint(
-                        painter: FaceOutlinePainter(),
-                      ),
-                    ),
-                    const Icon(
-                      Icons.person,
-                      size: 160,
-                      color: AppColors.lightBorder,
-                    ),
-                  ],
-                )
-              else
-                Container(
-                  width: 200,
-                  height: 250,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(100),
-                    image: DecorationImage(
-                      image: FileImage(_image!),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
+              Container(
+                width: double.infinity,
+                height: 250,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  image: _image != null
+                      ? DecorationImage(
+                          image: FileImage(_image!),
+                          fit: BoxFit.cover,
+                        )
+                      : const DecorationImage(
+                          image: AssetImage('assets/images/face_id.png'),
+                          fit: BoxFit.contain,
+                        ),
                 ),
+              ),
 
               const Spacer(),
 
@@ -147,24 +133,3 @@ class _FacialVerificationScreenState extends State<FacialVerificationScreen> {
   }
 }
 
-class FaceOutlinePainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = AppColors.success
-      ..strokeWidth = 8.0
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    final rect = Rect.fromLTWH(0, 0, size.width, size.height);
-    const double arcLength = 3.14159 / 3;
-
-    canvas.drawArc(rect, 3.14159 + 3.14159 / 12, arcLength, false, paint);
-    canvas.drawArc(rect, 1.5 * 3.14159 + 3.14159 / 12, arcLength, false, paint);
-    canvas.drawArc(rect, 0.5 * 3.14159 + 3.14159 / 12, arcLength, false, paint);
-    canvas.drawArc(rect, 0 + 3.14159 / 12, arcLength, false, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}

@@ -8,7 +8,7 @@ import '../../../../core/widgets/progress/step_progress_bar.dart';
 import '../../../../core/widgets/inputs/custom_text_field.dart';
 import '../../../../core/widgets/buttons/primary_action_button.dart';
 import '../models/registration_data.dart';
-import 'role_selection_screen.dart';
+import 'otp_verification_screen.dart';
 
 class PersonalDetailsScreen extends StatefulWidget {
   final RegistrationData? data;
@@ -21,6 +21,7 @@ class PersonalDetailsScreen extends StatefulWidget {
 class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
   late RegistrationData _data;
   final _formKey = GlobalKey<FormState>();
+  bool _isLoading = false;
 
   final _phoneController = TextEditingController();
   final _firstNameController = TextEditingController();
@@ -43,14 +44,16 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
     super.dispose();
   }
 
-  void _onNext() {
+  Future<void> _onNext() async {
     if (_formKey.currentState?.validate() ?? false) {
       _data.phone = _phoneController.text;
       _data.firstName = _firstNameController.text;
       _data.lastName = _lastNameController.text;
 
       Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => RoleSelectionScreen(data: _data)),
+        MaterialPageRoute(
+          builder: (_) => OtpVerificationScreen(data: _data),
+        ),
       );
     }
   }
@@ -134,10 +137,12 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
               ),
               Padding(
                 padding: const EdgeInsets.all(24.0),
-                child: PrimaryActionButton(
-                  onPressed: _onNext,
-                  icon: Icons.arrow_forward,
-                ),
+                child: _isLoading 
+                    ? const Center(child: CircularProgressIndicator()) 
+                    : PrimaryActionButton(
+                        onPressed: _onNext,
+                        icon: Icons.arrow_forward,
+                      ),
               ),
             ],
           ),

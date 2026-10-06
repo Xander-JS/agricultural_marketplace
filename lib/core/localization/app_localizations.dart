@@ -691,6 +691,36 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'La verificación no fue aprobada debido a inconsistencias en la documentación. Por favor, corrige la información y vuelve a intentar.'**
   String get verification_status_default_reject_reason;
+
+  /// No description provided for @otp_verification_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Ingresa tu código'**
+  String get otp_verification_title;
+
+  /// No description provided for @otp_verification_subtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Se ha enviado un código de 6 dígitos a tu celular.'**
+  String get otp_verification_subtitle;
+
+  /// No description provided for @otp_verification_didnt_receive.
+  ///
+  /// In es, this message translates to:
+  /// **'¿No recibiste el código? '**
+  String get otp_verification_didnt_receive;
+
+  /// No description provided for @otp_verification_resend.
+  ///
+  /// In es, this message translates to:
+  /// **'Reenviar.'**
+  String get otp_verification_resend;
+
+  /// No description provided for @otp_verification_appbar_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Verificación SMS'**
+  String get otp_verification_appbar_title;
 }
 
 class _AppLocalizationsDelegate

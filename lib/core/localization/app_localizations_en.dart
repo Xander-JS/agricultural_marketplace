@@ -328,4 +328,20 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get verification_status_default_reject_reason =>
       'The verification was not approved due to inconsistencies in the documentation. Please correct the information and try again.';
+
+  @override
+  String get otp_verification_title => 'Enter Your code';
+
+  @override
+  String get otp_verification_subtitle =>
+      'A 6 digit code has been sent to your cell phone.';
+
+  @override
+  String get otp_verification_didnt_receive => 'Didn\'t receive the code? ';
+
+  @override
+  String get otp_verification_resend => 'Resend.';
+
+  @override
+  String get otp_verification_appbar_title => 'SMS Verification';
 }

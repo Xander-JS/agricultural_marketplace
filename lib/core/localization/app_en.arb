@@ -98,5 +98,10 @@
   "verification_status_upload_docs": "Upload Documents",
   "verification_status_enter_app": "Enter application",
   "verification_status_update_status": "Update status",
-  "verification_status_default_reject_reason": "The verification was not approved due to inconsistencies in the documentation. Please correct the information and try again."
+  "verification_status_default_reject_reason": "The verification was not approved due to inconsistencies in the documentation. Please correct the information and try again.",
+  "otp_verification_title": "Enter Your code",
+  "otp_verification_subtitle": "A 6 digit code has been sent to your cell phone.",
+  "otp_verification_didnt_receive": "Didn't receive the code? ",
+  "otp_verification_resend": "Resend.",
+  "otp_verification_appbar_title": "SMS Verification"
 }

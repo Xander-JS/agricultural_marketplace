@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/navigation/app_bottom_navigation.dart';
+import '../../profile/screens/farmer_profile_screen.dart';
+import '../../crop/screens/marketplace_screen.dart';
+import '../../costs/screens/costs_screen.dart';
+import '../../deals/screens/deals_screen.dart';
 
 class MainDashboardScreen extends StatefulWidget {
   final String role;
@@ -15,6 +19,20 @@ class MainDashboardScreen extends StatefulWidget {
 class _MainDashboardScreenState extends State<MainDashboardScreen> {
   int _currentIndex = 0;
 
+  late List<Widget> _screens;
+
+  @override
+  void initState() {
+    super.initState();
+    _screens = [
+      const MarketplaceScreen(), // Índice 0 es Mercado
+      const DealsScreen(), // Índice 1 es Tratos
+      const CostsScreen(), // Índice 2 es Costos
+
+      const FarmerProfileScreen(), // Índice 3 es Mi Finca
+    ];
+  }
+
   String _capitalize(String value) {
     if (value.isEmpty) return value;
     return value[0].toUpperCase() + value.substring(1).toLowerCase();
@@ -23,21 +41,9 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Panel de ${_capitalize(widget.role)}',
-          style: AppTextStyles.titleLarge,
-        ),
-        backgroundColor: AppColors.lightSurface,
-        elevation: 0,
-        centerTitle: true,
-      ),
-      body: Center(
-        child: Text(
-          'Bienvenido a tu panel de ${widget.role.toUpperCase()}',
-          style: AppTextStyles.headlineMedium,
-          textAlign: TextAlign.center,
-        ),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _screens,
       ),
       bottomNavigationBar: AppBottomNavigation(
         currentIndex: _currentIndex,

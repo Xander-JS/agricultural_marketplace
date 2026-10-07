@@ -26,11 +26,38 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
 
+  late FocusNode _emailFocusNode;
+  late FocusNode _phoneFocusNode;
+  bool _emailSaved = false;
+  bool _phoneSaved = false;
+  StateSetter? _modalSetState;
+
   @override
   void initState() {
     super.initState();
     _emailController = TextEditingController();
     _phoneController = TextEditingController();
+    _emailFocusNode = FocusNode();
+    _phoneFocusNode = FocusNode();
+
+    _emailFocusNode.addListener(() {
+      if (!_emailFocusNode.hasFocus) {
+        _checkAndSaveField('email', _emailController.text.trim());
+      } else {
+        _emailSaved = false;
+        _modalSetState?.call(() {});
+      }
+    });
+
+    _phoneFocusNode.addListener(() {
+      if (!_phoneFocusNode.hasFocus) {
+        _checkAndSaveField('phone', _phoneController.text.trim());
+      } else {
+        _phoneSaved = false;
+        _modalSetState?.call(() {});
+      }
+    });
+
     _loadProfileData();
   }
 
@@ -38,14 +65,19 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
   void dispose() {
     _emailController.dispose();
     _phoneController.dispose();
+    _emailFocusNode.dispose();
+    _phoneFocusNode.dispose();
     super.dispose();
   }
 
   Future<void> _loadProfileData() async {
     setState(() => _isLoading = true);
     try {
-      final userId = Supabase.instance.client.auth.currentUser!.id;
-      final data = await _profileService.getFarmerProfileData(userId);
+      final currentUser = Supabase.instance.client.auth.currentUser;
+      if (currentUser == null) {
+        throw Exception('No hay usuario autenticado. (Modo prueba activo sin sesión)');
+      }
+      final userId = currentUser.id;      final data = await _profileService.getFarmerProfileData(userId);
       setState(() {
         _profileData = data;
         _emailController.text = data.email;
@@ -62,30 +94,56 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
     }
   }
 
-  Future<void> _updateProfileInfo() async {
+  Future<void> _checkAndSaveField(String field, String value) async {
     if (_profileData == null) return;
-    FocusScope.of(context).unfocus();
+    
+    // Verificar si realmente cambió
+    if (field == 'email' && value == _profileData!.email) return;
+    if (field == 'phone' && value == _profileData!.phone) return;
+
     setState(() => _isSaving = true);
+    _modalSetState?.call(() {});
+
     try {
-      await _profileService.updateProfileData(
-        _profileData!.id,
-        email: _emailController.text.trim(),
-        phone: _phoneController.text.trim(),
-      );
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Datos actualizados correctamente'), backgroundColor: AppColors.success),
+      if (field == 'email') {
+        await _profileService.updateProfileData(_profileData!.id, email: value);
+        _profileData = FarmerProfileData(
+          id: _profileData!.id,
+          fullName: _profileData!.fullName,
+          role: _profileData!.role,
+          email: value,
+          phone: _profileData!.phone,
+          profilePath: _profileData!.profilePath,
+          stats: _profileData!.stats,
+          settings: _profileData!.settings,
         );
-      }
-      await _loadProfileData();
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al actualizar datos: $e'), backgroundColor: AppColors.error),
+        _emailSaved = true;
+      } else if (field == 'phone') {
+        await _profileService.updateProfileData(_profileData!.id, phone: value);
+        _profileData = FarmerProfileData(
+          id: _profileData!.id,
+          fullName: _profileData!.fullName,
+          role: _profileData!.role,
+          email: _profileData!.email,
+          phone: value,
+          profilePath: _profileData!.profilePath,
+          stats: _profileData!.stats,
+          settings: _profileData!.settings,
         );
+        _phoneSaved = true;
       }
-    } finally {
+      
       setState(() => _isSaving = false);
+      _modalSetState?.call(() {});
+      
+    } catch (e) {
+      setState(() => _isSaving = false);
+      _modalSetState?.call(() {});
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al actualizar dato: $e'), backgroundColor: AppColors.error),
+        );
+      }
     }
   }
 
@@ -162,6 +220,12 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
         backgroundColor: AppColors.lightSurface,
         elevation: 0,
         iconTheme: const IconThemeData(color: AppColors.lightTextPrimary),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: _isSaving || _profileData == null ? null : _showSettingsBottomSheet,
+          ),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: AppColors.lightTertiary))
@@ -183,12 +247,9 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
                         children: [
                           _buildProfileHeader(),
                           const SizedBox(height: 32),
-                          _buildEditableDataSection(),
-                          const SizedBox(height: 32),
                           _buildStatisticsSection(),
-                          const SizedBox(height: 32),
-                          _buildSettingsSection(),
                           const SizedBox(height: 40),
+
                         ],
                       ),
                     ),
@@ -196,6 +257,186 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
     );
   }
 
+  void _showSettingsBottomSheet() {
+    // Reset status al abrir
+    _emailSaved = false;
+    _phoneSaved = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) {
+          _modalSetState = setModalState;
+          final settings = _profileData!.settings;
+
+          
+          return Container(
+            decoration: const BoxDecoration(
+              color: AppColors.lightBackground,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+              top: 24,
+              left: 20,
+              right: 20,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 24),
+                      decoration: BoxDecoration(
+                        color: AppColors.lightBorder,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const Text(
+                    'Información de contacto',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.lightTextPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildTextField(
+                    label: 'Correo electrónico',
+                    controller: _emailController,
+                    originalValue: _profileData!.email,
+                    icon: Icons.email_outlined,
+                    focusNode: _emailFocusNode,
+                    isSaved: _emailSaved,
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildTextField(
+                    label: 'Número de teléfono',
+                    controller: _phoneController,
+                    originalValue: _profileData!.phone,
+                    icon: Icons.phone_outlined,
+                    focusNode: _phoneFocusNode,
+                    isSaved: _phoneSaved,
+                    keyboardType: TextInputType.phone,
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  const Text(
+                    'Opciones de negociación',
+
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.lightTextPrimary,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                
+                // Habilitar precompra
+                _buildSwitchTile(
+                  title: 'Habilitar precompra',
+                  value: settings.enableEarlySale,
+                  icon: Icons.calendar_month_outlined,
+                  onChanged: (val) {
+                    setModalState(() {
+                      _updateSettings(FarmerSettingsData(
+                        enableEarlySale: val,
+                        sharePhone: settings.sharePhone,
+                        shareLocation: settings.shareLocation,
+                        shareWhatsapp: settings.shareWhatsapp,
+                      ));
+                    });
+                  },
+                ),
+                
+                const SizedBox(height: 24),
+                
+                const Text(
+                  'Visibilidad durante una negociación',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.lightTextPrimary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.lightSurface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.lightBorder),
+                  ),
+                  child: Column(
+                    children: [
+                      _buildSwitchListTileInside(
+                        title: 'Teléfono',
+                        value: settings.sharePhone,
+                        onChanged: (val) {
+                          setModalState(() {
+                            _updateSettings(FarmerSettingsData(
+                              enableEarlySale: settings.enableEarlySale,
+                              sharePhone: val,
+                              shareLocation: settings.shareLocation,
+                              shareWhatsapp: settings.shareWhatsapp,
+                            ));
+                          });
+                        },
+                      ),
+                      const Divider(height: 1, color: AppColors.lightBorder),
+                      _buildSwitchListTileInside(
+                        title: 'Ubicación',
+                        value: settings.shareLocation,
+                        onChanged: (val) {
+                          setModalState(() {
+                            _updateSettings(FarmerSettingsData(
+                              enableEarlySale: settings.enableEarlySale,
+                              sharePhone: settings.sharePhone,
+                              shareLocation: val,
+                              shareWhatsapp: settings.shareWhatsapp,
+                            ));
+                          });
+                        },
+                      ),
+                      const Divider(height: 1, color: AppColors.lightBorder),
+                      _buildSwitchListTileInside(
+                        title: 'WhatsApp',
+                        value: settings.shareWhatsapp,
+                        onChanged: (val) {
+                          setModalState(() {
+                            _updateSettings(FarmerSettingsData(
+                              enableEarlySale: settings.enableEarlySale,
+                              sharePhone: settings.sharePhone,
+                              shareLocation: settings.shareLocation,
+                              shareWhatsapp: val,
+                            ));
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+              ),
+            ),
+          );
+
+
+        },
+      ),
+    );
+  }
+
+  // Se modifican los headers y el editable data... (se deja igual)
   Widget _buildProfileHeader() {
     String? imageUrl;
     if (_profileData!.profilePath != null && _profileData!.profilePath!.isNotEmpty) {
@@ -257,78 +498,13 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
     );
   }
 
-  Widget _buildEditableDataSection() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.lightSurface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.lightBorder),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Información de contacto',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: AppColors.lightTextPrimary,
-            ),
-          ),
-          const SizedBox(height: 16),
-          _buildTextField(
-            label: 'Correo electrónico',
-            controller: _emailController,
-            icon: Icons.email_outlined,
-            keyboardType: TextInputType.emailAddress,
-          ),
-          const SizedBox(height: 16),
-          _buildTextField(
-            label: 'Número de teléfono',
-            controller: _phoneController,
-            icon: Icons.phone_outlined,
-            keyboardType: TextInputType.phone,
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _isSaving ? null : _updateProfileInfo,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.lightTertiary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 0,
-              ),
-              child: _isSaving
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                    )
-                  : const Text('Guardar cambios', style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildTextField({
     required String label,
     required TextEditingController controller,
+    required String originalValue,
     required IconData icon,
+    required FocusNode focusNode,
+    required bool isSaved,
     TextInputType? keyboardType,
   }) {
     return Column(
@@ -346,9 +522,13 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
         TextField(
           controller: controller,
           keyboardType: keyboardType,
+          focusNode: focusNode,
           style: const TextStyle(color: AppColors.lightTextPrimary),
           decoration: InputDecoration(
             prefixIcon: Icon(icon, color: AppColors.lightTextDisabled),
+            suffixIcon: isSaved
+                ? const Icon(Icons.check_circle, color: AppColors.success)
+                : null,
             filled: true,
             fillColor: AppColors.lightBackground,
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -434,114 +614,8 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
     );
   }
 
-  Widget _buildSettingsSection() {
-    final settings = _profileData!.settings;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Opciones de negociación',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: AppColors.lightTextPrimary,
-          ),
-        ),
-        const SizedBox(height: 16),
-        
-        // Habilitar precompra
-        _buildSwitchTile(
-          title: 'Habilitar precompra',
-          subtitle: 'Permitir que los compradores oferten antes de la cosecha.',
-          value: settings.enableEarlySale,
-          onChanged: (val) {
-            _updateSettings(FarmerSettingsData(
-              enableEarlySale: val,
-              sharePhone: settings.sharePhone,
-              shareLocation: settings.shareLocation,
-              shareWhatsapp: settings.shareWhatsapp,
-            ));
-          },
-          icon: Icons.calendar_month_outlined,
-        ),
-        
-        const SizedBox(height: 24),
-        
-        const Text(
-          'Datos visibles durante la negociación',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: AppColors.lightTextPrimary,
-          ),
-        ),
-        const SizedBox(height: 4),
-        const Text(
-          'Elige qué información de contacto estará disponible para el comprador.',
-          style: TextStyle(
-            fontSize: 13,
-            color: AppColors.lightTextSecondary,
-          ),
-        ),
-        const SizedBox(height: 12),
-        
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.lightSurface,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.lightBorder),
-          ),
-          child: Column(
-            children: [
-              _buildSwitchListTileInside(
-                title: 'Teléfono',
-                value: settings.sharePhone,
-                onChanged: (val) {
-                  _updateSettings(FarmerSettingsData(
-                    enableEarlySale: settings.enableEarlySale,
-                    sharePhone: val,
-                    shareLocation: settings.shareLocation,
-                    shareWhatsapp: settings.shareWhatsapp,
-                  ));
-                },
-              ),
-              const Divider(height: 1, color: AppColors.lightBorder),
-              _buildSwitchListTileInside(
-                title: 'Ubicación',
-                value: settings.shareLocation,
-                onChanged: (val) {
-                  _updateSettings(FarmerSettingsData(
-                    enableEarlySale: settings.enableEarlySale,
-                    sharePhone: settings.sharePhone,
-                    shareLocation: val,
-                    shareWhatsapp: settings.shareWhatsapp,
-                  ));
-                },
-              ),
-              const Divider(height: 1, color: AppColors.lightBorder),
-              _buildSwitchListTileInside(
-                title: 'WhatsApp',
-                value: settings.shareWhatsapp,
-                onChanged: (val) {
-                  _updateSettings(FarmerSettingsData(
-                    enableEarlySale: settings.enableEarlySale,
-                    sharePhone: settings.sharePhone,
-                    shareLocation: settings.shareLocation,
-                    shareWhatsapp: val,
-                  ));
-                },
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildSwitchTile({
     required String title,
-    required String subtitle,
     required bool value,
     required ValueChanged<bool> onChanged,
     required IconData icon,
@@ -556,10 +630,6 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
         title: Text(
           title,
           style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.lightTextPrimary),
-        ),
-        subtitle: Text(
-          subtitle,
-          style: const TextStyle(fontSize: 13, color: AppColors.lightTextSecondary),
         ),
         secondary: Container(
           padding: const EdgeInsets.all(8),

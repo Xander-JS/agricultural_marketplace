@@ -5,6 +5,7 @@ import '../../../../core/widgets/navigation/app_bottom_navigation.dart';
 import '../../profile/screens/farmer_profile_screen.dart';
 import '../../crop/screens/marketplace_screen.dart';
 import '../../costs/screens/costs_screen.dart';
+import '../../deals/screens/deals_screen.dart';
 
 class MainDashboardScreen extends StatefulWidget {
   final String role;
@@ -25,7 +26,7 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
     super.initState();
     _screens = [
       const MarketplaceScreen(), // Índice 0 es Mercado
-      const Center(child: Text('Tratos')),
+      const DealsScreen(), // Índice 1 es Tratos
       const CostsScreen(), // Índice 2 es Costos
 
       const FarmerProfileScreen(), // Índice 3 es Mi Finca

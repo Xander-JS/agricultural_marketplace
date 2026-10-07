@@ -29,10 +29,17 @@ class UserAvatar extends StatelessWidget {
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(20),
-          child: imageUrl != null
+          child: imageUrl != null && imageUrl!.isNotEmpty
               ? Image.network(
                   imageUrl!,
                   fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const Icon(
+                      Icons.person,
+                      color: AppColors.lightSurface,
+                      size: 24,
+                    );
+                  },
                 )
               : const Icon(
                   Icons.person,

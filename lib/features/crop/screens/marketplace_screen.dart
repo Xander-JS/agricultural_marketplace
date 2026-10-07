@@ -72,6 +72,15 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
       final user = Supabase.instance.client.auth.currentUser;
       if (user != null) {
         final crops = await _cropService.getCropsByFarmerId(user.id);
+        
+        // Recargar perfil por si cambió la imagen
+        try {
+          final profileData = await _profileService.getFarmerProfileData(user.id);
+          if (profileData.profilePath != null && profileData.profilePath!.isNotEmpty) {
+            _profileImageUrl = _profileService.getPublicProfileImageUrl(profileData.profilePath!);
+          }
+        } catch (_) {}
+
         setState(() {
           _crops = crops;
         });
@@ -160,9 +169,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mi Mercado', style: TextStyle(color: Colors.black)),
-        backgroundColor: const Color(0xFFC8E6C9), // Verde claro (Colors.green.shade100)
-        iconTheme: const IconThemeData(color: Colors.black),
+        title: const Text('Mi Mercado'),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16.0),

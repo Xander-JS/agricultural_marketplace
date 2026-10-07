@@ -5,6 +5,8 @@ import '../services/crop_service.dart';
 import '../widgets/crop_card.dart';
 import 'publish_crop_screen.dart';
 import 'crop_detail_screen.dart';
+import '../../../core/widgets/avatars/user_avatar.dart';
+import '../../profile/services/profile_service.dart';
 
 class MarketplaceScreen extends StatefulWidget {
   const MarketplaceScreen({super.key});
@@ -15,17 +17,20 @@ class MarketplaceScreen extends StatefulWidget {
 
 class _MarketplaceScreenState extends State<MarketplaceScreen> {
   final _cropService = CropService();
+  final _profileService = ProfileService();
+  
   List<CropModel> _crops = [];
+  String? _profileImageUrl;
   bool _isLoading = true;
   String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _loadCrops();
+    _loadData();
   }
 
-  Future<void> _loadCrops() async {
+  Future<void> _loadData() async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -35,7 +40,19 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
       final user = Supabase.instance.client.auth.currentUser;
       if (user == null) throw Exception('Usuario no autenticado');
 
+      // Cargar cosechas
       final crops = await _cropService.getCropsByFarmerId(user.id);
+      
+      // Cargar info del perfil para el avatar
+      try {
+        final profileData = await _profileService.getFarmerProfileData(user.id);
+        if (profileData.profilePath != null && profileData.profilePath!.isNotEmpty) {
+          _profileImageUrl = _profileService.getPublicProfileImageUrl(profileData.profilePath!);
+        }
+      } catch (_) {
+        // Ignorar si falla la carga del perfil
+      }
+
       setState(() {
         _crops = crops;
       });
@@ -50,6 +67,18 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
     }
   }
 
+  Future<void> _loadCrops() async {
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user != null) {
+        final crops = await _cropService.getCropsByFarmerId(user.id);
+        setState(() {
+          _crops = crops;
+        });
+      }
+    } catch (_) {}
+  }
+
   void _navigateToPublish() async {
     final result = await Navigator.push(
       context,
@@ -60,6 +89,58 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
     if (result == true) {
       _loadCrops();
     }
+  }
+
+  void _showPublishOptions() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text(
+                  '¿Cómo deseas publicar?',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ),
+              ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                  child: Icon(Icons.edit_document, color: Theme.of(context).primaryColor),
+                ),
+                title: const Text('Publicación Manual'),
+                subtitle: const Text('Llena el formulario paso a paso'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _navigateToPublish();
+                },
+              ),
+              ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                  child: Icon(Icons.mic, color: Theme.of(context).primaryColor),
+                ),
+                title: const Text('Publicación por Nota de Voz'),
+                subtitle: const Text('Cuéntanos qué quieres publicar (Con IA)'),
+                onTap: () {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Función de IA próximamente...')),
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   void _navigateToDetail(CropModel crop) async {
@@ -79,17 +160,29 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mi Mercado'),
+        title: const Text('Mi Mercado', style: TextStyle(color: Colors.black)),
+        backgroundColor: const Color(0xFFC8E6C9), // Verde claro (Colors.green.shade100)
+        iconTheme: const IconThemeData(color: Colors.black),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadCrops,
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: Center(
+              child: UserAvatar(
+                imageUrl: _profileImageUrl,
+                onTap: () {
+                  // Opcional: Navegar al perfil o abrir un diálogo
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Este es tu perfil')),
+                  );
+                },
+              ),
+            ),
           )
         ],
       ),
       body: _buildBody(),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _navigateToPublish,
+        onPressed: _showPublishOptions,
         icon: const Icon(Icons.add),
         label: const Text('Publicar'),
         backgroundColor: Theme.of(context).primaryColor,

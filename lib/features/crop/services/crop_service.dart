@@ -66,6 +66,14 @@ class CropService {
     }).eq('id', cropId);
   }
 
+  /// Elimina una cosecha
+  Future<void> deleteCrop(String cropId) async {
+    // Primero borramos las referencias a las imágenes en la BD
+    await _supabase.from('crop_images').delete().eq('crop_id', cropId);
+    // Luego borramos la cosecha
+    await _supabase.from('crops').delete().eq('id', cropId);
+  }
+
   /// Sube las imágenes al bucket y guarda los registros en crop_images
   Future<void> _uploadImagesForCrop(String cropId, List<File> images) async {
     for (int i = 0; i < images.length; i++) {

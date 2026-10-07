@@ -83,6 +83,48 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
     }
   }
 
+  Future<void> _confirmDelete() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Borrar Publicación'),
+        content: const Text('¿Estás seguro de que deseas borrar esta publicación? Esta acción no se puede deshacer.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Borrar', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      setState(() => _isLoading = true);
+      try {
+        await _cropService.deleteCrop(_crop.id);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Publicación borrada exitosamente'), backgroundColor: Colors.green),
+          );
+          Navigator.pop(context, true); // Retornar true para recargar la lista
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error al borrar: $e'), backgroundColor: Colors.red),
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _isLoading = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -95,6 +137,11 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
       appBar: AppBar(
         title: const Text('Detalle de Cosecha'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: _confirmDelete,
+            tooltip: 'Borrar',
+          ),
           IconButton(
             icon: const Icon(Icons.edit),
             onPressed: _navigateToEdit,

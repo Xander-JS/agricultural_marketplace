@@ -22,6 +22,10 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
   bool _isSaving = false;
   FarmerProfileData? _profileData;
 
+  // Preferencias de Accesibilidad
+  bool _isDarkMode = false;
+  bool _isEnglish = false;
+
   // Controladores para la edición de campos
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
@@ -419,6 +423,56 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
                               shareWhatsapp: val,
                             ));
                           });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                
+                const Text(
+                  'Accesibilidad',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.lightTextPrimary,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.lightSurface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.lightBorder),
+                  ),
+                  child: Column(
+                    children: [
+                      _buildSwitchListTileInside(
+                        title: 'Modo oscuro',
+                        value: _isDarkMode,
+                        onChanged: (val) {
+                          setModalState(() {
+                            _isDarkMode = val;
+                          });
+                          setState(() {
+                            _isDarkMode = val;
+                          });
+                          // TODO: Integrar con manejador de estado global de Tema
+                        },
+                      ),
+                      const Divider(height: 1, color: AppColors.lightBorder),
+                      _buildSwitchListTileInside(
+                        title: 'Idioma inglés',
+                        value: _isEnglish,
+                        onChanged: (val) {
+                          setModalState(() {
+                            _isEnglish = val;
+                          });
+                          setState(() {
+                            _isEnglish = val;
+                          });
+                          // TODO: Integrar con manejador de estado global de Idioma
                         },
                       ),
                     ],

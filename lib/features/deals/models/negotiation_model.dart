@@ -14,6 +14,7 @@ class NegotiationModel {
   // Joined fields
   final CropModel? crop;
   final Map<String, dynamic>? buyerProfile;
+  final Map<String, dynamic>? farmerProfile;
   final List<NegotiationOfferModel>? offers;
 
   NegotiationModel({
@@ -26,6 +27,7 @@ class NegotiationModel {
     required this.updatedAt,
     this.crop,
     this.buyerProfile,
+    this.farmerProfile,
     this.offers,
   });
 
@@ -37,6 +39,13 @@ class NegotiationModel {
             .map((o) => NegotiationOfferModel.fromJson(o))
             .toList();
       }
+    }
+
+    Map<String, dynamic>? parsedFarmerProfile;
+    if (json['crops'] != null && json['crops'] is Map && json['crops']['profiles'] != null) {
+      parsedFarmerProfile = json['crops']['profiles'] as Map<String, dynamic>;
+    } else if (json['farmer_profile'] != null && json['farmer_profile'] is Map) {
+      parsedFarmerProfile = json['farmer_profile'] as Map<String, dynamic>;
     }
 
     return NegotiationModel(
@@ -53,6 +62,7 @@ class NegotiationModel {
         : DateTime.now(),
       crop: json['crops'] != null ? CropModel.fromJson(json['crops']) : null,
       buyerProfile: json['profiles'] != null ? json['profiles'] as Map<String, dynamic> : null,
+      farmerProfile: parsedFarmerProfile,
       offers: parsedOffers,
     );
   }

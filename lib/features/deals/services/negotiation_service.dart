@@ -24,13 +24,33 @@ class NegotiationService {
     }
   }
 
+  /// Obtiene los tratos donde el usuario es el comprador
+  Future<List<NegotiationModel>> getBuyerNegotiations(String buyerId) async {
+    try {
+      final response = await _supabase
+          .from('negotiations')
+          .select('''
+            *,
+            crops(*, profiles:farmer_id(*)),
+            profiles:buyer_id(*),
+            negotiation_offers(*)
+          ''')
+          .eq('buyer_id', buyerId)
+          .order('updated_at', ascending: false);
+
+      return (response as List).map((n) => NegotiationModel.fromJson(n)).toList();
+    } catch (e) {
+      throw Exception('Error al cargar tratos del comprador: $e');
+    }
+  }
+
   Future<NegotiationModel> getNegotiationById(String id) async {
     try {
       final response = await _supabase
           .from('negotiations')
           .select('''
             *,
-            crops(*),
+            crops(*, profiles:farmer_id(*)),
             profiles:buyer_id(*),
             negotiation_offers(*)
           ''')
@@ -49,6 +69,7 @@ class NegotiationService {
     required double proposedPricePerKg,
     required String deliveryMethod,
     String? message,
+    String? nextResponder,
   }) async {
     try {
       final user = _supabase.auth.currentUser;
@@ -64,10 +85,29 @@ class NegotiationService {
         if (message != null && message.isNotEmpty) 'message': message,
       });
 
-      // 2. Update negotiation state
+      // 2. Determinar quién debe responder la siguiente oferta
+      String responder = nextResponder ?? 'buyer';
+      if (nextResponder == null) {
+        try {
+          final neg = await _supabase
+              .from('negotiations')
+              .select('buyer_id')
+              .eq('id', negotiationId)
+              .maybeSingle();
+          if (neg != null && neg['buyer_id'] == user.id) {
+            responder = 'farmer';
+          } else {
+            responder = 'buyer';
+          }
+        } catch (_) {
+          responder = 'buyer';
+        }
+      }
+
+      // 3. Update negotiation state
       await _supabase.from('negotiations').update({
         'status': NegotiationStatus.contraofertada.toShortString(),
-        'current_responder': 'buyer', // assuming 'buyer' / 'farmer'
+        'current_responder': responder,
         'updated_at': DateTime.now().toIso8601String(),
       }).eq('id', negotiationId);
 

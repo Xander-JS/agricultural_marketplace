@@ -1321,6 +1321,234 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'La cantidad supera el stock disponible'**
   String get offer_sheet_val_max_stock;
+
+  /// No description provided for @deals_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Tratos'**
+  String get deals_title;
+
+  /// No description provided for @deals_tab_all.
+  ///
+  /// In es, this message translates to:
+  /// **'Todos'**
+  String get deals_tab_all;
+
+  /// No description provided for @deals_tab_pending.
+  ///
+  /// In es, this message translates to:
+  /// **'Pendientes'**
+  String get deals_tab_pending;
+
+  /// No description provided for @deals_tab_in_negotiation.
+  ///
+  /// In es, this message translates to:
+  /// **'En negociación'**
+  String get deals_tab_in_negotiation;
+
+  /// No description provided for @deals_tab_agreed.
+  ///
+  /// In es, this message translates to:
+  /// **'Acordados'**
+  String get deals_tab_agreed;
+
+  /// No description provided for @deals_tab_history.
+  ///
+  /// In es, this message translates to:
+  /// **'Historial'**
+  String get deals_tab_history;
+
+  /// No description provided for @deals_your_turn.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu turno'**
+  String get deals_your_turn;
+
+  /// No description provided for @deals_waiting_response.
+  ///
+  /// In es, this message translates to:
+  /// **'Esperando respuesta'**
+  String get deals_waiting_response;
+
+  /// No description provided for @deals_see_deal.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver trato →'**
+  String get deals_see_deal;
+
+  /// No description provided for @deals_empty_farmer_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún no tienes tratos'**
+  String get deals_empty_farmer_title;
+
+  /// No description provided for @deals_empty_farmer_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuando un comprador realice una oferta sobre una de tus cosechas, aparecerá aquí.'**
+  String get deals_empty_farmer_desc;
+
+  /// No description provided for @deals_empty_buyer_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún no tienes tratos'**
+  String get deals_empty_buyer_title;
+
+  /// No description provided for @deals_empty_buyer_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuando realices una oferta en el mercado sobre una cosecha, podrás seguirla y negociar aquí.'**
+  String get deals_empty_buyer_desc;
+
+  /// No description provided for @deals_explore_market.
+  ///
+  /// In es, this message translates to:
+  /// **'Explorar mercado'**
+  String get deals_explore_market;
+
+  /// No description provided for @deals_view_crops.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver mis cosechas'**
+  String get deals_view_crops;
+
+  /// No description provided for @deal_detail_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Detalle del trato'**
+  String get deal_detail_title;
+
+  /// No description provided for @deal_counterpart_buyer.
+  ///
+  /// In es, this message translates to:
+  /// **'Comprador'**
+  String get deal_counterpart_buyer;
+
+  /// No description provided for @deal_counterpart_farmer.
+  ///
+  /// In es, this message translates to:
+  /// **'Productor'**
+  String get deal_counterpart_farmer;
+
+  /// No description provided for @deal_history_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Historial de ofertas'**
+  String get deal_history_title;
+
+  /// No description provided for @deal_waiting_buyer.
+  ///
+  /// In es, this message translates to:
+  /// **'Esperando respuesta del comprador'**
+  String get deal_waiting_buyer;
+
+  /// No description provided for @deal_waiting_farmer.
+  ///
+  /// In es, this message translates to:
+  /// **'Esperando respuesta del productor'**
+  String get deal_waiting_farmer;
+
+  /// No description provided for @deal_accept_offer.
+  ///
+  /// In es, this message translates to:
+  /// **'Aceptar oferta'**
+  String get deal_accept_offer;
+
+  /// No description provided for @deal_counter_offer.
+  ///
+  /// In es, this message translates to:
+  /// **'Contraofertar'**
+  String get deal_counter_offer;
+
+  /// No description provided for @deal_reject_deal.
+  ///
+  /// In es, this message translates to:
+  /// **'Rechazar trato'**
+  String get deal_reject_deal;
+
+  /// No description provided for @deal_cancel_deal.
+  ///
+  /// In es, this message translates to:
+  /// **'Cancelar propuesta'**
+  String get deal_cancel_deal;
+
+  /// No description provided for @deal_accept_success.
+  ///
+  /// In es, this message translates to:
+  /// **'Trato acordado correctamente'**
+  String get deal_accept_success;
+
+  /// No description provided for @deal_reject_success.
+  ///
+  /// In es, this message translates to:
+  /// **'El trato ha sido rechazado'**
+  String get deal_reject_success;
+
+  /// No description provided for @deal_reject_confirm_title.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Rechazar este trato?'**
+  String get deal_reject_confirm_title;
+
+  /// No description provided for @deal_reject_confirm_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta acción no se puede deshacer y el trato se cerrará.'**
+  String get deal_reject_confirm_desc;
+
+  /// No description provided for @counter_offer_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Contraoferta'**
+  String get counter_offer_title;
+
+  /// No description provided for @counter_offer_subtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Modifica los términos de la oferta para la cosecha seleccionada.'**
+  String get counter_offer_subtitle;
+
+  /// No description provided for @counter_offer_quantity_label.
+  ///
+  /// In es, this message translates to:
+  /// **'Cantidad (kg)'**
+  String get counter_offer_quantity_label;
+
+  /// No description provided for @counter_offer_price_label.
+  ///
+  /// In es, this message translates to:
+  /// **'Precio propuesto por kg'**
+  String get counter_offer_price_label;
+
+  /// No description provided for @counter_offer_delivery_label.
+  ///
+  /// In es, this message translates to:
+  /// **'Método de entrega'**
+  String get counter_offer_delivery_label;
+
+  /// No description provided for @counter_offer_message_label.
+  ///
+  /// In es, this message translates to:
+  /// **'Mensaje (Opcional)'**
+  String get counter_offer_message_label;
+
+  /// No description provided for @counter_offer_message_hint.
+  ///
+  /// In es, this message translates to:
+  /// **'Explica el motivo de tu contraoferta'**
+  String get counter_offer_message_hint;
+
+  /// No description provided for @counter_offer_send_btn.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviar contraoferta'**
+  String get counter_offer_send_btn;
+
+  /// No description provided for @counter_offer_success.
+  ///
+  /// In es, this message translates to:
+  /// **'Contraoferta enviada exitosamente'**
+  String get counter_offer_success;
 }
 
 class _AppLocalizationsDelegate

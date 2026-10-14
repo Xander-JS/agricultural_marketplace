@@ -655,4 +655,123 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get offer_sheet_val_max_stock => 'Quantity exceeds available stock';
+
+  @override
+  String get deals_title => 'Deals';
+
+  @override
+  String get deals_tab_all => 'All';
+
+  @override
+  String get deals_tab_pending => 'Pending';
+
+  @override
+  String get deals_tab_in_negotiation => 'Negotiating';
+
+  @override
+  String get deals_tab_agreed => 'Agreed';
+
+  @override
+  String get deals_tab_history => 'History';
+
+  @override
+  String get deals_your_turn => 'Your turn';
+
+  @override
+  String get deals_waiting_response => 'Waiting for response';
+
+  @override
+  String get deals_see_deal => 'View deal →';
+
+  @override
+  String get deals_empty_farmer_title => 'You have no deals yet';
+
+  @override
+  String get deals_empty_farmer_desc =>
+      'When a buyer makes an offer on one of your crops, it will appear here.';
+
+  @override
+  String get deals_empty_buyer_title => 'You have no deals yet';
+
+  @override
+  String get deals_empty_buyer_desc =>
+      'When you make an offer on the marketplace for a crop, you can track and negotiate it here.';
+
+  @override
+  String get deals_explore_market => 'Explore market';
+
+  @override
+  String get deals_view_crops => 'View my crops';
+
+  @override
+  String get deal_detail_title => 'Deal Details';
+
+  @override
+  String get deal_counterpart_buyer => 'Buyer';
+
+  @override
+  String get deal_counterpart_farmer => 'Producer';
+
+  @override
+  String get deal_history_title => 'Offer History';
+
+  @override
+  String get deal_waiting_buyer => 'Waiting for buyer response';
+
+  @override
+  String get deal_waiting_farmer => 'Waiting for producer response';
+
+  @override
+  String get deal_accept_offer => 'Accept offer';
+
+  @override
+  String get deal_counter_offer => 'Counteroffer';
+
+  @override
+  String get deal_reject_deal => 'Reject deal';
+
+  @override
+  String get deal_cancel_deal => 'Cancel proposal';
+
+  @override
+  String get deal_accept_success => 'Deal agreed successfully';
+
+  @override
+  String get deal_reject_success => 'The deal has been rejected';
+
+  @override
+  String get deal_reject_confirm_title => 'Reject this deal?';
+
+  @override
+  String get deal_reject_confirm_desc =>
+      'This action cannot be undone and the deal will be closed.';
+
+  @override
+  String get counter_offer_title => 'Counteroffer';
+
+  @override
+  String get counter_offer_subtitle =>
+      'Modify the terms of the offer for the selected crop.';
+
+  @override
+  String get counter_offer_quantity_label => 'Quantity (kg)';
+
+  @override
+  String get counter_offer_price_label => 'Proposed price per kg';
+
+  @override
+  String get counter_offer_delivery_label => 'Delivery method';
+
+  @override
+  String get counter_offer_message_label => 'Message (Optional)';
+
+  @override
+  String get counter_offer_message_hint =>
+      'Explain the reason for your counteroffer';
+
+  @override
+  String get counter_offer_send_btn => 'Send counteroffer';
+
+  @override
+  String get counter_offer_success => 'Counteroffer sent successfully';
 }

@@ -949,6 +949,378 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'No se pudieron cargar los datos.'**
   String get profile_no_data;
+
+  /// No description provided for @market_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Mercado'**
+  String get market_title;
+
+  /// No description provided for @market_title_farmer.
+  ///
+  /// In es, this message translates to:
+  /// **'Mi Mercado'**
+  String get market_title_farmer;
+
+  /// No description provided for @market_publish_btn.
+  ///
+  /// In es, this message translates to:
+  /// **'Publicar'**
+  String get market_publish_btn;
+
+  /// No description provided for @market_empty_farmer_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún no tienes cosechas publicadas'**
+  String get market_empty_farmer_title;
+
+  /// No description provided for @market_empty_farmer_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Comienza a ofrecer tus productos en el mercado agrícola creando tu primera publicación.'**
+  String get market_empty_farmer_desc;
+
+  /// No description provided for @market_publish_first.
+  ///
+  /// In es, this message translates to:
+  /// **'Publicar mi primera cosecha'**
+  String get market_publish_first;
+
+  /// No description provided for @market_empty_buyer_title.
+  ///
+  /// In es, this message translates to:
+  /// **'No hay cosechas disponibles'**
+  String get market_empty_buyer_title;
+
+  /// No description provided for @market_empty_buyer_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'En este momento no hay productos agrícolas disponibles para negociar. Intenta actualizar más tarde.'**
+  String get market_empty_buyer_desc;
+
+  /// No description provided for @market_retry.
+  ///
+  /// In es, this message translates to:
+  /// **'Reintentar'**
+  String get market_retry;
+
+  /// No description provided for @market_refresh.
+  ///
+  /// In es, this message translates to:
+  /// **'Actualizar'**
+  String get market_refresh;
+
+  /// No description provided for @market_publish_options_title.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Cómo deseas publicar?'**
+  String get market_publish_options_title;
+
+  /// No description provided for @market_publish_manual.
+  ///
+  /// In es, this message translates to:
+  /// **'Publicación Manual'**
+  String get market_publish_manual;
+
+  /// No description provided for @market_publish_manual_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Llena el formulario paso a paso'**
+  String get market_publish_manual_desc;
+
+  /// No description provided for @market_publish_voice.
+  ///
+  /// In es, this message translates to:
+  /// **'Publicación por Nota de Voz'**
+  String get market_publish_voice;
+
+  /// No description provided for @market_publish_voice_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuéntanos qué quieres publicar (Con IA)'**
+  String get market_publish_voice_desc;
+
+  /// No description provided for @market_ai_coming_soon.
+  ///
+  /// In es, this message translates to:
+  /// **'Función de IA próximamente...'**
+  String get market_ai_coming_soon;
+
+  /// No description provided for @crop_card_available.
+  ///
+  /// In es, this message translates to:
+  /// **'Disponible'**
+  String get crop_card_available;
+
+  /// No description provided for @crop_card_price_per_kg.
+  ///
+  /// In es, this message translates to:
+  /// **'Precio / kg'**
+  String get crop_card_price_per_kg;
+
+  /// No description provided for @crop_detail_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Detalle de Cosecha'**
+  String get crop_detail_title;
+
+  /// No description provided for @crop_detail_delete_tooltip.
+  ///
+  /// In es, this message translates to:
+  /// **'Borrar'**
+  String get crop_detail_delete_tooltip;
+
+  /// No description provided for @crop_detail_edit_tooltip.
+  ///
+  /// In es, this message translates to:
+  /// **'Editar'**
+  String get crop_detail_edit_tooltip;
+
+  /// No description provided for @crop_detail_confirm_delete_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Borrar Publicación'**
+  String get crop_detail_confirm_delete_title;
+
+  /// No description provided for @crop_detail_confirm_delete_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Estás seguro de que deseas borrar esta publicación? Esta acción no se puede deshacer.'**
+  String get crop_detail_confirm_delete_desc;
+
+  /// No description provided for @crop_detail_delete_success.
+  ///
+  /// In es, this message translates to:
+  /// **'Publicación borrada exitosamente'**
+  String get crop_detail_delete_success;
+
+  /// No description provided for @crop_detail_delete_error.
+  ///
+  /// In es, this message translates to:
+  /// **'Error al borrar'**
+  String get crop_detail_delete_error;
+
+  /// No description provided for @crop_detail_status_updated.
+  ///
+  /// In es, this message translates to:
+  /// **'Estado actualizado'**
+  String get crop_detail_status_updated;
+
+  /// No description provided for @crop_detail_price_per_kg.
+  ///
+  /// In es, this message translates to:
+  /// **'Precio por kg'**
+  String get crop_detail_price_per_kg;
+
+  /// No description provided for @crop_detail_available_stock.
+  ///
+  /// In es, this message translates to:
+  /// **'Total Disponible'**
+  String get crop_detail_available_stock;
+
+  /// No description provided for @crop_detail_min_order.
+  ///
+  /// In es, this message translates to:
+  /// **'Pedido Mínimo'**
+  String get crop_detail_min_order;
+
+  /// No description provided for @crop_detail_location.
+  ///
+  /// In es, this message translates to:
+  /// **'Ubicación'**
+  String get crop_detail_location;
+
+  /// No description provided for @crop_detail_early_sale.
+  ///
+  /// In es, this message translates to:
+  /// **'Venta Anticipada'**
+  String get crop_detail_early_sale;
+
+  /// No description provided for @crop_detail_estimated_harvest.
+  ///
+  /// In es, this message translates to:
+  /// **'Fecha est. de cosecha'**
+  String get crop_detail_estimated_harvest;
+
+  /// No description provided for @crop_detail_estimated_yield.
+  ///
+  /// In es, this message translates to:
+  /// **'Rendimiento estimado'**
+  String get crop_detail_estimated_yield;
+
+  /// No description provided for @crop_detail_quick_actions.
+  ///
+  /// In es, this message translates to:
+  /// **'Acciones Rápidas'**
+  String get crop_detail_quick_actions;
+
+  /// No description provided for @crop_detail_pause_crop.
+  ///
+  /// In es, this message translates to:
+  /// **'Pausar Publicación'**
+  String get crop_detail_pause_crop;
+
+  /// No description provided for @crop_detail_activate_crop.
+  ///
+  /// In es, this message translates to:
+  /// **'Activar Publicación'**
+  String get crop_detail_activate_crop;
+
+  /// No description provided for @crop_detail_view_negotiations.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver Negociaciones'**
+  String get crop_detail_view_negotiations;
+
+  /// No description provided for @crop_detail_negotiations_coming_soon.
+  ///
+  /// In es, this message translates to:
+  /// **'Próximamente: Ver negociaciones'**
+  String get crop_detail_negotiations_coming_soon;
+
+  /// No description provided for @crop_detail_make_offer.
+  ///
+  /// In es, this message translates to:
+  /// **'Hacer oferta / Negociar'**
+  String get crop_detail_make_offer;
+
+  /// No description provided for @crop_detail_farmer_info.
+  ///
+  /// In es, this message translates to:
+  /// **'Información del Productor'**
+  String get crop_detail_farmer_info;
+
+  /// No description provided for @crop_detail_producer.
+  ///
+  /// In es, this message translates to:
+  /// **'Productor'**
+  String get crop_detail_producer;
+
+  /// No description provided for @crop_detail_contact.
+  ///
+  /// In es, this message translates to:
+  /// **'Contacto'**
+  String get crop_detail_contact;
+
+  /// No description provided for @offer_sheet_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Nueva Oferta'**
+  String get offer_sheet_title;
+
+  /// No description provided for @offer_sheet_subtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Inicia una propuesta de negociación para este producto'**
+  String get offer_sheet_subtitle;
+
+  /// No description provided for @offer_sheet_quantity_label.
+  ///
+  /// In es, this message translates to:
+  /// **'Cantidad (kg)'**
+  String get offer_sheet_quantity_label;
+
+  /// No description provided for @offer_sheet_price_label.
+  ///
+  /// In es, this message translates to:
+  /// **'Precio propuesto por kg'**
+  String get offer_sheet_price_label;
+
+  /// No description provided for @offer_sheet_delivery_label.
+  ///
+  /// In es, this message translates to:
+  /// **'Método de entrega'**
+  String get offer_sheet_delivery_label;
+
+  /// No description provided for @offer_sheet_delivery_farm.
+  ///
+  /// In es, this message translates to:
+  /// **'En finca'**
+  String get offer_sheet_delivery_farm;
+
+  /// No description provided for @offer_sheet_delivery_hub.
+  ///
+  /// In es, this message translates to:
+  /// **'Punto de acopio'**
+  String get offer_sheet_delivery_hub;
+
+  /// No description provided for @offer_sheet_delivery_destination.
+  ///
+  /// In es, this message translates to:
+  /// **'Destino final'**
+  String get offer_sheet_delivery_destination;
+
+  /// No description provided for @offer_sheet_delivery_agree.
+  ///
+  /// In es, this message translates to:
+  /// **'A acordar con el productor'**
+  String get offer_sheet_delivery_agree;
+
+  /// No description provided for @offer_sheet_message_label.
+  ///
+  /// In es, this message translates to:
+  /// **'Mensaje para el productor (Opcional)'**
+  String get offer_sheet_message_label;
+
+  /// No description provided for @offer_sheet_message_hint.
+  ///
+  /// In es, this message translates to:
+  /// **'Explica detalles de tu propuesta o requerimientos de entrega'**
+  String get offer_sheet_message_hint;
+
+  /// No description provided for @offer_sheet_estimated_total.
+  ///
+  /// In es, this message translates to:
+  /// **'Total estimado'**
+  String get offer_sheet_estimated_total;
+
+  /// No description provided for @offer_sheet_submit_btn.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviar propuesta'**
+  String get offer_sheet_submit_btn;
+
+  /// No description provided for @offer_sheet_submitting.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviando...'**
+  String get offer_sheet_submitting;
+
+  /// No description provided for @offer_sheet_success.
+  ///
+  /// In es, this message translates to:
+  /// **'Propuesta enviada exitosamente'**
+  String get offer_sheet_success;
+
+  /// No description provided for @offer_sheet_existing_negotiation.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya tienes una negociación activa para este cultivo'**
+  String get offer_sheet_existing_negotiation;
+
+  /// No description provided for @offer_sheet_val_required.
+  ///
+  /// In es, this message translates to:
+  /// **'Campo requerido'**
+  String get offer_sheet_val_required;
+
+  /// No description provided for @offer_sheet_val_positive.
+  ///
+  /// In es, this message translates to:
+  /// **'Debe ser mayor a 0'**
+  String get offer_sheet_val_positive;
+
+  /// No description provided for @offer_sheet_val_min_order.
+  ///
+  /// In es, this message translates to:
+  /// **'La cantidad no cumple con el pedido mínimo'**
+  String get offer_sheet_val_min_order;
+
+  /// No description provided for @offer_sheet_val_max_stock.
+  ///
+  /// In es, this message translates to:
+  /// **'La cantidad supera el stock disponible'**
+  String get offer_sheet_val_max_stock;
 }
 
 class _AppLocalizationsDelegate

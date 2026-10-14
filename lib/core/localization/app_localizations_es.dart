@@ -465,4 +465,201 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get profile_no_data => 'No se pudieron cargar los datos.';
+
+  @override
+  String get market_title => 'Mercado';
+
+  @override
+  String get market_title_farmer => 'Mi Mercado';
+
+  @override
+  String get market_publish_btn => 'Publicar';
+
+  @override
+  String get market_empty_farmer_title => 'Aún no tienes cosechas publicadas';
+
+  @override
+  String get market_empty_farmer_desc =>
+      'Comienza a ofrecer tus productos en el mercado agrícola creando tu primera publicación.';
+
+  @override
+  String get market_publish_first => 'Publicar mi primera cosecha';
+
+  @override
+  String get market_empty_buyer_title => 'No hay cosechas disponibles';
+
+  @override
+  String get market_empty_buyer_desc =>
+      'En este momento no hay productos agrícolas disponibles para negociar. Intenta actualizar más tarde.';
+
+  @override
+  String get market_retry => 'Reintentar';
+
+  @override
+  String get market_refresh => 'Actualizar';
+
+  @override
+  String get market_publish_options_title => '¿Cómo deseas publicar?';
+
+  @override
+  String get market_publish_manual => 'Publicación Manual';
+
+  @override
+  String get market_publish_manual_desc => 'Llena el formulario paso a paso';
+
+  @override
+  String get market_publish_voice => 'Publicación por Nota de Voz';
+
+  @override
+  String get market_publish_voice_desc =>
+      'Cuéntanos qué quieres publicar (Con IA)';
+
+  @override
+  String get market_ai_coming_soon => 'Función de IA próximamente...';
+
+  @override
+  String get crop_card_available => 'Disponible';
+
+  @override
+  String get crop_card_price_per_kg => 'Precio / kg';
+
+  @override
+  String get crop_detail_title => 'Detalle de Cosecha';
+
+  @override
+  String get crop_detail_delete_tooltip => 'Borrar';
+
+  @override
+  String get crop_detail_edit_tooltip => 'Editar';
+
+  @override
+  String get crop_detail_confirm_delete_title => 'Borrar Publicación';
+
+  @override
+  String get crop_detail_confirm_delete_desc =>
+      '¿Estás seguro de que deseas borrar esta publicación? Esta acción no se puede deshacer.';
+
+  @override
+  String get crop_detail_delete_success => 'Publicación borrada exitosamente';
+
+  @override
+  String get crop_detail_delete_error => 'Error al borrar';
+
+  @override
+  String get crop_detail_status_updated => 'Estado actualizado';
+
+  @override
+  String get crop_detail_price_per_kg => 'Precio por kg';
+
+  @override
+  String get crop_detail_available_stock => 'Total Disponible';
+
+  @override
+  String get crop_detail_min_order => 'Pedido Mínimo';
+
+  @override
+  String get crop_detail_location => 'Ubicación';
+
+  @override
+  String get crop_detail_early_sale => 'Venta Anticipada';
+
+  @override
+  String get crop_detail_estimated_harvest => 'Fecha est. de cosecha';
+
+  @override
+  String get crop_detail_estimated_yield => 'Rendimiento estimado';
+
+  @override
+  String get crop_detail_quick_actions => 'Acciones Rápidas';
+
+  @override
+  String get crop_detail_pause_crop => 'Pausar Publicación';
+
+  @override
+  String get crop_detail_activate_crop => 'Activar Publicación';
+
+  @override
+  String get crop_detail_view_negotiations => 'Ver Negociaciones';
+
+  @override
+  String get crop_detail_negotiations_coming_soon =>
+      'Próximamente: Ver negociaciones';
+
+  @override
+  String get crop_detail_make_offer => 'Hacer oferta / Negociar';
+
+  @override
+  String get crop_detail_farmer_info => 'Información del Productor';
+
+  @override
+  String get crop_detail_producer => 'Productor';
+
+  @override
+  String get crop_detail_contact => 'Contacto';
+
+  @override
+  String get offer_sheet_title => 'Nueva Oferta';
+
+  @override
+  String get offer_sheet_subtitle =>
+      'Inicia una propuesta de negociación para este producto';
+
+  @override
+  String get offer_sheet_quantity_label => 'Cantidad (kg)';
+
+  @override
+  String get offer_sheet_price_label => 'Precio propuesto por kg';
+
+  @override
+  String get offer_sheet_delivery_label => 'Método de entrega';
+
+  @override
+  String get offer_sheet_delivery_farm => 'En finca';
+
+  @override
+  String get offer_sheet_delivery_hub => 'Punto de acopio';
+
+  @override
+  String get offer_sheet_delivery_destination => 'Destino final';
+
+  @override
+  String get offer_sheet_delivery_agree => 'A acordar con el productor';
+
+  @override
+  String get offer_sheet_message_label =>
+      'Mensaje para el productor (Opcional)';
+
+  @override
+  String get offer_sheet_message_hint =>
+      'Explica detalles de tu propuesta o requerimientos de entrega';
+
+  @override
+  String get offer_sheet_estimated_total => 'Total estimado';
+
+  @override
+  String get offer_sheet_submit_btn => 'Enviar propuesta';
+
+  @override
+  String get offer_sheet_submitting => 'Enviando...';
+
+  @override
+  String get offer_sheet_success => 'Propuesta enviada exitosamente';
+
+  @override
+  String get offer_sheet_existing_negotiation =>
+      'Ya tienes una negociación activa para este cultivo';
+
+  @override
+  String get offer_sheet_val_required => 'Campo requerido';
+
+  @override
+  String get offer_sheet_val_positive => 'Debe ser mayor a 0';
+
+  @override
+  String get offer_sheet_val_min_order =>
+      'La cantidad no cumple con el pedido mínimo';
+
+  @override
+  String get offer_sheet_val_max_stock =>
+      'La cantidad supera el stock disponible';
 }

@@ -460,4 +460,199 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profile_no_data => 'Could not load data.';
+
+  @override
+  String get market_title => 'Market';
+
+  @override
+  String get market_title_farmer => 'My Market';
+
+  @override
+  String get market_publish_btn => 'Publish';
+
+  @override
+  String get market_empty_farmer_title => 'You have no published crops yet';
+
+  @override
+  String get market_empty_farmer_desc =>
+      'Start offering your products in the agricultural marketplace by creating your first post.';
+
+  @override
+  String get market_publish_first => 'Publish my first crop';
+
+  @override
+  String get market_empty_buyer_title => 'No crops available';
+
+  @override
+  String get market_empty_buyer_desc =>
+      'Currently there are no agricultural products available for negotiation. Try refreshing later.';
+
+  @override
+  String get market_retry => 'Retry';
+
+  @override
+  String get market_refresh => 'Refresh';
+
+  @override
+  String get market_publish_options_title => 'How do you want to publish?';
+
+  @override
+  String get market_publish_manual => 'Manual Publication';
+
+  @override
+  String get market_publish_manual_desc => 'Fill in the form step by step';
+
+  @override
+  String get market_publish_voice => 'Voice Note Publication';
+
+  @override
+  String get market_publish_voice_desc =>
+      'Tell us what you want to publish (AI Powered)';
+
+  @override
+  String get market_ai_coming_soon => 'AI feature coming soon...';
+
+  @override
+  String get crop_card_available => 'Available';
+
+  @override
+  String get crop_card_price_per_kg => 'Price / kg';
+
+  @override
+  String get crop_detail_title => 'Crop Details';
+
+  @override
+  String get crop_detail_delete_tooltip => 'Delete';
+
+  @override
+  String get crop_detail_edit_tooltip => 'Edit';
+
+  @override
+  String get crop_detail_confirm_delete_title => 'Delete Crop';
+
+  @override
+  String get crop_detail_confirm_delete_desc =>
+      'Are you sure you want to delete this publication? This action cannot be undone.';
+
+  @override
+  String get crop_detail_delete_success => 'Publication deleted successfully';
+
+  @override
+  String get crop_detail_delete_error => 'Error deleting publication';
+
+  @override
+  String get crop_detail_status_updated => 'Status updated';
+
+  @override
+  String get crop_detail_price_per_kg => 'Price per kg';
+
+  @override
+  String get crop_detail_available_stock => 'Total Available';
+
+  @override
+  String get crop_detail_min_order => 'Minimum Order';
+
+  @override
+  String get crop_detail_location => 'Location';
+
+  @override
+  String get crop_detail_early_sale => 'Pre-Sale';
+
+  @override
+  String get crop_detail_estimated_harvest => 'Est. harvest date';
+
+  @override
+  String get crop_detail_estimated_yield => 'Estimated yield';
+
+  @override
+  String get crop_detail_quick_actions => 'Quick Actions';
+
+  @override
+  String get crop_detail_pause_crop => 'Pause Publication';
+
+  @override
+  String get crop_detail_activate_crop => 'Activate Publication';
+
+  @override
+  String get crop_detail_view_negotiations => 'View Negotiations';
+
+  @override
+  String get crop_detail_negotiations_coming_soon =>
+      'Coming soon: View negotiations';
+
+  @override
+  String get crop_detail_make_offer => 'Make offer / Negotiate';
+
+  @override
+  String get crop_detail_farmer_info => 'Farmer Information';
+
+  @override
+  String get crop_detail_producer => 'Producer';
+
+  @override
+  String get crop_detail_contact => 'Contact';
+
+  @override
+  String get offer_sheet_title => 'New Offer';
+
+  @override
+  String get offer_sheet_subtitle =>
+      'Start a negotiation proposal for this crop';
+
+  @override
+  String get offer_sheet_quantity_label => 'Quantity (kg)';
+
+  @override
+  String get offer_sheet_price_label => 'Proposed price per kg';
+
+  @override
+  String get offer_sheet_delivery_label => 'Delivery method';
+
+  @override
+  String get offer_sheet_delivery_farm => 'On farm';
+
+  @override
+  String get offer_sheet_delivery_hub => 'Collection point';
+
+  @override
+  String get offer_sheet_delivery_destination => 'Final destination';
+
+  @override
+  String get offer_sheet_delivery_agree => 'Agree with producer';
+
+  @override
+  String get offer_sheet_message_label => 'Message for producer (Optional)';
+
+  @override
+  String get offer_sheet_message_hint =>
+      'Explain details of your proposal or delivery requirements';
+
+  @override
+  String get offer_sheet_estimated_total => 'Estimated total';
+
+  @override
+  String get offer_sheet_submit_btn => 'Send proposal';
+
+  @override
+  String get offer_sheet_submitting => 'Sending...';
+
+  @override
+  String get offer_sheet_success => 'Proposal sent successfully';
+
+  @override
+  String get offer_sheet_existing_negotiation =>
+      'You already have an active negotiation for this crop';
+
+  @override
+  String get offer_sheet_val_required => 'Required field';
+
+  @override
+  String get offer_sheet_val_positive => 'Must be greater than 0';
+
+  @override
+  String get offer_sheet_val_min_order =>
+      'Quantity does not meet minimum order required';
+
+  @override
+  String get offer_sheet_val_max_stock => 'Quantity exceeds available stock';
 }

@@ -1549,6 +1549,84 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Contraoferta enviada exitosamente'**
   String get counter_offer_success;
+
+  /// No description provided for @purchases_tab_all.
+  ///
+  /// In es, this message translates to:
+  /// **'Todas'**
+  String get purchases_tab_all;
+
+  /// No description provided for @purchases_tab_agreed.
+  ///
+  /// In es, this message translates to:
+  /// **'Acordadas'**
+  String get purchases_tab_agreed;
+
+  /// No description provided for @purchases_tab_completed.
+  ///
+  /// In es, this message translates to:
+  /// **'Completadas'**
+  String get purchases_tab_completed;
+
+  /// No description provided for @purchases_empty_title.
+  ///
+  /// In es, this message translates to:
+  /// **'No tienes compras aún'**
+  String get purchases_empty_title;
+
+  /// No description provided for @purchases_empty_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Aquí aparecerán los acuerdos que hayas cerrado con los productores agrícolas y tus compras completadas.'**
+  String get purchases_empty_desc;
+
+  /// No description provided for @purchases_empty_action.
+  ///
+  /// In es, this message translates to:
+  /// **'Explorar mercado'**
+  String get purchases_empty_action;
+
+  /// No description provided for @purchases_total_agreed.
+  ///
+  /// In es, this message translates to:
+  /// **'Acuerdos vigentes'**
+  String get purchases_total_agreed;
+
+  /// No description provided for @purchases_total_invested.
+  ///
+  /// In es, this message translates to:
+  /// **'Total pactado'**
+  String get purchases_total_invested;
+
+  /// No description provided for @purchases_total_volume.
+  ///
+  /// In es, this message translates to:
+  /// **'Volumen total'**
+  String get purchases_total_volume;
+
+  /// No description provided for @purchases_view_detail.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver detalle del acuerdo →'**
+  String get purchases_view_detail;
+
+  /// No description provided for @purchases_delivery_method.
+  ///
+  /// In es, this message translates to:
+  /// **'Entrega'**
+  String get purchases_delivery_method;
+
+  /// No description provided for @purchases_status_agreed.
+  ///
+  /// In es, this message translates to:
+  /// **'Acordada'**
+  String get purchases_status_agreed;
+
+  /// No description provided for @purchases_status_completed.
+  ///
+  /// In es, this message translates to:
+  /// **'Completada'**
+  String get purchases_status_completed;
 }
 
 class _AppLocalizationsDelegate

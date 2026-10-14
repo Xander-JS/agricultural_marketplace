@@ -774,4 +774,44 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get counter_offer_success => 'Counteroffer sent successfully';
+
+  @override
+  String get purchases_tab_all => 'All';
+
+  @override
+  String get purchases_tab_agreed => 'Agreed';
+
+  @override
+  String get purchases_tab_completed => 'Completed';
+
+  @override
+  String get purchases_empty_title => 'No purchases yet';
+
+  @override
+  String get purchases_empty_desc =>
+      'Here you will see deals you have agreed on with farmers and your completed purchase history.';
+
+  @override
+  String get purchases_empty_action => 'Explore market';
+
+  @override
+  String get purchases_total_agreed => 'Active deals';
+
+  @override
+  String get purchases_total_invested => 'Total agreed';
+
+  @override
+  String get purchases_total_volume => 'Total volume';
+
+  @override
+  String get purchases_view_detail => 'View deal details →';
+
+  @override
+  String get purchases_delivery_method => 'Delivery';
+
+  @override
+  String get purchases_status_agreed => 'Agreed';
+
+  @override
+  String get purchases_status_completed => 'Completed';
 }

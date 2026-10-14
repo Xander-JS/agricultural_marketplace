@@ -241,5 +241,18 @@
   "counter_offer_message_label": "Message (Optional)",
   "counter_offer_message_hint": "Explain the reason for your counteroffer",
   "counter_offer_send_btn": "Send counteroffer",
-  "counter_offer_success": "Counteroffer sent successfully"
+  "counter_offer_success": "Counteroffer sent successfully",
+  "purchases_tab_all": "All",
+  "purchases_tab_agreed": "Agreed",
+  "purchases_tab_completed": "Completed",
+  "purchases_empty_title": "No purchases yet",
+  "purchases_empty_desc": "Here you will see deals you have agreed on with farmers and your completed purchase history.",
+  "purchases_empty_action": "Explore market",
+  "purchases_total_agreed": "Active deals",
+  "purchases_total_invested": "Total agreed",
+  "purchases_total_volume": "Total volume",
+  "purchases_view_detail": "View deal details →",
+  "purchases_delivery_method": "Delivery",
+  "purchases_status_agreed": "Agreed",
+  "purchases_status_completed": "Completed"
 }

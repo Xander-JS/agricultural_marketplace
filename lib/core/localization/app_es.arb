@@ -241,5 +241,18 @@
   "counter_offer_message_label": "Mensaje (Opcional)",
   "counter_offer_message_hint": "Explica el motivo de tu contraoferta",
   "counter_offer_send_btn": "Enviar contraoferta",
-  "counter_offer_success": "Contraoferta enviada exitosamente"
+  "counter_offer_success": "Contraoferta enviada exitosamente",
+  "purchases_tab_all": "Todas",
+  "purchases_tab_agreed": "Acordadas",
+  "purchases_tab_completed": "Completadas",
+  "purchases_empty_title": "No tienes compras aún",
+  "purchases_empty_desc": "Aquí aparecerán los acuerdos que hayas cerrado con los productores agrícolas y tus compras completadas.",
+  "purchases_empty_action": "Explorar mercado",
+  "purchases_total_agreed": "Acuerdos vigentes",
+  "purchases_total_invested": "Total pactado",
+  "purchases_total_volume": "Volumen total",
+  "purchases_view_detail": "Ver detalle del acuerdo →",
+  "purchases_delivery_method": "Entrega",
+  "purchases_status_agreed": "Acordada",
+  "purchases_status_completed": "Completada"
 }

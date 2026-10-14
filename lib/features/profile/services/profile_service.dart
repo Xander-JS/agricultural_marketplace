@@ -13,31 +13,45 @@ class ProfileService {
         .eq('id', userId)
         .single();
 
-    // 2. Obtener configuraciones del granjero
-    Map<String, dynamic> settingsMap = {};
-    try {
-      final settingsResponse = await _supabase
-          .from('farmer_settings')
-          .select()
-          .eq('user_id', userId)
-          .maybeSingle();
+    final role = (profileResponse['role'] as String? ?? 'agricultor').trim().toLowerCase();
+    final isBuyer = role == 'comprador' || role == 'comerciante';
 
-      if (settingsResponse != null) {
-        settingsMap = settingsResponse;
-      } else {
-        // Si no existen, se crean por defecto
-        final newSettings = {
+    // 2. Obtener configuraciones: solo consultar o insertar farmer_settings si es agricultor
+    Map<String, dynamic> settingsMap = {};
+    if (!isBuyer) {
+      try {
+        final settingsResponse = await _supabase
+            .from('farmer_settings')
+            .select()
+            .eq('user_id', userId)
+            .maybeSingle();
+
+        if (settingsResponse != null) {
+          settingsMap = settingsResponse;
+        } else {
+          // Si no existen, se crean por defecto para el agricultor
+          final newSettings = {
+            'user_id': userId,
+            'enable_early_sale': false,
+            'share_phone': false,
+            'share_location': false,
+            'share_whatsapp': false,
+          };
+          await _supabase.from('farmer_settings').insert(newSettings);
+          settingsMap = newSettings;
+        }
+      } catch (e) {
+        // Ignorar error y usar valores por defecto si falla
+        settingsMap = {
           'user_id': userId,
           'enable_early_sale': false,
           'share_phone': false,
           'share_location': false,
           'share_whatsapp': false,
         };
-        await _supabase.from('farmer_settings').insert(newSettings);
-        settingsMap = newSettings;
       }
-    } catch (e) {
-      // Ignorar error y usar valores por defecto si falla
+    } else {
+      // Para comerciante no se persiste en farmer_settings
       settingsMap = {
         'user_id': userId,
         'enable_early_sale': false,
@@ -47,33 +61,53 @@ class ProfileService {
       };
     }
 
-    // 3. Obtener estadísticas
-    // a. Publicados (Cultivos creados por este agricultor que no estén en borrador)
-    final cropsResponse = await _supabase
-        .from('crops')
-        .select('id, status')
-        .eq('farmer_id', userId)
-        .neq('status', 'borrador');
-    
-    final publishedCount = cropsResponse.length;
-
-    // b. Negociando y Cerradas
-    // Buscamos negociaciones que estén vinculadas a los cultivos de este granjero
-    final negotiationsResponse = await _supabase
-        .from('negotiations')
-        .select('id, status, crops!inner(farmer_id)')
-        .eq('crops.farmer_id', userId);
-
+    // 3. Obtener estadísticas según el rol
+    int publishedCount = 0;
     int negotiatingCount = 0;
     int closedCount = 0;
 
-    for (var neg in negotiationsResponse) {
-      final status = neg['status'] as String?;
-      if (status == 'completada' || status == 'cancelada' || status == 'rechazada') {
-        closedCount++;
-      } else {
-        // Asumimos que cualquier otro estado (propuesta, aceptada, etc.) es 'negociando'
-        negotiatingCount++;
+    if (!isBuyer) {
+      // Estadísticas del Agricultor
+      // a. Publicados (Cultivos creados por este agricultor que no estén en borrador)
+      final cropsResponse = await _supabase
+          .from('crops')
+          .select('id, status')
+          .eq('farmer_id', userId)
+          .neq('status', 'borrador');
+      
+      publishedCount = cropsResponse.length;
+
+      // b. Negociando y Cerradas
+      // Negociaciones vinculadas a los cultivos de este agricultor
+      final negotiationsResponse = await _supabase
+          .from('negotiations')
+          .select('id, status, crops!inner(farmer_id)')
+          .eq('crops.farmer_id', userId);
+
+      for (var neg in negotiationsResponse) {
+        final status = neg['status'] as String?;
+        if (status == 'completada' || status == 'cancelada' || status == 'rechazada') {
+          closedCount++;
+        } else {
+          negotiatingCount++;
+        }
+      }
+    } else {
+      // Estadísticas del Comerciante
+      // Consultar negociaciones donde el usuario es el comprador (buyer_id)
+      final buyerNegotiations = await _supabase
+          .from('negotiations')
+          .select('id, status')
+          .eq('buyer_id', userId);
+
+      for (var neg in buyerNegotiations) {
+        final status = (neg['status'] as String? ?? '').toLowerCase();
+        if (status == 'completada') {
+          closedCount++;
+        } else if (status != 'cancelada' && status != 'rechazada') {
+          // Negociaciones en curso (propuesta, contraofertada, acordada)
+          negotiatingCount++;
+        }
       }
     }
 

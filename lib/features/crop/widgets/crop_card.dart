@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/crop_model.dart';
 import '../services/crop_service.dart';
 import 'crop_status_badge.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/localization/app_localizations.dart';
 
 class CropCard extends StatelessWidget {
   final CropModel crop;
@@ -16,7 +18,9 @@ class CropCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final cropService = CropService(); // En un caso real usar Inyección de dependencias
+    final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
+    final cropService = CropService();
 
     String? primaryImageUrl;
     if (crop.imageUrls.isNotEmpty) {
@@ -24,9 +28,15 @@ class CropCard extends StatelessWidget {
     }
 
     return Card(
-      elevation: 2,
+      elevation: 0,
       margin: const EdgeInsets.only(bottom: 16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        ),
+      ),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
@@ -42,10 +52,10 @@ class CropCard extends StatelessWidget {
                       height: 140,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
-                        return _buildImagePlaceholder();
+                        return _buildImagePlaceholder(isDark);
                       },
                     )
-                  : _buildImagePlaceholder(),
+                  : _buildImagePlaceholder(isDark),
             ),
             
             // Detalles de la cosecha
@@ -62,6 +72,7 @@ class CropCard extends StatelessWidget {
                           crop.title,
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
+                            color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -75,7 +86,7 @@ class CropCard extends StatelessWidget {
                   Text(
                     crop.cropType,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey.shade600,
+                      color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -85,14 +96,16 @@ class CropCard extends StatelessWidget {
                       _buildInfoItem(
                         context,
                         icon: Icons.inventory_2_outlined,
-                        label: 'Disponible',
+                        label: l10n?.crop_card_available ?? 'Disponible',
                         value: '${crop.stockTotal.toStringAsFixed(0)} kg',
+                        isDark: isDark,
                       ),
                       _buildInfoItem(
                         context,
                         icon: Icons.sell_outlined,
-                        label: 'Precio / kg',
+                        label: l10n?.crop_card_price_per_kg ?? 'Precio / kg',
                         value: '\$${crop.pricePerKg.toStringAsFixed(0)}',
+                        isDark: isDark,
                       ),
                     ],
                   ),
@@ -105,15 +118,15 @@ class CropCard extends StatelessWidget {
     );
   }
 
-  Widget _buildImagePlaceholder() {
+  Widget _buildImagePlaceholder(bool isDark) {
     return Container(
       height: 140,
-      color: Colors.grey.shade200,
+      color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSecondary.withValues(alpha: 0.3),
       child: Center(
         child: Icon(
           Icons.image_not_supported_outlined,
           size: 48,
-          color: Colors.grey.shade400,
+          color: isDark ? AppColors.darkTextDisabled : AppColors.lightTextDisabled,
         ),
       ),
     );
@@ -124,10 +137,15 @@ class CropCard extends StatelessWidget {
     required IconData icon,
     required String label,
     required String value,
+    required bool isDark,
   }) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: Colors.grey.shade600),
+        Icon(
+          icon,
+          size: 16,
+          color: isDark ? AppColors.darkTertiary : AppColors.lightTertiary,
+        ),
         const SizedBox(width: 4),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -136,14 +154,15 @@ class CropCard extends StatelessWidget {
               label,
               style: TextStyle(
                 fontSize: 10,
-                color: Colors.grey.shade600,
+                color: isDark ? AppColors.darkTextDisabled : AppColors.lightTextSecondary,
               ),
             ),
             Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 14,
+                color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
               ),
             ),
           ],

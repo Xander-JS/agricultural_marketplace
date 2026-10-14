@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/crop_model.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/app_colors.dart';
 
 class CropStatusBadge extends StatelessWidget {
   final CropStatus status;
@@ -9,29 +9,38 @@ class CropStatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     Color backgroundColor;
     Color textColor;
     String label;
 
     switch (status) {
       case CropStatus.borrador:
-        backgroundColor = Colors.grey.shade200;
-        textColor = Colors.grey.shade700;
+        backgroundColor = isDark
+            ? AppColors.darkSurfaceVariant
+            : AppColors.lightSecondary.withValues(alpha: 0.5);
+        textColor = isDark ? AppColors.darkTextDisabled : AppColors.lightTextSecondary;
         label = 'Borrador';
         break;
       case CropStatus.activa:
-        backgroundColor = const Color(0xFFE8F5E9); // Light Green
-        textColor = const Color(0xFF2E7D32); // Dark Green
+        backgroundColor = isDark
+            ? AppColors.success.withValues(alpha: 0.2)
+            : AppColors.successLight;
+        textColor = isDark ? AppColors.darkTertiary : AppColors.success;
         label = 'Activa';
         break;
       case CropStatus.pausada:
-        backgroundColor = const Color(0xFFFFF3E0); // Light Orange
-        textColor = const Color(0xFFE65100); // Dark Orange
+        backgroundColor = isDark
+            ? AppColors.warning.withValues(alpha: 0.2)
+            : AppColors.warningLight;
+        textColor = isDark ? const Color(0xFFFFB74D) : AppColors.warning;
         label = 'Pausada';
         break;
       case CropStatus.agotada:
-        backgroundColor = const Color(0xFFFFEBEE); // Light Red
-        textColor = const Color(0xFFC62828); // Dark Red
+        backgroundColor = isDark
+            ? AppColors.error.withValues(alpha: 0.2)
+            : AppColors.errorLight;
+        textColor = isDark ? const Color(0xFFEF9A9A) : AppColors.error;
         label = 'Agotada';
         break;
     }
@@ -41,7 +50,7 @@ class CropStatusBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: textColor.withOpacity(0.2)),
+        border: Border.all(color: textColor.withValues(alpha: 0.25)),
       ),
       child: Text(
         label,

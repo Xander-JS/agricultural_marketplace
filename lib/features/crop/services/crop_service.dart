@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/crop_model.dart';
-import '../models/crop_image_model.dart';
 
 class CropService {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -16,6 +15,24 @@ class CropService {
 
     return (response as List<dynamic>)
         .map((json) => CropModel.fromJson(json as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Obtiene todas las cosechas activas para compradores en el mercado
+  Future<List<CropModel>> getActiveMarketplaceCrops({String? excludeFarmerId}) async {
+    var filterBuilder = _supabase
+        .from('crops')
+        .select('*, crop_images(image_path, is_primary)')
+        .eq('status', 'activa');
+
+    if (excludeFarmerId != null && excludeFarmerId.isNotEmpty) {
+      filterBuilder = filterBuilder.neq('farmer_id', excludeFarmerId);
+    }
+
+    final response = await filterBuilder.order('created_at', ascending: false);
+    return (response as List<dynamic>)
+        .map((json) => CropModel.fromJson(json as Map<String, dynamic>))
+        .where((crop) => crop.stockTotal > 0)
         .toList();
   }
 

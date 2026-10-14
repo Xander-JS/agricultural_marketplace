@@ -108,4 +108,92 @@ class NegotiationService {
       throw Exception('Error al cancelar la oferta: $e');
     }
   }
+
+  /// Consulta si el comprador ya tiene una negociación activa para este cultivo
+  Future<NegotiationModel?> getActiveNegotiationForCrop({
+    required String cropId,
+    required String buyerId,
+  }) async {
+    try {
+      final response = await _supabase
+          .from('negotiations')
+          .select('''
+            *,
+            crops(*),
+            negotiation_offers(*)
+          ''')
+          .eq('crop_id', cropId)
+          .eq('buyer_id', buyerId)
+          .inFilter('status', [
+            NegotiationStatus.propuesta.toShortString(),
+            NegotiationStatus.contraofertada.toShortString(),
+            NegotiationStatus.acordada.toShortString(),
+          ])
+          .maybeSingle();
+
+      if (response == null) return null;
+      return NegotiationModel.fromJson(response);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Crea una nueva negociación iniciada por el comprador con su oferta inicial
+  Future<NegotiationModel> createNegotiation({
+    required String cropId,
+    required double quantityKg,
+    required double proposedPricePerKg,
+    required String deliveryMethod,
+    String? message,
+  }) async {
+    try {
+      final user = _supabase.auth.currentUser;
+      if (user == null) throw Exception('Usuario no autenticado');
+
+      // 1. Validar que no exista negociación activa previa para el mismo cultivo
+      final existing = await getActiveNegotiationForCrop(
+        cropId: cropId,
+        buyerId: user.id,
+      );
+      if (existing != null) {
+        throw Exception('Ya tienes una negociación activa para este cultivo');
+      }
+
+      final now = DateTime.now().toIso8601String();
+
+      // 2. Insertar registro en negotiations
+      final negResponse = await _supabase
+          .from('negotiations')
+          .insert({
+            'crop_id': cropId,
+            'buyer_id': user.id,
+            'status': NegotiationStatus.propuesta.toShortString(),
+            'current_responder': 'farmer',
+            'created_at': now,
+            'updated_at': now,
+          })
+          .select()
+          .single();
+
+      final negotiationId = negResponse['id'] as String;
+
+      // 3. Insertar primera oferta en negotiation_offers
+      await _supabase.from('negotiation_offers').insert({
+        'negotiation_id': negotiationId,
+        'sender_id': user.id,
+        'quantity_kg': quantityKg,
+        'proposed_price_per_kg': proposedPricePerKg,
+        'delivery_method': deliveryMethod,
+        if (message != null && message.trim().isNotEmpty) 'message': message.trim(),
+        'created_at': now,
+      });
+
+      // 4. Retornar la negociación completa
+      return await getNegotiationById(negotiationId);
+    } catch (e) {
+      if (e is Exception) rethrow;
+      throw Exception('Error al iniciar negociación: $e');
+    }
+  }
 }
+

@@ -30,14 +30,14 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
     if (_isBuyer) {
       _screens = [
         MarketplaceScreen(role: widget.role),
-        const DealsScreen(),
+        DealsScreen(role: widget.role),
         const PurchasesScreen(),
         const FarmerProfileScreen(),
       ];
     } else {
       _screens = [
         MarketplaceScreen(role: widget.role),
-        const DealsScreen(),
+        DealsScreen(role: widget.role),
         const CostsScreen(),
         const FarmerProfileScreen(),
       ];

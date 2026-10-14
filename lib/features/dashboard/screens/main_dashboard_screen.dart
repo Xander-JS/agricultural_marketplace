@@ -28,18 +28,18 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
   void initState() {
     super.initState();
     if (_isBuyer) {
-      _screens = const [
-        MarketplaceScreen(),
-        DealsScreen(),
-        PurchasesScreen(),
-        FarmerProfileScreen(),
+      _screens = [
+        MarketplaceScreen(role: widget.role),
+        const DealsScreen(),
+        const PurchasesScreen(),
+        const FarmerProfileScreen(),
       ];
     } else {
-      _screens = const [
-        MarketplaceScreen(),
-        DealsScreen(),
-        CostsScreen(),
-        FarmerProfileScreen(),
+      _screens = [
+        MarketplaceScreen(role: widget.role),
+        const DealsScreen(),
+        const CostsScreen(),
+        const FarmerProfileScreen(),
       ];
     }
   }

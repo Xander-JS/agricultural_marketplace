@@ -379,4 +379,90 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get purchases_placeholder_desc =>
       'Aquí podrás consultar tus compras acordadas y el historial de operaciones completadas.';
+
+  @override
+  String get profile_title_farmer => 'Mi Finca';
+
+  @override
+  String get profile_title_buyer => 'Mi Perfil';
+
+  @override
+  String get profile_stats_title => 'Estadísticas';
+
+  @override
+  String get profile_stat_published => 'Publicados';
+
+  @override
+  String get profile_stat_negotiating => 'Negociando';
+
+  @override
+  String get profile_stat_closed_farmer => 'Cerradas';
+
+  @override
+  String get profile_stat_closed_buyer => 'Cerrados';
+
+  @override
+  String get profile_settings_title => 'Configuración';
+
+  @override
+  String get profile_contact_info => 'Información de contacto';
+
+  @override
+  String get profile_email => 'Correo electrónico';
+
+  @override
+  String get profile_phone => 'Número de teléfono';
+
+  @override
+  String get profile_negotiation_options => 'Opciones de negociación';
+
+  @override
+  String get profile_enable_early_sale => 'Habilitar precompra';
+
+  @override
+  String get profile_visibility_negotiation =>
+      'Visibilidad durante una negociación';
+
+  @override
+  String get profile_visibility_phone => 'Teléfono';
+
+  @override
+  String get profile_visibility_location => 'Ubicación';
+
+  @override
+  String get profile_visibility_whatsapp => 'WhatsApp';
+
+  @override
+  String get profile_accessibility => 'Accesibilidad';
+
+  @override
+  String get profile_dark_mode => 'Modo oscuro';
+
+  @override
+  String get profile_english_language => 'Idioma inglés';
+
+  @override
+  String get profile_logout => 'Cerrar sesión';
+
+  @override
+  String get profile_logout_confirm_title => '¿Cerrar sesión?';
+
+  @override
+  String get profile_logout_confirm_desc =>
+      '¿Estás seguro de que deseas salir de tu cuenta?';
+
+  @override
+  String get profile_cancel => 'Cancelar';
+
+  @override
+  String get profile_updated_photo => 'Foto de perfil actualizada';
+
+  @override
+  String get profile_save_settings_error => 'Error al guardar configuración';
+
+  @override
+  String get profile_load_error => 'Error al cargar el perfil';
+
+  @override
+  String get profile_no_data => 'No se pudieron cargar los datos.';
 }

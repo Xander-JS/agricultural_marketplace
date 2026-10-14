@@ -781,6 +781,174 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Aquí podrás consultar tus compras acordadas y el historial de operaciones completadas.'**
   String get purchases_placeholder_desc;
+
+  /// No description provided for @profile_title_farmer.
+  ///
+  /// In es, this message translates to:
+  /// **'Mi Finca'**
+  String get profile_title_farmer;
+
+  /// No description provided for @profile_title_buyer.
+  ///
+  /// In es, this message translates to:
+  /// **'Mi Perfil'**
+  String get profile_title_buyer;
+
+  /// No description provided for @profile_stats_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Estadísticas'**
+  String get profile_stats_title;
+
+  /// No description provided for @profile_stat_published.
+  ///
+  /// In es, this message translates to:
+  /// **'Publicados'**
+  String get profile_stat_published;
+
+  /// No description provided for @profile_stat_negotiating.
+  ///
+  /// In es, this message translates to:
+  /// **'Negociando'**
+  String get profile_stat_negotiating;
+
+  /// No description provided for @profile_stat_closed_farmer.
+  ///
+  /// In es, this message translates to:
+  /// **'Cerradas'**
+  String get profile_stat_closed_farmer;
+
+  /// No description provided for @profile_stat_closed_buyer.
+  ///
+  /// In es, this message translates to:
+  /// **'Cerrados'**
+  String get profile_stat_closed_buyer;
+
+  /// No description provided for @profile_settings_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Configuración'**
+  String get profile_settings_title;
+
+  /// No description provided for @profile_contact_info.
+  ///
+  /// In es, this message translates to:
+  /// **'Información de contacto'**
+  String get profile_contact_info;
+
+  /// No description provided for @profile_email.
+  ///
+  /// In es, this message translates to:
+  /// **'Correo electrónico'**
+  String get profile_email;
+
+  /// No description provided for @profile_phone.
+  ///
+  /// In es, this message translates to:
+  /// **'Número de teléfono'**
+  String get profile_phone;
+
+  /// No description provided for @profile_negotiation_options.
+  ///
+  /// In es, this message translates to:
+  /// **'Opciones de negociación'**
+  String get profile_negotiation_options;
+
+  /// No description provided for @profile_enable_early_sale.
+  ///
+  /// In es, this message translates to:
+  /// **'Habilitar precompra'**
+  String get profile_enable_early_sale;
+
+  /// No description provided for @profile_visibility_negotiation.
+  ///
+  /// In es, this message translates to:
+  /// **'Visibilidad durante una negociación'**
+  String get profile_visibility_negotiation;
+
+  /// No description provided for @profile_visibility_phone.
+  ///
+  /// In es, this message translates to:
+  /// **'Teléfono'**
+  String get profile_visibility_phone;
+
+  /// No description provided for @profile_visibility_location.
+  ///
+  /// In es, this message translates to:
+  /// **'Ubicación'**
+  String get profile_visibility_location;
+
+  /// No description provided for @profile_visibility_whatsapp.
+  ///
+  /// In es, this message translates to:
+  /// **'WhatsApp'**
+  String get profile_visibility_whatsapp;
+
+  /// No description provided for @profile_accessibility.
+  ///
+  /// In es, this message translates to:
+  /// **'Accesibilidad'**
+  String get profile_accessibility;
+
+  /// No description provided for @profile_dark_mode.
+  ///
+  /// In es, this message translates to:
+  /// **'Modo oscuro'**
+  String get profile_dark_mode;
+
+  /// No description provided for @profile_english_language.
+  ///
+  /// In es, this message translates to:
+  /// **'Idioma inglés'**
+  String get profile_english_language;
+
+  /// No description provided for @profile_logout.
+  ///
+  /// In es, this message translates to:
+  /// **'Cerrar sesión'**
+  String get profile_logout;
+
+  /// No description provided for @profile_logout_confirm_title.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Cerrar sesión?'**
+  String get profile_logout_confirm_title;
+
+  /// No description provided for @profile_logout_confirm_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Estás seguro de que deseas salir de tu cuenta?'**
+  String get profile_logout_confirm_desc;
+
+  /// No description provided for @profile_cancel.
+  ///
+  /// In es, this message translates to:
+  /// **'Cancelar'**
+  String get profile_cancel;
+
+  /// No description provided for @profile_updated_photo.
+  ///
+  /// In es, this message translates to:
+  /// **'Foto de perfil actualizada'**
+  String get profile_updated_photo;
+
+  /// No description provided for @profile_save_settings_error.
+  ///
+  /// In es, this message translates to:
+  /// **'Error al guardar configuración'**
+  String get profile_save_settings_error;
+
+  /// No description provided for @profile_load_error.
+  ///
+  /// In es, this message translates to:
+  /// **'Error al cargar el perfil'**
+  String get profile_load_error;
+
+  /// No description provided for @profile_no_data.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudieron cargar los datos.'**
+  String get profile_no_data;
 }
 
 class _AppLocalizationsDelegate

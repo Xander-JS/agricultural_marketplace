@@ -375,4 +375,89 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get purchases_placeholder_desc =>
       'Here you can check your agreed purchases and completed transaction history.';
+
+  @override
+  String get profile_title_farmer => 'My Farm';
+
+  @override
+  String get profile_title_buyer => 'My Profile';
+
+  @override
+  String get profile_stats_title => 'Statistics';
+
+  @override
+  String get profile_stat_published => 'Published';
+
+  @override
+  String get profile_stat_negotiating => 'Negotiating';
+
+  @override
+  String get profile_stat_closed_farmer => 'Closed';
+
+  @override
+  String get profile_stat_closed_buyer => 'Closed';
+
+  @override
+  String get profile_settings_title => 'Settings';
+
+  @override
+  String get profile_contact_info => 'Contact Information';
+
+  @override
+  String get profile_email => 'Email';
+
+  @override
+  String get profile_phone => 'Phone Number';
+
+  @override
+  String get profile_negotiation_options => 'Negotiation Options';
+
+  @override
+  String get profile_enable_early_sale => 'Enable Pre-Sale';
+
+  @override
+  String get profile_visibility_negotiation => 'Visibility during negotiation';
+
+  @override
+  String get profile_visibility_phone => 'Phone';
+
+  @override
+  String get profile_visibility_location => 'Location';
+
+  @override
+  String get profile_visibility_whatsapp => 'WhatsApp';
+
+  @override
+  String get profile_accessibility => 'Accessibility';
+
+  @override
+  String get profile_dark_mode => 'Dark Mode';
+
+  @override
+  String get profile_english_language => 'English Language';
+
+  @override
+  String get profile_logout => 'Log Out';
+
+  @override
+  String get profile_logout_confirm_title => 'Log Out?';
+
+  @override
+  String get profile_logout_confirm_desc =>
+      'Are you sure you want to log out of your account?';
+
+  @override
+  String get profile_cancel => 'Cancel';
+
+  @override
+  String get profile_updated_photo => 'Profile picture updated';
+
+  @override
+  String get profile_save_settings_error => 'Error saving settings';
+
+  @override
+  String get profile_load_error => 'Error loading profile';
+
+  @override
+  String get profile_no_data => 'Could not load data.';
 }

@@ -351,4 +351,32 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get otp_verification_appbar_title => 'Verificación SMS';
+
+  @override
+  String get nav_market => 'Mercado';
+
+  @override
+  String get nav_my_market => 'Mi mercado';
+
+  @override
+  String get nav_deals => 'Tratos';
+
+  @override
+  String get nav_costs => 'Costos';
+
+  @override
+  String get nav_purchases => 'Compras';
+
+  @override
+  String get nav_my_farm => 'Mi Finca';
+
+  @override
+  String get purchases_title => 'Compras';
+
+  @override
+  String get purchases_placeholder_title => 'Módulo de Compras';
+
+  @override
+  String get purchases_placeholder_desc =>
+      'Aquí podrás consultar tus compras acordadas y el historial de operaciones completadas.';
 }

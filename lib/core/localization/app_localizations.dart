@@ -727,6 +727,60 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Verificación SMS'**
   String get otp_verification_appbar_title;
+
+  /// No description provided for @nav_market.
+  ///
+  /// In es, this message translates to:
+  /// **'Mercado'**
+  String get nav_market;
+
+  /// No description provided for @nav_my_market.
+  ///
+  /// In es, this message translates to:
+  /// **'Mi mercado'**
+  String get nav_my_market;
+
+  /// No description provided for @nav_deals.
+  ///
+  /// In es, this message translates to:
+  /// **'Tratos'**
+  String get nav_deals;
+
+  /// No description provided for @nav_costs.
+  ///
+  /// In es, this message translates to:
+  /// **'Costos'**
+  String get nav_costs;
+
+  /// No description provided for @nav_purchases.
+  ///
+  /// In es, this message translates to:
+  /// **'Compras'**
+  String get nav_purchases;
+
+  /// No description provided for @nav_my_farm.
+  ///
+  /// In es, this message translates to:
+  /// **'Mi Finca'**
+  String get nav_my_farm;
+
+  /// No description provided for @purchases_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Compras'**
+  String get purchases_title;
+
+  /// No description provided for @purchases_placeholder_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Módulo de Compras'**
+  String get purchases_placeholder_title;
+
+  /// No description provided for @purchases_placeholder_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Aquí podrás consultar tus compras acordadas y el historial de operaciones completadas.'**
+  String get purchases_placeholder_desc;
 }
 
 class _AppLocalizationsDelegate

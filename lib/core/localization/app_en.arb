@@ -104,5 +104,14 @@
   "otp_verification_subtitle": "A 6 digit code has been sent to your cell phone.",
   "otp_verification_didnt_receive": "Didn't receive the code? ",
   "otp_verification_resend": "Resend.",
-  "otp_verification_appbar_title": "SMS Verification"
+  "otp_verification_appbar_title": "SMS Verification",
+  "nav_market": "Market",
+  "nav_my_market": "My Market",
+  "nav_deals": "Deals",
+  "nav_costs": "Costs",
+  "nav_purchases": "Purchases",
+  "nav_my_farm": "My Farm",
+  "purchases_title": "Purchases",
+  "purchases_placeholder_title": "Purchases Module",
+  "purchases_placeholder_desc": "Here you can check your agreed purchases and completed transaction history."
 }

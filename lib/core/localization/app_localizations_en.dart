@@ -347,4 +347,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get otp_verification_appbar_title => 'SMS Verification';
+
+  @override
+  String get nav_market => 'Market';
+
+  @override
+  String get nav_my_market => 'My Market';
+
+  @override
+  String get nav_deals => 'Deals';
+
+  @override
+  String get nav_costs => 'Costs';
+
+  @override
+  String get nav_purchases => 'Purchases';
+
+  @override
+  String get nav_my_farm => 'My Farm';
+
+  @override
+  String get purchases_title => 'Purchases';
+
+  @override
+  String get purchases_placeholder_title => 'Purchases Module';
+
+  @override
+  String get purchases_placeholder_desc =>
+      'Here you can check your agreed purchases and completed transaction history.';
 }

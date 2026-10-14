@@ -31,7 +31,13 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
       _screens = [
         MarketplaceScreen(role: widget.role),
         DealsScreen(role: widget.role),
-        const PurchasesScreen(),
+        PurchasesScreen(
+          onExploreMarket: () {
+            setState(() {
+              _currentIndex = 0;
+            });
+          },
+        ),
         const FarmerProfileScreen(),
       ];
     } else {

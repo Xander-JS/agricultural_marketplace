@@ -6,29 +6,70 @@ import '../models/negotiation_offer_model.dart';
 import '../models/negotiation_status.dart';
 import '../services/negotiation_service.dart';
 import 'counter_offer_screen.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/localization/app_localizations.dart';
 
 class DealDetailScreen extends StatefulWidget {
   final String negotiationId;
+  final String? role;
+  final NegotiationModel? initialNegotiation;
+  final NegotiationService? service;
 
-  const DealDetailScreen({super.key, required this.negotiationId});
+  const DealDetailScreen({
+    super.key,
+    required this.negotiationId,
+    this.role,
+    this.initialNegotiation,
+    this.service,
+  });
 
   @override
   State<DealDetailScreen> createState() => _DealDetailScreenState();
 }
 
 class _DealDetailScreenState extends State<DealDetailScreen> {
-  final NegotiationService _service = NegotiationService();
+  late final NegotiationService _service;
   bool _isLoading = true;
   String? _errorMessage;
   NegotiationModel? _negotiation;
 
+  bool get _isBuyer {
+    if (widget.role != null) {
+      final r = widget.role!.trim().toLowerCase();
+      return r == 'comprador' || r == 'comerciante';
+    }
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user != null && _negotiation != null) {
+      return _negotiation!.buyerId == user.id;
+    }
+    return false;
+  }
+
+  bool get _isMyTurn {
+    if (_negotiation == null) return false;
+    if (_isBuyer) {
+      return _negotiation!.currentResponder == 'buyer';
+    } else {
+      return _negotiation!.currentResponder == 'farmer';
+    }
+  }
+
   @override
   void initState() {
     super.initState();
-    _loadData();
+    _service = widget.service ?? NegotiationService();
+
+    if (widget.initialNegotiation != null) {
+      _negotiation = widget.initialNegotiation;
+      _isLoading = false;
+    } else {
+      _loadData();
+    }
   }
 
   Future<void> _loadData() async {
+    if (widget.initialNegotiation != null && _negotiation != null) return;
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -36,66 +77,102 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
 
     try {
       final negotiation = await _service.getNegotiationById(widget.negotiationId);
-      setState(() {
-        _negotiation = negotiation;
-      });
+      if (mounted) {
+        setState(() {
+          _negotiation = negotiation;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _errorMessage = e.toString();
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString();
+        });
+      }
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
+      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
       appBar: AppBar(
-        title: const Text('Detalle del trato'),
+        title: Text(l10n?.deal_detail_title ?? 'Detalle del trato'),
       ),
-      body: _buildBody(),
+      body: _buildBody(isDark, l10n),
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(bool isDark, AppLocalizations? l10n) {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
     if (_errorMessage != null) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
-            const SizedBox(height: 16),
-            Text('Ocurrió un error: $_errorMessage', textAlign: TextAlign.center),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _loadData,
-              child: const Text('Reintentar'),
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 48, color: AppColors.error),
+              const SizedBox(height: 16),
+              Text(
+                'Ocurrió un error: $_errorMessage',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _loadData,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isDark ? AppColors.darkTertiary : AppColors.lightTertiary,
+                  foregroundColor: isDark ? AppColors.darkBackground : Colors.white,
+                ),
+                child: Text(l10n?.market_retry ?? 'Reintentar'),
+              ),
+            ],
+          ),
         ),
       );
     }
 
     if (_negotiation == null) {
-      return const Center(child: Text('No se encontró el trato.'));
+      return Center(
+        child: Text(
+          'No se encontró el trato.',
+          style: TextStyle(
+            color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+          ),
+        ),
+      );
     }
 
     final currencyFormatter = NumberFormat.currency(locale: 'es_CO', symbol: '\$', decimalDigits: 0);
     final n = _negotiation!;
-    
-    // Sort offers chronologically
-    final offers = n.offers ?? [];
+
+    final offers = n.offers != null ? List<NegotiationOfferModel>.from(n.offers!) : <NegotiationOfferModel>[];
     offers.sort((a, b) => a.createdAt.compareTo(b.createdAt));
-    
+
     final latestOffer = offers.isNotEmpty ? offers.last : null;
-    final buyerName = n.buyerProfile?['full_name'] ?? 'Comprador Anónimo';
+
+    final counterpartLabel = _isBuyer
+        ? (l10n?.deal_counterpart_farmer ?? 'Productor')
+        : (l10n?.deal_counterpart_buyer ?? 'Comprador');
+
+    final counterpartName = _isBuyer
+        ? (n.farmerProfile?['full_name'] ?? 'Productor (${n.crop?.municipality ?? ""})')
+        : (n.buyerProfile?['full_name'] ?? 'Comprador');
 
     return RefreshIndicator(
       onRefresh: _loadData,
@@ -107,65 +184,90 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
           children: [
             Text(
               n.crop?.title ?? 'Cosecha desconocida',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+              ),
             ),
             const SizedBox(height: 8),
-            Text('Comprador', style: TextStyle(color: Colors.grey.shade600)),
-            Text(buyerName, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-            
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16.0),
-              child: Divider(),
-            ),
-            
-            if (latestOffer != null) ...[
-              _buildInfoRow('Cantidad', '${latestOffer.quantityKg.toStringAsFixed(0)} kg'),
-              const SizedBox(height: 8),
-              _buildInfoRow('Precio por kg', currencyFormatter.format(latestOffer.proposedPricePerKg)),
-              const SizedBox(height: 8),
-              _buildInfoRow('Método de entrega', latestOffer.deliveryMethod),
-              
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 16.0),
-                child: Divider(),
+            Text(
+              counterpartLabel,
+              style: TextStyle(
+                color: isDark ? AppColors.darkTextDisabled : AppColors.lightTextSecondary,
+                fontSize: 13,
               ),
+            ),
+            Text(
+              counterpartName,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+              ),
+            ),
+
+            Divider(height: 32, color: isDark ? AppColors.darkDivider : AppColors.lightDivider),
+
+            if (latestOffer != null) ...[
+              _buildInfoRow('Cantidad', '${latestOffer.quantityKg.toStringAsFixed(0)} kg', isDark),
+              const SizedBox(height: 10),
+              _buildInfoRow(
+                'Precio por kg',
+                currencyFormatter.format(latestOffer.proposedPricePerKg),
+                isDark,
+              ),
+              const SizedBox(height: 10),
+              _buildInfoRow('Método de entrega', latestOffer.deliveryMethod, isDark),
+              Divider(height: 32, color: isDark ? AppColors.darkDivider : AppColors.lightDivider),
             ],
 
-            _buildInfoRow('Estado', n.status.toDisplayName(), isStatus: true, status: n.status),
-
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16.0),
-              child: Divider(),
+            _buildInfoRow(
+              'Estado',
+              n.status.toDisplayName(),
+              isDark,
+              isStatus: true,
+              status: n.status,
             ),
 
-            const Text(
-              'Historial de ofertas',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Divider(height: 32, color: isDark ? AppColors.darkDivider : AppColors.lightDivider),
+
+            Text(
+              l10n?.deal_history_title ?? 'Historial de ofertas',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+              ),
             ),
             const SizedBox(height: 16),
-            ...offers.map((offer) => _buildOfferBubble(offer, n)).toList(),
+            ...offers.map((offer) => _buildOfferBubble(offer, n, isDark, l10n)),
 
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
 
-            _buildActionButtons(n, latestOffer),
+            _buildActionButtons(n, latestOffer, isDark, l10n),
 
             if (n.status == NegotiationStatus.completada) ...[
               const SizedBox(height: 16),
-              const Divider(),
+              Divider(color: isDark ? AppColors.darkDivider : AppColors.lightDivider),
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: () {
-                    // TODO: Navigate to Rating screen
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('La calificación de compradores estará disponible pronto.')),
+                      const SnackBar(
+                        content: Text('La calificación de tratos estará disponible pronto.'),
+                      ),
                     );
                   },
                   icon: const Icon(Icons.star_outline),
-                  label: const Text('Calificar comprador'),
+                  label: Text(_isBuyer ? 'Calificar productor' : 'Calificar comprador'),
                   style: ElevatedButton.styleFrom(
+                    backgroundColor: isDark ? AppColors.darkTertiary : AppColors.lightTertiary,
+                    foregroundColor: isDark ? AppColors.darkBackground : Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
               ),
@@ -177,81 +279,119 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
     );
   }
 
-  Widget _buildInfoRow(String label, String value, {bool isStatus = false, NegotiationStatus? status}) {
+  Widget _buildInfoRow(
+    String label,
+    String value,
+    bool isDark, {
+    bool isStatus = false,
+    NegotiationStatus? status,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: TextStyle(color: Colors.grey.shade700, fontSize: 16)),
+        Text(
+          label,
+          style: TextStyle(
+            color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+            fontSize: 15,
+          ),
+        ),
         if (isStatus && status != null)
-          _buildStatusBadge(status)
+          _buildStatusBadge(status, isDark)
         else
-          Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+            ),
+          ),
       ],
     );
   }
 
-  Widget _buildStatusBadge(NegotiationStatus status) {
+  Widget _buildStatusBadge(NegotiationStatus status, bool isDark) {
     Color color;
     switch (status) {
       case NegotiationStatus.propuesta:
-        color = Colors.blue;
+        color = isDark ? const Color(0xFF64B5F6) : AppColors.info;
         break;
       case NegotiationStatus.contraofertada:
-        color = Colors.orange;
+        color = isDark ? const Color(0xFFFFB74D) : AppColors.warning;
         break;
       case NegotiationStatus.acordada:
-        color = Colors.green;
+        color = isDark ? AppColors.darkTertiary : AppColors.success;
         break;
       case NegotiationStatus.completada:
-        color = Colors.teal;
+        color = isDark ? const Color(0xFF80CBC4) : const Color(0xFF00897B);
         break;
       case NegotiationStatus.rechazada:
       case NegotiationStatus.cancelada:
-        color = Colors.red;
+        color = isDark ? const Color(0xFFEF9A9A) : AppColors.error;
         break;
     }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: isDark ? 0.2 : 0.12),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.5)),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Text(
         status.toDisplayName(),
         style: TextStyle(
           color: color,
-          fontSize: 14,
+          fontSize: 13,
           fontWeight: FontWeight.bold,
         ),
       ),
     );
   }
 
-  Widget _buildOfferBubble(NegotiationOfferModel offer, NegotiationModel negotiation) {
+  Widget _buildOfferBubble(
+    NegotiationOfferModel offer,
+    NegotiationModel negotiation,
+    bool isDark,
+    AppLocalizations? l10n,
+  ) {
     final currencyFormatter = NumberFormat.currency(locale: 'es_CO', symbol: '\$', decimalDigits: 0);
-    final formatter = DateFormat('hh:mm a', 'es_CO');
-    
+    final formatter = DateFormat('dd/MM hh:mm a', 'es_CO');
+
     final user = Supabase.instance.client.auth.currentUser;
     final isMe = offer.senderId == user?.id;
+
+    final senderLabel = isMe
+        ? 'Tú'
+        : (_isBuyer
+            ? (l10n?.deal_counterpart_farmer ?? 'Productor')
+            : (l10n?.deal_counterpart_buyer ?? 'Comprador'));
+
+    final primaryThemeColor = isDark ? AppColors.darkTertiary : AppColors.lightTertiary;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: isMe ? Theme.of(context).primaryColor.withOpacity(0.1) : Colors.grey.shade100,
+          color: isMe
+              ? (isDark
+                  ? AppColors.darkSurfaceVariant
+                  : AppColors.lightSecondary.withValues(alpha: 0.6))
+              : (isDark ? AppColors.darkSurface : AppColors.lightSurface),
           borderRadius: BorderRadius.circular(16).copyWith(
-            bottomRight: isMe ? const Radius.circular(0) : const Radius.circular(16),
-            bottomLeft: isMe ? const Radius.circular(16) : const Radius.circular(0),
+            bottomRight: isMe ? const Radius.circular(2) : const Radius.circular(16),
+            bottomLeft: isMe ? const Radius.circular(16) : const Radius.circular(2),
           ),
           border: Border.all(
-            color: isMe ? Theme.of(context).primaryColor.withOpacity(0.3) : Colors.grey.shade300,
+            color: isMe
+                ? primaryThemeColor.withValues(alpha: 0.3)
+                : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
           ),
         ),
-        width: MediaQuery.of(context).size.width * 0.75,
+        width: MediaQuery.of(context).size.width * 0.78,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -259,67 +399,134 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  isMe ? 'Tú' : 'Comprador',
+                  senderLabel,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: isMe ? Theme.of(context).primaryColor : Colors.black87,
+                    color: isMe ? primaryThemeColor : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
                   ),
                 ),
                 Text(
                   formatter.format(offer.createdAt),
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                  style: TextStyle(
+                    color: isDark ? AppColors.darkTextDisabled : AppColors.lightTextDisabled,
+                    fontSize: 11,
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 8),
-            Text('${currencyFormatter.format(offer.proposedPricePerKg)} / kg'),
-            Text('${offer.quantityKg.toStringAsFixed(0)} kg'),
-            Text('Entrega: ${offer.deliveryMethod}'),
+            Text(
+              '${currencyFormatter.format(offer.proposedPricePerKg)} / kg',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
+                color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+              ),
+            ),
+            Text(
+              '${offer.quantityKg.toStringAsFixed(0)} kg',
+              style: TextStyle(
+                color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+              ),
+            ),
+            Text(
+              'Entrega: ${offer.deliveryMethod}',
+              style: TextStyle(
+                color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+              ),
+            ),
             if (offer.message != null && offer.message!.isNotEmpty) ...[
               const SizedBox(height: 8),
-              Text(
-                '"${offer.message}"',
-                style: const TextStyle(fontStyle: FontStyle.italic),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '"${offer.message}"',
+                  style: TextStyle(
+                    fontStyle: FontStyle.italic,
+                    fontSize: 13,
+                    color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                  ),
+                ),
               ),
-            ]
+            ],
           ],
         ),
       ),
     );
   }
 
-  Widget _buildActionButtons(NegotiationModel n, NegotiationOfferModel? latestOffer) {
-    if (n.status == NegotiationStatus.acordada || 
-        n.status == NegotiationStatus.completada || 
-        n.status == NegotiationStatus.rechazada || 
+  Widget _buildActionButtons(
+    NegotiationModel n,
+    NegotiationOfferModel? latestOffer,
+    bool isDark,
+    AppLocalizations? l10n,
+  ) {
+    if (n.status == NegotiationStatus.acordada ||
+        n.status == NegotiationStatus.completada ||
+        n.status == NegotiationStatus.rechazada ||
         n.status == NegotiationStatus.cancelada) {
       return const SizedBox.shrink();
     }
 
-    if (n.currentResponder != 'farmer') {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.orange.shade50,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.orange.shade200),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.hourglass_empty, color: Colors.orange.shade800),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                'Esperando respuesta del comprador',
-                style: TextStyle(color: Colors.orange.shade900),
+    // Si NO es mi turno, mostramos el aviso de espera
+    if (!_isMyTurn) {
+      final waitingMessage = _isBuyer
+          ? (l10n?.deal_waiting_farmer ?? 'Esperando respuesta del productor')
+          : (l10n?.deal_waiting_buyer ?? 'Esperando respuesta del comprador');
+
+      return Column(
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? AppColors.darkSurfaceVariant
+                  : AppColors.warningLight,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: isDark ? AppColors.darkBorder : AppColors.warning.withValues(alpha: 0.3),
               ),
             ),
+            child: Row(
+              children: [
+                Icon(Icons.hourglass_empty, color: isDark ? const Color(0xFFFFB74D) : AppColors.warning),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    waitingMessage,
+                    style: TextStyle(
+                      color: isDark ? AppColors.darkTextPrimary : const Color(0xFFB25E00),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Si el comprador apenas envió propuesta y desea cancelar:
+          if (_isBuyer && n.status == NegotiationStatus.propuesta) ...[
+            const SizedBox(height: 12),
+            OutlinedButton(
+              onPressed: () => _cancelOffer(n),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.error,
+                side: const BorderSide(color: AppColors.error),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: Text(l10n?.deal_cancel_deal ?? 'Cancelar propuesta'),
+            ),
           ],
-        ),
+        ],
       );
     }
 
+    // SÍ es mi turno: Aceptar, Contraofertar o Rechazar
     return Column(
       children: [
         SizedBox(
@@ -328,10 +535,14 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
             onPressed: () => _acceptOffer(n),
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: Colors.green.shade700,
-              foregroundColor: Colors.white,
+              backgroundColor: isDark ? AppColors.darkTertiary : AppColors.lightTertiary,
+              foregroundColor: isDark ? AppColors.darkBackground : Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-            child: const Text('Aceptar oferta', style: TextStyle(fontSize: 16)),
+            child: Text(
+              l10n?.deal_accept_offer ?? 'Aceptar oferta',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
           ),
         ),
         const SizedBox(height: 12),
@@ -341,8 +552,12 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
             onPressed: latestOffer == null ? null : () => _navigateToCounterOffer(n, latestOffer),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-            child: const Text('Contraofertar', style: TextStyle(fontSize: 16)),
+            child: Text(
+              l10n?.deal_counter_offer ?? 'Contraofertar',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
           ),
         ),
         const SizedBox(height: 12),
@@ -351,10 +566,13 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
           child: TextButton(
             onPressed: () => _rejectOffer(n),
             style: TextButton.styleFrom(
-              foregroundColor: Colors.red,
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              foregroundColor: AppColors.error,
+              padding: const EdgeInsets.symmetric(vertical: 14),
             ),
-            child: const Text('Rechazar trato', style: TextStyle(fontSize: 16)),
+            child: Text(
+              l10n?.deal_reject_deal ?? 'Rechazar trato',
+              style: const TextStyle(fontSize: 16),
+            ),
           ),
         ),
       ],
@@ -368,6 +586,8 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
         builder: (context) => CounterOfferScreen(
           negotiation: n,
           latestOffer: latestOffer,
+          role: widget.role,
+          service: _service,
         ),
       ),
     );
@@ -380,19 +600,23 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
   }
 
   Future<void> _acceptOffer(NegotiationModel n) async {
+    final l10n = AppLocalizations.of(context);
     try {
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (context) => const Center(child: CircularProgressIndicator()),
       );
-      
+
       await _service.acceptOffer(n.id);
-      
+
       if (mounted) {
         Navigator.pop(context); // pop loading
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Trato acordado correctamente.')),
+          SnackBar(
+            content: Text(l10n?.deal_accept_success ?? 'Trato acordado correctamente'),
+            backgroundColor: AppColors.success,
+          ),
         );
         _loadData();
       }
@@ -400,27 +624,37 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text(e.toString().replaceFirst('Exception: ', '')),
+            backgroundColor: AppColors.error,
+          ),
         );
       }
     }
   }
 
   Future<void> _rejectOffer(NegotiationModel n) async {
+    final l10n = AppLocalizations.of(context);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('¿Rechazar este trato?'),
-        content: const Text('Esta acción no se puede deshacer y el trato se cerrará.'),
+        title: Text(l10n?.deal_reject_confirm_title ?? '¿Rechazar este trato?'),
+        content: Text(
+          l10n?.deal_reject_confirm_desc ??
+              'Esta acción no se puede deshacer y el trato se cerrará.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+            child: Text(l10n?.profile_cancel ?? 'Cancelar'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
-            child: const Text('Rechazar'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(l10n?.deal_reject_deal ?? 'Rechazar'),
           ),
         ],
       ),
@@ -436,13 +670,16 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
           builder: (context) => const Center(child: CircularProgressIndicator()),
         );
       }
-      
+
       await _service.rejectOffer(n.id);
-      
+
       if (mounted) {
         Navigator.pop(context); // pop loading
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('El trato ha sido rechazado.')),
+          SnackBar(
+            content: Text(l10n?.deal_reject_success ?? 'El trato ha sido rechazado'),
+            backgroundColor: AppColors.error,
+          ),
         );
         _loadData();
       }
@@ -450,7 +687,31 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text(e.toString().replaceFirst('Exception: ', '')),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _cancelOffer(NegotiationModel n) async {
+    try {
+      await _service.cancelOffer(n.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Propuesta cancelada')),
+        );
+        _loadData();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceFirst('Exception: ', '')),
+            backgroundColor: AppColors.error,
+          ),
         );
       }
     }

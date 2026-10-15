@@ -2,13 +2,25 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../auth/login/screens/login_screen.dart';
 import '../models/farmer_profile_data.dart';
 import '../services/profile_service.dart';
 
+/// Pantalla de Perfil compartida entre los roles Agricultor y Comerciante/Comprador.
+///
+/// Conserva intacta la experiencia y opciones de negociación del agricultor,
+/// y adapta dinámicamente las estadísticas (solo Negociando y Cerrados para el comerciante)
+/// y las opciones de configuración, respetando temas claro y oscuro y localización.
 class FarmerProfileScreen extends StatefulWidget {
-  const FarmerProfileScreen({super.key});
+  final FarmerProfileData? initialProfileData;
+
+  const FarmerProfileScreen({
+    super.key,
+    this.initialProfileData,
+  });
 
   @override
   State<FarmerProfileScreen> createState() => _FarmerProfileScreenState();
@@ -17,7 +29,7 @@ class FarmerProfileScreen extends StatefulWidget {
 class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
   final ProfileService _profileService = ProfileService();
   final ImagePicker _imagePicker = ImagePicker();
-  
+
   bool _isLoading = true;
   bool _isSaving = false;
   FarmerProfileData? _profileData;
@@ -26,7 +38,7 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
   bool _isDarkMode = false;
   bool _isEnglish = false;
 
-  // Controladores para la edición de campos
+  // Controladores para la edición de campos de contacto
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
 
@@ -35,6 +47,11 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
   bool _emailSaved = false;
   bool _phoneSaved = false;
   StateSetter? _modalSetState;
+
+  bool get _isBuyer {
+    final role = _profileData?.role.trim().toLowerCase() ?? '';
+    return role == 'comprador' || role == 'comerciante';
+  }
 
   @override
   void initState() {
@@ -62,7 +79,14 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
       }
     });
 
-    _loadProfileData();
+    if (widget.initialProfileData != null) {
+      _profileData = widget.initialProfileData;
+      _emailController.text = _profileData!.email;
+      _phoneController.text = _profileData!.phone;
+      _isLoading = false;
+    } else {
+      _loadProfileData();
+    }
   }
 
   @override
@@ -81,18 +105,25 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
       if (currentUser == null) {
         throw Exception('No hay usuario autenticado. (Modo prueba activo sin sesión)');
       }
-      final userId = currentUser.id;      final data = await _profileService.getFarmerProfileData(userId);
-      setState(() {
-        _profileData = data;
-        _emailController.text = data.email;
-        _phoneController.text = data.phone;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() => _isLoading = false);
+      final userId = currentUser.id;
+      final data = await _profileService.getFarmerProfileData(userId);
       if (mounted) {
+        setState(() {
+          _profileData = data;
+          _emailController.text = data.email;
+          _phoneController.text = data.phone;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        final l10n = AppLocalizations.of(context);
+        setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al cargar el perfil: $e'), backgroundColor: AppColors.error),
+          SnackBar(
+            content: Text('${l10n?.profile_load_error ?? "Error al cargar el perfil"}: $e'),
+            backgroundColor: AppColors.error,
+          ),
         );
       }
     }
@@ -100,8 +131,7 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
 
   Future<void> _checkAndSaveField(String field, String value) async {
     if (_profileData == null) return;
-    
-    // Verificar si realmente cambió
+
     if (field == 'email' && value == _profileData!.email) return;
     if (field == 'phone' && value == _profileData!.phone) return;
 
@@ -136,16 +166,20 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
         );
         _phoneSaved = true;
       }
-      
-      setState(() => _isSaving = false);
-      _modalSetState?.call(() {});
-      
-    } catch (e) {
-      setState(() => _isSaving = false);
-      _modalSetState?.call(() {});
+
       if (mounted) {
+        setState(() => _isSaving = false);
+        _modalSetState?.call(() {});
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        _modalSetState?.call(() {});
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al actualizar dato: $e'), backgroundColor: AppColors.error),
+          SnackBar(
+            content: Text('Error al actualizar dato: $e'),
+            backgroundColor: AppColors.error,
+          ),
         );
       }
     }
@@ -153,8 +187,7 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
 
   Future<void> _updateSettings(FarmerSettingsData newSettings) async {
     if (_profileData == null) return;
-    
-    // Optimistic UI update
+
     setState(() {
       _profileData = FarmerProfileData(
         id: _profileData!.id,
@@ -171,11 +204,14 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
     try {
       await _profileService.updateFarmerSettings(_profileData!.id, newSettings);
     } catch (e) {
-      // Revertir en caso de error
       await _loadProfileData();
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al guardar configuración: $e'), backgroundColor: AppColors.error),
+          SnackBar(
+            content: Text('${l10n?.profile_save_settings_error ?? "Error al guardar configuración"}: $e'),
+            backgroundColor: AppColors.error,
+          ),
         );
       }
     }
@@ -183,7 +219,7 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
 
   Future<void> _pickAndUploadImage() async {
     if (_profileData == null) return;
-    
+
     final XFile? image = await _imagePicker.pickImage(
       source: ImageSource.gallery,
       maxWidth: 800,
@@ -198,49 +234,139 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
       final file = File(image.path);
       await _profileService.uploadProfilePicture(_profileData!.id, file);
       await _loadProfileData();
-      
+
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Foto de perfil actualizada'), backgroundColor: AppColors.success),
+          SnackBar(
+            content: Text(l10n?.profile_updated_photo ?? 'Foto de perfil actualizada'),
+            backgroundColor: AppColors.success,
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al subir imagen: $e'), backgroundColor: AppColors.error),
+          SnackBar(
+            content: Text('Error al subir imagen: $e'),
+            backgroundColor: AppColors.error,
+          ),
         );
       }
     } finally {
-      setState(() => _isSaving = false);
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
+  }
+
+  Future<void> _handleLogout() async {
+    final l10n = AppLocalizations.of(context);
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        final isDark = Theme.of(dialogContext).brightness == Brightness.dark;
+        return AlertDialog(
+          backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+          title: Text(
+            l10n?.profile_logout_confirm_title ?? '¿Cerrar sesión?',
+            style: TextStyle(
+              color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+            ),
+          ),
+          content: Text(
+            l10n?.profile_logout_confirm_desc ?? '¿Estás seguro de que deseas salir de tu cuenta?',
+            style: TextStyle(
+              color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(
+                l10n?.profile_cancel ?? 'Cancelar',
+                style: TextStyle(
+                  color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.error,
+                foregroundColor: Colors.white,
+              ),
+              child: Text(l10n?.profile_logout ?? 'Cerrar sesión'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirm == true) {
+      try {
+        await Supabase.instance.client.auth.signOut();
+      } catch (_) {}
+      if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          (route) => false,
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final backgroundColor = isDark ? AppColors.darkBackground : AppColors.lightBackground;
+    final surfaceColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
+    final textPrimary = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final textSecondary = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final tertiaryColor = isDark ? AppColors.darkTertiary : AppColors.lightTertiary;
+
+    final screenTitle = _isBuyer
+        ? (l10n?.profile_title_buyer ?? 'Mi Perfil')
+        : (l10n?.profile_title_farmer ?? 'Mi Finca');
+
     return Scaffold(
-      backgroundColor: AppColors.lightBackground,
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text('Mi finca', style: TextStyle(color: AppColors.lightTextPrimary, fontWeight: FontWeight.bold)),
-        backgroundColor: AppColors.lightSurface,
+        title: Text(
+          screenTitle,
+          style: AppTextStyles.displaySmall.copyWith(
+            color: textPrimary,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: surfaceColor,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.lightTextPrimary),
+        iconTheme: IconThemeData(color: textPrimary),
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings),
+            icon: const Icon(Icons.settings_outlined),
             onPressed: _isSaving || _profileData == null ? null : _showSettingsBottomSheet,
+            tooltip: l10n?.profile_settings_title ?? 'Configuración',
           ),
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.lightTertiary))
+          ? Center(child: CircularProgressIndicator(color: tertiaryColor))
           : RefreshIndicator(
               onRefresh: _loadProfileData,
-              color: AppColors.lightTertiary,
+              color: tertiaryColor,
               child: _profileData == null
                   ? ListView(
-                      children: const [
-                        SizedBox(height: 100),
-                        Center(child: Text('No se pudieron cargar los datos.', style: TextStyle(color: AppColors.lightTextSecondary))),
+                      children: [
+                        const SizedBox(height: 100),
+                        Center(
+                          child: Text(
+                            l10n?.profile_no_data ?? 'No se pudieron cargar los datos.',
+                            style: TextStyle(color: textSecondary),
+                          ),
+                        ),
                       ],
                     )
                   : SingleChildScrollView(
@@ -249,11 +375,10 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          _buildProfileHeader(),
+                          _buildProfileHeader(isDark, textPrimary, tertiaryColor),
                           const SizedBox(height: 32),
-                          _buildStatisticsSection(),
+                          _buildStatisticsSection(isDark, textPrimary),
                           const SizedBox(height: 40),
-
                         ],
                       ),
                     ),
@@ -262,7 +387,6 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
   }
 
   void _showSettingsBottomSheet() {
-    // Reset status al abrir
     _emailSaved = false;
     _phoneSaved = false;
 
@@ -273,13 +397,19 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) {
           _modalSetState = setModalState;
+          final l10n = AppLocalizations.of(context);
+          final isDark = Theme.of(context).brightness == Brightness.dark;
+
+          final sheetBackground = isDark ? AppColors.darkBackground : AppColors.lightBackground;
+          final sheetSurface = isDark ? AppColors.darkSurface : AppColors.lightSurface;
+          final textPrimary = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+          final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
           final settings = _profileData!.settings;
 
-          
           return Container(
-            decoration: const BoxDecoration(
-              color: AppColors.lightBackground,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            decoration: BoxDecoration(
+              color: sheetBackground,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             ),
             padding: EdgeInsets.only(
               bottom: MediaQuery.of(context).viewInsets.bottom + 24,
@@ -298,204 +428,236 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
                       height: 4,
                       margin: const EdgeInsets.only(bottom: 24),
                       decoration: BoxDecoration(
-                        color: AppColors.lightBorder,
+                        color: borderColor,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
                   ),
-                  const Text(
-                    'Información de contacto',
+                  Text(
+                    l10n?.profile_contact_info ?? 'Información de contacto',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.lightTextPrimary,
+                      color: textPrimary,
                     ),
                   ),
                   const SizedBox(height: 16),
                   _buildTextField(
-                    label: 'Correo electrónico',
+                    label: l10n?.profile_email ?? 'Correo electrónico',
                     controller: _emailController,
                     originalValue: _profileData!.email,
                     icon: Icons.email_outlined,
                     focusNode: _emailFocusNode,
                     isSaved: _emailSaved,
                     keyboardType: TextInputType.emailAddress,
+                    isDark: isDark,
                   ),
                   const SizedBox(height: 16),
                   _buildTextField(
-                    label: 'Número de teléfono',
+                    label: l10n?.profile_phone ?? 'Número de teléfono',
                     controller: _phoneController,
                     originalValue: _profileData!.phone,
                     icon: Icons.phone_outlined,
                     focusNode: _phoneFocusNode,
                     isSaved: _phoneSaved,
                     keyboardType: TextInputType.phone,
+                    isDark: isDark,
                   ),
                   const SizedBox(height: 24),
-                  
-                  const Text(
-                    'Opciones de negociación',
 
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.lightTextPrimary,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                
-                // Habilitar precompra
-                _buildSwitchTile(
-                  title: 'Habilitar precompra',
-                  value: settings.enableEarlySale,
-                  icon: Icons.calendar_month_outlined,
-                  onChanged: (val) {
-                    setModalState(() {
-                      _updateSettings(FarmerSettingsData(
-                        enableEarlySale: val,
-                        sharePhone: settings.sharePhone,
-                        shareLocation: settings.shareLocation,
-                        shareWhatsapp: settings.shareWhatsapp,
-                      ));
-                    });
-                  },
-                ),
-                
-                const SizedBox(height: 24),
-                
-                const Text(
-                  'Visibilidad durante una negociación',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.lightTextPrimary,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                
-                Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.lightSurface,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.lightBorder),
-                  ),
-                  child: Column(
-                    children: [
-                      _buildSwitchListTileInside(
-                        title: 'Teléfono',
-                        value: settings.sharePhone,
-                        onChanged: (val) {
-                          setModalState(() {
-                            _updateSettings(FarmerSettingsData(
-                              enableEarlySale: settings.enableEarlySale,
-                              sharePhone: val,
-                              shareLocation: settings.shareLocation,
-                              shareWhatsapp: settings.shareWhatsapp,
-                            ));
-                          });
-                        },
+                  // Opciones de negociación: EXCLUSIVAS DEL AGRICULTOR
+                  if (!_isBuyer) ...[
+                    Text(
+                      l10n?.profile_negotiation_options ?? 'Opciones de negociación',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: textPrimary,
                       ),
-                      const Divider(height: 1, color: AppColors.lightBorder),
-                      _buildSwitchListTileInside(
-                        title: 'Ubicación',
-                        value: settings.shareLocation,
-                        onChanged: (val) {
-                          setModalState(() {
-                            _updateSettings(FarmerSettingsData(
-                              enableEarlySale: settings.enableEarlySale,
-                              sharePhone: settings.sharePhone,
-                              shareLocation: val,
-                              shareWhatsapp: settings.shareWhatsapp,
-                            ));
-                          });
-                        },
+                    ),
+                    const SizedBox(height: 16),
+                    _buildSwitchTile(
+                      title: l10n?.profile_enable_early_sale ?? 'Habilitar precompra',
+                      value: settings.enableEarlySale,
+                      icon: Icons.calendar_month_outlined,
+                      isDark: isDark,
+                      onChanged: (val) {
+                        setModalState(() {
+                          _updateSettings(FarmerSettingsData(
+                            enableEarlySale: val,
+                            sharePhone: settings.sharePhone,
+                            shareLocation: settings.shareLocation,
+                            shareWhatsapp: settings.shareWhatsapp,
+                          ));
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      l10n?.profile_visibility_negotiation ?? 'Visibilidad durante una negociación',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: textPrimary,
                       ),
-                      const Divider(height: 1, color: AppColors.lightBorder),
-                      _buildSwitchListTileInside(
-                        title: 'WhatsApp',
-                        value: settings.shareWhatsapp,
-                        onChanged: (val) {
-                          setModalState(() {
-                            _updateSettings(FarmerSettingsData(
-                              enableEarlySale: settings.enableEarlySale,
-                              sharePhone: settings.sharePhone,
-                              shareLocation: settings.shareLocation,
-                              shareWhatsapp: val,
-                            ));
-                          });
-                        },
+                    ),
+                    const SizedBox(height: 12),
+                    Material(
+                      color: sheetSurface,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: BorderSide(color: borderColor),
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-                
-                const Text(
-                  'Accesibilidad',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.lightTextPrimary,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                
-                Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.lightSurface,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.lightBorder),
-                  ),
-                  child: Column(
-                    children: [
-                      _buildSwitchListTileInside(
-                        title: 'Modo oscuro',
-                        value: _isDarkMode,
-                        onChanged: (val) {
-                          setModalState(() {
-                            _isDarkMode = val;
-                          });
-                          setState(() {
-                            _isDarkMode = val;
-                          });
-                          // TODO: Integrar con manejador de estado global de Tema
-                        },
+                      child: Column(
+                        children: [
+                          _buildSwitchListTileInside(
+                            title: l10n?.profile_visibility_phone ?? 'Teléfono',
+                            value: settings.sharePhone,
+                            isDark: isDark,
+                            onChanged: (val) {
+                              setModalState(() {
+                                _updateSettings(FarmerSettingsData(
+                                  enableEarlySale: settings.enableEarlySale,
+                                  sharePhone: val,
+                                  shareLocation: settings.shareLocation,
+                                  shareWhatsapp: settings.shareWhatsapp,
+                                ));
+                              });
+                            },
+                          ),
+                          Divider(height: 1, color: borderColor),
+                          _buildSwitchListTileInside(
+                            title: l10n?.profile_visibility_location ?? 'Ubicación',
+                            value: settings.shareLocation,
+                            isDark: isDark,
+                            onChanged: (val) {
+                              setModalState(() {
+                                _updateSettings(FarmerSettingsData(
+                                  enableEarlySale: settings.enableEarlySale,
+                                  sharePhone: settings.sharePhone,
+                                  shareLocation: val,
+                                  shareWhatsapp: settings.shareWhatsapp,
+                                ));
+                              });
+                            },
+                          ),
+                          Divider(height: 1, color: borderColor),
+                          _buildSwitchListTileInside(
+                            title: l10n?.profile_visibility_whatsapp ?? 'WhatsApp',
+                            value: settings.shareWhatsapp,
+                            isDark: isDark,
+                            onChanged: (val) {
+                              setModalState(() {
+                                _updateSettings(FarmerSettingsData(
+                                  enableEarlySale: settings.enableEarlySale,
+                                  sharePhone: settings.sharePhone,
+                                  shareLocation: settings.shareLocation,
+                                  shareWhatsapp: val,
+                                ));
+                              });
+                            },
+                          ),
+                        ],
                       ),
-                      const Divider(height: 1, color: AppColors.lightBorder),
-                      _buildSwitchListTileInside(
-                        title: 'Idioma inglés',
-                        value: _isEnglish,
-                        onChanged: (val) {
-                          setModalState(() {
-                            _isEnglish = val;
-                          });
-                          setState(() {
-                            _isEnglish = val;
-                          });
-                          // TODO: Integrar con manejador de estado global de Idioma
-                        },
-                      ),
-                    ],
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+
+                  // Accesibilidad: Común para ambos roles
+                  Text(
+                    l10n?.profile_accessibility ?? 'Accesibilidad',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: textPrimary,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-              ],
+                  const SizedBox(height: 16),
+                  Material(
+                    color: sheetSurface,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(color: borderColor),
+                    ),
+                    child: Column(
+                      children: [
+                        _buildSwitchListTileInside(
+                          title: l10n?.profile_dark_mode ?? 'Modo oscuro',
+                          value: _isDarkMode,
+                          isDark: isDark,
+                          onChanged: (val) {
+                            setModalState(() {
+                              _isDarkMode = val;
+                            });
+                            setState(() {
+                              _isDarkMode = val;
+                            });
+                          },
+                        ),
+                        Divider(height: 1, color: borderColor),
+                        _buildSwitchListTileInside(
+                          title: l10n?.profile_english_language ?? 'Idioma inglés',
+                          value: _isEnglish,
+                          isDark: isDark,
+                          onChanged: (val) {
+                            setModalState(() {
+                              _isEnglish = val;
+                            });
+                            setState(() {
+                              _isEnglish = val;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+
+                  // Cierre de sesión: Común para ambos roles
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _handleLogout();
+                      },
+                      icon: const Icon(Icons.logout, color: AppColors.error),
+                      label: Text(
+                        l10n?.profile_logout ?? 'Cerrar sesión',
+                        style: const TextStyle(
+                          color: AppColors.error,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppColors.error),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
               ),
             ),
           );
-
-
         },
       ),
     );
   }
 
-  // Se modifican los headers y el editable data... (se deja igual)
-  Widget _buildProfileHeader() {
+  Widget _buildProfileHeader(bool isDark, Color textPrimary, Color tertiaryColor) {
     String? imageUrl;
     if (_profileData!.profilePath != null && _profileData!.profilePath!.isNotEmpty) {
       imageUrl = _profileService.getPublicProfileImageUrl(_profileData!.profilePath!);
     }
+
+    final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
+    final badgeBgColor = isDark
+        ? AppColors.darkSecondary
+        : AppColors.lightSecondary;
 
     return Column(
       children: [
@@ -504,7 +666,7 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
           children: [
             CircleAvatar(
               radius: 50,
-              backgroundColor: AppColors.lightBorder,
+              backgroundColor: borderColor,
               backgroundImage: imageUrl != null ? NetworkImage(imageUrl) : null,
               child: imageUrl == null
                   ? const Icon(Icons.person, size: 50, color: AppColors.lightTextDisabled)
@@ -514,8 +676,8 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
               onTap: _isSaving ? null : _pickAndUploadImage,
               child: Container(
                 padding: const EdgeInsets.all(8),
-                decoration: const BoxDecoration(
-                  color: AppColors.lightTertiary,
+                decoration: BoxDecoration(
+                  color: tertiaryColor,
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
@@ -527,13 +689,13 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
-            color: AppColors.lightSecondary,
+            color: badgeBgColor,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Text(
             (_profileData!.role).toUpperCase(),
-            style: const TextStyle(
-              color: AppColors.lightTertiary,
+            style: TextStyle(
+              color: tertiaryColor,
               fontWeight: FontWeight.bold,
               fontSize: 12,
             ),
@@ -542,10 +704,11 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
         const SizedBox(height: 8),
         Text(
           _profileData!.fullName,
-          style: const TextStyle(
+          textAlign: TextAlign.center,
+          style: AppTextStyles.displaySmall.copyWith(
             fontSize: 22,
             fontWeight: FontWeight.bold,
-            color: AppColors.lightTextPrimary,
+            color: textPrimary,
           ),
         ),
       ],
@@ -559,17 +722,24 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
     required IconData icon,
     required FocusNode focusNode,
     required bool isSaved,
+    required bool isDark,
     TextInputType? keyboardType,
   }) {
+    final textSecondary = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final textPrimary = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
+    final fieldBg = isDark ? AppColors.darkSurface : AppColors.lightBackground;
+    final tertiaryColor = isDark ? AppColors.darkTertiary : AppColors.lightTertiary;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: AppColors.lightTextSecondary,
+            color: textSecondary,
           ),
         ),
         const SizedBox(height: 8),
@@ -577,22 +747,22 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
           controller: controller,
           keyboardType: keyboardType,
           focusNode: focusNode,
-          style: const TextStyle(color: AppColors.lightTextPrimary),
+          style: TextStyle(color: textPrimary),
           decoration: InputDecoration(
             prefixIcon: Icon(icon, color: AppColors.lightTextDisabled),
             suffixIcon: isSaved
                 ? const Icon(Icons.check_circle, color: AppColors.success)
                 : null,
             filled: true,
-            fillColor: AppColors.lightBackground,
+            fillColor: fieldBg,
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.lightBorder),
+              borderSide: BorderSide(color: borderColor),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.lightTertiary),
+              borderSide: BorderSide(color: tertiaryColor),
             ),
           ),
         ),
@@ -600,42 +770,103 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
     );
   }
 
-  Widget _buildStatisticsSection() {
+  Widget _buildStatisticsSection(bool isDark, Color textPrimary) {
+    final l10n = AppLocalizations.of(context);
+    final stats = _profileData!.stats;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Estadísticas',
+        Text(
+          l10n?.profile_stats_title ?? 'Estadísticas',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: AppColors.lightTextPrimary,
+            color: textPrimary,
           ),
         ),
         const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(child: _buildStatCard('Publicados', _profileData!.stats.published.toString(), Icons.grass_outlined, AppColors.info)),
-            const SizedBox(width: 12),
-            Expanded(child: _buildStatCard('Negociando', _profileData!.stats.negotiating.toString(), Icons.handshake_outlined, AppColors.warning)),
-            const SizedBox(width: 12),
-            Expanded(child: _buildStatCard('Cerradas', _profileData!.stats.closed.toString(), Icons.check_circle_outline, AppColors.success)),
-          ],
-        ),
+        if (!_isBuyer) ...[
+          // Para el Agricultor: 3 estadísticas (Publicados, Negociando, Cerradas)
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatCard(
+                  l10n?.profile_stat_published ?? 'Publicados',
+                  stats.published.toString(),
+                  Icons.grass_outlined,
+                  AppColors.info,
+                  isDark,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildStatCard(
+                  l10n?.profile_stat_negotiating ?? 'Negociando',
+                  stats.negotiating.toString(),
+                  Icons.handshake_outlined,
+                  AppColors.warning,
+                  isDark,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildStatCard(
+                  l10n?.profile_stat_closed_farmer ?? 'Cerradas',
+                  stats.closed.toString(),
+                  Icons.check_circle_outline,
+                  AppColors.success,
+                  isDark,
+                ),
+              ),
+            ],
+          ),
+        ] else ...[
+          // Para el Comerciante: ÚNICAMENTE 2 estadísticas (Negociando, Cerrados)
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatCard(
+                  l10n?.profile_stat_negotiating ?? 'Negociando',
+                  stats.negotiating.toString(),
+                  Icons.handshake_outlined,
+                  AppColors.warning,
+                  isDark,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildStatCard(
+                  l10n?.profile_stat_closed_buyer ?? 'Cerrados',
+                  stats.closed.toString(),
+                  Icons.check_circle_outline,
+                  AppColors.success,
+                  isDark,
+                ),
+              ),
+            ],
+          ),
+        ],
       ],
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(String title, String value, IconData icon, Color color, bool isDark) {
+    final cardBg = isDark ? AppColors.darkSurface : AppColors.lightSurface;
+    final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
+    final textSecondary = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
       decoration: BoxDecoration(
-        color: AppColors.lightSurface,
+        color: cardBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.lightBorder),
+        border: Border.all(color: borderColor),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: isDark
+                ? Colors.black.withValues(alpha: 0.15)
+                : Colors.black.withValues(alpha: 0.02),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -657,10 +888,12 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
           Text(
             title,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w500,
-              color: AppColors.lightTextSecondary,
+              color: textSecondary,
             ),
           ),
         ],
@@ -673,32 +906,39 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
     required bool value,
     required ValueChanged<bool> onChanged,
     required IconData icon,
+    required bool isDark,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.lightSurface,
+    final surfaceColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
+    final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
+    final textPrimary = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final secondaryBg = isDark ? AppColors.darkSecondary : AppColors.lightSecondary;
+    final tertiaryColor = isDark ? AppColors.darkTertiary : AppColors.lightTertiary;
+
+    return Material(
+      color: surfaceColor,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.lightBorder),
+        side: BorderSide(color: borderColor),
       ),
       child: SwitchListTile(
         title: Text(
           title,
-          style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.lightTextPrimary),
+          style: TextStyle(fontWeight: FontWeight.w600, color: textPrimary),
         ),
         secondary: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: AppColors.lightSecondary,
+            color: secondaryBg,
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(icon, color: AppColors.lightTertiary),
+          child: Icon(icon, color: tertiaryColor),
         ),
         value: value,
         onChanged: _isSaving ? null : onChanged,
-        activeColor: AppColors.lightSurface,
-        activeTrackColor: AppColors.lightTertiary,
+        activeThumbColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        activeTrackColor: tertiaryColor,
         inactiveThumbColor: AppColors.lightTextDisabled,
-        inactiveTrackColor: AppColors.lightBorder,
+        inactiveTrackColor: borderColor,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       ),
     );
@@ -708,18 +948,23 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
     required String title,
     required bool value,
     required ValueChanged<bool> onChanged,
+    required bool isDark,
   }) {
+    final textPrimary = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final tertiaryColor = isDark ? AppColors.darkTertiary : AppColors.lightTertiary;
+    final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
+
     return SwitchListTile(
       title: Text(
         title,
-        style: const TextStyle(fontWeight: FontWeight.w500, color: AppColors.lightTextPrimary),
+        style: TextStyle(fontWeight: FontWeight.w500, color: textPrimary),
       ),
       value: value,
       onChanged: _isSaving ? null : onChanged,
-      activeColor: AppColors.lightSurface,
-      activeTrackColor: AppColors.lightTertiary,
+      activeThumbColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+      activeTrackColor: tertiaryColor,
       inactiveThumbColor: AppColors.lightTextDisabled,
-      inactiveTrackColor: AppColors.lightBorder,
+      inactiveTrackColor: borderColor,
     );
   }
 }

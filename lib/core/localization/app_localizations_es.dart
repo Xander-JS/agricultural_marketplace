@@ -351,4 +351,474 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get otp_verification_appbar_title => 'Verificación SMS';
+
+  @override
+  String get nav_market => 'Mercado';
+
+  @override
+  String get nav_my_market => 'Mi mercado';
+
+  @override
+  String get nav_deals => 'Tratos';
+
+  @override
+  String get nav_costs => 'Costos';
+
+  @override
+  String get nav_purchases => 'Compras';
+
+  @override
+  String get nav_my_farm => 'Mi Finca';
+
+  @override
+  String get purchases_title => 'Compras';
+
+  @override
+  String get purchases_placeholder_title => 'Módulo de Compras';
+
+  @override
+  String get purchases_placeholder_desc =>
+      'Aquí podrás consultar tus compras acordadas y el historial de operaciones completadas.';
+
+  @override
+  String get profile_title_farmer => 'Mi Finca';
+
+  @override
+  String get profile_title_buyer => 'Mi Perfil';
+
+  @override
+  String get profile_stats_title => 'Estadísticas';
+
+  @override
+  String get profile_stat_published => 'Publicados';
+
+  @override
+  String get profile_stat_negotiating => 'Negociando';
+
+  @override
+  String get profile_stat_closed_farmer => 'Cerradas';
+
+  @override
+  String get profile_stat_closed_buyer => 'Cerrados';
+
+  @override
+  String get profile_settings_title => 'Configuración';
+
+  @override
+  String get profile_contact_info => 'Información de contacto';
+
+  @override
+  String get profile_email => 'Correo electrónico';
+
+  @override
+  String get profile_phone => 'Número de teléfono';
+
+  @override
+  String get profile_negotiation_options => 'Opciones de negociación';
+
+  @override
+  String get profile_enable_early_sale => 'Habilitar precompra';
+
+  @override
+  String get profile_visibility_negotiation =>
+      'Visibilidad durante una negociación';
+
+  @override
+  String get profile_visibility_phone => 'Teléfono';
+
+  @override
+  String get profile_visibility_location => 'Ubicación';
+
+  @override
+  String get profile_visibility_whatsapp => 'WhatsApp';
+
+  @override
+  String get profile_accessibility => 'Accesibilidad';
+
+  @override
+  String get profile_dark_mode => 'Modo oscuro';
+
+  @override
+  String get profile_english_language => 'Idioma inglés';
+
+  @override
+  String get profile_logout => 'Cerrar sesión';
+
+  @override
+  String get profile_logout_confirm_title => '¿Cerrar sesión?';
+
+  @override
+  String get profile_logout_confirm_desc =>
+      '¿Estás seguro de que deseas salir de tu cuenta?';
+
+  @override
+  String get profile_cancel => 'Cancelar';
+
+  @override
+  String get profile_updated_photo => 'Foto de perfil actualizada';
+
+  @override
+  String get profile_save_settings_error => 'Error al guardar configuración';
+
+  @override
+  String get profile_load_error => 'Error al cargar el perfil';
+
+  @override
+  String get profile_no_data => 'No se pudieron cargar los datos.';
+
+  @override
+  String get market_title => 'Mercado';
+
+  @override
+  String get market_title_farmer => 'Mi Mercado';
+
+  @override
+  String get market_publish_btn => 'Publicar';
+
+  @override
+  String get market_empty_farmer_title => 'Aún no tienes cosechas publicadas';
+
+  @override
+  String get market_empty_farmer_desc =>
+      'Comienza a ofrecer tus productos en el mercado agrícola creando tu primera publicación.';
+
+  @override
+  String get market_publish_first => 'Publicar mi primera cosecha';
+
+  @override
+  String get market_empty_buyer_title => 'No hay cosechas disponibles';
+
+  @override
+  String get market_empty_buyer_desc =>
+      'En este momento no hay productos agrícolas disponibles para negociar. Intenta actualizar más tarde.';
+
+  @override
+  String get market_retry => 'Reintentar';
+
+  @override
+  String get market_refresh => 'Actualizar';
+
+  @override
+  String get market_publish_options_title => '¿Cómo deseas publicar?';
+
+  @override
+  String get market_publish_manual => 'Publicación Manual';
+
+  @override
+  String get market_publish_manual_desc => 'Llena el formulario paso a paso';
+
+  @override
+  String get market_publish_voice => 'Publicación por Nota de Voz';
+
+  @override
+  String get market_publish_voice_desc =>
+      'Cuéntanos qué quieres publicar (Con IA)';
+
+  @override
+  String get market_ai_coming_soon => 'Función de IA próximamente...';
+
+  @override
+  String get crop_card_available => 'Disponible';
+
+  @override
+  String get crop_card_price_per_kg => 'Precio / kg';
+
+  @override
+  String get crop_detail_title => 'Detalle de Cosecha';
+
+  @override
+  String get crop_detail_delete_tooltip => 'Borrar';
+
+  @override
+  String get crop_detail_edit_tooltip => 'Editar';
+
+  @override
+  String get crop_detail_confirm_delete_title => 'Borrar Publicación';
+
+  @override
+  String get crop_detail_confirm_delete_desc =>
+      '¿Estás seguro de que deseas borrar esta publicación? Esta acción no se puede deshacer.';
+
+  @override
+  String get crop_detail_delete_success => 'Publicación borrada exitosamente';
+
+  @override
+  String get crop_detail_delete_error => 'Error al borrar';
+
+  @override
+  String get crop_detail_status_updated => 'Estado actualizado';
+
+  @override
+  String get crop_detail_price_per_kg => 'Precio por kg';
+
+  @override
+  String get crop_detail_available_stock => 'Total Disponible';
+
+  @override
+  String get crop_detail_min_order => 'Pedido Mínimo';
+
+  @override
+  String get crop_detail_location => 'Ubicación';
+
+  @override
+  String get crop_detail_early_sale => 'Venta Anticipada';
+
+  @override
+  String get crop_detail_estimated_harvest => 'Fecha est. de cosecha';
+
+  @override
+  String get crop_detail_estimated_yield => 'Rendimiento estimado';
+
+  @override
+  String get crop_detail_quick_actions => 'Acciones Rápidas';
+
+  @override
+  String get crop_detail_pause_crop => 'Pausar Publicación';
+
+  @override
+  String get crop_detail_activate_crop => 'Activar Publicación';
+
+  @override
+  String get crop_detail_view_negotiations => 'Ver Negociaciones';
+
+  @override
+  String get crop_detail_negotiations_coming_soon =>
+      'Próximamente: Ver negociaciones';
+
+  @override
+  String get crop_detail_make_offer => 'Hacer oferta / Negociar';
+
+  @override
+  String get crop_detail_farmer_info => 'Información del Productor';
+
+  @override
+  String get crop_detail_producer => 'Productor';
+
+  @override
+  String get crop_detail_contact => 'Contacto';
+
+  @override
+  String get offer_sheet_title => 'Nueva Oferta';
+
+  @override
+  String get offer_sheet_subtitle =>
+      'Inicia una propuesta de negociación para este producto';
+
+  @override
+  String get offer_sheet_quantity_label => 'Cantidad (kg)';
+
+  @override
+  String get offer_sheet_price_label => 'Precio propuesto por kg';
+
+  @override
+  String get offer_sheet_delivery_label => 'Método de entrega';
+
+  @override
+  String get offer_sheet_delivery_farm => 'En finca';
+
+  @override
+  String get offer_sheet_delivery_hub => 'Punto de acopio';
+
+  @override
+  String get offer_sheet_delivery_destination => 'Destino final';
+
+  @override
+  String get offer_sheet_delivery_agree => 'A acordar con el productor';
+
+  @override
+  String get offer_sheet_message_label =>
+      'Mensaje para el productor (Opcional)';
+
+  @override
+  String get offer_sheet_message_hint =>
+      'Explica detalles de tu propuesta o requerimientos de entrega';
+
+  @override
+  String get offer_sheet_estimated_total => 'Total estimado';
+
+  @override
+  String get offer_sheet_submit_btn => 'Enviar propuesta';
+
+  @override
+  String get offer_sheet_submitting => 'Enviando...';
+
+  @override
+  String get offer_sheet_success => 'Propuesta enviada exitosamente';
+
+  @override
+  String get offer_sheet_existing_negotiation =>
+      'Ya tienes una negociación activa para este cultivo';
+
+  @override
+  String get offer_sheet_val_required => 'Campo requerido';
+
+  @override
+  String get offer_sheet_val_positive => 'Debe ser mayor a 0';
+
+  @override
+  String get offer_sheet_val_min_order =>
+      'La cantidad no cumple con el pedido mínimo';
+
+  @override
+  String get offer_sheet_val_max_stock =>
+      'La cantidad supera el stock disponible';
+
+  @override
+  String get deals_title => 'Tratos';
+
+  @override
+  String get deals_tab_all => 'Todos';
+
+  @override
+  String get deals_tab_pending => 'Pendientes';
+
+  @override
+  String get deals_tab_in_negotiation => 'En negociación';
+
+  @override
+  String get deals_tab_agreed => 'Acordados';
+
+  @override
+  String get deals_tab_history => 'Historial';
+
+  @override
+  String get deals_your_turn => 'Tu turno';
+
+  @override
+  String get deals_waiting_response => 'Esperando respuesta';
+
+  @override
+  String get deals_see_deal => 'Ver trato →';
+
+  @override
+  String get deals_empty_farmer_title => 'Aún no tienes tratos';
+
+  @override
+  String get deals_empty_farmer_desc =>
+      'Cuando un comprador realice una oferta sobre una de tus cosechas, aparecerá aquí.';
+
+  @override
+  String get deals_empty_buyer_title => 'Aún no tienes tratos';
+
+  @override
+  String get deals_empty_buyer_desc =>
+      'Cuando realices una oferta en el mercado sobre una cosecha, podrás seguirla y negociar aquí.';
+
+  @override
+  String get deals_explore_market => 'Explorar mercado';
+
+  @override
+  String get deals_view_crops => 'Ver mis cosechas';
+
+  @override
+  String get deal_detail_title => 'Detalle del trato';
+
+  @override
+  String get deal_counterpart_buyer => 'Comprador';
+
+  @override
+  String get deal_counterpart_farmer => 'Productor';
+
+  @override
+  String get deal_history_title => 'Historial de ofertas';
+
+  @override
+  String get deal_waiting_buyer => 'Esperando respuesta del comprador';
+
+  @override
+  String get deal_waiting_farmer => 'Esperando respuesta del productor';
+
+  @override
+  String get deal_accept_offer => 'Aceptar oferta';
+
+  @override
+  String get deal_counter_offer => 'Contraofertar';
+
+  @override
+  String get deal_reject_deal => 'Rechazar trato';
+
+  @override
+  String get deal_cancel_deal => 'Cancelar propuesta';
+
+  @override
+  String get deal_accept_success => 'Trato acordado correctamente';
+
+  @override
+  String get deal_reject_success => 'El trato ha sido rechazado';
+
+  @override
+  String get deal_reject_confirm_title => '¿Rechazar este trato?';
+
+  @override
+  String get deal_reject_confirm_desc =>
+      'Esta acción no se puede deshacer y el trato se cerrará.';
+
+  @override
+  String get counter_offer_title => 'Contraoferta';
+
+  @override
+  String get counter_offer_subtitle =>
+      'Modifica los términos de la oferta para la cosecha seleccionada.';
+
+  @override
+  String get counter_offer_quantity_label => 'Cantidad (kg)';
+
+  @override
+  String get counter_offer_price_label => 'Precio propuesto por kg';
+
+  @override
+  String get counter_offer_delivery_label => 'Método de entrega';
+
+  @override
+  String get counter_offer_message_label => 'Mensaje (Opcional)';
+
+  @override
+  String get counter_offer_message_hint =>
+      'Explica el motivo de tu contraoferta';
+
+  @override
+  String get counter_offer_send_btn => 'Enviar contraoferta';
+
+  @override
+  String get counter_offer_success => 'Contraoferta enviada exitosamente';
+
+  @override
+  String get purchases_tab_all => 'Todas';
+
+  @override
+  String get purchases_tab_agreed => 'Acordadas';
+
+  @override
+  String get purchases_tab_completed => 'Completadas';
+
+  @override
+  String get purchases_empty_title => 'No tienes compras aún';
+
+  @override
+  String get purchases_empty_desc =>
+      'Aquí aparecerán los acuerdos que hayas cerrado con los productores agrícolas y tus compras completadas.';
+
+  @override
+  String get purchases_empty_action => 'Explorar mercado';
+
+  @override
+  String get purchases_total_agreed => 'Acuerdos vigentes';
+
+  @override
+  String get purchases_total_invested => 'Total pactado';
+
+  @override
+  String get purchases_total_volume => 'Volumen total';
+
+  @override
+  String get purchases_view_detail => 'Ver detalle del acuerdo →';
+
+  @override
+  String get purchases_delivery_method => 'Entrega';
+
+  @override
+  String get purchases_status_agreed => 'Acordada';
+
+  @override
+  String get purchases_status_completed => 'Completada';
 }

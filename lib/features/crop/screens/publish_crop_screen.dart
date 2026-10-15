@@ -36,7 +36,7 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
   final _estimatedYieldController = TextEditingController();
   DateTime? _estimatedHarvestDate;
 
-  List<File> _selectedImages = [];
+  final List<File> _selectedImages = [];
 
   @override
   void initState() {

@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/navigation/app_bottom_navigation.dart';
 import '../../profile/screens/farmer_profile_screen.dart';
 import '../../crop/screens/marketplace_screen.dart';
 import '../../costs/screens/costs_screen.dart';
 import '../../deals/screens/deals_screen.dart';
+import '../../purchases/screens/purchases_screen.dart';
 
 class MainDashboardScreen extends StatefulWidget {
   final String role;
 
-  const MainDashboardScreen({Key? key, required this.role}) : super(key: key);
+  const MainDashboardScreen({super.key, required this.role});
 
   @override
   State<MainDashboardScreen> createState() => _MainDashboardScreenState();
@@ -18,24 +17,37 @@ class MainDashboardScreen extends StatefulWidget {
 
 class _MainDashboardScreenState extends State<MainDashboardScreen> {
   int _currentIndex = 0;
+  late final List<Widget> _screens;
 
-  late List<Widget> _screens;
+  bool get _isBuyer {
+    final normalized = widget.role.trim().toLowerCase();
+    return normalized == 'comprador' || normalized == 'comerciante';
+  }
 
   @override
   void initState() {
     super.initState();
-    _screens = [
-      const MarketplaceScreen(), // Índice 0 es Mercado
-      const DealsScreen(), // Índice 1 es Tratos
-      const CostsScreen(), // Índice 2 es Costos
-
-      const FarmerProfileScreen(), // Índice 3 es Mi Finca
-    ];
-  }
-
-  String _capitalize(String value) {
-    if (value.isEmpty) return value;
-    return value[0].toUpperCase() + value.substring(1).toLowerCase();
+    if (_isBuyer) {
+      _screens = [
+        MarketplaceScreen(role: widget.role),
+        DealsScreen(role: widget.role),
+        PurchasesScreen(
+          onExploreMarket: () {
+            setState(() {
+              _currentIndex = 0;
+            });
+          },
+        ),
+        const FarmerProfileScreen(),
+      ];
+    } else {
+      _screens = [
+        MarketplaceScreen(role: widget.role),
+        DealsScreen(role: widget.role),
+        const CostsScreen(),
+        const FarmerProfileScreen(),
+      ];
+    }
   }
 
   @override
@@ -46,6 +58,7 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
         children: _screens,
       ),
       bottomNavigationBar: AppBottomNavigation(
+        role: widget.role,
         currentIndex: _currentIndex,
         onTap: (index) {
           setState(() {
@@ -56,3 +69,4 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
     );
   }
 }
+

@@ -10,6 +10,7 @@ import '../../profile/models/farmer_profile_data.dart';
 import '../../profile/services/profile_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/localization/app_localizations.dart';
+import '../../../core/constants/user_roles.dart';
 
 class CropDetailScreen extends StatefulWidget {
   final CropModel crop;
@@ -40,8 +41,7 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
 
   bool get _isBuyer {
     if (widget.role != null) {
-      final r = widget.role!.trim().toLowerCase();
-      return r == 'comprador' || r == 'comerciante';
+      return UserRole.isBuyerRole(widget.role);
     }
     final user = Supabase.instance.client.auth.currentUser;
     if (user != null && user.id != _crop.farmerId) {
@@ -199,7 +199,61 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
     }
   }
 
-  void _openMakeOfferSheet() {
+  Future<void> _openMakeOfferSheet() async {
+    final l10n = AppLocalizations.of(context);
+
+    // 1. Validar que la cosecha tenga stock disponible
+    if (_crop.availableStock <= 0 || _crop.status == CropStatus.agotada) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Esta cosecha se encuentra agotada o sin stock disponible.'),
+          backgroundColor: AppColors.warning,
+        ),
+      );
+      return;
+    }
+
+    // 2. Validar estado de verificación comercial del usuario autenticado
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user != null) {
+      try {
+        final profileRes = await Supabase.instance.client
+            .from('profiles')
+            .select('verification_status')
+            .eq('id', user.id)
+            .maybeSingle();
+
+        if (profileRes != null) {
+          final status = UserVerificationStatus.fromString(
+            profileRes['verification_status'] as String?,
+          );
+
+          if (!status.isApproved && mounted) {
+            showDialog(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                title: Text(l10n?.crop_unapproved_dialog_title ?? 'Verificación requerida'),
+                content: Text(
+                  l10n?.crop_unapproved_dialog_desc ??
+                      'Para realizar ofertas y negociar con los agricultores, tu perfil debe estar verificado y aprobado por un moderador.',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: Text(l10n?.crop_unapproved_dialog_action ?? 'Entendido'),
+                  ),
+                ],
+              ),
+            );
+            return;
+          }
+        }
+      } catch (_) {
+        // En caso de que no haya conexión de red para verificar, el backend volverá a validar
+      }
+    }
+
+    if (!mounted) return;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,

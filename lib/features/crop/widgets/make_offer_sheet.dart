@@ -3,6 +3,7 @@ import '../models/crop_model.dart';
 import '../../deals/services/negotiation_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/localization/app_localizations.dart';
+import '../../../core/constants/delivery_methods.dart';
 
 class MakeOfferSheet extends StatefulWidget {
   final CropModel crop;
@@ -26,13 +27,8 @@ class _MakeOfferSheetState extends State<MakeOfferSheet> {
   late TextEditingController _priceController;
   late TextEditingController _messageController;
 
-  String _deliveryMethod = 'En finca';
-  final List<String> _deliveryOptions = [
-    'En finca',
-    'Punto de acopio',
-    'Destino final',
-    'A acordar con el productor',
-  ];
+  String _deliveryMethod = DeliveryMethod.uiOptions.first;
+  final List<String> _deliveryOptions = DeliveryMethod.uiOptions;
 
   bool _isSubmitting = false;
 
@@ -72,6 +68,7 @@ class _MakeOfferSheetState extends State<MakeOfferSheet> {
   }
 
   Future<void> _submit() async {
+    if (_isSubmitting) return;
     final l10n = AppLocalizations.of(context);
     if (!_formKey.currentState!.validate()) return;
 
@@ -192,7 +189,7 @@ class _MakeOfferSheetState extends State<MakeOfferSheet> {
                         ),
                       ),
                       Text(
-                        'Mín: ${widget.crop.minOrderKg.toStringAsFixed(0)} kg | Stock: ${widget.crop.stockTotal.toStringAsFixed(0)} kg',
+                        'Mín: ${widget.crop.minOrderKg.toStringAsFixed(0)} kg | Stock: ${widget.crop.availableStock.toStringAsFixed(0)} kg',
                         style: TextStyle(
                           fontSize: 13,
                           color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
@@ -225,7 +222,7 @@ class _MakeOfferSheetState extends State<MakeOfferSheet> {
                       return l10n?.offer_sheet_val_min_order ??
                           'La cantidad no cumple con el pedido mínimo';
                     }
-                    if (parsed > widget.crop.stockTotal) {
+                    if (parsed > widget.crop.availableStock) {
                       return l10n?.offer_sheet_val_max_stock ??
                           'La cantidad supera el stock disponible';
                     }

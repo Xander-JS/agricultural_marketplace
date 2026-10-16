@@ -821,4 +821,112 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get purchases_status_completed => 'Completada';
+
+  @override
+  String get deal_agreed_desc =>
+      'Trato acordado. Coordina la entrega física para completar la operación.';
+
+  @override
+  String get deal_complete_btn => 'Confirmar entrega y completar trato';
+
+  @override
+  String get deal_cancel_agreed => 'Cancelar acuerdo';
+
+  @override
+  String get deal_complete_confirm_title => '¿Completar este trato?';
+
+  @override
+  String get deal_complete_confirm_desc =>
+      'Esta acción confirmará la entrega física del producto y registrará la venta final en el inventario.';
+
+  @override
+  String get deal_complete_confirm_btn => 'Completar';
+
+  @override
+  String get deal_completed_success => 'Trato completado exitosamente';
+
+  @override
+  String get deal_detail_error => 'Ocurrió un error';
+
+  @override
+  String get deal_detail_not_found => 'No se encontró el trato.';
+
+  @override
+  String get deal_detail_quantity => 'Cantidad';
+
+  @override
+  String get deal_detail_price_per_kg => 'Precio por kg';
+
+  @override
+  String get deal_detail_delivery_method => 'Método de entrega';
+
+  @override
+  String get deal_detail_status => 'Estado';
+
+  @override
+  String get deal_detail_rate_coming_soon =>
+      'La calificación de tratos estará disponible pronto.';
+
+  @override
+  String get deal_detail_rate_farmer => 'Calificar productor';
+
+  @override
+  String get deal_detail_rate_buyer => 'Calificar comprador';
+
+  @override
+  String get deal_detail_proposal_cancelled => 'Propuesta cancelada';
+
+  @override
+  String get deals_unknown_crop => 'Cosecha desconocida';
+
+  @override
+  String get deals_counterpart_producer => 'Productor';
+
+  @override
+  String get deals_counterpart_buyer_label => 'Comprador';
+
+  @override
+  String get deals_status_pending => 'Pendiente';
+
+  @override
+  String get deals_status_counteroffer => 'Contraoferta';
+
+  @override
+  String get deals_status_agreed => 'Acordado';
+
+  @override
+  String get deals_status_completed => 'Completado';
+
+  @override
+  String get deals_status_rejected => 'Rechazado';
+
+  @override
+  String get deals_status_cancelled => 'Cancelado';
+
+  @override
+  String get offer_sheet_base_price => 'Base';
+
+  @override
+  String get offer_sheet_min_order => 'Mín';
+
+  @override
+  String get offer_sheet_available_stock => 'Stock disp.';
+
+  @override
+  String get offer_sheet_unapproved_error =>
+      'Tu cuenta debe estar verificada y aprobada para realizar ofertas comerciales.';
+
+  @override
+  String get crop_unapproved_warning =>
+      'Tu cuenta debe estar verificada y aprobada para realizar ofertas comerciales.';
+
+  @override
+  String get crop_unapproved_dialog_title => 'Verificación requerida';
+
+  @override
+  String get crop_unapproved_dialog_desc =>
+      'Para realizar ofertas y negociar con los agricultores, tu perfil debe estar verificado y aprobado por un moderador.';
+
+  @override
+  String get crop_unapproved_dialog_action => 'Entendido';
 }

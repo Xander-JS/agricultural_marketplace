@@ -814,4 +814,112 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get purchases_status_completed => 'Completed';
+
+  @override
+  String get deal_agreed_desc =>
+      'Deal agreed. Coordinate physical delivery to complete the transaction.';
+
+  @override
+  String get deal_complete_btn => 'Confirm delivery and complete deal';
+
+  @override
+  String get deal_cancel_agreed => 'Cancel agreement';
+
+  @override
+  String get deal_complete_confirm_title => 'Complete this deal?';
+
+  @override
+  String get deal_complete_confirm_desc =>
+      'This action will confirm physical product delivery and record the final sale in inventory.';
+
+  @override
+  String get deal_complete_confirm_btn => 'Complete';
+
+  @override
+  String get deal_completed_success => 'Deal completed successfully';
+
+  @override
+  String get deal_detail_error => 'An error occurred';
+
+  @override
+  String get deal_detail_not_found => 'Deal not found.';
+
+  @override
+  String get deal_detail_quantity => 'Quantity';
+
+  @override
+  String get deal_detail_price_per_kg => 'Price per kg';
+
+  @override
+  String get deal_detail_delivery_method => 'Delivery method';
+
+  @override
+  String get deal_detail_status => 'Status';
+
+  @override
+  String get deal_detail_rate_coming_soon =>
+      'Deal reviews will be available soon.';
+
+  @override
+  String get deal_detail_rate_farmer => 'Rate farmer';
+
+  @override
+  String get deal_detail_rate_buyer => 'Rate buyer';
+
+  @override
+  String get deal_detail_proposal_cancelled => 'Proposal cancelled';
+
+  @override
+  String get deals_unknown_crop => 'Unknown crop';
+
+  @override
+  String get deals_counterpart_producer => 'Producer';
+
+  @override
+  String get deals_counterpart_buyer_label => 'Buyer';
+
+  @override
+  String get deals_status_pending => 'Pending';
+
+  @override
+  String get deals_status_counteroffer => 'Counteroffer';
+
+  @override
+  String get deals_status_agreed => 'Agreed';
+
+  @override
+  String get deals_status_completed => 'Completed';
+
+  @override
+  String get deals_status_rejected => 'Rejected';
+
+  @override
+  String get deals_status_cancelled => 'Cancelled';
+
+  @override
+  String get offer_sheet_base_price => 'Base';
+
+  @override
+  String get offer_sheet_min_order => 'Min';
+
+  @override
+  String get offer_sheet_available_stock => 'Avail. stock';
+
+  @override
+  String get offer_sheet_unapproved_error =>
+      'Your account must be verified and approved to make commercial offers.';
+
+  @override
+  String get crop_unapproved_warning =>
+      'Your account must be verified and approved to make commercial offers.';
+
+  @override
+  String get crop_unapproved_dialog_title => 'Verification required';
+
+  @override
+  String get crop_unapproved_dialog_desc =>
+      'To make offers and negotiate with farmers, your profile must be verified and approved by a moderator.';
+
+  @override
+  String get crop_unapproved_dialog_action => 'Understood';
 }

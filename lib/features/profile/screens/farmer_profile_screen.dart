@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/services/app_preferences_service.dart';
 import '../../auth/login/screens/login_screen.dart';
 import '../models/farmer_profile_data.dart';
 import '../services/profile_service.dart';
@@ -34,9 +35,9 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
   bool _isSaving = false;
   FarmerProfileData? _profileData;
 
-  // Preferencias de Accesibilidad
-  bool _isDarkMode = false;
-  bool _isEnglish = false;
+  // Preferencias de Accesibilidad (conectadas globalmente a AppPreferencesService)
+  late bool _isDarkMode;
+  late bool _isEnglish;
 
   // Controladores para la edición de campos de contacto
   late TextEditingController _emailController;
@@ -56,6 +57,9 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
   @override
   void initState() {
     super.initState();
+    _isDarkMode = AppPreferencesService.instance.isDarkMode;
+    _isEnglish = AppPreferencesService.instance.isEnglish;
+
     _emailController = TextEditingController();
     _phoneController = TextEditingController();
     _emailFocusNode = FocusNode();
@@ -585,13 +589,14 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
                           title: l10n?.profile_dark_mode ?? 'Modo oscuro',
                           value: _isDarkMode,
                           isDark: isDark,
-                          onChanged: (val) {
+                          onChanged: (val) async {
                             setModalState(() {
                               _isDarkMode = val;
                             });
                             setState(() {
                               _isDarkMode = val;
                             });
+                            await AppPreferencesService.instance.toggleDarkMode(val);
                           },
                         ),
                         Divider(height: 1, color: borderColor),
@@ -599,13 +604,14 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
                           title: l10n?.profile_english_language ?? 'Idioma inglés',
                           value: _isEnglish,
                           isDark: isDark,
-                          onChanged: (val) {
+                          onChanged: (val) async {
                             setModalState(() {
                               _isEnglish = val;
                             });
                             setState(() {
                               _isEnglish = val;
                             });
+                            await AppPreferencesService.instance.toggleEnglish(val);
                           },
                         ),
                       ],

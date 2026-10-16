@@ -5,7 +5,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:agricultural_marketplace/core/localization/localization_config.dart';
 import 'package:agricultural_marketplace/core/theme/app_theme.dart';
 import 'package:agricultural_marketplace/core/widgets/navigation/app_bottom_navigation.dart';
-import 'package:agricultural_marketplace/features/dashboard/screens/main_dashboard_screen.dart';
 import 'package:agricultural_marketplace/features/crop/models/crop_model.dart';
 import 'package:agricultural_marketplace/features/crop/screens/crop_detail_screen.dart';
 import 'package:agricultural_marketplace/features/crop/screens/marketplace_screen.dart';

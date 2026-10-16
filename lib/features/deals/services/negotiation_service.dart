@@ -127,24 +127,26 @@ class NegotiationService {
         }
       }
 
-      final deliveryDb = DeliveryMethod.toDb(deliveryMethod);
+      final now = DateTime.now().toIso8601String();
 
       // 1. Create the offer
-      await _supabase.from('negotiation_offers').insert({
-        'negotiation_id': negotiationId,
-        'sender_id': user.id,
-        'quantity_kg': quantityKg,
-        'proposed_price_per_kg': proposedPricePerKg,
-        'delivery_method': deliveryDb,
-        if (message != null && message.trim().isNotEmpty) 'message': message.trim(),
-      });
+      final offerPayload = buildOfferPayload(
+        negotiationId: negotiationId,
+        senderId: user.id,
+        quantityKg: quantityKg,
+        proposedPricePerKg: proposedPricePerKg,
+        deliveryMethod: deliveryMethod,
+        message: message,
+        timestamp: now,
+      );
+      await _supabase.from('negotiation_offers').insert(offerPayload);
 
       // 2. Update negotiation state
-      await _supabase.from('negotiations').update({
-        'status': NegotiationStatus.contraofertada.toShortString(),
-        'current_responder': responderDb,
-        'updated_at': DateTime.now().toIso8601String(),
-      }).eq('id', negotiationId);
+      final updatePayload = buildCounterOfferNegotiationPayload(
+        nextResponderRole: responderDb,
+        timestamp: now,
+      );
+      await _supabase.from('negotiations').update(updatePayload).eq('id', negotiationId);
 
     } catch (e) {
       if (e is Exception) rethrow;
@@ -380,6 +382,62 @@ class NegotiationService {
     }
   }
 
+  /// Genera el payload canónico para insertar en la tabla `negotiations`.
+  /// Garantiza que `current_responder` use el enum PostgreSQL `agricultor` ('agricultor') y NUNCA 'farmer'.
+  static Map<String, dynamic> buildInitialNegotiationPayload({
+    required String cropId,
+    required String buyerId,
+    required String timestamp,
+  }) {
+    final roleDb = UserRole.agricultor.toDbValue();
+    assert(roleDb == 'agricultor' && roleDb != 'farmer');
+    return {
+      'crop_id': cropId,
+      'buyer_id': buyerId,
+      'status': NegotiationStatus.propuesta.toShortString(),
+      'current_responder': roleDb,
+      'created_at': timestamp,
+      'updated_at': timestamp,
+    };
+  }
+
+  /// Genera el payload canónico para insertar en la tabla `negotiation_offers`.
+  /// Mapea el método de entrega al enum PostgreSQL `delivery_method`.
+  static Map<String, dynamic> buildOfferPayload({
+    required String negotiationId,
+    required String senderId,
+    required double quantityKg,
+    required double proposedPricePerKg,
+    required String deliveryMethod,
+    String? message,
+    required String timestamp,
+  }) {
+    final deliveryDb = DeliveryMethod.toDb(deliveryMethod);
+    return {
+      'negotiation_id': negotiationId,
+      'sender_id': senderId,
+      'quantity_kg': quantityKg,
+      'proposed_price_per_kg': proposedPricePerKg,
+      'delivery_method': deliveryDb,
+      if (message != null && message.trim().isNotEmpty) 'message': message.trim(),
+      'created_at': timestamp,
+    };
+  }
+
+  /// Genera el payload canónico para actualizar la tabla `negotiations` en contraofertas.
+  static Map<String, dynamic> buildCounterOfferNegotiationPayload({
+    required String nextResponderRole,
+    required String timestamp,
+  }) {
+    final responderDb = UserRole.fromString(nextResponderRole).toDbValue();
+    assert(responderDb == 'agricultor' || responderDb == 'comprador');
+    return {
+      'status': NegotiationStatus.contraofertada.toShortString(),
+      'current_responder': responderDb,
+      'updated_at': timestamp,
+    };
+  }
+
   /// Crea una nueva negociación iniciada por el comprador con su oferta inicial.
   ///
   /// Garantiza:
@@ -431,35 +489,35 @@ class NegotiationService {
       }
 
       final now = DateTime.now().toIso8601String();
-      final deliveryDb = DeliveryMethod.toDb(deliveryMethod);
 
       // 4. Insertar registro en negotiations con enum user_role: 'agricultor'
+      final negPayload = buildInitialNegotiationPayload(
+        cropId: cropId,
+        buyerId: user.id,
+        timestamp: now,
+      );
+
       final negResponse = await _supabase
           .from('negotiations')
-          .insert({
-            'crop_id': cropId,
-            'buyer_id': user.id,
-            'status': NegotiationStatus.propuesta.toShortString(),
-            'current_responder': UserRole.agricultor.toDbValue(), // 'agricultor' en Supabase enum user_role
-            'created_at': now,
-            'updated_at': now,
-          })
+          .insert(negPayload)
           .select()
           .single();
 
       final negotiationId = negResponse['id'] as String;
 
+      final offerPayload = buildOfferPayload(
+        negotiationId: negotiationId,
+        senderId: user.id,
+        quantityKg: quantityKg,
+        proposedPricePerKg: proposedPricePerKg,
+        deliveryMethod: deliveryMethod,
+        message: message,
+        timestamp: now,
+      );
+
       // 5. Insertar primera oferta en negotiation_offers con rollback de resguardo
       try {
-        await _supabase.from('negotiation_offers').insert({
-          'negotiation_id': negotiationId,
-          'sender_id': user.id,
-          'quantity_kg': quantityKg,
-          'proposed_price_per_kg': proposedPricePerKg,
-          'delivery_method': deliveryDb,
-          if (message != null && message.trim().isNotEmpty) 'message': message.trim(),
-          'created_at': now,
-        });
+        await _supabase.from('negotiation_offers').insert(offerPayload);
       } catch (insertError) {
         // En caso de fallo al persistir la oferta inicial, eliminar la negociación creada
         // para garantizar atomicidad y evitar registros huérfanos incompletos en PostgreSQL

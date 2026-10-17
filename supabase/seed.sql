@@ -1,0 +1,1 @@
+-- Datos de prueba locales: todavía no se insertan registros.

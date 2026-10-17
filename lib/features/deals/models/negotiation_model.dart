@@ -1,6 +1,7 @@
 import 'negotiation_status.dart';
 import '../../crop/models/crop_model.dart';
 import 'negotiation_offer_model.dart';
+import '../../../core/constants/user_roles.dart';
 
 class NegotiationModel {
   final String id;
@@ -31,6 +32,20 @@ class NegotiationModel {
     this.offers,
   });
 
+  /// Rol normalizado que debe responder actualmente
+  UserRole get responderRole => UserRole.fromString(currentResponder);
+
+  /// Es el turno del agricultor / productor
+  bool get isFarmerTurn => responderRole == UserRole.agricultor;
+
+  /// Es el turno del comprador / comerciante
+  bool get isBuyerTurn => responderRole == UserRole.comprador;
+
+  /// Determina si es el turno del usuario autenticado según su rol
+  bool isMyTurn({required bool isBuyer}) {
+    return (isBuyer && isBuyerTurn) || (!isBuyer && isFarmerTurn);
+  }
+
   factory NegotiationModel.fromJson(Map<String, dynamic> json) {
     List<NegotiationOfferModel>? parsedOffers;
     if (json['negotiation_offers'] != null) {
@@ -53,7 +68,7 @@ class NegotiationModel {
       cropId: json['crop_id'] as String,
       buyerId: json['buyer_id'] as String,
       status: NegotiationStatus.fromString(json['status'] as String),
-      currentResponder: json['current_responder'] as String,
+      currentResponder: json['current_responder'] as String? ?? 'agricultor',
       createdAt: json['created_at'] != null 
         ? DateTime.parse(json['created_at'].toString())
         : DateTime.now(),
@@ -73,7 +88,7 @@ class NegotiationModel {
       'crop_id': cropId,
       'buyer_id': buyerId,
       'status': status.toShortString(),
-      'current_responder': currentResponder,
+      'current_responder': responderRole.toDbValue(),
     };
   }
 }

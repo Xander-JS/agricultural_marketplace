@@ -7,6 +7,7 @@ import '../services/negotiation_service.dart';
 import 'deal_detail_screen.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/localization/app_localizations.dart';
+import '../../../core/constants/user_roles.dart';
 
 class DealsScreen extends StatefulWidget {
   final String? role;
@@ -32,17 +33,7 @@ class _DealsScreenState extends State<DealsScreen> with SingleTickerProviderStat
   String? _userRole;
   late TabController _tabController;
 
-  bool get _isBuyer {
-    if (widget.role != null) {
-      final r = widget.role!.trim().toLowerCase();
-      return r == 'comprador' || r == 'comerciante';
-    }
-    if (_userRole != null) {
-      final r = _userRole!.trim().toLowerCase();
-      return r == 'comprador' || r == 'comerciante';
-    }
-    return false;
-  }
+  bool get _isBuyer => UserRole.isBuyerRole(widget.role ?? _userRole);
 
   @override
   void initState() {
@@ -264,8 +255,7 @@ class _DealsScreenState extends State<DealsScreen> with SingleTickerProviderStat
         negotiation.status == NegotiationStatus.contraofertada;
 
     final isMyTurn = isPendingOrNegotiating &&
-        ((_isBuyer && negotiation.currentResponder == 'buyer') ||
-         (!_isBuyer && negotiation.currentResponder == 'farmer'));
+        negotiation.isMyTurn(isBuyer: _isBuyer);
 
     final isWaiting = isPendingOrNegotiating && !isMyTurn;
 

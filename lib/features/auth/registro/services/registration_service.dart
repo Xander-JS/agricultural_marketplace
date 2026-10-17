@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/constants/user_roles.dart';
 
 class RegistrationService {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -45,12 +46,12 @@ class RegistrationService {
           .upload(backPath, documentBack);
       await _supabase.storage.from('user_documents').upload(selfiePath, selfie);
 
-      // 3. Insert into profiles
+      // 3. Insert into profiles con mapeo seguro al enum PostgreSQL user_role
       await _supabase.from('profiles').insert({
         'id': user.id,
         'phone': phone,
         'full_name': '$firstName $lastName'.trim(),
-        'role': role,
+        'role': UserRole.toDb(role),
         'verification_status': 'pendiente',
       });
 

@@ -1627,6 +1627,210 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Completada'**
   String get purchases_status_completed;
+
+  /// No description provided for @deal_agreed_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Trato acordado. Coordina la entrega física para completar la operación.'**
+  String get deal_agreed_desc;
+
+  /// No description provided for @deal_complete_btn.
+  ///
+  /// In es, this message translates to:
+  /// **'Confirmar entrega y completar trato'**
+  String get deal_complete_btn;
+
+  /// No description provided for @deal_cancel_agreed.
+  ///
+  /// In es, this message translates to:
+  /// **'Cancelar acuerdo'**
+  String get deal_cancel_agreed;
+
+  /// No description provided for @deal_complete_confirm_title.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Completar este trato?'**
+  String get deal_complete_confirm_title;
+
+  /// No description provided for @deal_complete_confirm_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta acción confirmará la entrega física del producto y registrará la venta final en el inventario.'**
+  String get deal_complete_confirm_desc;
+
+  /// No description provided for @deal_complete_confirm_btn.
+  ///
+  /// In es, this message translates to:
+  /// **'Completar'**
+  String get deal_complete_confirm_btn;
+
+  /// No description provided for @deal_completed_success.
+  ///
+  /// In es, this message translates to:
+  /// **'Trato completado exitosamente'**
+  String get deal_completed_success;
+
+  /// No description provided for @deal_detail_error.
+  ///
+  /// In es, this message translates to:
+  /// **'Ocurrió un error'**
+  String get deal_detail_error;
+
+  /// No description provided for @deal_detail_not_found.
+  ///
+  /// In es, this message translates to:
+  /// **'No se encontró el trato.'**
+  String get deal_detail_not_found;
+
+  /// No description provided for @deal_detail_quantity.
+  ///
+  /// In es, this message translates to:
+  /// **'Cantidad'**
+  String get deal_detail_quantity;
+
+  /// No description provided for @deal_detail_price_per_kg.
+  ///
+  /// In es, this message translates to:
+  /// **'Precio por kg'**
+  String get deal_detail_price_per_kg;
+
+  /// No description provided for @deal_detail_delivery_method.
+  ///
+  /// In es, this message translates to:
+  /// **'Método de entrega'**
+  String get deal_detail_delivery_method;
+
+  /// No description provided for @deal_detail_status.
+  ///
+  /// In es, this message translates to:
+  /// **'Estado'**
+  String get deal_detail_status;
+
+  /// No description provided for @deal_detail_rate_coming_soon.
+  ///
+  /// In es, this message translates to:
+  /// **'La calificación de tratos estará disponible pronto.'**
+  String get deal_detail_rate_coming_soon;
+
+  /// No description provided for @deal_detail_rate_farmer.
+  ///
+  /// In es, this message translates to:
+  /// **'Calificar productor'**
+  String get deal_detail_rate_farmer;
+
+  /// No description provided for @deal_detail_rate_buyer.
+  ///
+  /// In es, this message translates to:
+  /// **'Calificar comprador'**
+  String get deal_detail_rate_buyer;
+
+  /// No description provided for @deal_detail_proposal_cancelled.
+  ///
+  /// In es, this message translates to:
+  /// **'Propuesta cancelada'**
+  String get deal_detail_proposal_cancelled;
+
+  /// No description provided for @deals_unknown_crop.
+  ///
+  /// In es, this message translates to:
+  /// **'Cosecha desconocida'**
+  String get deals_unknown_crop;
+
+  /// No description provided for @deals_counterpart_producer.
+  ///
+  /// In es, this message translates to:
+  /// **'Productor'**
+  String get deals_counterpart_producer;
+
+  /// No description provided for @deals_counterpart_buyer_label.
+  ///
+  /// In es, this message translates to:
+  /// **'Comprador'**
+  String get deals_counterpart_buyer_label;
+
+  /// No description provided for @deals_status_pending.
+  ///
+  /// In es, this message translates to:
+  /// **'Pendiente'**
+  String get deals_status_pending;
+
+  /// No description provided for @deals_status_counteroffer.
+  ///
+  /// In es, this message translates to:
+  /// **'Contraoferta'**
+  String get deals_status_counteroffer;
+
+  /// No description provided for @deals_status_agreed.
+  ///
+  /// In es, this message translates to:
+  /// **'Acordado'**
+  String get deals_status_agreed;
+
+  /// No description provided for @deals_status_completed.
+  ///
+  /// In es, this message translates to:
+  /// **'Completado'**
+  String get deals_status_completed;
+
+  /// No description provided for @deals_status_rejected.
+  ///
+  /// In es, this message translates to:
+  /// **'Rechazado'**
+  String get deals_status_rejected;
+
+  /// No description provided for @deals_status_cancelled.
+  ///
+  /// In es, this message translates to:
+  /// **'Cancelado'**
+  String get deals_status_cancelled;
+
+  /// No description provided for @offer_sheet_base_price.
+  ///
+  /// In es, this message translates to:
+  /// **'Base'**
+  String get offer_sheet_base_price;
+
+  /// No description provided for @offer_sheet_min_order.
+  ///
+  /// In es, this message translates to:
+  /// **'Mín'**
+  String get offer_sheet_min_order;
+
+  /// No description provided for @offer_sheet_available_stock.
+  ///
+  /// In es, this message translates to:
+  /// **'Stock disp.'**
+  String get offer_sheet_available_stock;
+
+  /// No description provided for @offer_sheet_unapproved_error.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu cuenta debe estar verificada y aprobada para realizar ofertas comerciales.'**
+  String get offer_sheet_unapproved_error;
+
+  /// No description provided for @crop_unapproved_warning.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu cuenta debe estar verificada y aprobada para realizar ofertas comerciales.'**
+  String get crop_unapproved_warning;
+
+  /// No description provided for @crop_unapproved_dialog_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Verificación requerida'**
+  String get crop_unapproved_dialog_title;
+
+  /// No description provided for @crop_unapproved_dialog_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Para realizar ofertas y negociar con los agricultores, tu perfil debe estar verificado y aprobado por un moderador.'**
+  String get crop_unapproved_dialog_desc;
+
+  /// No description provided for @crop_unapproved_dialog_action.
+  ///
+  /// In es, this message translates to:
+  /// **'Entendido'**
+  String get crop_unapproved_dialog_action;
 }
 
 class _AppLocalizationsDelegate

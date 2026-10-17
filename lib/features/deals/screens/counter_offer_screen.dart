@@ -5,6 +5,8 @@ import '../models/negotiation_offer_model.dart';
 import '../services/negotiation_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/localization/app_localizations.dart';
+import '../../../core/constants/user_roles.dart';
+import '../../../core/constants/delivery_methods.dart';
 
 class CounterOfferScreen extends StatefulWidget {
   final NegotiationModel negotiation;
@@ -32,20 +34,14 @@ class _CounterOfferScreenState extends State<CounterOfferScreen> {
   late TextEditingController _priceController;
   late TextEditingController _messageController;
 
-  String _deliveryMethod = 'En finca';
-  final List<String> _deliveryOptions = [
-    'En finca',
-    'Punto de acopio',
-    'Destino final',
-    'A acordar con la otra parte',
-  ];
+  String _deliveryMethod = DeliveryMethod.uiOptions.first;
+  final List<String> _deliveryOptions = DeliveryMethod.uiOptions;
 
   bool _isLoading = false;
 
   bool get _isBuyer {
     if (widget.role != null) {
-      final r = widget.role!.trim().toLowerCase();
-      return r == 'comprador' || r == 'comerciante';
+      return UserRole.isBuyerRole(widget.role);
     }
     final user = Supabase.instance.client.auth.currentUser;
     if (user != null) {
@@ -69,6 +65,11 @@ class _CounterOfferScreenState extends State<CounterOfferScreen> {
 
     if (_deliveryOptions.contains(widget.latestOffer.deliveryMethod)) {
       _deliveryMethod = widget.latestOffer.deliveryMethod;
+    } else {
+      _deliveryMethod = DeliveryMethod.toLabel(widget.latestOffer.deliveryMethod);
+      if (!_deliveryOptions.contains(_deliveryMethod)) {
+        _deliveryMethod = _deliveryOptions.first;
+      }
     }
   }
 
@@ -93,13 +94,16 @@ class _CounterOfferScreenState extends State<CounterOfferScreen> {
   }
 
   Future<void> _submit() async {
+    if (_isLoading) return;
     final l10n = AppLocalizations.of(context);
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
     try {
-      final nextResponder = _isBuyer ? 'farmer' : 'buyer';
+      final nextResponder = _isBuyer
+          ? UserRole.agricultor.toDbValue()
+          : UserRole.comprador.toDbValue();
 
       await _service.counterOffer(
         negotiationId: widget.negotiation.id,

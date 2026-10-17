@@ -4,7 +4,6 @@ import 'package:agricultural_marketplace/core/localization/app_localizations.dar
 import '../../../../core/widgets/loading/app_loading.dart';
 import '../../../../core/widgets/loading/loading_content.dart';
 import '../models/registration_data.dart';
-import '../services/registration_service.dart';
 import '../../login/screens/login_screen.dart';
 
 class ProcessingScreen extends StatefulWidget {
@@ -16,8 +15,6 @@ class ProcessingScreen extends StatefulWidget {
 }
 
 class _ProcessingScreenState extends State<ProcessingScreen> {
-  final RegistrationService _service = RegistrationService();
-
   late String _statusMessage;
   bool _hasError = false;
   bool _isSpinning = true;

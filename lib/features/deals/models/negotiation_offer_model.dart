@@ -1,3 +1,5 @@
+import '../../../core/constants/delivery_methods.dart';
+
 class NegotiationOfferModel {
   final String id;
   final String negotiationId;
@@ -19,6 +21,12 @@ class NegotiationOfferModel {
     required this.createdAt,
   });
 
+  /// Etiqueta descriptiva para la interfaz de usuario
+  String get deliveryMethodLabel => DeliveryMethod.toLabel(deliveryMethod);
+
+  /// Valor normalizado admitido por PostgreSQL
+  String get deliveryMethodDbValue => DeliveryMethod.toDb(deliveryMethod);
+
   factory NegotiationOfferModel.fromJson(Map<String, dynamic> json) {
     return NegotiationOfferModel(
       id: json['id'] as String? ?? '',
@@ -26,7 +34,7 @@ class NegotiationOfferModel {
       senderId: json['sender_id'] as String,
       quantityKg: (json['quantity_kg'] as num).toDouble(),
       proposedPricePerKg: (json['proposed_price_per_kg'] as num).toDouble(),
-      deliveryMethod: json['delivery_method'] as String,
+      deliveryMethod: json['delivery_method'] as String? ?? 'en_finca',
       message: json['message'] as String?,
       createdAt: json['created_at'] != null 
         ? DateTime.parse(json['created_at'].toString())
@@ -41,7 +49,7 @@ class NegotiationOfferModel {
       'sender_id': senderId,
       'quantity_kg': quantityKg,
       'proposed_price_per_kg': proposedPricePerKg,
-      'delivery_method': deliveryMethod,
+      'delivery_method': deliveryMethodDbValue,
       if (message != null) 'message': message,
     };
   }

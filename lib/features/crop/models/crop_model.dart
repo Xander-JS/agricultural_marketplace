@@ -49,6 +49,13 @@ class CropModel {
   // Additional fields for relationships
   final List<String> imageUrls; // Mapped from crop_images
 
+  /// Stock disponible calculado según las reglas oficiales del sistema:
+  /// stock_disponible = stock_total - stock_comprometido - stock_vendido
+  double get availableStock {
+    final available = stockTotal - stockCommitted - stockSold;
+    return available < 0 ? 0.0 : available;
+  }
+
   CropModel({
     required this.id,
     required this.farmerId,

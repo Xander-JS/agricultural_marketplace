@@ -8,6 +8,7 @@ import '../services/negotiation_service.dart';
 import 'counter_offer_screen.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/localization/app_localizations.dart';
+import '../../../core/constants/user_roles.dart';
 
 class DealDetailScreen extends StatefulWidget {
   final String negotiationId;
@@ -35,8 +36,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
 
   bool get _isBuyer {
     if (widget.role != null) {
-      final r = widget.role!.trim().toLowerCase();
-      return r == 'comprador' || r == 'comerciante';
+      return UserRole.isBuyerRole(widget.role);
     }
     final user = Supabase.instance.client.auth.currentUser;
     if (user != null && _negotiation != null) {
@@ -47,11 +47,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
 
   bool get _isMyTurn {
     if (_negotiation == null) return false;
-    if (_isBuyer) {
-      return _negotiation!.currentResponder == 'buyer';
-    } else {
-      return _negotiation!.currentResponder == 'farmer';
-    }
+    return _negotiation!.isMyTurn(isBuyer: _isBuyer);
   }
 
   @override
@@ -465,8 +461,67 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
     bool isDark,
     AppLocalizations? l10n,
   ) {
-    if (n.status == NegotiationStatus.acordada ||
-        n.status == NegotiationStatus.completada ||
+    if (n.status == NegotiationStatus.acordada) {
+      return Column(
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkSurfaceVariant : AppColors.successLight,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: isDark ? AppColors.darkBorder : AppColors.success.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.handshake_outlined, color: AppColors.success),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    l10n?.deal_agreed_desc ?? 'Trato acordado. Coordina la entrega física para completar la operación.',
+                    style: TextStyle(
+                      color: isDark ? AppColors.darkTextPrimary : AppColors.success,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () => _completeNegotiation(n),
+              icon: const Icon(Icons.check_circle_outline),
+              label: Text(l10n?.deal_complete_btn ?? 'Confirmar entrega y completar trato'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                backgroundColor: isDark ? AppColors.darkTertiary : AppColors.lightTertiary,
+                foregroundColor: isDark ? AppColors.darkBackground : Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: TextButton(
+              onPressed: () => _rejectOffer(n),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.error,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+              child: Text(l10n?.deal_cancel_agreed ?? 'Cancelar acuerdo'),
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (n.status == NegotiationStatus.completada ||
         n.status == NegotiationStatus.rechazada ||
         n.status == NegotiationStatus.cancelada) {
       return const SizedBox.shrink();
@@ -707,6 +762,69 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
       }
     } catch (e) {
       if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceFirst('Exception: ', '')),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _completeNegotiation(NegotiationModel n) async {
+    final l10n = AppLocalizations.of(context);
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n?.deal_complete_confirm_title ?? '¿Completar este trato?'),
+        content: Text(
+          l10n?.deal_complete_confirm_desc ??
+              'Esta acción confirmará la entrega física del producto y registrará la venta final en el inventario.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n?.profile_cancel ?? 'Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.success,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(l10n?.deal_complete_confirm_btn ?? 'Completar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const Center(child: CircularProgressIndicator()),
+        );
+      }
+
+      await _service.completeNegotiation(n.id);
+
+      if (mounted) {
+        Navigator.pop(context); // pop loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n?.deal_completed_success ?? 'Trato completado exitosamente'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+        _loadData();
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString().replaceFirst('Exception: ', '')),

@@ -1,15 +1,38 @@
-import 'dart:math';
+// ignore_for_file: prefer_initializing_formals
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/negotiation_model.dart';
 import '../models/negotiation_status.dart';
+import '../exceptions/commercial_exception.dart';
 import '../../../core/constants/user_roles.dart';
 import '../../../core/constants/delivery_methods.dart';
 
+export '../exceptions/commercial_exception.dart';
+
+typedef RpcInvoker = Future<dynamic> Function(
+  String functionName, {
+  Map<String, dynamic>? params,
+});
+
+typedef GetNegotiationByIdInvoker = Future<NegotiationModel> Function(String id);
+
 class NegotiationService {
   final SupabaseClient _supabase;
+  final RpcInvoker? _rpcInvoker;
+  final GetNegotiationByIdInvoker? _getNegotiationByIdInvoker;
+  final String? _currentUserIdForTesting;
 
-  NegotiationService({SupabaseClient? client})
-      : _supabase = client ?? Supabase.instance.client;
+  NegotiationService({
+    SupabaseClient? client,
+    RpcInvoker? rpcInvoker,
+    GetNegotiationByIdInvoker? getNegotiationByIdInvoker,
+    String? currentUserIdForTesting,
+  })  : _supabase = client ?? Supabase.instance.client,
+        _rpcInvoker = rpcInvoker,
+        _getNegotiationByIdInvoker = getNegotiationByIdInvoker,
+        _currentUserIdForTesting = currentUserIdForTesting;
+
+  String? get _activeUserId =>
+      _currentUserIdForTesting ?? _supabase.auth.currentUser?.id;
 
   Future<List<NegotiationModel>> getFarmerNegotiations(String farmerId) async {
     try {
@@ -51,6 +74,10 @@ class NegotiationService {
   }
 
   Future<NegotiationModel> getNegotiationById(String id) async {
+    final invoker = _getNegotiationByIdInvoker;
+    if (invoker != null) {
+      return await invoker(id);
+    }
     try {
       final response = await _supabase
           .from('negotiations')
@@ -69,31 +96,8 @@ class NegotiationService {
     }
   }
 
-  /// Valida que el usuario tenga estado de verificación 'aprobado' en su perfil
-  Future<void> _validateUserApproved(String userId) async {
-    try {
-      final profile = await _supabase
-          .from('profiles')
-          .select('verification_status')
-          .eq('id', userId)
-          .maybeSingle();
-
-      if (profile != null) {
-        final status = UserVerificationStatus.fromString(
-          profile['verification_status'] as String?,
-        );
-        if (!status.isApproved) {
-          throw Exception(
-            'Tu cuenta debe estar verificada y aprobada para realizar operaciones comerciales.',
-          );
-        }
-      }
-    } catch (e) {
-      if (e is Exception) rethrow;
-      throw Exception('Error al validar estado de verificación: $e');
-    }
-  }
-
+  /// Registra una contraoferta mediante la función RPC PostgreSQL transaccional `counter_offer`.
+  /// Valida en servidor: identidad, perfil aprobado, turnos, participantes y stock disponible.
   Future<void> counterOffer({
     required String negotiationId,
     required double quantityKg,
@@ -102,256 +106,197 @@ class NegotiationService {
     String? message,
     String? nextResponder,
   }) async {
+    final userId = _activeUserId;
+    if (userId == null) {
+      throw const CommercialAuthException(
+        'Usuario no autenticado. Por favor inicia sesión nuevamente.',
+        code: '28000',
+      );
+    }
+
+    final dbDelivery = DeliveryMethod.toDb(deliveryMethod);
+    final cleanMessage = (message != null && message.trim().isNotEmpty)
+        ? message.trim()
+        : null;
+
+    final Map<String, dynamic> rpcParams = {
+      'p_negotiation_id': negotiationId,
+      'p_quantity_kg': quantityKg,
+      'p_proposed_price_per_kg': proposedPricePerKg,
+      'p_delivery_method': dbDelivery,
+      'p_message': cleanMessage,
+    };
+
     try {
-      final user = _supabase.auth.currentUser;
-      if (user == null) throw Exception('Usuario no autenticado');
-
-      // Validar permisos de verificación comercial
-      await _validateUserApproved(user.id);
-
-      // Determinar quién debe responder en formato PostgreSQL enum user_role
-      String responderDb;
-      if (nextResponder != null) {
-        responderDb = UserRole.fromString(nextResponder).toDbValue();
+      final invoker = _rpcInvoker;
+      if (invoker != null) {
+        await invoker('counter_offer', params: rpcParams);
       } else {
-        final neg = await _supabase
-            .from('negotiations')
-            .select('buyer_id')
-            .eq('id', negotiationId)
-            .maybeSingle();
-
-        if (neg != null && neg['buyer_id'] == user.id) {
-          responderDb = UserRole.agricultor.toDbValue();
-        } else {
-          responderDb = UserRole.comprador.toDbValue();
-        }
+        await _supabase.rpc('counter_offer', params: rpcParams);
       }
-
-      final now = DateTime.now().toIso8601String();
-
-      // 1. Create the offer
-      final offerPayload = buildOfferPayload(
-        negotiationId: negotiationId,
-        senderId: user.id,
-        quantityKg: quantityKg,
-        proposedPricePerKg: proposedPricePerKg,
-        deliveryMethod: deliveryMethod,
-        message: message,
-        timestamp: now,
-      );
-      await _supabase.from('negotiation_offers').insert(offerPayload);
-
-      // 2. Update negotiation state
-      final updatePayload = buildCounterOfferNegotiationPayload(
-        nextResponderRole: responderDb,
-        timestamp: now,
-      );
-      await _supabase.from('negotiations').update(updatePayload).eq('id', negotiationId);
-
+    } on PostgrestException catch (pe) {
+      throw mapPostgrestError(pe);
     } catch (e) {
-      if (e is Exception) rethrow;
-      throw Exception('Error al enviar contraoferta: $e');
+      if (e is CommercialException) rethrow;
+      throw CommercialDatabaseException(
+        'Error al enviar contraoferta: $e',
+        originalError: e,
+      );
     }
   }
 
-  /// Acepta un trato acordando las condiciones y reservando el stock pactado:
-  /// stock_disponible = stock_total - stock_comprometido - stock_vendido
+  /// Acepta un trato acordando las condiciones y reservando el stock pactado
+  /// mediante la función RPC PostgreSQL transaccional `accept_negotiation`.
+  ///
+  /// Ejecuta bloqueo exclusivo `FOR UPDATE` en `crops`, verifica stock disponible,
+  /// reserva inventario en `stock_committed`, registra movimiento en `inventory_movements`
+  /// y actualiza `negotiations.status = 'acordada'` en una única transacción atómica.
   Future<void> acceptOffer(String negotiationId) async {
-    try {
-      final user = _supabase.auth.currentUser;
-      if (user == null) throw Exception('Usuario no autenticado');
-
-      // Validar permisos comerciales
-      await _validateUserApproved(user.id);
-
-      // 1. Obtener la negociación y su última oferta
-      final negotiation = await getNegotiationById(negotiationId);
-      final offers = negotiation.offers;
-      if (offers == null || offers.isEmpty) {
-        throw Exception('No hay ofertas registradas en esta negociación');
-      }
-
-      final latestOffer = offers.reduce(
-        (a, b) => a.createdAt.isAfter(b.createdAt) ? a : b,
+    final userId = _activeUserId;
+    if (userId == null) {
+      throw const CommercialAuthException(
+        'Usuario no autenticado. Por favor inicia sesión nuevamente.',
+        code: '28000',
       );
+    }
 
-      final crop = negotiation.crop;
-      if (crop != null) {
-        final available = crop.availableStock;
-        if (latestOffer.quantityKg > available) {
-          throw Exception(
-            'Stock disponible insuficiente ($available kg) para reservar ${latestOffer.quantityKg} kg pactados',
-          );
-        }
+    final Map<String, dynamic> rpcParams = {
+      'p_negotiation_id': negotiationId,
+    };
 
-        // 2. Reservar stock pactado en crops
-        final newCommitted = crop.stockCommitted + latestOffer.quantityKg;
-        await _supabase.from('crops').update({
-          'stock_committed': newCommitted,
-          'updated_at': DateTime.now().toIso8601String(),
-        }).eq('id', crop.id);
-
-        // 3. Registrar movimiento de inventario (reserva)
-        try {
-          await _supabase.from('inventory_movements').insert({
-            'crop_id': crop.id,
-            'negotiation_id': negotiationId,
-            'movement_type': 'reserva',
-            'quantity_kg': latestOffer.quantityKg,
-            'created_at': DateTime.now().toIso8601String(),
-          });
-        } catch (_) {
-          // Si la tabla no está disponible o falla el insert opcional, no romper el flujo
-        }
+    try {
+      final invoker = _rpcInvoker;
+      if (invoker != null) {
+        await invoker('accept_negotiation', params: rpcParams);
+      } else {
+        await _supabase.rpc('accept_negotiation', params: rpcParams);
       }
-
-      // 4. Actualizar estado de negociación a 'acordada'
-      await _supabase.from('negotiations').update({
-        'status': NegotiationStatus.acordada.toShortString(),
-        'updated_at': DateTime.now().toIso8601String(),
-      }).eq('id', negotiationId);
+    } on PostgrestException catch (pe) {
+      throw mapPostgrestError(pe);
     } catch (e) {
-      if (e is Exception) rethrow;
-      throw Exception('Error al aceptar la oferta: $e');
+      if (e is CommercialException) rethrow;
+      throw CommercialDatabaseException(
+        'Error al aceptar la oferta: $e',
+        originalError: e,
+      );
     }
   }
 
-  /// Completa una negociación acordada: convierte el stock comprometido en stock vendido
+  /// Completa una negociación acordada mediante la función RPC PostgreSQL transaccional `complete_negotiation`.
+  ///
+  /// Traslada `stock_committed` a `stock_sold`, ajusta estado del cultivo a 'agotada' si stock disponible llega a 0,
+  /// registra movimiento 'venta' en `inventory_movements` y actualiza `negotiations.status = 'completada'`.
   Future<void> completeNegotiation(String negotiationId) async {
-    try {
-      final user = _supabase.auth.currentUser;
-      if (user == null) throw Exception('Usuario no autenticado');
-
-      await _validateUserApproved(user.id);
-
-      final negotiation = await getNegotiationById(negotiationId);
-      final offers = negotiation.offers;
-      if (offers == null || offers.isEmpty) {
-        throw Exception('No hay ofertas registradas en esta negociación');
-      }
-
-      final latestOffer = offers.reduce(
-        (a, b) => a.createdAt.isAfter(b.createdAt) ? a : b,
+    final userId = _activeUserId;
+    if (userId == null) {
+      throw const CommercialAuthException(
+        'Usuario no autenticado. Por favor inicia sesión nuevamente.',
+        code: '28000',
       );
-
-      final crop = negotiation.crop;
-      if (crop != null) {
-        final newCommitted = max(0.0, crop.stockCommitted - latestOffer.quantityKg);
-        final newSold = crop.stockSold + latestOffer.quantityKg;
-        final availableRemaining = crop.stockTotal - newCommitted - newSold;
-        final isAgotada = availableRemaining <= 0;
-
-        await _supabase.from('crops').update({
-          'stock_committed': newCommitted,
-          'stock_sold': newSold,
-          if (isAgotada) 'status': 'agotada',
-          'updated_at': DateTime.now().toIso8601String(),
-        }).eq('id', crop.id);
-
-        try {
-          await _supabase.from('inventory_movements').insert({
-            'crop_id': crop.id,
-            'negotiation_id': negotiationId,
-            'movement_type': 'venta',
-            'quantity_kg': latestOffer.quantityKg,
-            'created_at': DateTime.now().toIso8601String(),
-          });
-        } catch (_) {}
-      }
-
-      await _supabase.from('negotiations').update({
-        'status': NegotiationStatus.completada.toShortString(),
-        'updated_at': DateTime.now().toIso8601String(),
-      }).eq('id', negotiationId);
-    } catch (e) {
-      if (e is Exception) rethrow;
-      throw Exception('Error al completar la negociación: $e');
     }
-  }
 
-  /// Rechaza un trato y libera la reserva de inventario si ya estaba acordado
-  Future<void> rejectOffer(String negotiationId) async {
+    final Map<String, dynamic> rpcParams = {
+      'p_negotiation_id': negotiationId,
+    };
+
     try {
-      final user = _supabase.auth.currentUser;
-      if (user == null) throw Exception('Usuario no autenticado');
-
-      final negotiation = await getNegotiationById(negotiationId);
-      if (negotiation.status == NegotiationStatus.acordada && negotiation.crop != null) {
-        final offers = negotiation.offers;
-        if (offers != null && offers.isNotEmpty) {
-          final latestOffer = offers.reduce(
-            (a, b) => a.createdAt.isAfter(b.createdAt) ? a : b,
-          );
-          final crop = negotiation.crop!;
-          final newCommitted = max(0.0, crop.stockCommitted - latestOffer.quantityKg);
-          await _supabase.from('crops').update({
-            'stock_committed': newCommitted,
-            'updated_at': DateTime.now().toIso8601String(),
-          }).eq('id', crop.id);
-
-          try {
-            await _supabase.from('inventory_movements').insert({
-              'crop_id': crop.id,
-              'negotiation_id': negotiationId,
-              'movement_type': 'liberacion_reserva',
-              'quantity_kg': latestOffer.quantityKg,
-              'created_at': DateTime.now().toIso8601String(),
-            });
-          } catch (_) {}
-        }
+      final invoker = _rpcInvoker;
+      if (invoker != null) {
+        await invoker('complete_negotiation', params: rpcParams);
+      } else {
+        await _supabase.rpc('complete_negotiation', params: rpcParams);
       }
-
-      await _supabase.from('negotiations').update({
-        'status': NegotiationStatus.rechazada.toShortString(),
-        'updated_at': DateTime.now().toIso8601String(),
-      }).eq('id', negotiationId);
+    } on PostgrestException catch (pe) {
+      throw mapPostgrestError(pe);
     } catch (e) {
-      if (e is Exception) rethrow;
-      throw Exception('Error al rechazar la oferta: $e');
+      if (e is CommercialException) rethrow;
+      throw CommercialDatabaseException(
+        'Error al completar la negociación: $e',
+        originalError: e,
+      );
     }
   }
 
-  /// Cancela una propuesta de negociación y libera la reserva si correspondía
-  Future<void> cancelOffer(String negotiationId) async {
+  /// Rechaza un trato mediante la función RPC PostgreSQL transaccional `reject_negotiation`.
+  ///
+  /// Si el trato ya estaba en estado 'acordada', libera atómicamente el `stock_committed`
+  /// y registra el movimiento 'liberacion_reserva' en `inventory_movements`.
+  Future<void> rejectOffer(String negotiationId, {String? reason}) async {
+    final userId = _activeUserId;
+    if (userId == null) {
+      throw const CommercialAuthException(
+        'Usuario no autenticado. Por favor inicia sesión nuevamente.',
+        code: '28000',
+      );
+    }
+
+    final cleanReason = (reason != null && reason.trim().isNotEmpty)
+        ? reason.trim()
+        : null;
+
+    final Map<String, dynamic> rpcParams = {
+      'p_negotiation_id': negotiationId,
+      'p_reason': ?cleanReason,
+    };
+
     try {
-      final user = _supabase.auth.currentUser;
-      if (user == null) throw Exception('Usuario no autenticado');
-
-      final negotiation = await getNegotiationById(negotiationId);
-      if (negotiation.status == NegotiationStatus.acordada && negotiation.crop != null) {
-        final offers = negotiation.offers;
-        if (offers != null && offers.isNotEmpty) {
-          final latestOffer = offers.reduce(
-            (a, b) => a.createdAt.isAfter(b.createdAt) ? a : b,
-          );
-          final crop = negotiation.crop!;
-          final newCommitted = max(0.0, crop.stockCommitted - latestOffer.quantityKg);
-          await _supabase.from('crops').update({
-            'stock_committed': newCommitted,
-            'updated_at': DateTime.now().toIso8601String(),
-          }).eq('id', crop.id);
-
-          try {
-            await _supabase.from('inventory_movements').insert({
-              'crop_id': crop.id,
-              'negotiation_id': negotiationId,
-              'movement_type': 'liberacion_reserva',
-              'quantity_kg': latestOffer.quantityKg,
-              'created_at': DateTime.now().toIso8601String(),
-            });
-          } catch (_) {}
-        }
+      final invoker = _rpcInvoker;
+      if (invoker != null) {
+        await invoker('reject_negotiation', params: rpcParams);
+      } else {
+        await _supabase.rpc('reject_negotiation', params: rpcParams);
       }
-
-      await _supabase.from('negotiations').update({
-        'status': NegotiationStatus.cancelada.toShortString(),
-        'updated_at': DateTime.now().toIso8601String(),
-      }).eq('id', negotiationId);
+    } on PostgrestException catch (pe) {
+      throw mapPostgrestError(pe);
     } catch (e) {
-      if (e is Exception) rethrow;
-      throw Exception('Error al cancelar la oferta: $e');
+      if (e is CommercialException) rethrow;
+      throw CommercialDatabaseException(
+        'Error al rechazar la oferta: $e',
+        originalError: e,
+      );
     }
   }
+
+  /// Cancela una propuesta de negociación mediante la función RPC PostgreSQL transaccional `cancel_negotiation`.
+  ///
+  /// Si el trato ya estaba en estado 'acordada', libera atómicamente el `stock_committed`
+  /// y registra el movimiento 'liberacion_reserva' en `inventory_movements`.
+  Future<void> cancelOffer(String negotiationId, {String? reason}) async {
+    final userId = _activeUserId;
+    if (userId == null) {
+      throw const CommercialAuthException(
+        'Usuario no autenticado. Por favor inicia sesión nuevamente.',
+        code: '28000',
+      );
+    }
+
+    final cleanReason = (reason != null && reason.trim().isNotEmpty)
+        ? reason.trim()
+        : null;
+
+    final Map<String, dynamic> rpcParams = {
+      'p_negotiation_id': negotiationId,
+      'p_reason': ?cleanReason,
+    };
+
+    try {
+      final invoker = _rpcInvoker;
+      if (invoker != null) {
+        await invoker('cancel_negotiation', params: rpcParams);
+      } else {
+        await _supabase.rpc('cancel_negotiation', params: rpcParams);
+      }
+    } on PostgrestException catch (pe) {
+      throw mapPostgrestError(pe);
+    } catch (e) {
+      if (e is CommercialException) rethrow;
+      throw CommercialDatabaseException(
+        'Error al cancelar la oferta: $e',
+        originalError: e,
+      );
+    }
+  }
+
 
   /// Consulta si el comprador ya tiene una negociación activa para este cultivo
   Future<NegotiationModel?> getActiveNegotiationForCrop({
@@ -438,13 +383,143 @@ class NegotiationService {
     };
   }
 
-  /// Crea una nueva negociación iniciada por el comprador con su oferta inicial.
+  /// Transforma PostgrestException de Supabase/PostgreSQL en excepciones comerciales tipadas.
+  /// Mapea los códigos SQL estándar y mensajes del servidor protegiendo credenciales y tokens.
+  static CommercialException mapPostgrestError(PostgrestException pe) {
+    final code = pe.code;
+    final message = pe.message;
+    final details = pe.details?.toString();
+
+    // 1. Error de autenticación (28000) o sesión ausente
+    if (code == '28000' || message.toLowerCase().contains('no autenticado')) {
+      return CommercialAuthException(
+        'Usuario no autenticado. Por favor inicia sesión nuevamente.',
+        code: code,
+        details: details,
+      );
+    }
+
+    // 2. Errores de permisos / RLS / Verificación de negocio (42501)
+    if (code == '42501') {
+      final msgLower = message.toLowerCase();
+      if (msgLower.contains('aprobad') || msgLower.contains('verificad')) {
+        return CommercialValidationException(
+          'Tu cuenta debe estar verificada y aprobada para realizar operaciones comerciales.',
+          code: code,
+          details: details,
+        );
+      }
+      if (msgLower.contains('propio cultivo')) {
+        return CommercialValidationException(
+          'No puedes iniciar una negociación sobre tu propio cultivo.',
+          code: code,
+          details: details,
+        );
+      }
+      if (msgLower.contains('rol') && msgLower.contains('comprador')) {
+        return CommercialValidationException(
+          'Solo los usuarios con rol de comprador pueden iniciar negociaciones.',
+          code: code,
+          details: details,
+        );
+      }
+      if (msgLower.contains('turno')) {
+        return CommercialValidationException(
+          'No es tu turno para responder a esta negociación.',
+          code: code,
+          details: details,
+        );
+      }
+      if (msgLower.contains('propia oferta')) {
+        return CommercialValidationException(
+          'No puedes aceptar tu propia oferta.',
+          code: code,
+          details: details,
+        );
+      }
+      if (msgLower.contains('cancelar una propuesta')) {
+        return CommercialAuthorizationException(
+          'Solo el comprador proponente puede cancelar una propuesta inicial.',
+          code: code,
+          details: details,
+        );
+      }
+      if (msgLower.contains('participante')) {
+        return CommercialAuthorizationException(
+          'Acceso denegado: no eres participante de esta negociación.',
+          code: code,
+          details: details,
+        );
+      }
+      return CommercialAuthorizationException(
+        'Acceso denegado: no tienes permisos para realizar esta operación comercial.',
+        code: code,
+        details: details,
+      );
+    }
+
+    // 3. Reglas comerciales y stock (22000)
+    if (code == '22000') {
+      final msgLower = message.toLowerCase();
+      if (msgLower.contains('stock') || msgLower.contains('disponible')) {
+        return InsufficientStockException(
+          message,
+          code: code,
+          details: details,
+        );
+      }
+      return CommercialValidationException(
+        message,
+        code: code,
+        details: details,
+      );
+    }
+
+    // 4. Negociación activa duplicada (23505 - Unique Violation)
+    if (code == '23505' || message.toLowerCase().contains('ya tienes una negociación activa')) {
+      return DuplicateNegotiationException(
+        'Ya tienes una negociación activa para este cultivo.',
+        code: code,
+        details: details,
+      );
+    }
+
+    // 5. Violación de restricciones CHECK de integridad (23514)
+    if (code == '23514') {
+      return CommercialValidationException(
+        'Operación rechazada: los valores no cumplen con las restricciones de integridad comercial.',
+        code: code,
+        details: details,
+      );
+    }
+
+    // 6. Entidad no encontrada (P0002)
+    if (code == 'P0002') {
+      return CommercialValidationException(
+        message,
+        code: code,
+        details: details,
+      );
+    }
+
+    // 7. Otros errores de base de datos
+    return CommercialDatabaseException(
+      'Error en la base de datos: $message',
+      code: code,
+      details: details,
+      originalError: pe,
+    );
+  }
+
+  /// Crea una nueva negociación iniciada por el comprador con su oferta inicial
+  /// de forma atómica mediante la función RPC PostgreSQL `create_negotiation_with_offer`.
   ///
   /// Garantiza:
-  /// 1. Validación de verificación comercial del usuario ('aprobado').
-  /// 2. Validación de pedido mínimo y stock disponible según `app_movil_estados_Sistema.docx`.
-  /// 3. Asignación correcta del turno inicial al agricultor (`current_responder = 'agricultor'`).
-  /// 4. Atomicidad: rollback con eliminación de la negociación si falla la oferta inicial.
+  /// 1. Validación de sesión autenticada.
+  /// 2. Atomicidad ACID total: la negociación y la oferta inicial se crean en la misma transacción.
+  /// 3. Validación en servidor de perfil aprobado, rol comprador, stock disponible y pedido mínimo.
+  /// 4. Protección contra condiciones de carrera e inserciones duplicadas (bloqueo FOR SHARE + índice único).
+  /// 5. Eliminación del rollback manual frágil en cliente.
   Future<NegotiationModel> createNegotiation({
     required String cropId,
     required double quantityKg,
@@ -452,86 +527,56 @@ class NegotiationService {
     required String deliveryMethod,
     String? message,
   }) async {
-    try {
-      final user = _supabase.auth.currentUser;
-      if (user == null) throw Exception('Usuario no autenticado');
-
-      // 1. Validar que el comprador tenga cuenta aprobada
-      await _validateUserApproved(user.id);
-
-      // 2. Validar reglas de inventario de la cosecha
-      final cropRes = await _supabase
-          .from('crops')
-          .select('stock_total, stock_committed, stock_sold, min_order_kg')
-          .eq('id', cropId)
-          .single();
-
-      final total = (cropRes['stock_total'] as num).toDouble();
-      final committed = (cropRes['stock_committed'] as num? ?? 0).toDouble();
-      final sold = (cropRes['stock_sold'] as num? ?? 0).toDouble();
-      final minOrder = (cropRes['min_order_kg'] as num? ?? 1).toDouble();
-      final available = max(0.0, total - committed - sold);
-
-      if (quantityKg < minOrder) {
-        throw Exception('La cantidad no cumple con el pedido mínimo (${minOrder.toStringAsFixed(0)} kg)');
-      }
-      if (quantityKg > available) {
-        throw Exception('La cantidad supera el stock disponible (${available.toStringAsFixed(0)} kg)');
-      }
-
-      // 3. Validar que no exista negociación activa previa para el mismo cultivo
-      final existing = await getActiveNegotiationForCrop(
-        cropId: cropId,
-        buyerId: user.id,
+    final userId = _activeUserId;
+    if (userId == null) {
+      throw const CommercialAuthException(
+        'Usuario no autenticado',
+        code: '28000',
       );
-      if (existing != null) {
-        throw Exception('Ya tienes una negociación activa para este cultivo');
-      }
-
-      final now = DateTime.now().toIso8601String();
-
-      // 4. Insertar registro en negotiations con enum user_role: 'agricultor'
-      final negPayload = buildInitialNegotiationPayload(
-        cropId: cropId,
-        buyerId: user.id,
-        timestamp: now,
-      );
-
-      final negResponse = await _supabase
-          .from('negotiations')
-          .insert(negPayload)
-          .select()
-          .single();
-
-      final negotiationId = negResponse['id'] as String;
-
-      final offerPayload = buildOfferPayload(
-        negotiationId: negotiationId,
-        senderId: user.id,
-        quantityKg: quantityKg,
-        proposedPricePerKg: proposedPricePerKg,
-        deliveryMethod: deliveryMethod,
-        message: message,
-        timestamp: now,
-      );
-
-      // 5. Insertar primera oferta en negotiation_offers con rollback de resguardo
-      try {
-        await _supabase.from('negotiation_offers').insert(offerPayload);
-      } catch (insertError) {
-        // En caso de fallo al persistir la oferta inicial, eliminar la negociación creada
-        // para garantizar atomicidad y evitar registros huérfanos incompletos en PostgreSQL
-        try {
-          await _supabase.from('negotiations').delete().eq('id', negotiationId);
-        } catch (_) {}
-        rethrow;
-      }
-
-      // 6. Retornar la negociación completa
-      return await getNegotiationById(negotiationId);
-    } catch (e) {
-      if (e is Exception) rethrow;
-      throw Exception('Error al iniciar negociación: $e');
     }
+
+    final dbDelivery = DeliveryMethod.toDb(deliveryMethod);
+    final cleanMessage = (message != null && message.trim().isNotEmpty)
+        ? message.trim()
+        : null;
+
+    final Map<String, dynamic> rpcParams = {
+      'p_crop_id': cropId,
+      'p_quantity_kg': quantityKg,
+      'p_proposed_price_per_kg': proposedPricePerKg,
+      'p_delivery_method': dbDelivery,
+      'p_message': ?cleanMessage,
+    };
+
+    final dynamic rpcResponse;
+    try {
+      final invoker = _rpcInvoker;
+      if (invoker != null) {
+        rpcResponse = await invoker(
+          'create_negotiation_with_offer',
+          params: rpcParams,
+        );
+      } else {
+        rpcResponse = await _supabase.rpc(
+          'create_negotiation_with_offer',
+          params: rpcParams,
+        );
+      }
+    } on PostgrestException catch (pe) {
+      throw mapPostgrestError(pe);
+    } catch (e) {
+      if (e is CommercialException) rethrow;
+      throw CommercialDatabaseException(
+        'Error al procesar la negociación: $e',
+        originalError: e,
+      );
+    }
+
+    final Map<String, dynamic> data = rpcResponse is Map<String, dynamic>
+        ? rpcResponse
+        : Map<String, dynamic>.from(rpcResponse as Map);
+
+    final negotiationId = data['id'] as String;
+    return await getNegotiationById(negotiationId);
   }
 }

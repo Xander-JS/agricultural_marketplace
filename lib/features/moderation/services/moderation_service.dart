@@ -147,7 +147,7 @@ class ModerationService {
         reviewed_at,
         created_at,
         updated_at,
-        profiles (
+        profiles!user_id (
           id,
           full_name,
           phone,

@@ -246,6 +246,59 @@ void main() {
       expect(fetchCount, equals(2));
     });
 
+    // 5b. Perfil con rol nulo
+    testWidgets('5b. Perfil con rol nulo conduce a estado recuperable con reintento y cierre de sesión', (tester) async {
+      final session = createMockSession(userId: 'null-role-user');
+
+      await tester.pumpWidget(
+        createTestApp(
+          child: AuthGate(
+            initialSession: session,
+            profileFetcher: (userId) async => {
+              'role': null,
+              'verification_status': 'aprobado',
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Ha ocurrido un error'), findsOneWidget);
+      expect(find.text('El rol del perfil no es válido o no está definido.'), findsOneWidget);
+      expect(find.text('Reintentar'), findsOneWidget);
+      expect(find.text('Cerrar sesión'), findsOneWidget);
+      expect(find.byType(MainDashboardScreen), findsNothing);
+
+      await tester.tap(find.text('Cerrar sesión'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(LoginScreen), findsOneWidget);
+    });
+
+    // 5c. Perfil con rol desconocido
+    testWidgets('5c. Perfil con rol desconocido conduce a estado recuperable con reintento y cierre de sesión', (tester) async {
+      final session = createMockSession(userId: 'unknown-role-user');
+
+      await tester.pumpWidget(
+        createTestApp(
+          child: AuthGate(
+            initialSession: session,
+            profileFetcher: (userId) async => {
+              'role': 'rol_invalido_hacker',
+              'verification_status': 'aprobado',
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Ha ocurrido un error'), findsOneWidget);
+      expect(find.text('El rol del perfil no es válido o no está definido.'), findsOneWidget);
+      expect(find.text('Reintentar'), findsOneWidget);
+      expect(find.text('Cerrar sesión'), findsOneWidget);
+      expect(find.byType(MainDashboardScreen), findsNothing);
+    });
+
     // 6. Error de red y reintento exitoso
     testWidgets('6. Error de red despliega vista con reintento y transiciona a dashboard al recuperarse', (tester) async {
       final session = createMockSession(userId: 'network-user');
@@ -271,6 +324,7 @@ void main() {
 
       expect(find.text('Ha ocurrido un error'), findsOneWidget);
       expect(find.text('Reintentar'), findsOneWidget);
+      expect(find.text('Cerrar sesión'), findsOneWidget);
       expect(find.byType(MainDashboardScreen), findsNothing);
 
       simulateNetworkFailure = false;
@@ -279,6 +333,33 @@ void main() {
 
       expect(find.byType(MainDashboardScreen), findsOneWidget);
       expect(find.text('Ha ocurrido un error'), findsNothing);
+    });
+
+    // 6b. Vista de error de red permite cerrar sesión
+    testWidgets('6b. Vista de error de red permite cerrar sesión y regresa limpiamente a LoginScreen', (tester) async {
+      final session = createMockSession(userId: 'network-user-logout');
+
+      await tester.pumpWidget(
+        createTestApp(
+          child: AuthGate(
+            initialSession: session,
+            profileFetcher: (userId) async {
+              throw const SocketException('No route to host');
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Ha ocurrido un error'), findsOneWidget);
+      expect(find.text('Reintentar'), findsOneWidget);
+      expect(find.text('Cerrar sesión'), findsOneWidget);
+      expect(find.byType(MainDashboardScreen), findsNothing);
+
+      await tester.tap(find.text('Cerrar sesión'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(LoginScreen), findsOneWidget);
     });
 
     // 7. Cierre de sesión reactivo
@@ -421,6 +502,148 @@ void main() {
       expect(find.byType(MainDashboardScreen), findsOneWidget);
       expect(session.user.id, equals(commercialUserId));
       expect(service, isNotNull);
+    });
+
+    // 11. Cierre de sesión desde Dashboard / Perfil propaga hacia AuthGate y maneja fallo remoto
+    testWidgets('11. Cierre de sesión desde MainDashboardScreen maneja fallo remoto y regresa a LoginScreen', (tester) async {
+      final session = createMockSession(userId: 'farmer-logout-test');
+
+      await tester.pumpWidget(
+        createTestApp(
+          child: AuthGate(
+            initialSession: session,
+            profileFetcher: (userId) async => {
+              'role': 'agricultor',
+              'verification_status': 'aprobado',
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(MainDashboardScreen), findsOneWidget);
+
+      final dashboard = tester.widget<MainDashboardScreen>(find.byType(MainDashboardScreen));
+      expect(dashboard.onSignOut, isNotNull);
+
+      // Invocar el callback de cierre de sesión inyectado al dashboard
+      dashboard.onSignOut!();
+      await tester.pumpAndSettle();
+
+      expect(find.byType(LoginScreen), findsOneWidget);
+      expect(find.byType(MainDashboardScreen), findsNothing);
+    });
+
+    // 12a. Error de credenciales expiradas con refresco exitoso
+    testWidgets('12a. Error de credenciales expiradas con refresco exitoso reanuda resolución y muestra dashboard', (tester) async {
+      final session = createMockSession(userId: 'expired-token-user');
+      int fetchCalls = 0;
+      int refreshCalls = 0;
+
+      await tester.pumpWidget(
+        createTestApp(
+          child: AuthGate(
+            initialSession: session,
+            sessionRefresher: () async {
+              refreshCalls++;
+              return AuthResponse(session: createMockSession(userId: 'expired-token-user'));
+            },
+            profileFetcher: (userId) async {
+              fetchCalls++;
+              if (fetchCalls == 1) {
+                throw const PostgrestException(message: 'JWT expired', code: 'PGRST301');
+              }
+              return {
+                'role': 'agricultor',
+                'verification_status': 'aprobado',
+              };
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(refreshCalls, equals(1));
+      expect(fetchCalls, equals(2));
+      expect(find.byType(MainDashboardScreen), findsOneWidget);
+      expect(find.byType(LoginScreen), findsNothing);
+    });
+
+    // 12b. Credenciales irrecuperables tras fallar el refresco
+    testWidgets('12b. Credenciales irrecuperables tras fallar el refresco desautentica a LoginScreen', (tester) async {
+      final session = createMockSession(userId: 'dead-token-user');
+
+      await tester.pumpWidget(
+        createTestApp(
+          child: AuthGate(
+            initialSession: session,
+            sessionRefresher: () async {
+              throw const AuthException('Invalid refresh token: session_not_found');
+            },
+            profileFetcher: (userId) async {
+              throw const PostgrestException(message: 'JWT expired', code: 'PGRST301');
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(LoginScreen), findsOneWidget);
+      expect(find.byType(MainDashboardScreen), findsNothing);
+      expect(find.text('Ha ocurrido un error'), findsNothing);
+    });
+
+    // 12c. Fallo de red durante el refresco de sesión
+    testWidgets('12c. Fallo de red durante el refresco muestra error de red sin desautenticar indebidamente', (tester) async {
+      final session = createMockSession(userId: 'network-refresh-user');
+
+      await tester.pumpWidget(
+        createTestApp(
+          child: AuthGate(
+            initialSession: session,
+            sessionRefresher: () async {
+              throw const SocketException('Failed host lookup: auth.supabase.co');
+            },
+            profileFetcher: (userId) async {
+              throw const PostgrestException(message: 'JWT expired', code: 'PGRST301');
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Ha ocurrido un error'), findsOneWidget);
+      expect(find.text('Reintentar'), findsOneWidget);
+      expect(find.text('Cerrar sesión'), findsOneWidget);
+      expect(find.byType(LoginScreen), findsNothing);
+    });
+
+    // 12d. Respuesta asíncrona después de desmontar AuthGate
+    testWidgets('12d. Respuesta asíncrona tras desmontar AuthGate no produce setState después de dispose', (tester) async {
+      final session = createMockSession(userId: 'dispose-refresh-user');
+      final completer = Completer<AuthResponse>();
+
+      await tester.pumpWidget(
+        createTestApp(
+          child: AuthGate(
+            initialSession: session,
+            sessionRefresher: () => completer.future,
+            profileFetcher: (userId) async {
+              throw const PostgrestException(message: 'JWT expired', code: 'PGRST301');
+            },
+          ),
+        ),
+      );
+      await tester.pump();
+
+      // Desmontar el widget mientras el refresco está pendiente
+      await tester.pumpWidget(const SizedBox());
+
+      // Completar el refresco tras desmontar
+      completer.complete(AuthResponse(session: session));
+      await tester.pump();
+
+      expect(tester.takeException(), isNull);
     });
   });
 }

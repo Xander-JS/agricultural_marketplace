@@ -537,5 +537,46 @@ void main() {
       expect(find.byType(MainDashboardScreen), findsNothing);
       expect(find.text('Cola de Moderación'), findsOneWidget);
     });
+
+    // 15. Mapeo de ModerationRequest procesa correctamente el perfil embebido (profiles)
+    test('15. ModerationRequest.fromJson procesa correctamente la respuesta de consulta con perfil embebido', () {
+      final rawPostgrestItem = {
+        'id': 'att-xyz-001',
+        'user_id': 'usr-farmer-777',
+        'status': 'pendiente',
+        'document_front_path': 'docs/cedula_frente.jpg',
+        'document_back_path': 'docs/cedula_dorso.jpg',
+        'selfie_path': 'docs/selfie_rostro.jpg',
+        'rejection_reason': null,
+        'reviewed_by': null,
+        'reviewed_at': null,
+        'created_at': '2026-10-18T14:30:00.000Z',
+        'updated_at': '2026-10-18T14:30:00.000Z',
+        'profiles': {
+          'id': 'usr-farmer-777',
+          'full_name': 'Ana María Campesina',
+          'phone': '+573159998877',
+          'email': 'ana.maria@agromarket.com',
+          'role': 'agricultor',
+          'verification_status': 'pendiente',
+        },
+      };
+
+      final request = ModerationRequest.fromJson(rawPostgrestItem);
+
+      expect(request.id, 'att-xyz-001');
+      expect(request.userId, 'usr-farmer-777');
+      expect(request.fullName, 'Ana María Campesina');
+      expect(request.phone, '+573159998877');
+      expect(request.email, 'ana.maria@agromarket.com');
+      expect(request.userRole, UserRole.agricultor);
+      expect(request.status, UserVerificationStatus.pendiente);
+      expect(request.documentFrontPath, 'docs/cedula_frente.jpg');
+      expect(request.documentBackPath, 'docs/cedula_dorso.jpg');
+      expect(request.selfiePath, 'docs/selfie_rostro.jpg');
+      expect(request.rejectionReason, isNull);
+      expect(request.isPending, isTrue);
+      expect(request.isApproved, isFalse);
+    });
   });
 }

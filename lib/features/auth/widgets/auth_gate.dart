@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -44,6 +45,7 @@ class AuthGate extends StatefulWidget {
   final bool enableAutoPolling;
   final RecoveryService? recoveryService;
   final ModerationService? moderationService;
+  final Future<AuthResponse> Function()? sessionRefresher;
 
   const AuthGate({
     super.key,
@@ -54,6 +56,7 @@ class AuthGate extends StatefulWidget {
     this.enableAutoPolling = true,
     this.recoveryService,
     this.moderationService,
+    this.sessionRefresher,
   });
 
   @override
@@ -225,11 +228,64 @@ class _AuthGateState extends State<AuthGate> {
     return res;
   }
 
+  Future<AuthResponse> _refreshSession() async {
+    if (widget.sessionRefresher != null) {
+      return await widget.sessionRefresher!();
+    }
+    final client = _client;
+    if (client != null) {
+      return await client.auth.refreshSession();
+    }
+    throw const AuthException('No active SupabaseClient for refreshSession');
+  }
+
+  Future<bool> _handleAuthOrExpiredError(String userId, int epoch) async {
+    try {
+      final refreshRes = await _refreshSession();
+      if (!mounted || epoch != _resolutionEpoch) return true;
+
+      if (refreshRes.session != null) {
+        await _resolveProfile(userId, epoch);
+        return true;
+      } else {
+        await _handleSignOut();
+        return true;
+      }
+    } on AuthException catch (_) {
+      if (!mounted || epoch != _resolutionEpoch) return true;
+      await _handleSignOut();
+      return true;
+    } catch (refreshErr) {
+      if (!mounted || epoch != _resolutionEpoch) return true;
+
+      final refreshErrStr = refreshErr.toString();
+      final isNetwork = refreshErr is SocketException ||
+          refreshErrStr.contains('SocketException') ||
+          refreshErrStr.contains('ClientException') ||
+          refreshErrStr.contains('Network') ||
+          refreshErrStr.contains('TimeoutException') ||
+          refreshErrStr.contains('Failed host lookup');
+
+      if (isNetwork) {
+        setState(() {
+          _status = _AuthGateStatus.networkError;
+          _errorMessage = refreshErrStr;
+        });
+        return true;
+      } else {
+        await _handleSignOut();
+        return true;
+      }
+    }
+  }
+
   Future<void> _resolveProfile(String userId, int epoch) async {
     if (mounted) {
       setState(() {
         _status = _AuthGateStatus.loading;
         _errorMessage = null;
+        _role = null;
+        _verificationData = null;
       });
     }
 
@@ -250,8 +306,17 @@ class _AuthGateState extends State<AuthGate> {
       final rawStatus = profile['verification_status'] as String?;
       final rawRole = profile['role'] as String?;
 
+      final parsedRole = UserRole.tryParse(rawRole);
+      if (parsedRole == null) {
+        setState(() {
+          _status = _AuthGateStatus.recoverableError;
+          _errorMessage = 'El rol del perfil no es válido o no está definido.';
+        });
+        return;
+      }
+
       final verificationStatus = UserVerificationStatus.fromString(rawStatus);
-      final role = UserRole.fromString(rawRole).toDbValue();
+      final role = parsedRole.toDbValue();
 
       if (verificationStatus.isApproved) {
         setState(() {
@@ -272,19 +337,40 @@ class _AuthGateState extends State<AuthGate> {
     } on PostgrestException catch (e) {
       if (!mounted || epoch != _resolutionEpoch) return;
 
-      // Código 28000: si PostgREST reporta credencial ausente, intentar refresh antes de fallar
-      if (e.code == '28000') {
-        try {
-          final client = _client;
-          if (client != null) {
-            final refreshRes = await client.auth.refreshSession();
-            if (refreshRes.session != null && mounted && epoch == _resolutionEpoch) {
-              return await _resolveProfile(userId, epoch);
-            }
-          }
-        } catch (_) {}
+      final isAuthOrExpired = e.code == '28000' ||
+          e.code == 'PGRST301' ||
+          e.code == '401' ||
+          e.message.toLowerCase().contains('jwt') ||
+          e.message.toLowerCase().contains('token') ||
+          e.message.toLowerCase().contains('unauthorized');
+
+      if (isAuthOrExpired) {
+        final handled = await _handleAuthOrExpiredError(userId, epoch);
+        if (handled) return;
       }
 
+      if (!mounted || epoch != _resolutionEpoch) return;
+      setState(() {
+        _status = _AuthGateStatus.recoverableError;
+        _errorMessage = e.message;
+      });
+    } on AuthException catch (e) {
+      if (!mounted || epoch != _resolutionEpoch) return;
+
+      final errStr = e.toString().toLowerCase();
+      final isAuthOrExpired = e.statusCode == '401' ||
+          errStr.contains('jwt') ||
+          errStr.contains('token') ||
+          errStr.contains('unauthorized') ||
+          errStr.contains('invalid_grant') ||
+          errStr.contains('session');
+
+      if (isAuthOrExpired) {
+        final handled = await _handleAuthOrExpiredError(userId, epoch);
+        if (handled) return;
+      }
+
+      if (!mounted || epoch != _resolutionEpoch) return;
       setState(() {
         _status = _AuthGateStatus.recoverableError;
         _errorMessage = e.message;
@@ -293,20 +379,37 @@ class _AuthGateState extends State<AuthGate> {
       if (!mounted || epoch != _resolutionEpoch) return;
 
       final errStr = e.toString();
-      final isNetwork = errStr.contains('SocketException') ||
+      final errLower = errStr.toLowerCase();
+
+      final isNetwork = e is SocketException ||
+          errStr.contains('SocketException') ||
           errStr.contains('ClientException') ||
           errStr.contains('Network') ||
           errStr.contains('TimeoutException') ||
           errStr.contains('Failed host lookup');
 
-      setState(() {
-        if (isNetwork) {
+      if (isNetwork) {
+        setState(() {
           _status = _AuthGateStatus.networkError;
           _errorMessage = errStr;
-        } else {
-          _status = _AuthGateStatus.recoverableError;
-          _errorMessage = errStr;
-        }
+        });
+        return;
+      }
+
+      final isAuthOrExpired = errLower.contains('jwt expired') ||
+          errLower.contains('token is expired') ||
+          errLower.contains('pgrst301') ||
+          errLower.contains('28000');
+
+      if (isAuthOrExpired) {
+        final handled = await _handleAuthOrExpiredError(userId, epoch);
+        if (handled) return;
+      }
+
+      if (!mounted || epoch != _resolutionEpoch) return;
+      setState(() {
+        _status = _AuthGateStatus.recoverableError;
+        _errorMessage = errStr;
       });
     }
   }
@@ -320,27 +423,37 @@ class _AuthGateState extends State<AuthGate> {
         _activeUserId = session.user.id;
         _resolveProfile(session.user.id, ++_resolutionEpoch);
       } else {
-        setState(() {
-          _status = _AuthGateStatus.unauthenticated;
-        });
+        if (mounted) {
+          setState(() {
+            _status = _AuthGateStatus.unauthenticated;
+          });
+        }
       }
     }
   }
 
   Future<void> _handleSignOut() async {
-    try {
-      final client = _client;
-      if (client != null) {
-        await client.auth.signOut();
-      }
-    } catch (_) {}
     if (mounted) {
       setState(() {
         _status = _AuthGateStatus.unauthenticated;
         _activeUserId = null;
         _role = null;
         _verificationData = null;
+        _errorMessage = null;
       });
+    }
+    try {
+      final client = _client;
+      if (client != null) {
+        await client.auth.signOut();
+      }
+    } catch (_) {
+      try {
+        final client = _client;
+        if (client != null) {
+          await client.auth.signOut(scope: SignOutScope.local);
+        }
+      } catch (_) {}
     }
   }
 
@@ -372,7 +485,10 @@ class _AuthGateState extends State<AuthGate> {
             onSignOut: _handleSignOut,
           );
         }
-        return MainDashboardScreen(role: _role ?? 'agricultor');
+        return MainDashboardScreen(
+          role: _role ?? 'agricultor',
+          onSignOut: _handleSignOut,
+        );
 
       case _AuthGateStatus.authenticatedPendingVerification:
         return VerificationStatusScreen(
@@ -447,6 +563,14 @@ class _AuthGateState extends State<AuthGate> {
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
             ),
             child: Text(l10n?.verification_status_retry ?? 'Reintentar'),
+          ),
+          const SizedBox(height: 16),
+          TextButton(
+            onPressed: _handleSignOut,
+            child: Text(
+              l10n?.profile_logout ?? 'Cerrar sesión',
+              style: const TextStyle(color: Colors.white70),
+            ),
           ),
         ],
       ),

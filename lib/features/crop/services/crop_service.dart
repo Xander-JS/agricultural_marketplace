@@ -59,7 +59,16 @@ class CropService {
       
       // Subir imágenes si existen
       if (newImages != null && newImages.isNotEmpty) {
-        await _uploadImagesForCrop(newCrop.id, newImages, isInitial: true);
+        try {
+          await _uploadImagesForCrop(newCrop.id, newImages, isInitial: true);
+        } catch (uploadError) {
+          // Si falla la subida de imágenes durante la publicación de un nuevo cultivo,
+          // limpiar el cultivo huérfano en BD para evitar estados inconsistentes
+          try {
+            await _supabase.from('crops').delete().eq('id', newCrop.id);
+          } catch (_) {}
+          rethrow;
+        }
         try {
           final fullResponse = await _supabase
               .from('crops')
@@ -143,16 +152,37 @@ class CropService {
 
   /// Elimina una imagen específica de un cultivo de Storage y de la BD
   Future<void> deleteCropImage(String cropId, String imagePath) async {
-    if (!imagePath.startsWith('http://') && !imagePath.startsWith('https://')) {
+    final isAllowedPath = imagePath.startsWith('$cropId/') && !imagePath.contains('..');
+    if (isAllowedPath && !imagePath.startsWith('http://') && !imagePath.startsWith('https://')) {
       try {
         await _supabase.storage.from('product_images').remove([imagePath]);
       } catch (_) {}
     }
+
     await _supabase
         .from('crop_images')
         .delete()
         .eq('crop_id', cropId)
         .eq('image_path', imagePath);
+
+    // Si la imagen eliminada era la principal y quedan otras imágenes válidas, promover una
+    try {
+      final remainingRecords = await _supabase
+          .from('crop_images')
+          .select('id, is_primary')
+          .eq('crop_id', cropId);
+
+      final recordsList = (remainingRecords as List<dynamic>).cast<Map<String, dynamic>>();
+      final hasPrimary = recordsList.any((r) => r['is_primary'] == true);
+
+      if (!hasPrimary && recordsList.isNotEmpty) {
+        final firstRecordId = recordsList.first['id'];
+        await _supabase
+            .from('crop_images')
+            .update({'is_primary': true})
+            .eq('id', firstRecordId);
+      }
+    } catch (_) {}
   }
 
   /// Elimina una cosecha junto con sus registros e imágenes almacenadas
@@ -165,7 +195,13 @@ class CropService {
 
     final paths = (imagesResponse as List<dynamic>)
         .map((r) => r['image_path'] as String?)
-        .where((p) => p != null && p.isNotEmpty && !p.startsWith('http://') && !p.startsWith('https://'))
+        .where((p) =>
+            p != null &&
+            p.isNotEmpty &&
+            p.startsWith('$cropId/') &&
+            !p.contains('..') &&
+            !p.startsWith('http://') &&
+            !p.startsWith('https://'))
         .cast<String>()
         .toList();
 
@@ -217,12 +253,20 @@ class CropService {
         fileOptions: const FileOptions(upsert: true),
       );
 
-      // Guardar el registro en la tabla crop_images
-      await _supabase.from('crop_images').insert({
-        'crop_id': cropId,
-        'image_path': filePath,
-        'is_primary': isInitial && i == 0,
-      });
+      // Guardar el registro en la tabla crop_images con rollback si falla la BD
+      try {
+        await _supabase.from('crop_images').insert({
+          'crop_id': cropId,
+          'image_path': filePath,
+          'is_primary': isInitial && i == 0,
+        });
+      } catch (dbError) {
+        // En caso de fallo parcial en BD, eliminar de Storage para no dejar archivos huérfanos
+        try {
+          await _supabase.storage.from('product_images').remove([filePath]);
+        } catch (_) {}
+        rethrow;
+      }
     }
   }
 

@@ -6,7 +6,6 @@ import '../../../core/localization/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/services/app_preferences_service.dart';
-import '../../auth/login/screens/login_screen.dart';
 import '../models/farmer_profile_data.dart';
 import '../services/profile_service.dart';
 
@@ -89,7 +88,11 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
       _phoneController.text = _profileData!.phone;
       _isLoading = false;
     } else {
-      _loadProfileData();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _loadProfileData();
+        }
+      });
     }
   }
 
@@ -310,12 +313,8 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
     if (confirm == true) {
       try {
         await Supabase.instance.client.auth.signOut();
-      } catch (_) {}
-      if (mounted) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
-          (route) => false,
-        );
+      } catch (e) {
+        debugPrint('Sign out error: $e');
       }
     }
   }

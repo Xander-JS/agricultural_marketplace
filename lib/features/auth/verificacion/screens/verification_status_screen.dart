@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:agricultural_marketplace/core/localization/app_localizations.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -9,21 +11,84 @@ import '../../../dashboard/screens/main_dashboard_screen.dart';
 import '../services/verification_service.dart';
 
 class VerificationStatusScreen extends StatefulWidget {
-  const VerificationStatusScreen({Key? key}) : super(key: key);
+  final VerificationStatusData? initialData;
+  final void Function(VerificationStatusData data)? onVerificationApproved;
+  final Future<void> Function()? onSignOut;
+  final VerificationService? verificationService;
+  final bool enableAutoPolling;
+
+  const VerificationStatusScreen({
+    super.key,
+    this.initialData,
+    this.onVerificationApproved,
+    this.onSignOut,
+    this.verificationService,
+    this.enableAutoPolling = true,
+  });
 
   @override
   State<VerificationStatusScreen> createState() =>
       _VerificationStatusScreenState();
 }
 
-class _VerificationStatusScreenState extends State<VerificationStatusScreen> {
-  final VerificationService _service = VerificationService();
+class _VerificationStatusScreenState extends State<VerificationStatusScreen>
+    with WidgetsBindingObserver {
+  late final VerificationService _service;
   late Future<VerificationStatusData> _statusFuture;
+  Timer? _pollTimer;
 
   @override
   void initState() {
     super.initState();
-    _statusFuture = _service.getCurrentVerificationStatus();
+    WidgetsBinding.instance.addObserver(this);
+    _service = widget.verificationService ?? VerificationService();
+    if (widget.initialData != null) {
+      _statusFuture = Future.value(widget.initialData);
+    } else {
+      _statusFuture = _service.getCurrentVerificationStatus();
+    }
+    _startPollTimer();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _pollTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && mounted) {
+      _checkStatusSilently();
+    }
+  }
+
+  void _startPollTimer() {
+    _pollTimer?.cancel();
+    if (!widget.enableAutoPolling) return;
+    _pollTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) {
+        _checkStatusSilently();
+      }
+    });
+  }
+
+  Future<void> _checkStatusSilently() async {
+    try {
+      final data = await _service.getCurrentVerificationStatus();
+      if (!mounted) return;
+      if (data.status == 'aprobado') {
+        _pollTimer?.cancel();
+        if (widget.onVerificationApproved != null) {
+          widget.onVerificationApproved!(data);
+          return;
+        }
+      }
+      setState(() {
+        _statusFuture = Future.value(data);
+      });
+    } catch (_) {}
   }
 
   void _retry() {
@@ -47,7 +112,9 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen> {
           }
 
           final data = snapshot.data!;
-          return _buildStatusState(context, data);
+          return SingleChildScrollView(
+            child: _buildStatusState(context, data),
+          );
         },
       ),
     );
@@ -215,8 +282,8 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen> {
           ElevatedButton(
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Funcionalidad de re-carga en desarrollo.'),
+                SnackBar(
+                  content: Text(l10n.verification_status_reupload_coming_soon),
                 ),
               );
             },
@@ -230,13 +297,17 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen> {
         else if (data.status == 'aprobado')
           ElevatedButton(
             onPressed: () {
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(
-                  builder: (_) => MainDashboardScreen(
-                    role: data.role ?? 'desconocido',
+              if (widget.onVerificationApproved != null) {
+                widget.onVerificationApproved!(data);
+              } else {
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(
+                    builder: (_) => MainDashboardScreen(
+                      role: data.role ?? 'desconocido',
+                    ),
                   ),
-                ),
-              );
+                );
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
@@ -253,6 +324,25 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen> {
               style: const TextStyle(color: Colors.white70),
             ),
           ),
+
+        if (data.status == 'rechazado' ||
+            data.status == 'suspendido' ||
+            data.status == 'desconocido') ...[
+          const SizedBox(height: 16),
+          TextButton(
+            onPressed: () async {
+              if (widget.onSignOut != null) {
+                await widget.onSignOut!();
+              } else {
+                await Supabase.instance.client.auth.signOut();
+              }
+            },
+            child: Text(
+              l10n.profile_logout,
+              style: const TextStyle(color: Colors.white70),
+            ),
+          ),
+        ],
       ],
     );
   }

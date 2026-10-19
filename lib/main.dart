@@ -3,7 +3,7 @@ import 'core/config/supabase_client.dart';
 import 'core/localization/localization_config.dart';
 import 'core/services/app_preferences_service.dart';
 import 'core/theme/app_theme.dart';
-import 'features/auth/login/screens/login_screen.dart';
+import 'features/auth/widgets/auth_gate.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -68,7 +68,7 @@ class AgriculturalMarketplaceApp extends StatelessWidget {
           // ---------------------------------------------------------
           // Punto de entrada de la app
           // ---------------------------------------------------------
-          home: home ?? const LoginScreen(),
+          home: home ?? const AuthGate(),
         );
       },
     );

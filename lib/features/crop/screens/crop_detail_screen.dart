@@ -18,6 +18,8 @@ class CropDetailScreen extends StatefulWidget {
   final bool? isOwner;
   final FarmerProfileData? initialFarmerProfile;
   final NegotiationService? negotiationService;
+  final CropService? cropService;
+  final ProfileService? profileService;
 
   const CropDetailScreen({
     super.key,
@@ -26,6 +28,8 @@ class CropDetailScreen extends StatefulWidget {
     this.isOwner,
     this.initialFarmerProfile,
     this.negotiationService,
+    this.cropService,
+    this.profileService,
   });
 
   @override
@@ -34,8 +38,10 @@ class CropDetailScreen extends StatefulWidget {
 
 class _CropDetailScreenState extends State<CropDetailScreen> {
   late CropModel _crop;
-  final _cropService = CropService();
-  final _profileService = ProfileService();
+  late final CropService _cropService;
+  late final ProfileService _profileService;
+  late final PageController _pageController;
+  int _currentImageIndex = 0;
   FarmerProfileData? _farmerProfile;
   bool _isLoading = false;
 
@@ -64,11 +70,20 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
   void initState() {
     super.initState();
     _crop = widget.crop;
+    _cropService = widget.cropService ?? CropService();
+    _profileService = widget.profileService ?? ProfileService();
+    _pageController = PageController();
     _farmerProfile = widget.initialFarmerProfile;
 
     if (_isBuyer && _farmerProfile == null) {
       _loadFarmerProfile();
     }
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadFarmerProfile() async {
@@ -88,24 +103,9 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
     try {
       await _cropService.updateCropStatus(_crop.id, newStatus);
       setState(() {
-        _crop = CropModel(
-          id: _crop.id,
-          farmerId: _crop.farmerId,
-          title: _crop.title,
-          description: _crop.description,
-          cropType: _crop.cropType,
-          pricePerKg: _crop.pricePerKg,
-          stockTotal: _crop.stockTotal,
-          stockCommitted: _crop.stockCommitted,
-          stockSold: _crop.stockSold,
-          minOrderKg: _crop.minOrderKg,
-          department: _crop.department,
-          municipality: _crop.municipality,
-          isEarlySale: _crop.isEarlySale,
+        _crop = _crop.copyWith(
           status: newStatus,
-          createdAt: _crop.createdAt,
           updatedAt: DateTime.now(),
-          imageUrls: _crop.imageUrls,
         );
       });
       if (mounted) {
@@ -132,7 +132,12 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
   void _navigateToEdit() async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => PublishCropScreen(cropToEdit: _crop)),
+      MaterialPageRoute(
+        builder: (context) => PublishCropScreen(
+          cropToEdit: _crop,
+          cropService: _cropService,
+        ),
+      ),
     );
 
     if (result == true) {
@@ -271,11 +276,6 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
     final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context);
 
-    String? primaryImageUrl;
-    if (_crop.imageUrls.isNotEmpty) {
-      primaryImageUrl = _cropService.getPublicImageUrl(_crop.imageUrls.first);
-    }
-
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
       appBar: AppBar(
@@ -301,16 +301,8 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Imagen principal
-                  if (primaryImageUrl != null)
-                    Image.network(
-                      primaryImageUrl,
-                      height: 250,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => _buildImageFallback(isDark),
-                    )
-                  else
-                    _buildImageFallback(isDark),
+                  // Galería de imágenes
+                  _buildImageGallery(isDark),
 
                   Padding(
                     padding: const EdgeInsets.all(16.0),
@@ -501,6 +493,155 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
     );
   }
 
+  Widget _buildImageGallery(bool isDark) {
+    if (_crop.imageUrls.isEmpty) {
+      return _buildImageFallback(isDark);
+    }
+
+    if (_crop.imageUrls.length == 1) {
+      final url = _cropService.getPublicImageUrl(_crop.imageUrls.first);
+      return SizedBox(
+        height: 250,
+        width: double.infinity,
+        child: Image.network(
+          url,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => _buildImageFallback(isDark),
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return Container(
+              height: 250,
+              color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightDivider,
+              child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+            );
+          },
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        SizedBox(
+          height: 250,
+          child: Stack(
+            children: [
+              PageView.builder(
+                controller: _pageController,
+                itemCount: _crop.imageUrls.length,
+                onPageChanged: (index) {
+                  setState(() {
+                    _currentImageIndex = index;
+                  });
+                },
+                itemBuilder: (context, index) {
+                  final url = _cropService.getPublicImageUrl(_crop.imageUrls[index]);
+                  return Image.network(
+                    url,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => _buildImageFallback(isDark),
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Container(
+                        color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightDivider,
+                        child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                      );
+                    },
+                  );
+                },
+              ),
+              Positioned(
+                bottom: 12,
+                right: 12,
+                child: Container(
+                  key: const Key('crop_gallery_indicator'),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.65),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Text(
+                    '${_currentImageIndex + 1} / ${_crop.imageUrls.length}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 12,
+                left: 12,
+                child: Row(
+                  children: List.generate(_crop.imageUrls.length, (index) {
+                    final isSelected = index == _currentImageIndex;
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      margin: const EdgeInsets.only(right: 6),
+                      width: isSelected ? 18 : 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: isSelected ? Colors.white : Colors.white.withOpacity(0.4),
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                    );
+                  }),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Container(
+          key: const Key('crop_gallery_thumbnails'),
+          height: 64,
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+          color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: _crop.imageUrls.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            itemBuilder: (context, index) {
+              final isSelected = index == _currentImageIndex;
+              final url = _cropService.getPublicImageUrl(_crop.imageUrls[index]);
+              final borderColor = isSelected
+                  ? (isDark ? AppColors.darkTertiary : AppColors.lightTertiary)
+                  : Colors.transparent;
+
+              return GestureDetector(
+                onTap: () {
+                  _pageController.animateToPage(
+                    index,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  );
+                },
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: borderColor, width: 2),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: Image.network(
+                      url,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightDivider,
+                        child: const Icon(Icons.image_not_supported_outlined, size: 20),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildImageFallback(bool isDark) {
     return Container(
       height: 200,
@@ -519,6 +660,10 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
     final producerName = _farmerProfile?.fullName.isNotEmpty == true
         ? _farmerProfile!.fullName
         : '${l10n?.crop_detail_producer ?? "Productor"} (${_crop.municipality})';
+
+    final avatarUrl = _farmerProfile?.profilePath != null && _farmerProfile!.profilePath!.isNotEmpty
+        ? _profileService.getPublicProfileImageUrl(_farmerProfile!.profilePath!)
+        : null;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -539,9 +684,22 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
                     ? AppColors.darkTertiary.withValues(alpha: 0.2)
                     : AppColors.lightSecondary,
                 radius: 22,
-                child: Icon(
-                  Icons.person,
-                  color: isDark ? AppColors.darkTertiary : AppColors.lightTertiary,
+                child: ClipOval(
+                  child: avatarUrl != null
+                      ? Image.network(
+                          avatarUrl,
+                          width: 44,
+                          height: 44,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => Icon(
+                            Icons.person,
+                            color: isDark ? AppColors.darkTertiary : AppColors.lightTertiary,
+                          ),
+                        )
+                      : Icon(
+                          Icons.person,
+                          color: isDark ? AppColors.darkTertiary : AppColors.lightTertiary,
+                        ),
                 ),
               ),
               const SizedBox(width: 12),

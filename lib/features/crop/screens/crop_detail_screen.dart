@@ -11,12 +11,16 @@ import '../../profile/services/profile_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/constants/user_roles.dart';
+import '../../../core/widgets/avatars/user_avatar.dart';
+import '../../geo/models/simulated_location.dart';
+import '../../../core/utils/app_formatters.dart';
 
 class CropDetailScreen extends StatefulWidget {
   final CropModel crop;
   final String? role;
   final bool? isOwner;
   final FarmerProfileData? initialFarmerProfile;
+  final DistanceEvaluation? initialDistanceEvaluation;
   final NegotiationService? negotiationService;
   final CropService? cropService;
   final ProfileService? profileService;
@@ -27,6 +31,7 @@ class CropDetailScreen extends StatefulWidget {
     this.role,
     this.isOwner,
     this.initialFarmerProfile,
+    this.initialDistanceEvaluation,
     this.negotiationService,
     this.cropService,
     this.profileService,
@@ -43,6 +48,7 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
   late final PageController _pageController;
   int _currentImageIndex = 0;
   FarmerProfileData? _farmerProfile;
+  DistanceEvaluation? _distanceEvaluation;
   bool _isLoading = false;
 
   bool get _isBuyer {
@@ -74,6 +80,7 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
     _profileService = widget.profileService ?? ProfileService();
     _pageController = PageController();
     _farmerProfile = widget.initialFarmerProfile;
+    _distanceEvaluation = widget.initialDistanceEvaluation;
 
     if (_isBuyer && _farmerProfile == null) {
       _loadFarmerProfile();
@@ -350,22 +357,24 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
                         // Datos de precio y existencias
                         _buildInfoRow(
                           l10n?.crop_detail_price_per_kg ?? 'Precio por kg',
-                          '\$${_crop.pricePerKg.toStringAsFixed(2)}',
+                          CurrencyFormatters.formatCop(_crop.pricePerKg),
                           isDark,
                         ),
                         _buildInfoRow(
                           l10n?.crop_detail_available_stock ?? 'Total Disponible',
-                          '${_crop.stockTotal.toStringAsFixed(2)} kg',
+                          UnitFormatters.formatKgWithEquivalence(_crop.stockTotal),
                           isDark,
                         ),
                         _buildInfoRow(
                           l10n?.crop_detail_min_order ?? 'Pedido Mínimo',
-                          '${_crop.minOrderKg.toStringAsFixed(2)} kg',
+                          UnitFormatters.formatKg(_crop.minOrderKg),
                           isDark,
                         ),
                         _buildInfoRow(
                           l10n?.crop_detail_location ?? 'Ubicación',
-                          '${_crop.municipality}, ${_crop.department}',
+                          _distanceEvaluation != null && _distanceEvaluation!.hasValidDistance
+                              ? '${_crop.municipality}, ${_crop.department} (${_distanceEvaluation!.formatted})'
+                              : '${_crop.municipality}, ${_crop.department}',
                           isDark,
                         ),
 
@@ -385,13 +394,13 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
                           if (_crop.estimatedHarvestDate != null)
                             _buildInfoRow(
                               l10n?.crop_detail_estimated_harvest ?? 'Fecha est. de cosecha',
-                              '${_crop.estimatedHarvestDate!.day}/${_crop.estimatedHarvestDate!.month}/${_crop.estimatedHarvestDate!.year}',
+                              DateFormatters.formatHarvestDateLong(_crop.estimatedHarvestDate),
                               isDark,
                             ),
                           if (_crop.estimatedYieldKg != null)
                             _buildInfoRow(
                               l10n?.crop_detail_estimated_yield ?? 'Rendimiento estimado',
-                              '${_crop.estimatedYieldKg} kg',
+                              UnitFormatters.formatKgWithEquivalence(_crop.estimatedYieldKg),
                               isDark,
                             ),
                         ],
@@ -556,7 +565,7 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
                   key: const Key('crop_gallery_indicator'),
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.65),
+                    color: Colors.black.withValues(alpha: 0.65),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Text(
@@ -581,7 +590,7 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
                       width: isSelected ? 18 : 6,
                       height: 6,
                       decoration: BoxDecoration(
-                        color: isSelected ? Colors.white : Colors.white.withOpacity(0.4),
+                        color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.4),
                         borderRadius: BorderRadius.circular(3),
                       ),
                     );
@@ -599,7 +608,7 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: _crop.imageUrls.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
             itemBuilder: (context, index) {
               final isSelected = index == _currentImageIndex;
               final url = _cropService.getPublicImageUrl(_crop.imageUrls[index]);
@@ -679,28 +688,16 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
         children: [
           Row(
             children: [
-              CircleAvatar(
+              UserAvatar(
+                imageUrl: avatarUrl,
+                radius: 22,
                 backgroundColor: isDark
                     ? AppColors.darkTertiary.withValues(alpha: 0.2)
                     : AppColors.lightSecondary,
-                radius: 22,
-                child: ClipOval(
-                  child: avatarUrl != null
-                      ? Image.network(
-                          avatarUrl,
-                          width: 44,
-                          height: 44,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => Icon(
-                            Icons.person,
-                            color: isDark ? AppColors.darkTertiary : AppColors.lightTertiary,
-                          ),
-                        )
-                      : Icon(
-                          Icons.person,
-                          color: isDark ? AppColors.darkTertiary : AppColors.lightTertiary,
-                        ),
-                ),
+                borderColor: isDark
+                    ? AppColors.darkTertiary.withValues(alpha: 0.4)
+                    : AppColors.lightSecondary,
+                iconColor: isDark ? AppColors.darkTertiary : AppColors.lightTertiary,
               ),
               const SizedBox(width: 12),
               Expanded(

@@ -4,6 +4,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/crop_model.dart';
 import '../services/crop_service.dart';
+import '../../geo/services/geo_simulation_service.dart';
+import '../../../core/utils/app_formatters.dart';
 
 class PublishCropScreen extends StatefulWidget {
   final CropModel? cropToEdit;
@@ -54,6 +56,8 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
     
     if (widget.cropToEdit != null) {
       _loadCropData(widget.cropToEdit!);
+    } else {
+      _departmentController.text = 'Nariño';
     }
   }
 
@@ -61,15 +65,15 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
     _titleController.text = crop.title;
     _descriptionController.text = crop.description;
     _cropTypeController.text = crop.cropType;
-    _priceController.text = crop.pricePerKg.toString();
-    _stockController.text = crop.stockTotal.toString();
-    _minOrderController.text = crop.minOrderKg.toString();
+    _priceController.text = UnitFormatters.formatCleanValue(crop.pricePerKg, useLocaleSeparators: false);
+    _stockController.text = UnitFormatters.formatCleanValue(crop.stockTotal, useLocaleSeparators: false);
+    _minOrderController.text = UnitFormatters.formatCleanValue(crop.minOrderKg, useLocaleSeparators: false);
     _departmentController.text = crop.department;
     _municipalityController.text = crop.municipality;
     
     _isEarlySale = crop.isEarlySale;
     if (crop.estimatedYieldKg != null) {
-      _estimatedYieldController.text = crop.estimatedYieldKg.toString();
+      _estimatedYieldController.text = UnitFormatters.formatCleanValue(crop.estimatedYieldKg, useLocaleSeparators: false);
     }
     _estimatedHarvestDate = crop.estimatedHarvestDate;
   }
@@ -140,6 +144,20 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
           .where((path) => !_existingImageUrls.contains(path))
           .toList();
 
+      // Preservar coordenadas existentes al editar o asignar simulación determinista para nuevo
+      double? lat = widget.cropToEdit?.latitude;
+      double? lon = widget.cropToEdit?.longitude;
+
+      if (lat == null || lon == null) {
+        final cropLocation = GeoSimulationService.assignSimulatedLocation(
+          seed: 'crop_${userId}_${_titleController.text.trim()}',
+          municipality: _municipalityController.text.trim(),
+          department: _departmentController.text.trim(),
+        );
+        lat = cropLocation.latitude;
+        lon = cropLocation.longitude;
+      }
+
       final newCrop = CropModel(
         id: widget.cropToEdit?.id ?? '',
         farmerId: userId,
@@ -151,6 +169,8 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
         minOrderKg: double.tryParse(_minOrderController.text.trim()) ?? 1,
         department: _departmentController.text.trim(),
         municipality: _municipalityController.text.trim(),
+        latitude: lat,
+        longitude: lon,
         isEarlySale: _isEarlySale,
         estimatedYieldKg: _isEarlySale && _estimatedYieldController.text.isNotEmpty 
             ? double.tryParse(_estimatedYieldController.text.trim()) 
@@ -331,7 +351,7 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
                                 ),
                                 child: Text(
                                   _estimatedHarvestDate != null
-                                      ? '${_estimatedHarvestDate!.day}/${_estimatedHarvestDate!.month}/${_estimatedHarvestDate!.year}'
+                                      ? DateFormatters.formatHarvestDate(_estimatedHarvestDate)
                                       : 'Seleccionar...',
                                 ),
                               ),
@@ -355,7 +375,7 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
                           key: const Key('existing_images_list'),
                           scrollDirection: Axis.horizontal,
                           itemCount: _existingImageUrls.length,
-                          separatorBuilder: (_, __) => const SizedBox(width: 8),
+                          separatorBuilder: (_, _) => const SizedBox(width: 8),
                           itemBuilder: (context, index) {
                             final path = _existingImageUrls[index];
                             final url = _cropService.getPublicImageUrl(path);
@@ -369,7 +389,7 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
                                     width: 80,
                                     height: 80,
                                     fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) => Container(
+                                    errorBuilder: (_, _, _) => Container(
                                       width: 80,
                                       height: 80,
                                       color: Colors.grey.shade200,

@@ -58,6 +58,15 @@ enum UserRole {
     return fromString(role) == UserRole.agricultor;
   }
 
+  /// Verifica si una cadena representa el rol Moderador
+  static bool isModeratorRole(String? role) {
+    return fromString(role) == UserRole.moderador;
+  }
+
+  bool get isModerator => this == UserRole.moderador;
+  bool get isBuyer => this == UserRole.comprador;
+  bool get isFarmer => this == UserRole.agricultor;
+
   /// Nombre amigable por defecto en español
   String get displayName {
     switch (this) {
@@ -77,7 +86,8 @@ enum UserVerificationStatus {
   enRevisionIa,
   aprobado,
   rechazado,
-  suspendido;
+  suspendido,
+  desconocido;
 
   String toDbValue() {
     switch (this) {
@@ -91,6 +101,8 @@ enum UserVerificationStatus {
         return 'rechazado';
       case UserVerificationStatus.suspendido:
         return 'suspendido';
+      case UserVerificationStatus.desconocido:
+        return 'desconocido';
     }
   }
 
@@ -112,8 +124,9 @@ enum UserVerificationStatus {
         return UserVerificationStatus.suspendido;
       case 'pendiente':
       case 'pending':
-      default:
         return UserVerificationStatus.pendiente;
+      default:
+        return UserVerificationStatus.desconocido;
     }
   }
 

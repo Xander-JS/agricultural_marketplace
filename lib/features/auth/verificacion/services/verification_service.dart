@@ -1,3 +1,4 @@
+// ignore_for_file: prefer_initializing_formals
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class VerificationStatusData {
@@ -9,9 +10,27 @@ class VerificationStatusData {
 }
 
 class VerificationService {
-  final SupabaseClient _supabase = Supabase.instance.client;
+  final SupabaseClient? _clientOverride;
+  final Future<VerificationStatusData> Function()? _statusFetcher;
+
+  VerificationService({
+    SupabaseClient? client,
+    Future<VerificationStatusData> Function()? statusFetcher,
+  })  : _clientOverride = client,
+        _statusFetcher = statusFetcher;
+
+  SupabaseClient get _supabase {
+    final client = _clientOverride;
+    if (client != null) return client;
+    return Supabase.instance.client;
+  }
 
   Future<VerificationStatusData> getCurrentVerificationStatus() async {
+    final fetcher = _statusFetcher;
+    if (fetcher != null) {
+      return await fetcher();
+    }
+
     final user = _supabase.auth.currentUser;
     if (user == null) {
       throw Exception('Usuario no autenticado');
@@ -29,7 +48,7 @@ class VerificationService {
         throw Exception('Perfil inexistente');
       }
 
-      final profileStatus = profileRes['verification_status'] as String;
+      final profileStatus = profileRes['verification_status'] as String?;
       final role = profileRes['role'] as String?;
 
       // 2. Get latest verification attempt details if any
@@ -43,10 +62,13 @@ class VerificationService {
 
       if (attemptRes == null) {
         // If no attempts exist, rely on profile status
-        return VerificationStatusData(status: profileStatus, role: role);
+        return VerificationStatusData(
+          status: profileStatus ?? 'desconocido',
+          role: role,
+        );
       }
 
-      final attemptStatus = attemptRes['status'] as String;
+      final attemptStatus = attemptRes['status'] as String?;
       final rejectionReason = attemptRes['rejection_reason'] as String?;
 
       // According to the logic, we can return the attempt status or profile status.
@@ -54,11 +76,14 @@ class VerificationService {
       // but attempt status might have the specific rejection reason.
       // If profile is approved but attempt is rejected (unlikely), profile wins.
       if (profileStatus == 'aprobado' || profileStatus == 'suspendido') {
-        return VerificationStatusData(status: profileStatus, role: role);
+        return VerificationStatusData(
+          status: profileStatus!,
+          role: role,
+        );
       }
 
       return VerificationStatusData(
-        status: attemptStatus,
+        status: attemptStatus ?? profileStatus ?? 'desconocido',
         rejectionReason: rejectionReason,
         role: role,
       );

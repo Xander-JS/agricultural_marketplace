@@ -97,6 +97,20 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
     });
   }
 
+  Future<void> _handleSignOut() async {
+    if (widget.onSignOut != null) {
+      await widget.onSignOut!();
+    } else {
+      try {
+        await Supabase.instance.client.auth.signOut();
+      } catch (e) {
+        try {
+          await Supabase.instance.client.auth.signOut(scope: SignOutScope.local);
+        } catch (_) {}
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AppLoading(
@@ -164,6 +178,14 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
           ),
           child: Text(l10n.verification_status_retry),
+        ),
+        const SizedBox(height: 16),
+        TextButton(
+          onPressed: _handleSignOut,
+          child: Text(
+            l10n.profile_logout,
+            style: const TextStyle(color: Colors.white70),
+          ),
         ),
       ],
     );
@@ -325,18 +347,10 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
             ),
           ),
 
-        if (data.status == 'rechazado' ||
-            data.status == 'suspendido' ||
-            data.status == 'desconocido') ...[
+        if (data.status != 'aprobado') ...[
           const SizedBox(height: 16),
           TextButton(
-            onPressed: () async {
-              if (widget.onSignOut != null) {
-                await widget.onSignOut!();
-              } else {
-                await Supabase.instance.client.auth.signOut();
-              }
-            },
+            onPressed: _handleSignOut,
             child: Text(
               l10n.profile_logout,
               style: const TextStyle(color: Colors.white70),

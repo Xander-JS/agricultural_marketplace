@@ -524,5 +524,104 @@ void main() {
       expect(statusData.status, equals('desconocido'));
       expect(statusData.role, equals('agricultor'));
     });
+
+    // 14a. Estado de verificación pendiente permite cerrar sesión y regresa a LoginScreen
+    testWidgets('14a. Estado de verificación pendiente permite cerrar sesión y regresa a LoginScreen', (tester) async {
+      final session = createMockSession(userId: 'farmer-pend-logout');
+
+      await tester.pumpWidget(
+        createTestApp(
+          child: AuthGate(
+            initialSession: session,
+            profileFetcher: (userId) async => {
+              'id': userId,
+              'role': 'agricultor',
+              'verification_status': 'pendiente',
+            },
+            enableAutoPolling: false,
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(find.byType(VerificationStatusScreen), findsOneWidget);
+      expect(find.text('Pendiente de Documentos'), findsOneWidget);
+
+      await tester.ensureVisible(find.text('Cerrar sesión'));
+      expect(find.text('Cerrar sesión'), findsOneWidget);
+
+      await tester.tap(find.text('Cerrar sesión'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
+
+      expect(find.byType(LoginScreen), findsOneWidget);
+      expect(find.byType(VerificationStatusScreen), findsNothing);
+    });
+
+    // 14b. Estado de verificación en_revision_ia permite cerrar sesión y regresa a LoginScreen
+    testWidgets('14b. Estado de verificación en_revision_ia permite cerrar sesión y regresa a LoginScreen', (tester) async {
+      final session = createMockSession(userId: 'farmer-review-logout');
+
+      await tester.pumpWidget(
+        createTestApp(
+          child: AuthGate(
+            initialSession: session,
+            profileFetcher: (userId) async => {
+              'id': userId,
+              'role': 'agricultor',
+              'verification_status': 'en_revision_ia',
+            },
+            enableAutoPolling: false,
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(find.byType(VerificationStatusScreen), findsOneWidget);
+      expect(find.text('En Revisión'), findsOneWidget);
+
+      await tester.ensureVisible(find.text('Cerrar sesión'));
+      expect(find.text('Cerrar sesión'), findsOneWidget);
+
+      await tester.tap(find.text('Cerrar sesión'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
+
+      expect(find.byType(LoginScreen), findsOneWidget);
+      expect(find.byType(VerificationStatusScreen), findsNothing);
+    });
+
+    // 14c. Estado de error en verificación despliega botón de cerrar sesión operable
+    testWidgets('14c. Estado de error en verificación despliega botón de cerrar sesión operable', (tester) async {
+      bool signedOut = false;
+
+      final failingService = VerificationService(
+        statusFetcher: () async => throw Exception('Fallo de conexión en verificación'),
+      );
+
+      await tester.pumpWidget(
+        createTestApp(
+          child: VerificationStatusScreen(
+            verificationService: failingService,
+            onSignOut: () async {
+              signedOut = true;
+            },
+            enableAutoPolling: false,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Ha ocurrido un error'), findsOneWidget);
+      expect(find.text('Reintentar'), findsOneWidget);
+      expect(find.text('Cerrar sesión'), findsOneWidget);
+
+      await tester.tap(find.text('Cerrar sesión'));
+      await tester.pumpAndSettle();
+
+      expect(signedOut, isTrue);
+    });
   });
 }

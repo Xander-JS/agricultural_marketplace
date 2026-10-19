@@ -4,6 +4,7 @@ import '../../deals/services/negotiation_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/constants/delivery_methods.dart';
+import '../../../core/utils/app_formatters.dart';
 
 class MakeOfferSheet extends StatefulWidget {
   final CropModel crop;
@@ -38,11 +39,11 @@ class _MakeOfferSheetState extends State<MakeOfferSheet> {
     _service = widget.negotiationService ?? NegotiationService();
 
     final initialQty = widget.crop.minOrderKg > 0
-        ? widget.crop.minOrderKg.toStringAsFixed(0)
+        ? UnitFormatters.formatCleanValue(widget.crop.minOrderKg, useLocaleSeparators: false)
         : '1';
     _quantityController = TextEditingController(text: initialQty);
     _priceController = TextEditingController(
-      text: widget.crop.pricePerKg.toStringAsFixed(0),
+      text: UnitFormatters.formatCleanValue(widget.crop.pricePerKg, useLocaleSeparators: false),
     );
     _messageController = TextEditingController();
   }
@@ -181,7 +182,7 @@ class _MakeOfferSheetState extends State<MakeOfferSheet> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Base: \$${widget.crop.pricePerKg.toStringAsFixed(0)} / kg',
+                        'Base: ${CurrencyFormatters.formatPricePerKg(widget.crop.pricePerKg)}',
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
@@ -189,7 +190,7 @@ class _MakeOfferSheetState extends State<MakeOfferSheet> {
                         ),
                       ),
                       Text(
-                        'Mín: ${widget.crop.minOrderKg.toStringAsFixed(0)} kg | Stock: ${widget.crop.availableStock.toStringAsFixed(0)} kg',
+                        'Mín: ${UnitFormatters.formatKg(widget.crop.minOrderKg)} | Stock: ${UnitFormatters.formatKg(widget.crop.availableStock)}',
                         style: TextStyle(
                           fontSize: 13,
                           color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
@@ -306,7 +307,7 @@ class _MakeOfferSheetState extends State<MakeOfferSheet> {
                         ),
                       ),
                       Text(
-                        '\$ ${_estimatedTotal.toStringAsFixed(0)}',
+                        CurrencyFormatters.formatCop(_estimatedTotal),
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,

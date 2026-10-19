@@ -2,17 +2,21 @@ import 'package:flutter/material.dart';
 import '../models/crop_model.dart';
 import '../services/crop_service.dart';
 import 'crop_status_badge.dart';
+import '../../geo/models/simulated_location.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/localization/app_localizations.dart';
+import '../../../core/utils/app_formatters.dart';
 
 class CropCard extends StatelessWidget {
   final CropModel crop;
   final VoidCallback onTap;
+  final DistanceEvaluation? distanceEvaluation;
 
   const CropCard({
     super.key,
     required this.crop,
     required this.onTap,
+    this.distanceEvaluation,
   });
 
   @override
@@ -83,11 +87,36 @@ class CropCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    crop.cropType,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        crop.cropType,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                        ),
+                      ),
+                      if (distanceEvaluation != null && distanceEvaluation!.hasValidDistance)
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.near_me_outlined,
+                              size: 13,
+                              color: isDark ? AppColors.darkTertiary : AppColors.lightTertiary,
+                            ),
+                            const SizedBox(width: 3),
+                            Text(
+                              distanceEvaluation!.formatted,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: isDark ? AppColors.darkTertiary : AppColors.lightTertiary,
+                              ),
+                            ),
+                          ],
+                        ),
+                    ],
                   ),
                   const SizedBox(height: 12),
                   Row(
@@ -97,14 +126,14 @@ class CropCard extends StatelessWidget {
                         context,
                         icon: Icons.inventory_2_outlined,
                         label: l10n?.crop_card_available ?? 'Disponible',
-                        value: '${crop.stockTotal.toStringAsFixed(0)} kg',
+                        value: UnitFormatters.formatKg(crop.stockTotal),
                         isDark: isDark,
                       ),
                       _buildInfoItem(
                         context,
                         icon: Icons.sell_outlined,
                         label: l10n?.crop_card_price_per_kg ?? 'Precio / kg',
-                        value: '\$${crop.pricePerKg.toStringAsFixed(0)}',
+                        value: CurrencyFormatters.formatCop(crop.pricePerKg),
                         isDark: isDark,
                       ),
                     ],

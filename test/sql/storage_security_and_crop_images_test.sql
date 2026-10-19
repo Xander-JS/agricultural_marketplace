@@ -48,6 +48,7 @@ DECLARE
 
     c_obj_prod_a  uuid := 'd0000000-0000-0000-0000-000000000100';
     c_obj_prof_a  uuid := 'd0000000-0000-0000-0000-000000000200';
+    c_obj_doc_a   uuid := 'd0000000-0000-0000-0000-000000000300';
 
     v_err_code text;
     v_err_msg  text;
@@ -96,6 +97,10 @@ BEGIN
     INSERT INTO public.crop_images (id, crop_id, image_path, is_primary) VALUES
         (c_crop_img_a, c_crop_a_id, c_crop_a_id::text || '/img_a_1.jpg', true),
         (c_crop_img_b, c_crop_b_id, c_crop_b_id::text || '/img_b_1.jpg', true);
+
+    -- Inserción de documento privado de prueba en user_documents
+    INSERT INTO storage.objects (id, bucket_id, name, owner) VALUES
+        (c_obj_doc_a, 'user_documents', c_farmer_a_id::text || '/cedula.pdf', c_farmer_a_id);
 
 
     -- ========================================================================
@@ -253,6 +258,29 @@ BEGIN
             verdict := 'FALLÓ';
         END IF;
     EXCEPTION WHEN OTHERS THEN
+        obtained := 'ERROR_INESPERADO: ' || SQLERRM || ' (SQLSTATE: ' || SQLSTATE || ')';
+        verdict := 'FALLÓ';
+    END;
+    RETURN NEXT;
+
+    -- SEC-PROD-07: Intento de manipulación de identificador de carpeta sin UUID válido
+    scenario := 'product_images: Manipulación de identificadores / ruta inválida';
+    test_code := 'SEC-PROD-07';
+    description := 'Agricultor intenta subir archivo a carpeta sin UUID válido de cultivo';
+    expected := 'BLOQUEADO_RLS (SQLSTATE 42501)';
+    BEGIN
+        PERFORM set_config('role', 'authenticated', true);
+        PERFORM set_config('request.jwt.claim.sub', c_farmer_a_id::text, true);
+
+        INSERT INTO storage.objects (id, bucket_id, name, owner)
+        VALUES (gen_random_uuid(), 'product_images', 'invalid-uuid-folder/hack.jpg', c_farmer_a_id);
+
+        obtained := 'VULNERABILIDAD: Inserción en ruta no-UUID fue permitida';
+        verdict := 'FALLÓ';
+    EXCEPTION WHEN insufficient_privilege THEN
+        obtained := 'BLOQUEADO_RLS (SQLSTATE 42501)';
+        verdict := 'PASÓ';
+    WHEN OTHERS THEN
         obtained := 'ERROR_INESPERADO: ' || SQLERRM || ' (SQLSTATE: ' || SQLSTATE || ')';
         verdict := 'FALLÓ';
     END;
@@ -501,6 +529,100 @@ BEGIN
             verdict := 'FALLÓ';
         END IF;
     EXCEPTION WHEN OTHERS THEN
+        obtained := 'ERROR_INESPERADO: ' || SQLERRM || ' (SQLSTATE: ' || SQLSTATE || ')';
+        verdict := 'FALLÓ';
+    END;
+    RETURN NEXT;
+
+
+    -- ========================================================================
+    -- ESCENARIO 4: SEGURIDAD Y PRIVACIDAD EN BUCKET 'user_documents'
+    -- ========================================================================
+
+    -- SEC-DOC-01: Configuración de privacidad del bucket
+    scenario := 'user_documents: Bucket privado';
+    test_code := 'SEC-DOC-01';
+    description := 'Verificar que el bucket user_documents está configurado como estrictamente privado';
+    expected := 'PRIVADO (public = false)';
+    BEGIN
+        PERFORM set_config('role', 'postgres', true);
+
+        SELECT count(*) INTO v_count
+        FROM storage.buckets
+        WHERE id = 'user_documents' AND public = false;
+
+        IF v_count = 1 THEN
+            obtained := 'PRIVADO (public = false)';
+            verdict := 'PASÓ';
+        ELSE
+            obtained := 'VULNERABILIDAD: El bucket user_documents no es privado';
+            verdict := 'FALLÓ';
+        END IF;
+    EXCEPTION WHEN OTHERS THEN
+        obtained := 'ERROR_INESPERADO: ' || SQLERRM || ' (SQLSTATE: ' || SQLSTATE || ')';
+        verdict := 'FALLÓ';
+    END;
+    RETURN NEXT;
+
+    -- SEC-DOC-02: Acceso anónimo denegado a documentos privados
+    scenario := 'user_documents: Acceso anónimo bloqueado';
+    test_code := 'SEC-DOC-02';
+    description := 'Usuario anónimo intenta listar o leer archivos privados en user_documents';
+    expected := 'ACCESO_DENEGADO (0 filas visibles)';
+    BEGIN
+        PERFORM set_config('role', 'anon', true);
+        PERFORM set_config('request.jwt.claim.sub', '', true);
+
+        SELECT count(*) INTO v_count
+        FROM storage.objects
+        WHERE bucket_id = 'user_documents';
+
+        IF v_count = 0 THEN
+            obtained := 'ACCESO_DENEGADO (0 filas visibles)';
+            verdict := 'PASÓ';
+        ELSE
+            obtained := 'VULNERABILIDAD: ' || v_count || ' documento(s) privado(s) visible(s) para anon';
+            verdict := 'FALLÓ';
+        END IF;
+    EXCEPTION WHEN OTHERS THEN
+        obtained := 'ERROR_INESPERADO: ' || SQLERRM || ' (SQLSTATE: ' || SQLSTATE || ')';
+        verdict := 'FALLÓ';
+    END;
+    RETURN NEXT;
+
+    -- SEC-DOC-03: Usuario ajeno no puede acceder ni borrar documentos privados de otro usuario
+    scenario := 'user_documents: Aislamiento entre usuarios';
+    test_code := 'SEC-DOC-03';
+    description := 'Comprador ajeno intenta leer o borrar documento de identidad del Agricultor A';
+    expected := 'ACCESO_DENEGADO (0 filas visibles/eliminadas)';
+    BEGIN
+        PERFORM set_config('role', 'authenticated', true);
+        PERFORM set_config('request.jwt.claim.sub', c_buyer_id::text, true);
+        PERFORM set_config('storage.allow_delete_query', 'true', true);
+
+        DELETE FROM storage.objects WHERE id = c_obj_doc_a;
+
+        GET DIAGNOSTICS v_count = ROW_COUNT;
+        IF v_count = 0 THEN
+            SELECT count(*) INTO v_count
+            FROM storage.objects
+            WHERE id = c_obj_doc_a;
+
+            IF v_count = 0 THEN
+                obtained := 'ACCESO_DENEGADO (0 filas visibles/eliminadas)';
+                verdict := 'PASÓ';
+            ELSE
+                obtained := 'VULNERABILIDAD: Comprador pudo leer documento ajeno';
+                verdict := 'FALLÓ';
+            END IF;
+        ELSE
+            obtained := 'VULNERABILIDAD: Comprador pudo eliminar documento ajeno';
+            verdict := 'FALLÓ';
+        END IF;
+    EXCEPTION WHEN insufficient_privilege THEN
+        obtained := 'ACCESO_DENEGADO (0 filas visibles/eliminadas)';
+        verdict := 'PASÓ';
+    WHEN OTHERS THEN
         obtained := 'ERROR_INESPERADO: ' || SQLERRM || ' (SQLSTATE: ' || SQLSTATE || ')';
         verdict := 'FALLÓ';
     END;

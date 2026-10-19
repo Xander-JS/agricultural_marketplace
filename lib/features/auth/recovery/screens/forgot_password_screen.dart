@@ -57,7 +57,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final l10n = AppLocalizations.of(context);
     final contact = _contactController.text;
 
-    final result = await _service.requestPasswordReset(contact: contact);
+    final result = await _service.requestPasswordReset(
+      contact: contact,
+      redirectTo: 'agromarketplace://reset-password',
+    );
 
     if (!mounted) return;
 

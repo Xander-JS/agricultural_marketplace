@@ -1,5 +1,6 @@
 // ignore_for_file: prefer_initializing_formals
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Resultado estructurado para operaciones de recuperación y cambio de contraseña.
@@ -154,6 +155,10 @@ class RecoveryService {
         isNetwork: true,
       );
     } on AuthException catch (e) {
+      debugPrint(
+        '[RecoveryService.requestPasswordReset] AuthException: '
+        'type=${e.runtimeType}, statusCode=${e.statusCode}, code=${e.code}, message=${e.message}',
+      );
       // Manejar posibles errores del proveedor (rate limit, etc.)
       if (e.statusCode == '429' || e.message.toLowerCase().contains('rate limit')) {
         return RecoveryResult.failure(
@@ -167,6 +172,10 @@ class RecoveryService {
             : 'No se pudo procesar la solicitud. Por favor intenta más tarde.',
       );
     } catch (e) {
+      debugPrint(
+        '[RecoveryService.requestPasswordReset] Error inesperado: '
+        'type=${e.runtimeType}, description=$e',
+      );
       final errStr = e.toString();
       if (_isNetworkErrorString(errStr)) {
         return RecoveryResult.failure(

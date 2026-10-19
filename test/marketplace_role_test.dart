@@ -114,6 +114,26 @@ void main() {
       expect(find.byType(FloatingActionButton), findsNothing);
     });
 
+    testWidgets('Variantes buyer, mayúsculas y espacios no muestran accidentalmente interfaz de agricultor', (tester) async {
+      final buyerVariants = ['buyer', ' BUYER ', '  comprador  ', '  Comerciante  '];
+      for (final variant in buyerVariants) {
+        await tester.pumpWidget(
+          createTestWidget(
+            child: MarketplaceScreen(
+              role: variant,
+              initialCrops: [sampleCrop],
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Mercado'), findsOneWidget, reason: 'Falló para variante: "$variant"');
+        expect(find.text('Mi Mercado'), findsNothing, reason: 'Mostró Mi Mercado para variante: "$variant"');
+        expect(find.byType(FloatingActionButton), findsNothing, reason: 'Mostró FAB para variante: "$variant"');
+        expect(find.text('Publicar'), findsNothing, reason: 'Mostró Publicar para variante: "$variant"');
+      }
+    });
+
     testWidgets('Agricultor ve título "Mi Mercado" y SÍ ve botón flotante "Publicar"', (tester) async {
       await tester.pumpWidget(
         createTestWidget(

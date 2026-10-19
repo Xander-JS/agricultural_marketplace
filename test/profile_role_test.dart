@@ -182,5 +182,37 @@ void main() {
       expect(find.text('Cerrados'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
+
+    testWidgets('Cierre de sesión desde FarmerProfileScreen invoca onSignOut tras confirmar diálogo', (tester) async {
+      bool signedOut = false;
+
+      await tester.pumpWidget(
+        createTestWidget(
+          child: FarmerProfileScreen(
+            initialProfileData: farmerData,
+            onSignOut: () async {
+              signedOut = true;
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Abrir modal de configuración
+      await tester.tap(find.byIcon(Icons.settings_outlined));
+      await tester.pumpAndSettle();
+
+      // Desplazar y pulsar cerrar sesión en el modal
+      await tester.ensureVisible(find.text('Cerrar sesión'));
+      await tester.tap(find.text('Cerrar sesión'));
+      await tester.pumpAndSettle();
+
+      // Confirmar en el diálogo
+      expect(find.text('¿Cerrar sesión?'), findsOneWidget);
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Cerrar sesión'));
+      await tester.pumpAndSettle();
+
+      expect(signedOut, isTrue);
+    });
   });
 }

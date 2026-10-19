@@ -23,8 +23,8 @@ enum UserRole {
   }
 
   /// Analiza cualquier variante de cadena (`farmer`, `buyer`, `comerciante`, etc.)
-  /// y retorna el rol tipado correspondiente.
-  static UserRole fromString(String? role) {
+  /// y retorna el rol tipado correspondiente, o `null` si el rol es nulo o no reconocido.
+  static UserRole? tryParse(String? role) {
     final normalized = (role ?? '').trim().toLowerCase();
     switch (normalized) {
       case 'farmer':
@@ -39,8 +39,17 @@ enum UserRole {
       case 'moderador':
         return UserRole.moderador;
       default:
-        return UserRole.agricultor;
+        return null;
     }
+  }
+
+  /// Alias de conveniencia para [tryParse]
+  static UserRole? tryFromString(String? role) => tryParse(role);
+
+  /// Analiza cualquier variante de cadena (`farmer`, `buyer`, `comerciante`, etc.)
+  /// y retorna el rol tipado correspondiente. Si es nulo o desconocido, recurre al valor por defecto.
+  static UserRole fromString(String? role, {UserRole fallback = UserRole.agricultor}) {
+    return tryParse(role) ?? fallback;
   }
 
   /// Convierte cualquier cadena de rol a su valor seguro para Supabase
@@ -50,17 +59,22 @@ enum UserRole {
 
   /// Verifica si una cadena representa el rol Comprador / Comerciante
   static bool isBuyerRole(String? role) {
-    return fromString(role) == UserRole.comprador;
+    return tryParse(role) == UserRole.comprador;
   }
 
   /// Verifica si una cadena representa el rol Agricultor / Productor
   static bool isFarmerRole(String? role) {
-    return fromString(role) == UserRole.agricultor;
+    return tryParse(role) == UserRole.agricultor;
   }
 
   /// Verifica si una cadena representa el rol Moderador
   static bool isModeratorRole(String? role) {
-    return fromString(role) == UserRole.moderador;
+    return tryParse(role) == UserRole.moderador;
+  }
+
+  /// Comprueba si una cadena representa un rol reconocido en el sistema
+  static bool isValidRole(String? role) {
+    return tryParse(role) != null;
   }
 
   bool get isModerator => this == UserRole.moderador;

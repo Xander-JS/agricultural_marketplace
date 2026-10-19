@@ -16,10 +16,12 @@ import '../services/profile_service.dart';
 /// y las opciones de configuración, respetando temas claro y oscuro y localización.
 class FarmerProfileScreen extends StatefulWidget {
   final FarmerProfileData? initialProfileData;
+  final Future<void> Function()? onSignOut;
 
   const FarmerProfileScreen({
     super.key,
     this.initialProfileData,
+    this.onSignOut,
   });
 
   @override
@@ -311,10 +313,17 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
     );
 
     if (confirm == true) {
-      try {
-        await Supabase.instance.client.auth.signOut();
-      } catch (e) {
-        debugPrint('Sign out error: $e');
+      if (widget.onSignOut != null) {
+        await widget.onSignOut!();
+      } else {
+        try {
+          await Supabase.instance.client.auth.signOut();
+        } catch (e) {
+          debugPrint('Sign out remote error: $e');
+          try {
+            await Supabase.instance.client.auth.signOut(scope: SignOutScope.local);
+          } catch (_) {}
+        }
       }
     }
   }

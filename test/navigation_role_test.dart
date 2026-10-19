@@ -1,12 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:agricultural_marketplace/core/localization/localization_config.dart';
 import 'package:agricultural_marketplace/core/theme/app_theme.dart';
 import 'package:agricultural_marketplace/core/widgets/navigation/app_bottom_navigation.dart';
 import 'package:agricultural_marketplace/features/dashboard/screens/main_dashboard_screen.dart';
 import 'package:agricultural_marketplace/features/purchases/screens/purchases_screen.dart';
+import 'package:agricultural_marketplace/features/costs/screens/costs_screen.dart';
 
 void main() {
+  setUpAll(() async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    SharedPreferences.setMockInitialValues({});
+    try {
+      await Supabase.initialize(
+        url: 'https://placeholder.supabase.co',
+        publishableKey: 'placeholder-anon-key',
+      );
+    } catch (_) {}
+  });
+
   Widget createTestWidget({
     required Widget child,
     ThemeMode themeMode = ThemeMode.light,
@@ -150,6 +164,26 @@ void main() {
 
       const merchantDashboard = MainDashboardScreen(role: 'comerciante');
       expect(merchantDashboard.role, 'comerciante');
+    });
+
+    testWidgets('MainDashboardScreen con variantes buyer, mayúsculas y espacios monta PurchasesScreen y no CostsScreen', (tester) async {
+      final buyerVariants = ['buyer', ' BUYER ', '  comprador  ', '  Comerciante  '];
+      for (final variant in buyerVariants) {
+        await tester.pumpWidget(
+          createTestWidget(
+            child: MainDashboardScreen(
+              key: ValueKey(variant),
+              role: variant,
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.byType(PurchasesScreen, skipOffstage: false), findsOneWidget, reason: 'Falló PurchasesScreen para: "$variant"');
+        expect(find.byType(CostsScreen, skipOffstage: false), findsNothing, reason: 'Mostró CostsScreen para: "$variant"');
+        expect(find.text('Compras'), findsOneWidget, reason: 'Falló texto Compras en navegación para: "$variant"');
+        expect(find.text('Costos'), findsNothing, reason: 'Mostró Costos en navegación para: "$variant"');
+      }
     });
   });
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/constants/user_roles.dart';
 import '../../../../core/widgets/navigation/app_bottom_navigation.dart';
 import '../../profile/screens/farmer_profile_screen.dart';
 import '../../crop/screens/marketplace_screen.dart';
@@ -8,8 +9,13 @@ import '../../purchases/screens/purchases_screen.dart';
 
 class MainDashboardScreen extends StatefulWidget {
   final String role;
+  final Future<void> Function()? onSignOut;
 
-  const MainDashboardScreen({super.key, required this.role});
+  const MainDashboardScreen({
+    super.key,
+    required this.role,
+    this.onSignOut,
+  });
 
   @override
   State<MainDashboardScreen> createState() => _MainDashboardScreenState();
@@ -19,10 +25,7 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
   int _currentIndex = 0;
   late final List<Widget> _screens;
 
-  bool get _isBuyer {
-    final normalized = widget.role.trim().toLowerCase();
-    return normalized == 'comprador' || normalized == 'comerciante';
-  }
+  bool get _isBuyer => UserRole.isBuyerRole(widget.role);
 
   @override
   void initState() {
@@ -38,14 +41,14 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
             });
           },
         ),
-        const FarmerProfileScreen(),
+        FarmerProfileScreen(onSignOut: widget.onSignOut),
       ];
     } else {
       _screens = [
         MarketplaceScreen(role: widget.role),
         DealsScreen(role: widget.role),
         const CostsScreen(),
-        const FarmerProfileScreen(),
+        FarmerProfileScreen(onSignOut: widget.onSignOut),
       ];
     }
   }

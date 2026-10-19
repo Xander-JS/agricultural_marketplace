@@ -4,21 +4,27 @@ class RegistrationData {
   String? phone;
   String? firstName;
   String? lastName;
+  String? password;
+  String? email;
   String? role; // 'agricultor' or 'comprador'
   String? documentType; // 'CC' or 'Driver License'
   File? documentFront;
   File? documentBack;
   File? selfie;
 
+  bool get isPasswordValid => password != null && password!.length >= 6;
+
   bool get isPersonalInfoValid =>
       phone != null &&
-      phone!.isNotEmpty &&
+      phone!.trim().isNotEmpty &&
       firstName != null &&
-      firstName!.isNotEmpty &&
+      firstName!.trim().isNotEmpty &&
       lastName != null &&
-      lastName!.isNotEmpty;
+      lastName!.trim().isNotEmpty &&
+      isPasswordValid;
 
-  bool get isRoleValid => role != null && role!.isNotEmpty;
+  bool get isRoleValid =>
+      role != null && (role == 'agricultor' || role == 'comprador');
 
   bool get isDocumentTypeValid =>
       documentType != null && documentType!.isNotEmpty;

@@ -21,11 +21,13 @@ class PersonalDetailsScreen extends StatefulWidget {
 class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
   late RegistrationData _data;
   final _formKey = GlobalKey<FormState>();
-  bool _isLoading = false;
+  final bool _isLoading = false;
 
   final _phoneController = TextEditingController();
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _isPasswordVisible = false;
 
   @override
   void initState() {
@@ -34,6 +36,7 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
     _phoneController.text = _data.phone ?? '';
     _firstNameController.text = _data.firstName ?? '';
     _lastNameController.text = _data.lastName ?? '';
+    _passwordController.text = _data.password ?? '';
   }
 
   @override
@@ -41,14 +44,16 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
     _phoneController.dispose();
     _firstNameController.dispose();
     _lastNameController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
   Future<void> _onNext() async {
     if (_formKey.currentState?.validate() ?? false) {
-      _data.phone = _phoneController.text;
-      _data.firstName = _firstNameController.text;
-      _data.lastName = _lastNameController.text;
+      _data.phone = _phoneController.text.trim();
+      _data.firstName = _firstNameController.text.trim();
+      _data.lastName = _lastNameController.text.trim();
+      _data.password = _passwordController.text;
 
       Navigator.of(context).push(
         MaterialPageRoute(
@@ -75,16 +80,22 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
                 child: ListView(
                   padding: const EdgeInsets.all(24.0),
                   children: [
-
-
                     CustomTextField(
                       label: l10n.personal_info_phone,
                       hint: l10n.personal_info_phone_hint,
                       icon: Icons.phone_android,
                       controller: _phoneController,
                       keyboardType: TextInputType.phone,
-                      validator: (value) =>
-                          value == null || value.isEmpty ? l10n.personal_info_required : null,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return l10n.personal_info_required;
+                        }
+                        final clean = value.replaceAll(RegExp(r'[\s\-()]+'), '');
+                        if (!clean.contains('@') && clean.length < 7) {
+                          return 'Número telefónico inválido';
+                        }
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 24),
 
@@ -94,7 +105,7 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
                       icon: Icons.badge_outlined,
                       controller: _firstNameController,
                       validator: (value) =>
-                          value == null || value.isEmpty ? l10n.personal_info_required : null,
+                          value == null || value.trim().isEmpty ? l10n.personal_info_required : null,
                     ),
                     const SizedBox(height: 24),
 
@@ -104,7 +115,38 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
                       icon: Icons.person_outline,
                       controller: _lastNameController,
                       validator: (value) =>
-                          value == null || value.isEmpty ? l10n.personal_info_required : null,
+                          value == null || value.trim().isEmpty ? l10n.personal_info_required : null,
+                    ),
+                    const SizedBox(height: 24),
+
+                    CustomTextField(
+                      label: l10n.login_password,
+                      hint: l10n.login_password_hint,
+                      icon: Icons.lock_outline,
+                      controller: _passwordController,
+                      obscureText: !_isPasswordVisible,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _isPasswordVisible
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                          color: AppColors.lightTextDisabled,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _isPasswordVisible = !_isPasswordVisible;
+                          });
+                        },
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return l10n.personal_info_required;
+                        }
+                        if (value.length < 6) {
+                          return 'Mínimo 6 caracteres';
+                        }
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 32),
 

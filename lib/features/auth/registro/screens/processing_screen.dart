@@ -4,11 +4,17 @@ import 'package:agricultural_marketplace/core/localization/app_localizations.dar
 import '../../../../core/widgets/loading/app_loading.dart';
 import '../../../../core/widgets/loading/loading_content.dart';
 import '../models/registration_data.dart';
-import '../../login/screens/login_screen.dart';
+import '../services/registration_service.dart';
 
 class ProcessingScreen extends StatefulWidget {
   final RegistrationData data;
-  const ProcessingScreen({Key? key, required this.data}) : super(key: key);
+  final RegistrationService? registrationService;
+
+  const ProcessingScreen({
+    Key? key,
+    required this.data,
+    this.registrationService,
+  }) : super(key: key);
 
   @override
   State<ProcessingScreen> createState() => _ProcessingScreenState();
@@ -18,17 +24,14 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
   late String _statusMessage;
   bool _hasError = false;
   bool _isSpinning = true;
+  bool _requiresConfirmation = false;
+  bool _isSubmitted = false;
 
-  @override
-  void initState() {
-    super.initState();
-  }
-  
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Initialize text using localization
-    if (!_hasError) {
+    if (!_hasError && !_isSubmitted) {
+      _isSubmitted = true;
       _statusMessage = AppLocalizations.of(context)!.processing_default_message;
       _submitData();
     }
@@ -52,32 +55,47 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
         });
       }
 
-      // Simular tiempo de carga sin llamar a Supabase
-      await Future.delayed(const Duration(seconds: 2));
+      final service = widget.registrationService ?? RegistrationService();
+      final result = await service.registerUser(
+        phone: widget.data.phone!,
+        firstName: widget.data.firstName!,
+        lastName: widget.data.lastName!,
+        password: widget.data.password!,
+        role: widget.data.role!,
+        documentType: widget.data.documentType,
+        documentFront: widget.data.documentFront,
+        documentBack: widget.data.documentBack,
+        selfie: widget.data.selfie,
+      );
 
-      if (mounted) {
+      if (!mounted) return;
+
+      if (result.requiresConfirmation) {
         setState(() {
-          _statusMessage = '¡Cargado con éxito!'; // Mensaje de cargado
+          _statusMessage = result.message ??
+              'Cuenta creada. Por favor confirma tu medio de contacto para continuar.';
+          _isSpinning = false;
+          _requiresConfirmation = true;
+        });
+      } else {
+        setState(() {
+          _statusMessage = l10n.processing_success;
           _isSpinning = false;
         });
-      }
 
-      // Navigate to Login Screen (Simulando que terminó y ahora debe iniciar sesión)
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) {
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(
-              builder: (_) => const LoginScreen(),
-            ),
-            (route) => false,
-          );
-        }
-      });
+        // Retornar a la raíz donde AuthGate ya resolvió la sesión y el perfil
+        Future.delayed(const Duration(milliseconds: 1000), () {
+          if (mounted) {
+            Navigator.of(context).popUntil((route) => route.isFirst);
+          }
+        });
+      }
     } catch (e) {
       if (mounted) {
         setState(() {
           _hasError = true;
-          _statusMessage = '${l10n.processing_error_prefix}${e.toString()}';
+          _statusMessage =
+              '${l10n.processing_error_prefix}${e.toString().replaceAll('Exception: ', '').replaceAll('ArgumentError: ', '')}';
           _isSpinning = false;
         });
       }
@@ -90,8 +108,13 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
       _hasError = false;
       _statusMessage = l10n.processing_retrying;
       _isSpinning = true;
+      _requiresConfirmation = false;
     });
     _submitData();
+  }
+
+  void _onReturnToLogin() {
+    Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
   @override
@@ -104,9 +127,11 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
         isError: _hasError,
         isSpinning: _isSpinning,
         onRetry: _hasError ? _onRetry : null,
-        onBack: _hasError ? () => Navigator.of(context).pop() : null,
+        onBack: _hasError
+            ? () => Navigator.of(context).pop()
+            : (_requiresConfirmation ? _onReturnToLogin : null),
         retryText: l10n.processing_retry,
-        backText: l10n.processing_back,
+        backText: _requiresConfirmation ? l10n.login_title : l10n.processing_back,
       ),
     );
   }

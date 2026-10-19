@@ -84,9 +84,20 @@ class CropModel {
     // Handle relationships if fetched together
     List<String> parsedImageUrls = [];
     if (json['crop_images'] != null && json['crop_images'] is List) {
-      parsedImageUrls = (json['crop_images'] as List).map((img) {
-        return img['image_path'] as String;
-      }).toList();
+      final list = (json['crop_images'] as List)
+          .whereType<Map<String, dynamic>>()
+          .toList();
+      list.sort((a, b) {
+        final aPrimary = a['is_primary'] == true ? 1 : 0;
+        final bPrimary = b['is_primary'] == true ? 1 : 0;
+        return bPrimary.compareTo(aPrimary);
+      });
+      parsedImageUrls = list
+          .map((img) => img['image_path'] as String?)
+          .whereType<String>()
+          .toList();
+    } else if (json['image_urls'] != null && json['image_urls'] is List) {
+      parsedImageUrls = (json['image_urls'] as List).map((e) => e.toString()).toList();
     }
 
     return CropModel(
@@ -145,4 +156,53 @@ class CropModel {
 
     return data;
   }
+
+  CropModel copyWith({
+    String? id,
+    String? farmerId,
+    String? title,
+    String? description,
+    String? cropType,
+    double? pricePerKg,
+    double? stockTotal,
+    double? stockCommitted,
+    double? stockSold,
+    double? minOrderKg,
+    double? estimatedYieldKg,
+    String? department,
+    String? municipality,
+    double? latitude,
+    double? longitude,
+    bool? isEarlySale,
+    DateTime? estimatedHarvestDate,
+    CropStatus? status,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    List<String>? imageUrls,
+  }) {
+    return CropModel(
+      id: id ?? this.id,
+      farmerId: farmerId ?? this.farmerId,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      cropType: cropType ?? this.cropType,
+      pricePerKg: pricePerKg ?? this.pricePerKg,
+      stockTotal: stockTotal ?? this.stockTotal,
+      stockCommitted: stockCommitted ?? this.stockCommitted,
+      stockSold: stockSold ?? this.stockSold,
+      minOrderKg: minOrderKg ?? this.minOrderKg,
+      estimatedYieldKg: estimatedYieldKg ?? this.estimatedYieldKg,
+      department: department ?? this.department,
+      municipality: municipality ?? this.municipality,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      isEarlySale: isEarlySale ?? this.isEarlySale,
+      estimatedHarvestDate: estimatedHarvestDate ?? this.estimatedHarvestDate,
+      status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      imageUrls: imageUrls ?? this.imageUrls,
+    );
+  }
 }
+

@@ -1831,6 +1831,324 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Entendido'**
   String get crop_unapproved_dialog_action;
+
+  /// No description provided for @recovery_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Recuperar contraseña'**
+  String get recovery_title;
+
+  /// No description provided for @recovery_subtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Ingresa el correo electrónico asociado a tu cuenta para recibir las instrucciones de restablecimiento.'**
+  String get recovery_subtitle;
+
+  /// No description provided for @recovery_email_label.
+  ///
+  /// In es, this message translates to:
+  /// **'Correo electrónico'**
+  String get recovery_email_label;
+
+  /// No description provided for @recovery_email_hint.
+  ///
+  /// In es, this message translates to:
+  /// **'ejemplo@correo.com'**
+  String get recovery_email_hint;
+
+  /// No description provided for @recovery_email_required.
+  ///
+  /// In es, this message translates to:
+  /// **'Ingresa tu correo electrónico.'**
+  String get recovery_email_required;
+
+  /// No description provided for @recovery_email_invalid.
+  ///
+  /// In es, this message translates to:
+  /// **'Ingresa un correo electrónico válido.'**
+  String get recovery_email_invalid;
+
+  /// No description provided for @recovery_phone_not_supported.
+  ///
+  /// In es, this message translates to:
+  /// **'La recuperación por enlace requiere un correo electrónico. Si te registraste únicamente con un número de teléfono, por favor contacta al administrador.'**
+  String get recovery_phone_not_supported;
+
+  /// No description provided for @recovery_send_button.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviar instrucciones'**
+  String get recovery_send_button;
+
+  /// No description provided for @recovery_sending.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviando...'**
+  String get recovery_sending;
+
+  /// No description provided for @recovery_generic_success.
+  ///
+  /// In es, this message translates to:
+  /// **'Si los datos corresponden a una cuenta registrada, se enviarán las instrucciones para restablecer tu contraseña.'**
+  String get recovery_generic_success;
+
+  /// No description provided for @recovery_back_to_login.
+  ///
+  /// In es, this message translates to:
+  /// **'Volver a Iniciar Sesión'**
+  String get recovery_back_to_login;
+
+  /// No description provided for @recovery_network_error.
+  ///
+  /// In es, this message translates to:
+  /// **'Error de conexión. Verifica tu acceso a internet e inténtalo nuevamente.'**
+  String get recovery_network_error;
+
+  /// No description provided for @recovery_generic_error.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo procesar la solicitud. Por favor intenta más tarde.'**
+  String get recovery_generic_error;
+
+  /// No description provided for @reset_password_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Nueva contraseña'**
+  String get reset_password_title;
+
+  /// No description provided for @reset_password_subtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Ingresa tu nueva contraseña para acceder a tu cuenta.'**
+  String get reset_password_subtitle;
+
+  /// No description provided for @reset_password_new_label.
+  ///
+  /// In es, this message translates to:
+  /// **'Nueva contraseña'**
+  String get reset_password_new_label;
+
+  /// No description provided for @reset_password_new_hint.
+  ///
+  /// In es, this message translates to:
+  /// **'Mínimo 6 caracteres'**
+  String get reset_password_new_hint;
+
+  /// No description provided for @reset_password_confirm_label.
+  ///
+  /// In es, this message translates to:
+  /// **'Confirmar nueva contraseña'**
+  String get reset_password_confirm_label;
+
+  /// No description provided for @reset_password_confirm_hint.
+  ///
+  /// In es, this message translates to:
+  /// **'Repite tu nueva contraseña'**
+  String get reset_password_confirm_hint;
+
+  /// No description provided for @reset_password_length_error.
+  ///
+  /// In es, this message translates to:
+  /// **'La contraseña debe tener al menos 6 caracteres.'**
+  String get reset_password_length_error;
+
+  /// No description provided for @reset_password_mismatch_error.
+  ///
+  /// In es, this message translates to:
+  /// **'Las contraseñas no coinciden.'**
+  String get reset_password_mismatch_error;
+
+  /// No description provided for @reset_password_required_error.
+  ///
+  /// In es, this message translates to:
+  /// **'Este campo es requerido.'**
+  String get reset_password_required_error;
+
+  /// No description provided for @reset_password_submit_button.
+  ///
+  /// In es, this message translates to:
+  /// **'Actualizar contraseña'**
+  String get reset_password_submit_button;
+
+  /// No description provided for @reset_password_updating.
+  ///
+  /// In es, this message translates to:
+  /// **'Actualizando...'**
+  String get reset_password_updating;
+
+  /// No description provided for @reset_password_success.
+  ///
+  /// In es, this message translates to:
+  /// **'Contraseña actualizada exitosamente. Por favor, inicia sesión con tu nueva contraseña.'**
+  String get reset_password_success;
+
+  /// No description provided for @reset_password_invalid_session.
+  ///
+  /// In es, this message translates to:
+  /// **'El enlace de recuperación es inválido o ha caducado. Por favor, solicita uno nuevo.'**
+  String get reset_password_invalid_session;
+
+  /// No description provided for @reset_password_cancel.
+  ///
+  /// In es, this message translates to:
+  /// **'Cancelar'**
+  String get reset_password_cancel;
+
+  /// No description provided for @verification_status_reupload_coming_soon.
+  ///
+  /// In es, this message translates to:
+  /// **'Funcionalidad de re-carga en desarrollo.'**
+  String get verification_status_reupload_coming_soon;
+
+  /// No description provided for @moderation_queue_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Cola de Moderación'**
+  String get moderation_queue_title;
+
+  /// No description provided for @moderation_queue_empty_title.
+  ///
+  /// In es, this message translates to:
+  /// **'No hay solicitudes pendientes'**
+  String get moderation_queue_empty_title;
+
+  /// No description provided for @moderation_queue_empty_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Todas las solicitudes de verificación han sido resueltas o no hay envíos pendientes.'**
+  String get moderation_queue_empty_desc;
+
+  /// No description provided for @moderation_unauthorized_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Acceso No Autorizado'**
+  String get moderation_unauthorized_title;
+
+  /// No description provided for @moderation_unauthorized_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu cuenta no posee privilegios de moderación para acceder a esta consola.'**
+  String get moderation_unauthorized_desc;
+
+  /// No description provided for @moderation_detail_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Detalle de Solicitud'**
+  String get moderation_detail_title;
+
+  /// No description provided for @moderation_lbl_role.
+  ///
+  /// In es, this message translates to:
+  /// **'Rol:'**
+  String get moderation_lbl_role;
+
+  /// No description provided for @moderation_lbl_submitted.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviado:'**
+  String get moderation_lbl_submitted;
+
+  /// No description provided for @moderation_documents_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Documentos Presentados'**
+  String get moderation_documents_title;
+
+  /// No description provided for @moderation_storage_notice.
+  ///
+  /// In es, this message translates to:
+  /// **'Archivos locales/simulados. La integración con Supabase Storage se completará en la Fase 2.'**
+  String get moderation_storage_notice;
+
+  /// No description provided for @moderation_doc_front.
+  ///
+  /// In es, this message translates to:
+  /// **'Cédula (Frente)'**
+  String get moderation_doc_front;
+
+  /// No description provided for @moderation_doc_back.
+  ///
+  /// In es, this message translates to:
+  /// **'Cédula (Dorso)'**
+  String get moderation_doc_back;
+
+  /// No description provided for @moderation_doc_selfie.
+  ///
+  /// In es, this message translates to:
+  /// **'Selfie Facial'**
+  String get moderation_doc_selfie;
+
+  /// No description provided for @moderation_previous_rejection.
+  ///
+  /// In es, this message translates to:
+  /// **'Motivo de Rechazo Registrado'**
+  String get moderation_previous_rejection;
+
+  /// No description provided for @moderation_already_resolved.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta solicitud ya fue resuelta y no admite nuevas modificaciones inmediatas.'**
+  String get moderation_already_resolved;
+
+  /// No description provided for @moderation_btn_approve.
+  ///
+  /// In es, this message translates to:
+  /// **'Aprobar'**
+  String get moderation_btn_approve;
+
+  /// No description provided for @moderation_btn_reject.
+  ///
+  /// In es, this message translates to:
+  /// **'Rechazar'**
+  String get moderation_btn_reject;
+
+  /// No description provided for @moderation_confirm_approve_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Confirmar Aprobación'**
+  String get moderation_confirm_approve_title;
+
+  /// No description provided for @moderation_confirm_approve_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Estás seguro de que deseas aprobar esta solicitud? El usuario obtendrá acceso a las funcionalidades comerciales.'**
+  String get moderation_confirm_approve_desc;
+
+  /// No description provided for @moderation_approved_success.
+  ///
+  /// In es, this message translates to:
+  /// **'Solicitud aprobada con éxito.'**
+  String get moderation_approved_success;
+
+  /// No description provided for @moderation_confirm_reject_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Rechazar Solicitud'**
+  String get moderation_confirm_reject_title;
+
+  /// No description provided for @moderation_reject_reason_prompt.
+  ///
+  /// In es, this message translates to:
+  /// **'Indica el motivo del rechazo para que el usuario pueda corregirlo:'**
+  String get moderation_reject_reason_prompt;
+
+  /// No description provided for @moderation_reject_reason_hint.
+  ///
+  /// In es, this message translates to:
+  /// **'Ej. Documento borroso o fecha de vencimiento ilegible'**
+  String get moderation_reject_reason_hint;
+
+  /// No description provided for @moderation_reject_reason_required.
+  ///
+  /// In es, this message translates to:
+  /// **'El motivo de rechazo es obligatorio.'**
+  String get moderation_reject_reason_required;
+
+  /// No description provided for @moderation_rejected_success.
+  ///
+  /// In es, this message translates to:
+  /// **'Solicitud rechazada correctamente.'**
+  String get moderation_rejected_success;
 }
 
 class _AppLocalizationsDelegate

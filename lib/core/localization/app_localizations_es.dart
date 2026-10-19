@@ -929,4 +929,182 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get crop_unapproved_dialog_action => 'Entendido';
+
+  @override
+  String get recovery_title => 'Recuperar contraseña';
+
+  @override
+  String get recovery_subtitle =>
+      'Ingresa el correo electrónico asociado a tu cuenta para recibir las instrucciones de restablecimiento.';
+
+  @override
+  String get recovery_email_label => 'Correo electrónico';
+
+  @override
+  String get recovery_email_hint => 'ejemplo@correo.com';
+
+  @override
+  String get recovery_email_required => 'Ingresa tu correo electrónico.';
+
+  @override
+  String get recovery_email_invalid => 'Ingresa un correo electrónico válido.';
+
+  @override
+  String get recovery_phone_not_supported =>
+      'La recuperación por enlace requiere un correo electrónico. Si te registraste únicamente con un número de teléfono, por favor contacta al administrador.';
+
+  @override
+  String get recovery_send_button => 'Enviar instrucciones';
+
+  @override
+  String get recovery_sending => 'Enviando...';
+
+  @override
+  String get recovery_generic_success =>
+      'Si los datos corresponden a una cuenta registrada, se enviarán las instrucciones para restablecer tu contraseña.';
+
+  @override
+  String get recovery_back_to_login => 'Volver a Iniciar Sesión';
+
+  @override
+  String get recovery_network_error =>
+      'Error de conexión. Verifica tu acceso a internet e inténtalo nuevamente.';
+
+  @override
+  String get recovery_generic_error =>
+      'No se pudo procesar la solicitud. Por favor intenta más tarde.';
+
+  @override
+  String get reset_password_title => 'Nueva contraseña';
+
+  @override
+  String get reset_password_subtitle =>
+      'Ingresa tu nueva contraseña para acceder a tu cuenta.';
+
+  @override
+  String get reset_password_new_label => 'Nueva contraseña';
+
+  @override
+  String get reset_password_new_hint => 'Mínimo 6 caracteres';
+
+  @override
+  String get reset_password_confirm_label => 'Confirmar nueva contraseña';
+
+  @override
+  String get reset_password_confirm_hint => 'Repite tu nueva contraseña';
+
+  @override
+  String get reset_password_length_error =>
+      'La contraseña debe tener al menos 6 caracteres.';
+
+  @override
+  String get reset_password_mismatch_error => 'Las contraseñas no coinciden.';
+
+  @override
+  String get reset_password_required_error => 'Este campo es requerido.';
+
+  @override
+  String get reset_password_submit_button => 'Actualizar contraseña';
+
+  @override
+  String get reset_password_updating => 'Actualizando...';
+
+  @override
+  String get reset_password_success =>
+      'Contraseña actualizada exitosamente. Por favor, inicia sesión con tu nueva contraseña.';
+
+  @override
+  String get reset_password_invalid_session =>
+      'El enlace de recuperación es inválido o ha caducado. Por favor, solicita uno nuevo.';
+
+  @override
+  String get reset_password_cancel => 'Cancelar';
+
+  @override
+  String get verification_status_reupload_coming_soon =>
+      'Funcionalidad de re-carga en desarrollo.';
+
+  @override
+  String get moderation_queue_title => 'Cola de Moderación';
+
+  @override
+  String get moderation_queue_empty_title => 'No hay solicitudes pendientes';
+
+  @override
+  String get moderation_queue_empty_desc =>
+      'Todas las solicitudes de verificación han sido resueltas o no hay envíos pendientes.';
+
+  @override
+  String get moderation_unauthorized_title => 'Acceso No Autorizado';
+
+  @override
+  String get moderation_unauthorized_desc =>
+      'Tu cuenta no posee privilegios de moderación para acceder a esta consola.';
+
+  @override
+  String get moderation_detail_title => 'Detalle de Solicitud';
+
+  @override
+  String get moderation_lbl_role => 'Rol:';
+
+  @override
+  String get moderation_lbl_submitted => 'Enviado:';
+
+  @override
+  String get moderation_documents_title => 'Documentos Presentados';
+
+  @override
+  String get moderation_storage_notice =>
+      'Archivos locales/simulados. La integración con Supabase Storage se completará en la Fase 2.';
+
+  @override
+  String get moderation_doc_front => 'Cédula (Frente)';
+
+  @override
+  String get moderation_doc_back => 'Cédula (Dorso)';
+
+  @override
+  String get moderation_doc_selfie => 'Selfie Facial';
+
+  @override
+  String get moderation_previous_rejection => 'Motivo de Rechazo Registrado';
+
+  @override
+  String get moderation_already_resolved =>
+      'Esta solicitud ya fue resuelta y no admite nuevas modificaciones inmediatas.';
+
+  @override
+  String get moderation_btn_approve => 'Aprobar';
+
+  @override
+  String get moderation_btn_reject => 'Rechazar';
+
+  @override
+  String get moderation_confirm_approve_title => 'Confirmar Aprobación';
+
+  @override
+  String get moderation_confirm_approve_desc =>
+      '¿Estás seguro de que deseas aprobar esta solicitud? El usuario obtendrá acceso a las funcionalidades comerciales.';
+
+  @override
+  String get moderation_approved_success => 'Solicitud aprobada con éxito.';
+
+  @override
+  String get moderation_confirm_reject_title => 'Rechazar Solicitud';
+
+  @override
+  String get moderation_reject_reason_prompt =>
+      'Indica el motivo del rechazo para que el usuario pueda corregirlo:';
+
+  @override
+  String get moderation_reject_reason_hint =>
+      'Ej. Documento borroso o fecha de vencimiento ilegible';
+
+  @override
+  String get moderation_reject_reason_required =>
+      'El motivo de rechazo es obligatorio.';
+
+  @override
+  String get moderation_rejected_success =>
+      'Solicitud rechazada correctamente.';
 }

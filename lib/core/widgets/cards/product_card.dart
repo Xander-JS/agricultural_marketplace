@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
-import '../badges/status_badge.dart';
 import '../badges/altitude_badge.dart';
 
 /// Main reusable product card for the market screen.

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 
 /// A reusable badge for status like 'Preventa' or 'Listo para despacho'

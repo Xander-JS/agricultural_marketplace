@@ -7,8 +7,15 @@ import '../services/crop_service.dart';
 
 class PublishCropScreen extends StatefulWidget {
   final CropModel? cropToEdit;
+  final CropService? cropService;
+  final String? currentUserIdForTesting;
 
-  const PublishCropScreen({super.key, this.cropToEdit});
+  const PublishCropScreen({
+    super.key,
+    this.cropToEdit,
+    this.cropService,
+    this.currentUserIdForTesting,
+  });
 
   @override
   State<PublishCropScreen> createState() => _PublishCropScreenState();
@@ -16,7 +23,7 @@ class PublishCropScreen extends StatefulWidget {
 
 class _PublishCropScreenState extends State<PublishCropScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _cropService = CropService();
+  late final CropService _cropService = widget.cropService ?? CropService();
   final _imagePicker = ImagePicker();
 
   bool _isLoading = false;
@@ -37,11 +44,13 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
   DateTime? _estimatedHarvestDate;
 
   final List<File> _selectedImages = [];
+  late List<String> _existingImageUrls;
 
   @override
   void initState() {
     super.initState();
     _minOrderController.text = '1';
+    _existingImageUrls = List<String>.from(widget.cropToEdit?.imageUrls ?? const []);
     
     if (widget.cropToEdit != null) {
       _loadCropData(widget.cropToEdit!);
@@ -123,11 +132,17 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
 
     try {
       final user = Supabase.instance.client.auth.currentUser;
-      if (user == null) throw Exception('No autenticado');
+      final userId = widget.currentUserIdForTesting ?? user?.id;
+      if (userId == null) throw Exception('No autenticado');
+
+      final originalImages = widget.cropToEdit?.imageUrls ?? const [];
+      final removedImages = originalImages
+          .where((path) => !_existingImageUrls.contains(path))
+          .toList();
 
       final newCrop = CropModel(
         id: widget.cropToEdit?.id ?? '',
-        farmerId: user.id,
+        farmerId: userId,
         title: _titleController.text.trim(),
         description: _descriptionController.text.trim(),
         cropType: _cropTypeController.text.trim(),
@@ -144,9 +159,14 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
         status: targetStatus,
         createdAt: widget.cropToEdit?.createdAt ?? DateTime.now(),
         updatedAt: DateTime.now(),
+        imageUrls: _existingImageUrls,
       );
 
-      await _cropService.saveCrop(newCrop, newImages: _selectedImages.isNotEmpty ? _selectedImages : null);
+      await _cropService.saveCrop(
+        newCrop,
+        newImages: _selectedImages.isNotEmpty ? _selectedImages : null,
+        removedImages: removedImages.isNotEmpty ? removedImages : null,
+      );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -323,6 +343,71 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
 
                     const SizedBox(height: 32),
                     _buildSectionTitle('5. Imágenes'),
+                    if (_existingImageUrls.isNotEmpty) ...[
+                      const Text(
+                        'Imágenes actuales de la publicación:',
+                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        height: 90,
+                        child: ListView.separated(
+                          key: const Key('existing_images_list'),
+                          scrollDirection: Axis.horizontal,
+                          itemCount: _existingImageUrls.length,
+                          separatorBuilder: (_, __) => const SizedBox(width: 8),
+                          itemBuilder: (context, index) {
+                            final path = _existingImageUrls[index];
+                            final url = _cropService.getPublicImageUrl(path);
+                            return Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.network(
+                                    url,
+                                    width: 80,
+                                    height: 80,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => Container(
+                                      width: 80,
+                                      height: 80,
+                                      color: Colors.grey.shade200,
+                                      child: const Icon(Icons.image_not_supported_outlined, size: 24),
+                                    ),
+                                  ),
+                                ),
+                                Positioned(
+                                  top: -4,
+                                  right: -4,
+                                  child: GestureDetector(
+                                    key: Key('remove_existing_image_$index'),
+                                    onTap: () {
+                                      setState(() {
+                                        _existingImageUrls.removeAt(index);
+                                      });
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.all(2),
+                                      decoration: const BoxDecoration(
+                                        color: Colors.red,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.close,
+                                        color: Colors.white,
+                                        size: 16,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
                     ElevatedButton.icon(
                       onPressed: _pickImages,
                       icon: const Icon(Icons.add_a_photo),

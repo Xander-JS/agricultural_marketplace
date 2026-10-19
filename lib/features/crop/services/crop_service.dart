@@ -3,7 +3,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/crop_model.dart';
 
 class CropService {
-  final SupabaseClient _supabase = Supabase.instance.client;
+  final SupabaseClient _supabase;
+
+  CropService({SupabaseClient? client})
+      : _supabase = client ?? Supabase.instance.client;
 
   /// Obtiene todas las cosechas de un agricultor
   Future<List<CropModel>> getCropsByFarmerId(String farmerId) async {
@@ -37,7 +40,11 @@ class CropService {
   }
 
   /// Crea o actualiza una cosecha
-  Future<CropModel> saveCrop(CropModel crop, {List<File>? newImages}) async {
+  Future<CropModel> saveCrop(
+    CropModel crop, {
+    List<File>? newImages,
+    List<String>? removedImages,
+  }) async {
     final cropData = crop.toJson();
     
     // Si no tiene id (es nuevo)
@@ -52,7 +59,17 @@ class CropService {
       
       // Subir imágenes si existen
       if (newImages != null && newImages.isNotEmpty) {
-        await _uploadImagesForCrop(newCrop.id, newImages);
+        await _uploadImagesForCrop(newCrop.id, newImages, isInitial: true);
+        try {
+          final fullResponse = await _supabase
+              .from('crops')
+              .select('*, crop_images(image_path, is_primary)')
+              .eq('id', newCrop.id)
+              .single();
+          return CropModel.fromJson(fullResponse);
+        } catch (_) {
+          return newCrop;
+        }
       }
       return newCrop;
     } else {
@@ -67,11 +84,52 @@ class CropService {
       
       final updatedCrop = CropModel.fromJson(response);
       
-      // Subir nuevas imágenes (en una implementación completa habría que manejar borrado y edición)
-      if (newImages != null && newImages.isNotEmpty) {
-        await _uploadImagesForCrop(updatedCrop.id, newImages);
+      // 1. Eliminar imágenes quitadas por el usuario (de Storage y de crop_images)
+      if (removedImages != null && removedImages.isNotEmpty) {
+        for (final path in removedImages) {
+          await deleteCropImage(crop.id, path);
+        }
       }
-      return updatedCrop;
+
+      // 2. Verificar estado de imágenes existentes y promover a principal si la anterior fue eliminada
+      final currentRecords = await _supabase
+          .from('crop_images')
+          .select('id, image_path, is_primary')
+          .eq('crop_id', crop.id);
+
+      final recordsList = (currentRecords as List<dynamic>).cast<Map<String, dynamic>>();
+      final hasPrimary = recordsList.any((r) => r['is_primary'] == true);
+
+      if (!hasPrimary && recordsList.isNotEmpty) {
+        final firstRecordId = recordsList.first['id'];
+        await _supabase
+            .from('crop_images')
+            .update({'is_primary': true})
+            .eq('id', firstRecordId);
+      }
+
+      // 3. Subir nuevas imágenes sin duplicar las existentes
+      if (newImages != null && newImages.isNotEmpty) {
+        final needsPrimary = !hasPrimary && recordsList.isEmpty;
+        await _uploadImagesForCrop(
+          updatedCrop.id,
+          newImages,
+          isInitial: needsPrimary,
+        );
+      }
+
+      // 4. Retornar el cultivo con la lista completa y actualizada de crop_images
+      try {
+        final fullResponse = await _supabase
+            .from('crops')
+            .select('*, crop_images(image_path, is_primary)')
+            .eq('id', updatedCrop.id)
+            .single();
+
+        return CropModel.fromJson(fullResponse);
+      } catch (_) {
+        return updatedCrop;
+      }
     }
   }
 
@@ -83,16 +141,68 @@ class CropService {
     }).eq('id', cropId);
   }
 
-  /// Elimina una cosecha
+  /// Elimina una imagen específica de un cultivo de Storage y de la BD
+  Future<void> deleteCropImage(String cropId, String imagePath) async {
+    if (!imagePath.startsWith('http://') && !imagePath.startsWith('https://')) {
+      try {
+        await _supabase.storage.from('product_images').remove([imagePath]);
+      } catch (_) {}
+    }
+    await _supabase
+        .from('crop_images')
+        .delete()
+        .eq('crop_id', cropId)
+        .eq('image_path', imagePath);
+  }
+
+  /// Elimina una cosecha junto con sus registros e imágenes almacenadas
   Future<void> deleteCrop(String cropId) async {
-    // Primero borramos las referencias a las imágenes en la BD
+    // 1. Obtener las rutas de imágenes asociadas en crop_images
+    final imagesResponse = await _supabase
+        .from('crop_images')
+        .select('image_path')
+        .eq('crop_id', cropId);
+
+    final paths = (imagesResponse as List<dynamic>)
+        .map((r) => r['image_path'] as String?)
+        .where((p) => p != null && p.isNotEmpty && !p.startsWith('http://') && !p.startsWith('https://'))
+        .cast<String>()
+        .toList();
+
+    // 2. Intentar listar archivos adicionales en la carpeta del cultivo en storage
+    try {
+      final listedFiles = await _supabase.storage.from('product_images').list(path: cropId);
+      for (final f in listedFiles) {
+        if (f.name.isNotEmpty && !f.name.startsWith('.')) {
+          final fullPath = '$cropId/${f.name}';
+          if (!paths.contains(fullPath)) {
+            paths.add(fullPath);
+          }
+        }
+      }
+    } catch (_) {}
+
+    // 3. Limpiar las imágenes almacenadas en Supabase Storage
+    // (Importante hacerlo antes de eliminar de crops para que la política RLS valide propiedad)
+    if (paths.isNotEmpty) {
+      try {
+        await _supabase.storage.from('product_images').remove(paths);
+      } catch (_) {}
+    }
+
+    // 4. Borrar registros en crop_images
     await _supabase.from('crop_images').delete().eq('crop_id', cropId);
-    // Luego borramos la cosecha
+
+    // 5. Borrar la cosecha en crops
     await _supabase.from('crops').delete().eq('id', cropId);
   }
 
   /// Sube las imágenes al bucket y guarda los registros en crop_images
-  Future<void> _uploadImagesForCrop(String cropId, List<File> images) async {
+  Future<void> _uploadImagesForCrop(
+    String cropId,
+    List<File> images, {
+    bool isInitial = true,
+  }) async {
     for (int i = 0; i < images.length; i++) {
       final file = images[i];
       final extension = file.path.split('.').last.toLowerCase();
@@ -111,13 +221,16 @@ class CropService {
       await _supabase.from('crop_images').insert({
         'crop_id': cropId,
         'image_path': filePath,
-        'is_primary': i == 0, // La primera imagen es la principal
+        'is_primary': isInitial && i == 0,
       });
     }
   }
 
   /// Obtiene la URL pública de una imagen
   String getPublicImageUrl(String imagePath) {
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      return imagePath;
+    }
     return _supabase.storage.from('product_images').getPublicUrl(imagePath);
   }
 }

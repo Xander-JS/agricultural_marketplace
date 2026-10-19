@@ -323,10 +323,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Contraoferta'), findsOneWidget);
-      // Cantidad inicial 200, precio 14800 -> total 2960000
+      // Cantidad inicial 200, precio 14800 -> total 2960000 -> $ 2.960.000
       expect(find.text('200'), findsOneWidget);
       expect(find.text('14800'), findsOneWidget);
-      expect(find.text('\$ 2960000'), findsOneWidget);
+      expect(find.text(r'$ 2.960.000'), findsOneWidget);
 
       expect(find.text('Enviar contraoferta'), findsOneWidget);
     });

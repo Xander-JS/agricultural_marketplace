@@ -299,8 +299,8 @@ void main() {
       expect(find.text('100'), findsOneWidget); // minOrderKg = 100
       expect(find.text('4500'), findsOneWidget); // pricePerKg = 4500
 
-      // Subtotal estimado inicial: 100 * 4500 = 450000
-      expect(find.text('\$ 450000'), findsOneWidget);
+      // Subtotal estimado inicial: 100 * 4500 = 450000 -> $ 450.000
+      expect(find.text(r'$ 450.000'), findsOneWidget);
 
       // Opciones de método de entrega presentes
       expect(find.text('En finca'), findsOneWidget);

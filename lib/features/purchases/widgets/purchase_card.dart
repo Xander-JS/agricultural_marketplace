@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../../deals/models/negotiation_model.dart';
 import '../../deals/models/negotiation_status.dart';
 import '../../deals/screens/deal_detail_screen.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/utils/app_formatters.dart';
 
 class PurchaseCard extends StatelessWidget {
   final NegotiationModel purchase;
@@ -21,8 +21,6 @@ class PurchaseCard extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context);
-    final currencyFormatter = NumberFormat.currency(locale: 'es_CO', symbol: '\$', decimalDigits: 0);
-
     // Obtener la última oferta acordada
     final latestOffer = (purchase.offers != null && purchase.offers!.isNotEmpty)
         ? purchase.offers!.reduce((a, b) => a.createdAt.isAfter(b.createdAt) ? a : b)
@@ -41,8 +39,7 @@ class PurchaseCard extends StatelessWidget {
         ? '${purchase.crop!.municipality}, ${purchase.crop!.department}'
         : null;
 
-    final formatter = DateFormat('dd MMM yyyy', 'es_CO');
-    final formattedDate = formatter.format(purchase.updatedAt);
+    final formattedDate = DateFormatters.formatMediumDate(purchase.updatedAt);
 
     final isAgreed = purchase.status == NegotiationStatus.acordada;
 
@@ -177,17 +174,17 @@ class PurchaseCard extends StatelessWidget {
                   children: [
                     _buildMetricColumn(
                       label: 'Cantidad',
-                      value: '${quantity.toStringAsFixed(0)} kg',
+                      value: UnitFormatters.formatKg(quantity),
                       isDark: isDark,
                     ),
                     _buildMetricColumn(
                       label: 'Precio / kg',
-                      value: currencyFormatter.format(price),
+                      value: CurrencyFormatters.formatCop(price),
                       isDark: isDark,
                     ),
                     _buildMetricColumn(
                       label: l10n?.purchases_total_invested ?? 'Total pactado',
-                      value: currencyFormatter.format(total),
+                      value: CurrencyFormatters.formatCop(total),
                       isDark: isDark,
                       isHighlighted: true,
                     ),

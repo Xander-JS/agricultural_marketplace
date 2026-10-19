@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../deals/models/negotiation_model.dart';
 import '../../deals/models/negotiation_status.dart';
@@ -9,6 +8,7 @@ import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/app_formatters.dart';
 
 /// Pantalla principal del Módulo de Compras para el rol Comerciante/Comprador.
 ///
@@ -161,8 +161,6 @@ class _PurchasesScreenState extends State<PurchasesScreen>
     final primaryColor = isDark ? AppColors.darkTertiary : AppColors.lightTertiary;
 
     final titleText = l10n?.purchases_title ?? 'Compras';
-    final currencyFormatter = NumberFormat.currency(locale: 'es_CO', symbol: '\$', decimalDigits: 0);
-    final volumeFormatter = NumberFormat('#,##0', 'es_CO');
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -240,8 +238,6 @@ class _PurchasesScreenState extends State<PurchasesScreen>
                         agreedCount: _agreedCount,
                         totalInvested: _totalInvested,
                         totalVolumeKg: _totalVolumeKg,
-                        currencyFormatter: currencyFormatter,
-                        volumeFormatter: volumeFormatter,
                       ),
                       // Pestañas con lista de compras
                       Expanded(
@@ -296,8 +292,6 @@ class _PurchasesScreenState extends State<PurchasesScreen>
     required int agreedCount,
     required double totalInvested,
     required double totalVolumeKg,
-    required NumberFormat currencyFormatter,
-    required NumberFormat volumeFormatter,
   }) {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -335,7 +329,7 @@ class _PurchasesScreenState extends State<PurchasesScreen>
           Expanded(
             child: _buildBannerItem(
               label: l10n?.purchases_total_invested ?? 'Total pactado',
-              value: currencyFormatter.format(totalInvested),
+              value: CurrencyFormatters.formatCop(totalInvested),
               icon: Icons.payments_outlined,
               isDark: isDark,
               color: isDark ? const Color(0xFF81C784) : AppColors.success,
@@ -349,7 +343,7 @@ class _PurchasesScreenState extends State<PurchasesScreen>
           Expanded(
             child: _buildBannerItem(
               label: l10n?.purchases_total_volume ?? 'Volumen total',
-              value: '${volumeFormatter.format(totalVolumeKg)} kg',
+              value: UnitFormatters.formatKg(totalVolumeKg),
               icon: Icons.scale_outlined,
               isDark: isDark,
               color: isDark ? const Color(0xFFFFB74D) : const Color(0xFFF57C00),

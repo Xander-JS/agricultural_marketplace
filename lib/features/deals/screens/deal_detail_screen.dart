@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/negotiation_model.dart';
 import '../models/negotiation_offer_model.dart';
@@ -9,6 +8,7 @@ import 'counter_offer_screen.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/constants/user_roles.dart';
+import '../../../core/utils/app_formatters.dart';
 
 class DealDetailScreen extends StatefulWidget {
   final String negotiationId;
@@ -154,7 +154,6 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
       );
     }
 
-    final currencyFormatter = NumberFormat.currency(locale: 'es_CO', symbol: '\$', decimalDigits: 0);
     final n = _negotiation!;
 
     final offers = n.offers != null ? List<NegotiationOfferModel>.from(n.offers!) : <NegotiationOfferModel>[];
@@ -206,11 +205,11 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
             Divider(height: 32, color: isDark ? AppColors.darkDivider : AppColors.lightDivider),
 
             if (latestOffer != null) ...[
-              _buildInfoRow('Cantidad', '${latestOffer.quantityKg.toStringAsFixed(0)} kg', isDark),
+              _buildInfoRow('Cantidad', UnitFormatters.formatKg(latestOffer.quantityKg), isDark),
               const SizedBox(height: 10),
               _buildInfoRow(
                 'Precio por kg',
-                currencyFormatter.format(latestOffer.proposedPricePerKg),
+                CurrencyFormatters.formatCop(latestOffer.proposedPricePerKg),
                 isDark,
               ),
               const SizedBox(height: 10),
@@ -352,9 +351,6 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
     bool isDark,
     AppLocalizations? l10n,
   ) {
-    final currencyFormatter = NumberFormat.currency(locale: 'es_CO', symbol: '\$', decimalDigits: 0);
-    final formatter = DateFormat('dd/MM hh:mm a', 'es_CO');
-
     final user = Supabase.instance.client.auth.currentUser;
     final isMe = offer.senderId == user?.id;
 
@@ -402,7 +398,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                   ),
                 ),
                 Text(
-                  formatter.format(offer.createdAt),
+                  DateFormatters.formatOfferDateTime(offer.createdAt),
                   style: TextStyle(
                     color: isDark ? AppColors.darkTextDisabled : AppColors.lightTextDisabled,
                     fontSize: 11,
@@ -412,7 +408,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              '${currencyFormatter.format(offer.proposedPricePerKg)} / kg',
+              CurrencyFormatters.formatPricePerKg(offer.proposedPricePerKg),
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 15,
@@ -420,7 +416,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
               ),
             ),
             Text(
-              '${offer.quantityKg.toStringAsFixed(0)} kg',
+              UnitFormatters.formatKg(offer.quantityKg),
               style: TextStyle(
                 color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
               ),

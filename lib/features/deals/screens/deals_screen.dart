@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:intl/intl.dart';
 import '../models/negotiation_model.dart';
 import '../models/negotiation_status.dart';
 import '../services/negotiation_service.dart';
@@ -8,6 +7,7 @@ import 'deal_detail_screen.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/constants/user_roles.dart';
+import '../../../core/utils/app_formatters.dart';
 
 class DealsScreen extends StatefulWidget {
   final String? role;
@@ -226,8 +226,6 @@ class _DealsScreenState extends State<DealsScreen> with SingleTickerProviderStat
   }
 
   Widget _buildDealCard(NegotiationModel negotiation, bool isDark, AppLocalizations? l10n) {
-    final currencyFormatter = NumberFormat.currency(locale: 'es_CO', symbol: '\$', decimalDigits: 0);
-
     final latestOffer = (negotiation.offers != null && negotiation.offers!.isNotEmpty)
         ? negotiation.offers!.reduce((a, b) => a.createdAt.isAfter(b.createdAt) ? a : b)
         : null;
@@ -246,8 +244,7 @@ class _DealsScreenState extends State<DealsScreen> with SingleTickerProviderStat
                 : 'Productor'))
         : (negotiation.buyerProfile?['full_name'] ?? 'Comprador');
 
-    final formatter = DateFormat('dd MMM yyyy, hh:mm a', 'es_CO');
-    final formattedDate = formatter.format(negotiation.updatedAt);
+    final formattedDate = DateFormatters.formatFullDateTime(negotiation.updatedAt);
 
     // Determinar si es el turno del usuario autenticado
     final isPendingOrNegotiating =
@@ -308,14 +305,14 @@ class _DealsScreenState extends State<DealsScreen> with SingleTickerProviderStat
               Row(
                 children: [
                   Text(
-                    '${quantity.toStringAsFixed(0)} kg',
+                    UnitFormatters.formatKg(quantity),
                     style: TextStyle(
                       color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
                     ),
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    '${currencyFormatter.format(price)} / kg',
+                    CurrencyFormatters.formatPricePerKg(price),
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 15,

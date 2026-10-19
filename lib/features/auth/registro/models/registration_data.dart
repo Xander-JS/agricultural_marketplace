@@ -11,6 +11,10 @@ class RegistrationData {
   File? documentFront;
   File? documentBack;
   File? selfie;
+  String? department;
+  String? municipality;
+  double? latitude;
+  double? longitude;
 
   bool get isPasswordValid => password != null && password!.length >= 6;
 

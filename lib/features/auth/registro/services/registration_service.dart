@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/user_roles.dart';
+import '../../../../core/utils/geo_utils.dart';
+import '../../../geo/services/geo_simulation_service.dart';
 
 class RegistrationResult {
   final bool success;
@@ -67,6 +69,10 @@ class RegistrationService {
     File? documentFront,
     File? documentBack,
     File? selfie,
+    String? department,
+    String? municipality,
+    double? latitude,
+    double? longitude,
   }) async {
     // 1. Validación de campos obligatorios
     if (phone.trim().isEmpty ||
@@ -155,7 +161,27 @@ class RegistrationService {
         await _uploadFile('user_documents', selfiePath, selfie);
       }
 
-      // 8. Inserción o actualización en profiles (Upsert para evitar duplicados ante reintentos)
+      // 8. Asignación de ubicación simulada determinista y estable dentro del área piloto
+      final simLocation = GeoSimulationService.assignSimulatedLocation(
+        seed: user.id,
+        municipality: municipality,
+        department: department,
+      );
+
+      final finalDepartment = department?.trim().isNotEmpty == true
+          ? department!.trim()
+          : simLocation.department;
+      final finalMunicipality = municipality?.trim().isNotEmpty == true
+          ? municipality!.trim()
+          : simLocation.municipality;
+      final finalLatitude = GeoUtils.isValidCoordinate(latitude, longitude)
+          ? latitude!
+          : simLocation.latitude;
+      final finalLongitude = GeoUtils.isValidCoordinate(latitude, longitude)
+          ? longitude!
+          : simLocation.longitude;
+
+      // Inserción o actualización en profiles (Upsert para evitar duplicados ante reintentos)
       final profileData = {
         'id': user.id,
         'phone': cleanContact,
@@ -163,6 +189,10 @@ class RegistrationService {
         'role': UserRole.toDb(normalizedRole),
         'verification_status': 'pendiente',
         if (isEmail) 'email': cleanContact,
+        'department': finalDepartment,
+        'municipality': finalMunicipality,
+        'latitude': finalLatitude,
+        'longitude': finalLongitude,
       };
 
       final profileUpserter = _profileUpserter;

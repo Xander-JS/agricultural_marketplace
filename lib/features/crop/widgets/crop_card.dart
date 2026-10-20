@@ -90,32 +90,17 @@ class CropCard extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        crop.cropType,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                      Flexible(
+                        child: Text(
+                          crop.cropType,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      if (distanceEvaluation != null && distanceEvaluation!.hasValidDistance)
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.near_me_outlined,
-                              size: 13,
-                              color: isDark ? AppColors.darkTertiary : AppColors.lightTertiary,
-                            ),
-                            const SizedBox(width: 3),
-                            Text(
-                              distanceEvaluation!.formatted,
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: isDark ? AppColors.darkTertiary : AppColors.lightTertiary,
-                              ),
-                            ),
-                          ],
-                        ),
+                      const SizedBox(width: 8),
+                      _buildLocationAndDistance(isDark),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -144,6 +129,57 @@ class CropCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildLocationAndDistance(bool isDark) {
+    final locationName = crop.municipality.trim().isNotEmpty
+        ? crop.municipality.trim()
+        : crop.department.trim();
+    final hasValidDistance =
+        distanceEvaluation != null && distanceEvaluation!.hasValidDistance;
+
+    if (locationName.isEmpty && !hasValidDistance) {
+      return const SizedBox.shrink();
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          hasValidDistance ? Icons.near_me_outlined : Icons.place_outlined,
+          size: 13,
+          color: isDark ? AppColors.darkTertiary : AppColors.lightTertiary,
+        ),
+        const SizedBox(width: 3),
+        if (locationName.isNotEmpty) ...[
+          Text(
+            locationName,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+            ),
+          ),
+          if (hasValidDistance)
+            Text(
+              ' · ',
+              style: TextStyle(
+                fontSize: 11,
+                color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+              ),
+            ),
+        ],
+        if (hasValidDistance)
+          Text(
+            distanceEvaluation!.formatted,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: isDark ? AppColors.darkTertiary : AppColors.lightTertiary,
+            ),
+          ),
+      ],
     );
   }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../theme/app_colors.dart';
 
 /// Un widget de avatar reutilizable para usuarios y agricultores,
@@ -34,9 +35,20 @@ class UserAvatar extends StatelessWidget {
     final effectiveBgColor = backgroundColor ??
         (isDark ? AppColors.darkSurfaceVariant : AppColors.lightTertiary);
     final effectiveBorderColor = borderColor ??
-        (isDark ? AppColors.darkBorder : AppColors.lightTertiary.withOpacity(0.3));
+        (isDark ? AppColors.darkBorder : AppColors.lightTertiary.withValues(alpha: 0.3));
     final effectiveIconColor = iconColor ??
         (isDark ? AppColors.darkTextDisabled : AppColors.lightSurface);
+
+    String? resolvedUrl = imageUrl?.trim();
+    if (resolvedUrl != null && resolvedUrl.isNotEmpty) {
+      if (!resolvedUrl.startsWith('http://') && !resolvedUrl.startsWith('https://')) {
+        try {
+          resolvedUrl = Supabase.instance.client.storage.from('profiles').getPublicUrl(resolvedUrl);
+        } catch (_) {}
+      }
+    }
+
+    final hasValidUrl = resolvedUrl != null && resolvedUrl.isNotEmpty;
 
     final avatarContent = Container(
       width: diameter,
@@ -50,12 +62,13 @@ class UserAvatar extends StatelessWidget {
         ),
       ),
       child: ClipOval(
-        child: (imageUrl != null && imageUrl!.trim().isNotEmpty)
+        child: hasValidUrl
             ? Image.network(
-                imageUrl!,
+                resolvedUrl,
                 width: diameter,
                 height: diameter,
                 fit: BoxFit.cover,
+                gaplessPlayback: true,
                 errorBuilder: (context, error, stackTrace) {
                   return Icon(
                     Icons.person,

@@ -30,9 +30,18 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
   @override
   void initState() {
     super.initState();
+    void goToProfileTab() {
+      setState(() {
+        _currentIndex = 3;
+      });
+    }
+
     if (_isBuyer) {
       _screens = [
-        MarketplaceScreen(role: widget.role),
+        MarketplaceScreen(
+          role: widget.role,
+          onProfileTap: goToProfileTab,
+        ),
         DealsScreen(role: widget.role),
         PurchasesScreen(
           onExploreMarket: () {
@@ -45,7 +54,10 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
       ];
     } else {
       _screens = [
-        MarketplaceScreen(role: widget.role),
+        MarketplaceScreen(
+          role: widget.role,
+          onProfileTap: goToProfileTab,
+        ),
         DealsScreen(role: widget.role),
         const CostsScreen(),
         FarmerProfileScreen(onSignOut: widget.onSignOut),

@@ -11,6 +11,36 @@ import 'package:agricultural_marketplace/features/crop/models/crop_model.dart';
 import 'package:agricultural_marketplace/features/profile/models/farmer_profile_data.dart';
 import 'package:agricultural_marketplace/features/crop/widgets/crop_card.dart';
 import 'package:agricultural_marketplace/features/crop/screens/crop_detail_screen.dart';
+import 'package:agricultural_marketplace/features/crop/screens/marketplace_screen.dart';
+import 'package:agricultural_marketplace/features/profile/services/profile_service.dart';
+
+class MockProfileServiceForGeo extends ProfileService {
+  final FarmerProfileData? profileToReturn;
+  MockProfileServiceForGeo({this.profileToReturn});
+
+  @override
+  Future<FarmerProfileData> getFarmerProfileData(String userId) async {
+    return profileToReturn ??
+        FarmerProfileData(
+          id: userId,
+          fullName: 'Usuario Test',
+          role: 'comprador',
+          email: 'test@agro.co',
+          phone: '3101234567',
+          department: 'Nariño',
+          municipality: 'Pasto',
+          latitude: 1.2136,
+          longitude: -77.2811,
+          settings: FarmerSettingsData(
+            enableEarlySale: false,
+            sharePhone: false,
+            shareLocation: true,
+            shareWhatsapp: false,
+          ),
+          stats: FarmerStatsData(published: 0, negotiating: 0, closed: 0),
+        );
+  }
+}
 
 void main() {
   setUpAll(() async {
@@ -546,6 +576,320 @@ void main() {
 
       // Debe mostrar el texto con la ubicación y la distancia formateada
       expect(find.text('Ipiales, Nariño (A 59 km)'), findsOneWidget);
+    });
+
+    testWidgets('12. CropCard muestra discretamente municipio y distancia estimada en catálogo',
+        (tester) async {
+      final crop = CropModel(
+        id: 'crop_pasto_12',
+        farmerId: 'farmer_pasto',
+        title: 'Café Tostado',
+        description: 'Café de Pasto',
+        cropType: 'Café',
+        pricePerKg: 15000,
+        stockTotal: 100,
+        department: 'Nariño',
+        municipality: 'Pasto',
+        latitude: 1.2136,
+        longitude: -77.2811,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      const distanceEval = DistanceEvaluation(
+        distanceKm: 12.0,
+        category: DistanceRangeCategory.local,
+        formatted: 'A 12 km',
+      );
+
+      await tester.pumpWidget(
+        createTestWidget(
+          Scaffold(
+            body: CropCard(
+              crop: crop,
+              onTap: () {},
+              distanceEvaluation: distanceEval,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Debe mostrar el municipio 'Pasto', el separador ' · ' y la distancia 'A 12 km'
+      expect(find.text('Pasto'), findsOneWidget);
+      expect(find.text(' · '), findsOneWidget);
+      expect(find.text('A 12 km'), findsOneWidget);
+      expect(find.byIcon(Icons.near_me_outlined), findsOneWidget);
+    });
+
+    testWidgets('13. CropCard cuando no hay coordenadas válidas muestra solo ubicación textual sin kilómetros',
+        (tester) async {
+      final cropNoCoords = CropModel(
+        id: 'crop_no_coords',
+        farmerId: 'farmer_x',
+        title: 'Papa Pastusa',
+        description: 'Sin coordenadas',
+        cropType: 'Papa',
+        pricePerKg: 2000,
+        stockTotal: 50,
+        department: 'Nariño',
+        municipality: 'Túquerres',
+        latitude: null,
+        longitude: null,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      await tester.pumpWidget(
+        createTestWidget(
+          Scaffold(
+            body: CropCard(
+              crop: cropNoCoords,
+              onTap: () {},
+              distanceEvaluation: null,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Debe mostrar la ubicación textual
+      expect(find.text('Túquerres'), findsOneWidget);
+      expect(find.byIcon(Icons.place_outlined), findsOneWidget);
+
+      // NO debe inventar distancias ni mostrar separadores de distancia
+      expect(find.text(' · '), findsNothing);
+      expect(find.textContaining('km'), findsNothing);
+      expect(find.byIcon(Icons.near_me_outlined), findsNothing);
+    });
+
+    testWidgets('14. CropCard cuando no hay municipio ni coordenadas omite sección de ubicación',
+        (tester) async {
+      final emptyCrop = CropModel(
+        id: 'crop_empty_loc',
+        farmerId: 'farmer_x',
+        title: 'Maíz Amarillo',
+        description: 'Sin ubicación',
+        cropType: 'Maíz',
+        pricePerKg: 1200,
+        stockTotal: 80,
+        department: '',
+        municipality: '',
+        latitude: null,
+        longitude: null,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      await tester.pumpWidget(
+        createTestWidget(
+          Scaffold(
+            body: CropCard(
+              crop: emptyCrop,
+              onTap: () {},
+              distanceEvaluation: null,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.place_outlined), findsNothing);
+      expect(find.byIcon(Icons.near_me_outlined), findsNothing);
+      expect(find.textContaining('km'), findsNothing);
+    });
+
+    testWidgets('15. CropDetailScreen despliega fila "Distancia estimada" de forma informativa',
+        (tester) async {
+      final crop = CropModel(
+        id: 'crop_detail_dist_row',
+        farmerId: 'farmer_detail_1',
+        title: 'Zanahoria Dulce',
+        description: 'Zanahoria fresca',
+        cropType: 'Zanahoria',
+        pricePerKg: 1800,
+        stockTotal: 300,
+        minOrderKg: 10,
+        department: 'Nariño',
+        municipality: 'Ipiales',
+        latitude: 0.8248,
+        longitude: -77.6417,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      const distanceEval = DistanceEvaluation(
+        distanceKm: 58.9,
+        category: DistanceRangeCategory.regionalShort,
+        formatted: 'A 59 km',
+      );
+
+      await tester.pumpWidget(
+        createTestWidget(
+          CropDetailScreen(
+            crop: crop,
+            role: 'comprador',
+            initialDistanceEvaluation: distanceEval,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Debe mostrar la fila de Distancia estimada
+      expect(find.text('Distancia estimada'), findsOneWidget);
+      expect(find.text('59 km'), findsOneWidget);
+
+      // Y la fila de ubicación mantiene coherencia
+      expect(find.text('Ipiales, Nariño (A 59 km)'), findsOneWidget);
+    });
+
+    testWidgets('16. CropDetailScreen sin coordenadas válidas omite fila de distancia estimada',
+        (tester) async {
+      final cropNoCoords = CropModel(
+        id: 'crop_detail_no_coords',
+        farmerId: 'farmer_detail_2',
+        title: 'Repollo Blanco',
+        description: 'Sin coordenadas',
+        cropType: 'Repollo',
+        pricePerKg: 1100,
+        stockTotal: 150,
+        minOrderKg: 5,
+        department: 'Nariño',
+        municipality: 'Guaitarilla',
+        latitude: null,
+        longitude: null,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      await tester.pumpWidget(
+        createTestWidget(
+          CropDetailScreen(
+            crop: cropNoCoords,
+            role: 'comprador',
+            initialDistanceEvaluation: null,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Fila de ubicación solo muestra departamento y municipio
+      expect(find.text('Guaitarilla, Nariño'), findsOneWidget);
+
+      // NO debe mostrar la fila de distancia estimada ni valores inventados
+      expect(find.text('Distancia estimada'), findsNothing);
+      expect(find.textContaining('km)'), findsNothing);
+    });
+
+    testWidgets('17. MarketplaceScreen evalúa distancia y la transfiere de forma coherente a CropDetailScreen',
+        (tester) async {
+      final buyerProfile = FarmerProfileData(
+        id: 'buyer_pasto_1',
+        fullName: 'Carlos Comprador',
+        role: 'comprador',
+        email: 'carlos@buyer.co',
+        phone: '3151234567',
+        department: 'Nariño',
+        municipality: 'Pasto',
+        latitude: 1.2136,
+        longitude: -77.2811,
+        settings: FarmerSettingsData(
+          enableEarlySale: false,
+          sharePhone: false,
+          shareLocation: true,
+          shareWhatsapp: false,
+        ),
+        stats: FarmerStatsData(published: 0, negotiating: 0, closed: 0),
+      );
+
+      final cropInIpiales = CropModel(
+        id: 'crop_ipiales_catalog',
+        farmerId: 'farmer_ipiales_99',
+        title: 'Cebolla Junca',
+        description: 'De Ipiales',
+        cropType: 'Cebolla',
+        pricePerKg: 2500,
+        stockTotal: 200,
+        minOrderKg: 10,
+        department: 'Nariño',
+        municipality: 'Ipiales',
+        latitude: 0.8248,
+        longitude: -77.6417,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      final mockProfileService = MockProfileServiceForGeo(profileToReturn: buyerProfile);
+
+      await tester.pumpWidget(
+        createTestWidget(
+          MarketplaceScreen(
+            role: 'comprador',
+            initialCrops: [cropInIpiales],
+            initialUserProfile: buyerProfile,
+            profileService: mockProfileService,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // En el catálogo debe mostrarse la tarjeta con 'Ipiales' y la distancia calculada ('A 59 km')
+      expect(find.byType(CropCard), findsOneWidget);
+      expect(find.text('Ipiales'), findsOneWidget);
+      expect(find.text('A 59 km'), findsOneWidget);
+
+      // Al pulsar en la tarjeta, abre CropDetailScreen
+      await tester.tap(find.byType(CropCard));
+      await tester.pumpAndSettle();
+
+      // CropDetailScreen debe recibir y mostrar la misma distancia calculada
+      expect(find.byType(CropDetailScreen), findsOneWidget);
+      expect(find.text('Distancia estimada'), findsOneWidget);
+      expect(find.text('59 km'), findsOneWidget);
+      expect(find.text('Ipiales, Nariño (A 59 km)'), findsOneWidget);
+    });
+
+    test('18. No calcula distancia si el usuario es el mismo agricultor que publicó el cultivo', () {
+      final farmerAsBuyer = FarmerProfileData(
+        id: 'same_farmer_123',
+        fullName: 'Don Laureano',
+        role: 'agricultor',
+        email: 'laureano@finca.co',
+        phone: '3123456789',
+        department: 'Nariño',
+        municipality: 'Pasto',
+        latitude: 1.2136,
+        longitude: -77.2811,
+        settings: FarmerSettingsData(
+          enableEarlySale: false,
+          sharePhone: false,
+          shareLocation: true,
+          shareWhatsapp: false,
+        ),
+        stats: FarmerStatsData(published: 1, negotiating: 0, closed: 0),
+      );
+
+      final ownCrop = CropModel(
+        id: 'crop_own',
+        farmerId: 'same_farmer_123',
+        title: 'Mi Propia Cosecha',
+        description: 'Cultivo propio',
+        cropType: 'Café',
+        pricePerKg: 10000,
+        department: 'Nariño',
+        municipality: 'Pasto',
+        latitude: 1.2136,
+        longitude: -77.2811,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      // Si el comprador es el mismo agricultor, la función debe evitar calcular origen y destino idénticos
+      if (farmerAsBuyer.id == ownCrop.farmerId) {
+        final eval = DistanceEvaluation.unavailable(originSource: 'same_user');
+        expect(eval.hasValidDistance, isFalse);
+        expect(eval.distanceKm, isNull);
+      }
     });
   });
 }

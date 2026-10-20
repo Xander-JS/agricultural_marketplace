@@ -13,7 +13,9 @@ import '../../../core/localization/app_localizations.dart';
 import '../../../core/constants/user_roles.dart';
 import '../../../core/widgets/avatars/user_avatar.dart';
 import '../../geo/models/simulated_location.dart';
+import '../../geo/services/geo_simulation_service.dart';
 import '../../../core/utils/app_formatters.dart';
+import '../widgets/unit_equivalences_sheet.dart';
 
 class CropDetailScreen extends StatefulWidget {
   final CropModel crop;
@@ -21,6 +23,7 @@ class CropDetailScreen extends StatefulWidget {
   final bool? isOwner;
   final FarmerProfileData? initialFarmerProfile;
   final DistanceEvaluation? initialDistanceEvaluation;
+  final FarmerProfileData? initialBuyerProfile;
   final NegotiationService? negotiationService;
   final CropService? cropService;
   final ProfileService? profileService;
@@ -32,6 +35,7 @@ class CropDetailScreen extends StatefulWidget {
     this.isOwner,
     this.initialFarmerProfile,
     this.initialDistanceEvaluation,
+    this.initialBuyerProfile,
     this.negotiationService,
     this.cropService,
     this.profileService,
@@ -82,8 +86,13 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
     _farmerProfile = widget.initialFarmerProfile;
     _distanceEvaluation = widget.initialDistanceEvaluation;
 
-    if (_isBuyer && _farmerProfile == null) {
-      _loadFarmerProfile();
+    if (_isBuyer) {
+      if (_distanceEvaluation == null) {
+        _resolveDistanceEvaluation(initialBuyer: widget.initialBuyerProfile);
+      }
+      if (_farmerProfile == null) {
+        _loadFarmerProfile();
+      }
     }
   }
 
@@ -93,15 +102,63 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
     super.dispose();
   }
 
+  Future<void> _resolveDistanceEvaluation({FarmerProfileData? initialBuyer}) async {
+    if (_distanceEvaluation != null && _distanceEvaluation!.hasValidDistance) return;
+    try {
+      FarmerProfileData? buyer = initialBuyer;
+      if (buyer == null) {
+        final user = Supabase.instance.client.auth.currentUser;
+        if (user != null && user.id != _crop.farmerId) {
+          buyer = await _profileService.getFarmerProfileData(user.id);
+        }
+      }
+      if (buyer != null && buyer.id != _crop.farmerId) {
+        final eval = GeoSimulationService.evaluateBuyerProfileToCrop(
+          buyerProfile: buyer,
+          crop: _crop,
+          farmerProfile: _farmerProfile,
+        );
+        if (mounted && eval.hasValidDistance) {
+          setState(() {
+            _distanceEvaluation = eval;
+          });
+        }
+      }
+    } catch (_) {}
+  }
+
   Future<void> _loadFarmerProfile() async {
     try {
       final profile = await _profileService.getFarmerProfileData(_crop.farmerId);
       if (mounted) {
         setState(() => _farmerProfile = profile);
+        if (_isBuyer && (_distanceEvaluation == null || !_distanceEvaluation!.hasValidDistance)) {
+          _resolveDistanceEvaluation(initialBuyer: widget.initialBuyerProfile);
+        }
       }
     } catch (_) {
       // Si falla la carga del perfil del agricultor, se usa la información básica de la cosecha
     }
+  }
+
+  String _formatEstimatedDistance(DistanceEvaluation eval) {
+    final km = eval.distanceKm;
+    if (km == null || km < 0) return 'No disponible';
+    if (km < 1.0) return '< 1 km';
+    return '${km.round()} km';
+  }
+
+  void _showEquivalencesModal(BuildContext context) {
+    if (!_isBuyer) return;
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => UnitEquivalencesSheet(
+        referenceKg: _crop.availableStock,
+        cropTitle: _crop.title,
+      ),
+    );
   }
 
   Future<void> _updateStatus(CropStatus newStatus) async {
@@ -365,6 +422,35 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
                           UnitFormatters.formatKgWithEquivalence(_crop.stockTotal),
                           isDark,
                         ),
+                        if (_isBuyer)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 6.0),
+                            child: Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton.icon(
+                                key: const Key('crop_detail_equivalences_button'),
+                                onPressed: () => _showEquivalencesModal(context),
+                                style: TextButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  minimumSize: Size.zero,
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                icon: Icon(
+                                  Icons.calculate_outlined,
+                                  size: 16,
+                                  color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+                                ),
+                                label: Text(
+                                  l10n?.crop_detail_view_equivalences ?? 'Ver equivalencias',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
                         _buildInfoRow(
                           l10n?.crop_detail_min_order ?? 'Pedido Mínimo',
                           UnitFormatters.formatKg(_crop.minOrderKg),
@@ -377,6 +463,27 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
                               : '${_crop.municipality}, ${_crop.department}',
                           isDark,
                         ),
+                        if (_isBuyer &&
+                            _distanceEvaluation != null &&
+                            _distanceEvaluation!.hasValidDistance)
+                          _buildInfoRow(
+                            Localizations.localeOf(context).languageCode == 'en'
+                                ? 'Estimated distance'
+                                : 'Distancia estimada',
+                            _formatEstimatedDistance(_distanceEvaluation!),
+                            isDark,
+                          ),
+                        _buildInfoRow(
+                          l10n?.crop_detail_publication_date ?? 'Fecha de publicación',
+                          DateFormatters.formatMediumDate(_crop.createdAt),
+                          isDark,
+                        ),
+                        if (!_crop.isEarlySale && _crop.estimatedHarvestDate != null)
+                          _buildInfoRow(
+                            l10n?.crop_detail_estimated_harvest ?? 'Fecha est. de cosecha',
+                            DateFormatters.formatHarvestDateLong(_crop.estimatedHarvestDate),
+                            isDark,
+                          ),
 
                         if (_crop.isEarlySale) ...[
                           Divider(

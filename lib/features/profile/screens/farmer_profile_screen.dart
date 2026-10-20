@@ -91,6 +91,7 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
 
     if (widget.initialProfileData != null) {
       _profileData = widget.initialProfileData;
+      _profileService.profilePathNotifier.value = _profileData!.profilePath;
       _emailController.text = _profileData!.email;
       _phoneController.text = _profileData!.phone;
       _isLoading = false;
@@ -122,6 +123,8 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
       final userId = currentUser.id;
       final data = await _profileService.getFarmerProfileData(userId);
       if (mounted) {
+        _profileService.invalidateCache(data.profilePath);
+        _profileService.profilePathNotifier.value = data.profilePath;
         setState(() {
           _profileData = data;
           _emailController.text = data.email;
@@ -252,6 +255,7 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
         oldProfilePath: _profileData?.profilePath,
       );
       if (mounted) {
+        _profileService.profilePathNotifier.value = newPath;
         setState(() {
           _profileData = _profileData!.copyWith(profilePath: newPath);
         });
@@ -262,12 +266,6 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
             backgroundColor: AppColors.success,
           ),
         );
-      }
-
-      if (Supabase.instance.client.auth.currentUser != null) {
-        try {
-          await _loadProfileData();
-        } catch (_) {}
       }
     } catch (e) {
       if (mounted) {
@@ -329,6 +327,7 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
     );
 
     if (confirm == true) {
+      _profileService.profilePathNotifier.value = null;
       if (widget.onSignOut != null) {
         await widget.onSignOut!();
       } else {
@@ -694,12 +693,21 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
         Stack(
           alignment: Alignment.bottomRight,
           children: [
-            UserAvatar(
-              imageUrl: imageUrl,
-              radius: 50,
-              backgroundColor: isDark ? AppColors.darkSurfaceVariant : borderColor,
-              borderColor: borderColor,
-              iconColor: isDark ? AppColors.darkTextDisabled : AppColors.lightTextDisabled,
+            ValueListenableBuilder<String?>(
+              valueListenable: _profileService.profilePathNotifier,
+              builder: (context, livePath, _) {
+                final currentPath = livePath ?? _profileData?.profilePath;
+                final resolvedImageUrl = (currentPath != null && currentPath.isNotEmpty)
+                    ? _profileService.getPublicProfileImageUrl(currentPath)
+                    : imageUrl;
+                return UserAvatar(
+                  imageUrl: resolvedImageUrl,
+                  radius: 50,
+                  backgroundColor: isDark ? AppColors.darkSurfaceVariant : borderColor,
+                  borderColor: borderColor,
+                  iconColor: isDark ? AppColors.darkTextDisabled : AppColors.lightTextDisabled,
+                );
+              },
             ),
             GestureDetector(
               key: const Key('change_avatar_button'),

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../geo/services/geo_simulation_service.dart';
 import '../models/farmer_profile_data.dart';
@@ -6,8 +7,28 @@ import '../models/farmer_profile_data.dart';
 class ProfileService {
   final SupabaseClient _supabase;
 
+  static final ValueNotifier<String?> currentProfilePathNotifier = ValueNotifier<String?>(null);
+  ValueNotifier<String?> get profilePathNotifier => currentProfilePathNotifier;
+
   ProfileService({SupabaseClient? client})
       : _supabase = client ?? Supabase.instance.client;
+
+  Future<String?> getProfilePath(String userId) async {
+    try {
+      final res = await _supabase
+          .from('profiles')
+          .select('profile_path')
+          .eq('id', userId)
+          .maybeSingle();
+      final path = res?['profile_path'] as String?;
+      if (_supabase.auth.currentUser?.id == userId) {
+        currentProfilePathNotifier.value = path;
+      }
+      return path;
+    } catch (_) {
+      return null;
+    }
+  }
 
   Future<FarmerProfileData> getFarmerProfileData(String userId) async {
     // 1. Obtener datos del perfil
@@ -18,6 +39,10 @@ class ProfileService {
         .single();
 
     final Map<String, dynamic> rawProfile = Map<String, dynamic>.from(profileResponse);
+    final profilePath = rawProfile['profile_path'] as String?;
+    if (_supabase.auth.currentUser?.id == userId) {
+      currentProfilePathNotifier.value = profilePath;
+    }
     final rawLat = (rawProfile['latitude'] as num?)?.toDouble();
     final rawLon = (rawProfile['longitude'] as num?)?.toDouble();
 
@@ -212,10 +237,23 @@ class ProfileService {
 
     // 2. Confirmar actualización en la base de datos
     try {
-      await _supabase.from('profiles').update({'profile_path': filePath}).eq('id', userId);
+      final updated = await _supabase
+          .from('profiles')
+          .update({
+            'profile_path': filePath,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', userId)
+          .select('id, profile_path');
+
+      if (updated.isEmpty) {
+        throw Exception(
+          'Error al actualizar perfil en base de datos: 0 filas modificadas.',
+        );
+      }
     } catch (e) {
       // En caso de fallo en BD, limpiar el archivo recién subido si era de distinta ruta para evitar huérfanos
-      if (previousPath != null && previousPath != filePath) {
+      if (previousPath != filePath) {
         try {
           await _supabase.storage.from('profiles').remove([filePath]);
         } catch (_) {}
@@ -236,6 +274,10 @@ class ProfileService {
       } catch (_) {}
     }
 
+    // 4. Actualizar versión en memoria para invalidar caché de forma segura y notificar
+    _pathVersions[filePath] = DateTime.now().millisecondsSinceEpoch.toString();
+    currentProfilePathNotifier.value = filePath;
+
     return filePath;
   }
 
@@ -253,16 +295,35 @@ class ProfileService {
         await _supabase.storage.from('profiles').remove([profilePath]);
       } catch (_) {}
     }
-    await _supabase.from('profiles').update({'profile_path': null}).eq('id', userId);
+    await _supabase.from('profiles').update({
+      'profile_path': null,
+      'updated_at': DateTime.now().toIso8601String(),
+    }).eq('id', userId);
+
+    if (profilePath != null) {
+      _pathVersions.remove(profilePath);
+    }
+    currentProfilePathNotifier.value = null;
+  }
+
+  static final Map<String, String> _pathVersions = {};
+
+  void invalidateCache([String? profilePath]) {
+    if (profilePath != null && profilePath.isNotEmpty) {
+      _pathVersions[profilePath] = DateTime.now().millisecondsSinceEpoch.toString();
+    }
   }
 
   String getPublicProfileImageUrl(String profilePath) {
     if (profilePath.startsWith('http://') || profilePath.startsWith('https://')) {
       return profilePath;
     }
-    // Agregamos un timestamp para el cache busting
+    // Generar o reutilizar un timestamp estable para cache busting
     final url = _supabase.storage.from('profiles').getPublicUrl(profilePath);
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
-    return '$url?t=$timestamp';
+    final v = _pathVersions.putIfAbsent(
+      profilePath,
+      () => DateTime.now().millisecondsSinceEpoch.toString(),
+    );
+    return '$url?t=$v';
   }
 }

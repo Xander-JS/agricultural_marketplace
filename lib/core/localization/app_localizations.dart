@@ -1118,6 +1118,12 @@ abstract class AppLocalizations {
   /// **'Total Disponible'**
   String get crop_detail_available_stock;
 
+  /// No description provided for @crop_detail_view_equivalences.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver equivalencias'**
+  String get crop_detail_view_equivalences;
+
   /// No description provided for @crop_detail_min_order.
   ///
   /// In es, this message translates to:
@@ -1129,6 +1135,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Ubicación'**
   String get crop_detail_location;
+
+  /// No description provided for @crop_detail_publication_date.
+  ///
+  /// In es, this message translates to:
+  /// **'Fecha de publicación'**
+  String get crop_detail_publication_date;
 
   /// No description provided for @crop_detail_early_sale.
   ///

@@ -550,10 +550,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get crop_detail_available_stock => 'Total Available';
 
   @override
+  String get crop_detail_view_equivalences => 'View equivalences';
+
+  @override
   String get crop_detail_min_order => 'Minimum Order';
 
   @override
   String get crop_detail_location => 'Location';
+
+  @override
+  String get crop_detail_publication_date => 'Publication date';
 
   @override
   String get crop_detail_early_sale => 'Pre-Sale';

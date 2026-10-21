@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/utils/unit_formatters.dart';
 import '../models/crop_cost_model.dart';
 import '../services/crop_cost_calculator.dart';
@@ -57,6 +59,7 @@ class _AddCropCostScreenState extends State<AddCropCostScreen> {
   }
 
   Future<void> _saveCost() async {
+    final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
 
     setState(() {
@@ -83,14 +86,14 @@ class _AddCropCostScreenState extends State<AddCropCostScreen> {
         await _costService.createCost(cost);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Costo agregado exitosamente')),
+            SnackBar(content: Text(l10n.costs_added)),
           );
         }
       } else {
         await _costService.updateCost(cost);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Costo actualizado exitosamente')),
+            SnackBar(content: Text(l10n.costs_updated)),
           );
         }
       }
@@ -101,7 +104,7 @@ class _AddCropCostScreenState extends State<AddCropCostScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al guardar: $e')),
+          SnackBar(content: Text(l10n.costs_save_error(e.toString()))),
         );
       }
     } finally {
@@ -116,10 +119,12 @@ class _AddCropCostScreenState extends State<AddCropCostScreen> {
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.costToEdit != null;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
+      backgroundColor: context.appBackground,
       appBar: AppBar(
-        title: Text(isEditing ? 'Editar Costo' : 'Agregar Costo'),
+        title: Text(isEditing ? l10n.costs_edit_title : l10n.costs_add_title),
       ),
       body: _isSaving
           ? const Center(child: CircularProgressIndicator())
@@ -130,9 +135,13 @@ class _AddCropCostScreenState extends State<AddCropCostScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text(
-                      'Categoría',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    Text(
+                      l10n.costs_category,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: context.appTextPrimary,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<CostCategory>(
@@ -158,22 +167,26 @@ class _AddCropCostScreenState extends State<AddCropCostScreen> {
                       },
                     ),
                     const SizedBox(height: 24),
-                    const Text(
-                      'Descripción',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    Text(
+                      l10n.costs_description,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: context.appTextPrimary,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _descriptionController,
                       decoration: InputDecoration(
-                        hintText: 'Ej: Mano de obra para recolección',
+                        hintText: l10n.costs_description_hint,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
-                          return 'Por favor ingresa una descripción';
+                          return l10n.costs_description_required;
                         }
                         return null;
                       },
@@ -181,15 +194,19 @@ class _AddCropCostScreenState extends State<AddCropCostScreen> {
                       textCapitalization: TextCapitalization.sentences,
                     ),
                     const SizedBox(height: 24),
-                    const Text(
-                      'Valor',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    Text(
+                      l10n.costs_value,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: context.appTextPrimary,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _amountController,
                       decoration: InputDecoration(
-                        hintText: 'Ej: 150000 o 150000,50',
+                        hintText: l10n.costs_value_hint,
                         prefixText: '\$ ',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -203,10 +220,10 @@ class _AddCropCostScreenState extends State<AddCropCostScreen> {
                       ],
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
-                          return 'Por favor ingresa un valor';
+                          return l10n.costs_value_required;
                         }
                         if (CropCostCalculator.parseAmount(value) == null) {
-                          return 'Ingresa un importe numérico mayor que 0';
+                          return l10n.costs_value_invalid;
                         }
                         return null;
                       },
@@ -221,7 +238,7 @@ class _AddCropCostScreenState extends State<AddCropCostScreen> {
                         ),
                       ),
                       child: Text(
-                        isEditing ? 'Actualizar costo' : 'Guardar costo',
+                        isEditing ? l10n.costs_update : l10n.costs_save,
                         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                     ),

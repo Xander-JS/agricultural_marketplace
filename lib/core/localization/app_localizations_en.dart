@@ -232,6 +232,67 @@ class AppLocalizationsEn extends AppLocalizations {
   String get processing_back => 'Go back';
 
   @override
+  String get complete_registration_title => 'Complete your registration';
+
+  @override
+  String get complete_registration_description =>
+      'Your sign-in account already exists, but it has no profile or verification request yet. Enter your information and upload the three images. Previous data and documents are not reused.';
+
+  @override
+  String get complete_registration_contact => 'Phone or email';
+
+  @override
+  String get complete_registration_contact_hint =>
+      '3151234567 or email@example.com';
+
+  @override
+  String get complete_registration_full_name => 'Full name';
+
+  @override
+  String get complete_registration_full_name_hint => 'First and last names';
+
+  @override
+  String get complete_registration_role => 'Account type';
+
+  @override
+  String get complete_registration_documents => 'Identity documents';
+
+  @override
+  String get complete_registration_submit => 'Complete registration';
+
+  @override
+  String get complete_registration_success =>
+      'Registration completed. Your request is pending manual review.';
+
+  @override
+  String get complete_registration_invalid_data =>
+      'Complete all fields and attach the front, back, and selfie images.';
+
+  @override
+  String get complete_registration_unauthorized =>
+      'Your session is not active. Sign in again to continue.';
+
+  @override
+  String get complete_registration_profile_error =>
+      'We could not save your profile. Please try again.';
+
+  @override
+  String get complete_registration_documents_error =>
+      'We could not save your documents. Check your connection and try again.';
+
+  @override
+  String get complete_registration_in_progress =>
+      'A document submission is already in progress.';
+
+  @override
+  String get complete_registration_unknown_error =>
+      'We could not complete your registration. Please try again.';
+
+  @override
+  String get complete_registration_missing_documents =>
+      'You must attach the front, back, and selfie images before continuing.';
+
+  @override
   String get login_title => 'Sign in';
 
   @override

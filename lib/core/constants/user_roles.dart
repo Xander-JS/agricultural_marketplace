@@ -145,4 +145,27 @@ enum UserVerificationStatus {
   }
 
   bool get isApproved => this == UserVerificationStatus.aprobado;
+  bool get isPending => this == UserVerificationStatus.pendiente;
+  bool get isUnderAiReview => this == UserVerificationStatus.enRevisionIa;
+  bool get isRejected => this == UserVerificationStatus.rechazado;
+  bool get isSuspended => this == UserVerificationStatus.suspendido;
+  bool get isUnknown => this == UserVerificationStatus.desconocido;
+
+  /// Nombre amigable por defecto en español
+  String get displayName {
+    switch (this) {
+      case UserVerificationStatus.pendiente:
+        return 'Pendiente';
+      case UserVerificationStatus.enRevisionIa:
+        return 'En revisión';
+      case UserVerificationStatus.aprobado:
+        return 'Aprobado';
+      case UserVerificationStatus.rechazado:
+        return 'Rechazado';
+      case UserVerificationStatus.suspendido:
+        return 'Suspendido';
+      case UserVerificationStatus.desconocido:
+        return 'Desconocido';
+    }
+  }
 }

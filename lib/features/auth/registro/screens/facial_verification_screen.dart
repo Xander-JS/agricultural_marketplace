@@ -11,7 +11,7 @@ import '../../../../core/widgets/progress/step_progress_bar.dart';
 import '../../../../core/widgets/info/tip_pill.dart';
 import '../../../../core/widgets/buttons/primary_action_button.dart';
 import '../models/registration_data.dart';
-import 'processing_screen.dart';
+import 'document_review_screen.dart';
 
 class FacialVerificationScreen extends StatefulWidget {
   final RegistrationData data;
@@ -42,7 +42,7 @@ class _FacialVerificationScreenState extends State<FacialVerificationScreen> {
         if (!mounted) return;
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (_) => ProcessingScreen(data: widget.data),
+            builder: (_) => DocumentReviewScreen(data: widget.data),
           ),
         );
       });
@@ -78,55 +78,66 @@ class _FacialVerificationScreenState extends State<FacialVerificationScreen> {
                 ],
               ),
             ),
-            
+
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0),
                 child: Column(
                   children: [
                     const Spacer(),
-              
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: AppColors.lightTextSecondary,
-                    width: 4,
-                  ),
-                ),
-                child: Container(
-                  width: 250,
-                  height: 250,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    image: _image != null
-                        ? DecorationImage(
-                            image: FileImage(_image!),
-                            fit: BoxFit.cover,
-                          )
-                        : const DecorationImage(
-                            image: AssetImage('assets/images/face_id.png'),
-                            fit: BoxFit.contain,
-                          ),
-                  ),
-                ),
-              ),
 
-              const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: AppColors.lightTextSecondary,
+                          width: 4,
+                        ),
+                      ),
+                      child: Container(
+                        width: 250,
+                        height: 250,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          image: _image != null
+                              ? DecorationImage(
+                                  image: FileImage(_image!),
+                                  fit: BoxFit.cover,
+                                )
+                              : const DecorationImage(
+                                  image: AssetImage(
+                                    'assets/images/face_id.png',
+                                  ),
+                                  fit: BoxFit.contain,
+                                ),
+                        ),
+                      ),
+                    ),
 
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  TipPill(icon: Icons.light_mode_outlined, text: l10n.facial_verification_tip_light),
-                  const SizedBox(width: 8),
-                  TipPill(icon: Icons.visibility_off_outlined, text: l10n.facial_verification_tip_glasses),
-                  const SizedBox(width: 8),
-                  TipPill(icon: Icons.sentiment_satisfied_alt, text: l10n.facial_verification_tip_straight),
-                ],
-              ),
-              const SizedBox(height: 32),
-              
+                    const Spacer(),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        TipPill(
+                          icon: Icons.light_mode_outlined,
+                          text: l10n.facial_verification_tip_light,
+                        ),
+                        const SizedBox(width: 8),
+                        TipPill(
+                          icon: Icons.visibility_off_outlined,
+                          text: l10n.facial_verification_tip_glasses,
+                        ),
+                        const SizedBox(width: 8),
+                        TipPill(
+                          icon: Icons.sentiment_satisfied_alt,
+                          text: l10n.facial_verification_tip_straight,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
+
                     PrimaryActionButton(
                       onPressed: _takePicture,
                       text: l10n.facial_verification_start_button,
@@ -142,4 +153,3 @@ class _FacialVerificationScreenState extends State<FacialVerificationScreen> {
     );
   }
 }
-

@@ -8,7 +8,10 @@ import '../../../../core/widgets/progress/step_progress_bar.dart';
 import '../../../../core/widgets/inputs/custom_text_field.dart';
 import '../../../../core/widgets/buttons/primary_action_button.dart';
 import '../models/registration_data.dart';
-import 'otp_verification_screen.dart';
+import 'role_selection_screen.dart';
+// Nota: OtpVerificationScreen eliminado del flujo de registro por defecto.
+// El proveedor SMS de Supabase está desactivado (enable_signup = false en [auth.sms]).
+// La verificación de identidad se realiza a través de documentos físicos revisados por moderador.
 
 class PersonalDetailsScreen extends StatefulWidget {
   final RegistrationData? data;
@@ -55,9 +58,11 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
       _data.lastName = _lastNameController.text.trim();
       _data.password = _passwordController.text;
 
+      // El flujo de OTP por SMS fue eliminado: Supabase no tiene SMS habilitado.
+      // Se navega directamente a la selección de rol.
       Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (_) => OtpVerificationScreen(data: _data),
+          builder: (_) => RoleSelectionScreen(data: _data),
         ),
       );
     }

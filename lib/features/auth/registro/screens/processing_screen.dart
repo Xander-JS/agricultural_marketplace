@@ -66,25 +66,29 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
         documentFront: widget.data.documentFront,
         documentBack: widget.data.documentBack,
         selfie: widget.data.selfie,
+        // verificationStatus no se pasa: el servicio siempre impone 'pendiente'
+        // para respetar el trigger trg_protect_profiles_security_fields.
       );
 
       if (!mounted) return;
 
       if (result.requiresConfirmation) {
         setState(() {
-          _statusMessage = result.message ??
-              'Cuenta creada. Por favor confirma tu medio de contacto para continuar.';
+          _statusMessage = result.message ?? 'Cuenta creada. Por favor confirma tu medio de contacto para continuar.';
           _isSpinning = false;
           _requiresConfirmation = true;
         });
       } else {
         setState(() {
-          _statusMessage = l10n.processing_success;
+          _statusMessage = result.documentsUploaded
+              ? l10n.processing_success
+              : (result.message ?? l10n.processing_success);
           _isSpinning = false;
         });
 
         // Retornar a la raíz donde AuthGate ya resolvió la sesión y el perfil
-        Future.delayed(const Duration(milliseconds: 1000), () {
+        final delay = result.documentsUploaded ? 1000 : 2200;
+        Future.delayed(Duration(milliseconds: delay), () {
           if (mounted) {
             Navigator.of(context).popUntil((route) => route.isFirst);
           }
@@ -131,7 +135,9 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
             ? () => Navigator.of(context).pop()
             : (_requiresConfirmation ? _onReturnToLogin : null),
         retryText: l10n.processing_retry,
-        backText: _requiresConfirmation ? l10n.login_title : l10n.processing_back,
+        backText: _requiresConfirmation
+            ? l10n.login_title
+            : l10n.processing_back,
       ),
     );
   }

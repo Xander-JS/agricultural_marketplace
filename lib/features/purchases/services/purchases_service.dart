@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../deals/models/negotiation_model.dart';
 import '../../deals/models/negotiation_status.dart';
 
@@ -16,8 +17,8 @@ class PurchasesService {
           .from('negotiations')
           .select('''
             *,
-            crops(*, profiles:farmer_id(*)),
-            profiles:buyer_id(*),
+            crops(*, profiles:farmer_id(id, full_name, role, profile_path, verification_status, department, municipality)),
+            profiles:buyer_id(id, full_name, role, profile_path, verification_status, department, municipality),
             negotiation_offers(*)
           ''')
           .eq('buyer_id', buyerId)
@@ -27,7 +28,9 @@ class PurchasesService {
           ])
           .order('updated_at', ascending: false);
 
-      return (response as List).map((n) => NegotiationModel.fromJson(n)).toList();
+      return (response as List)
+          .map((n) => NegotiationModel.fromJson(n))
+          .toList();
     } catch (e) {
       throw Exception('Error al cargar compras: $e');
     }

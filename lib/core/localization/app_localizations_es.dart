@@ -236,6 +236,67 @@ class AppLocalizationsEs extends AppLocalizations {
   String get processing_back => 'Volver atrás';
 
   @override
+  String get complete_registration_title => 'Completa tu registro';
+
+  @override
+  String get complete_registration_description =>
+      'Tu cuenta de acceso ya existe, pero aún no tiene perfil ni solicitud de verificación. Ingresa tus datos y sube las tres imágenes. No se reutilizan datos ni documentos anteriores.';
+
+  @override
+  String get complete_registration_contact => 'Teléfono o correo';
+
+  @override
+  String get complete_registration_contact_hint =>
+      '3151234567 o correo@ejemplo.com';
+
+  @override
+  String get complete_registration_full_name => 'Nombre completo';
+
+  @override
+  String get complete_registration_full_name_hint => 'Nombres y apellidos';
+
+  @override
+  String get complete_registration_role => 'Tipo de cuenta';
+
+  @override
+  String get complete_registration_documents => 'Documentos de identidad';
+
+  @override
+  String get complete_registration_submit => 'Completar registro';
+
+  @override
+  String get complete_registration_success =>
+      'Registro completado. Tu solicitud está pendiente de revisión manual.';
+
+  @override
+  String get complete_registration_invalid_data =>
+      'Completa todos los campos y adjunta el frente, el reverso y la selfie.';
+
+  @override
+  String get complete_registration_unauthorized =>
+      'Tu sesión no está activa. Inicia sesión nuevamente para continuar.';
+
+  @override
+  String get complete_registration_profile_error =>
+      'No se pudo guardar tu perfil. Inténtalo de nuevo.';
+
+  @override
+  String get complete_registration_documents_error =>
+      'No se pudieron guardar los documentos. Revisa tu conexión e inténtalo de nuevo.';
+
+  @override
+  String get complete_registration_in_progress =>
+      'Ya hay un envío de documentos en curso.';
+
+  @override
+  String get complete_registration_unknown_error =>
+      'No se pudo completar el registro. Inténtalo de nuevo.';
+
+  @override
+  String get complete_registration_missing_documents =>
+      'Debes adjuntar el frente, el reverso y la selfie antes de continuar.';
+
+  @override
   String get login_title => 'Iniciar sesión';
 
   @override

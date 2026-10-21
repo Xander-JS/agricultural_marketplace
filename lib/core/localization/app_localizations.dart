@@ -512,6 +512,108 @@ abstract class AppLocalizations {
   /// **'Volver atrás'**
   String get processing_back;
 
+  /// No description provided for @complete_registration_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Completa tu registro'**
+  String get complete_registration_title;
+
+  /// No description provided for @complete_registration_description.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu cuenta de acceso ya existe, pero aún no tiene perfil ni solicitud de verificación. Ingresa tus datos y sube las tres imágenes. No se reutilizan datos ni documentos anteriores.'**
+  String get complete_registration_description;
+
+  /// No description provided for @complete_registration_contact.
+  ///
+  /// In es, this message translates to:
+  /// **'Teléfono o correo'**
+  String get complete_registration_contact;
+
+  /// No description provided for @complete_registration_contact_hint.
+  ///
+  /// In es, this message translates to:
+  /// **'3151234567 o correo@ejemplo.com'**
+  String get complete_registration_contact_hint;
+
+  /// No description provided for @complete_registration_full_name.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre completo'**
+  String get complete_registration_full_name;
+
+  /// No description provided for @complete_registration_full_name_hint.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombres y apellidos'**
+  String get complete_registration_full_name_hint;
+
+  /// No description provided for @complete_registration_role.
+  ///
+  /// In es, this message translates to:
+  /// **'Tipo de cuenta'**
+  String get complete_registration_role;
+
+  /// No description provided for @complete_registration_documents.
+  ///
+  /// In es, this message translates to:
+  /// **'Documentos de identidad'**
+  String get complete_registration_documents;
+
+  /// No description provided for @complete_registration_submit.
+  ///
+  /// In es, this message translates to:
+  /// **'Completar registro'**
+  String get complete_registration_submit;
+
+  /// No description provided for @complete_registration_success.
+  ///
+  /// In es, this message translates to:
+  /// **'Registro completado. Tu solicitud está pendiente de revisión manual.'**
+  String get complete_registration_success;
+
+  /// No description provided for @complete_registration_invalid_data.
+  ///
+  /// In es, this message translates to:
+  /// **'Completa todos los campos y adjunta el frente, el reverso y la selfie.'**
+  String get complete_registration_invalid_data;
+
+  /// No description provided for @complete_registration_unauthorized.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu sesión no está activa. Inicia sesión nuevamente para continuar.'**
+  String get complete_registration_unauthorized;
+
+  /// No description provided for @complete_registration_profile_error.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo guardar tu perfil. Inténtalo de nuevo.'**
+  String get complete_registration_profile_error;
+
+  /// No description provided for @complete_registration_documents_error.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudieron guardar los documentos. Revisa tu conexión e inténtalo de nuevo.'**
+  String get complete_registration_documents_error;
+
+  /// No description provided for @complete_registration_in_progress.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya hay un envío de documentos en curso.'**
+  String get complete_registration_in_progress;
+
+  /// No description provided for @complete_registration_unknown_error.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo completar el registro. Inténtalo de nuevo.'**
+  String get complete_registration_unknown_error;
+
+  /// No description provided for @complete_registration_missing_documents.
+  ///
+  /// In es, this message translates to:
+  /// **'Debes adjuntar el frente, el reverso y la selfie antes de continuar.'**
+  String get complete_registration_missing_documents;
+
   /// No description provided for @login_title.
   ///
   /// In es, this message translates to:

@@ -9,6 +9,7 @@ import 'package:agricultural_marketplace/core/localization/localization_config.d
 import 'package:agricultural_marketplace/core/theme/app_theme.dart';
 import 'package:agricultural_marketplace/core/widgets/loading/loading_indicator.dart';
 import 'package:agricultural_marketplace/features/auth/login/screens/login_screen.dart';
+import 'package:agricultural_marketplace/features/auth/registro/screens/complete_registration_screen.dart';
 import 'package:agricultural_marketplace/features/auth/verificacion/screens/verification_status_screen.dart';
 import 'package:agricultural_marketplace/features/auth/widgets/auth_gate.dart';
 import 'package:agricultural_marketplace/features/dashboard/screens/main_dashboard_screen.dart';
@@ -217,33 +218,44 @@ void main() {
       expect(find.text('Cerrar sesión'), findsOneWidget);
     });
 
-    // 5. Perfil inexistente
-    testWidgets('5. Perfil inexistente despliega pantalla informativa segura con reintento y salida', (tester) async {
+    // 5. Cuenta de Auth sin perfil: se ofrece completar el registro
+    testWidgets('5. Perfil inexistente despliega la pantalla para completar el registro sin acceder al dashboard', (tester) async {
       final session = createMockSession(userId: 'orphan-user');
-      int fetchCount = 0;
 
       await tester.pumpWidget(
         createTestApp(
           child: AuthGate(
             initialSession: session,
-            profileFetcher: (userId) async {
-              fetchCount++;
-              return null;
-            },
+            profileFetcher: (userId) async => null,
           ),
         ),
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Estado Desconocido'), findsOneWidget);
-      expect(find.text('Reintentar'), findsOneWidget);
-      expect(find.text('Cerrar sesión'), findsOneWidget);
+      expect(find.byType(CompleteRegistrationScreen), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('complete_registration_screen')),
+        findsOneWidget,
+      );
+      expect(find.text('Completa tu registro'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('complete_registration_submit')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('complete_registration_logout')),
+        findsOneWidget,
+      );
+      expect(find.text('Estado Desconocido'), findsNothing);
       expect(find.byType(MainDashboardScreen), findsNothing);
+      expect(find.byType(VerificationStatusScreen), findsNothing);
 
-      await tester.tap(find.text('Reintentar'));
+      await tester.tap(
+        find.byKey(const ValueKey('complete_registration_logout')),
+      );
       await tester.pumpAndSettle();
 
-      expect(fetchCount, equals(2));
+      expect(find.byType(LoginScreen), findsOneWidget);
     });
 
     // 5b. Perfil con rol nulo

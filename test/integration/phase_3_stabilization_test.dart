@@ -175,7 +175,7 @@ void main() {
   });
 
   group('Punto 2 — Persistencia atómica de registro y cola de moderación', () {
-    test('2.1. RegistrationService asegura inserción obligatoria en profiles con en_revision_ia antes de attempts',
+    test('2.1. RegistrationService asegura inserción obligatoria en profiles con estado pendiente antes de attempts',
         () async {
       final executionOrder = <String>[];
       Map<String, dynamic>? savedProfile;
@@ -229,13 +229,13 @@ void main() {
 
       expect(savedProfile, isNotNull);
       expect(savedProfile!['id'], equals('uuid-atomic-user'));
-      expect(savedProfile!['verification_status'], equals('en_revision_ia'));
+      // El perfil nace en 'pendiente'; pasa a 'en_revision_ia' solo tras la aprobación del moderador.
+      expect(savedProfile!['verification_status'], equals('pendiente'));
 
       expect(savedAttempt, isNotNull);
       expect(savedAttempt!['user_id'], equals('uuid-atomic-user'));
-      expect(savedAttempt!['status'], equals('en_revision_ia'));
-      expect(savedAttempt!['ai_result'], isNotNull);
-      expect((savedAttempt!['ai_result'] as Map)['simulated'], isTrue);
+      expect(savedAttempt!['status'], equals('pendiente'));
+      expect(savedAttempt!['ai_result'], isNull);
     });
 
     test('2.2. Si falla la inserción en profiles o verification_attempts, arroja error y no finge éxito', () async {
@@ -295,7 +295,11 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('Foreign key violation 23503'), findsOneWidget);
+      expect(
+        find.textContaining('Error al procesar el registro'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('Foreign key violation 23503'), findsNothing);
       expect(find.text('Reintentar'), findsOneWidget);
     });
   });

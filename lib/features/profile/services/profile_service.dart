@@ -31,14 +31,31 @@ class ProfileService {
   }
 
   Future<FarmerProfileData> getFarmerProfileData(String userId) async {
-    // 1. Obtener datos del perfil
-    final profileResponse = await _supabase
-        .from('profiles')
-        .select()
-        .eq('id', userId)
-        .single();
-
-    final Map<String, dynamic> rawProfile = Map<String, dynamic>.from(profileResponse);
+    // 1. Obtener datos del perfil (usando RPC segura get_my_profile para perfil propio)
+    final currentUid = _supabase.auth.currentUser?.id;
+    Map<String, dynamic> rawProfile;
+    if (userId == currentUid) {
+      try {
+        final myProfileRes = await _supabase.rpc('get_my_profile');
+        rawProfile = myProfileRes is Map<String, dynamic>
+            ? myProfileRes
+            : Map<String, dynamic>.from(myProfileRes as Map);
+      } catch (_) {
+        final profileResponse = await _supabase
+            .from('profiles')
+            .select('id, full_name, role, verification_status, profile_path, department, municipality')
+            .eq('id', userId)
+            .single();
+        rawProfile = Map<String, dynamic>.from(profileResponse);
+      }
+    } else {
+      final profileResponse = await _supabase
+          .from('profiles')
+          .select('id, full_name, role, verification_status, profile_path, department, municipality')
+          .eq('id', userId)
+          .single();
+      rawProfile = Map<String, dynamic>.from(profileResponse);
+    }
     final profilePath = rawProfile['profile_path'] as String?;
     if (_supabase.auth.currentUser?.id == userId) {
       currentProfilePathNotifier.value = profilePath;

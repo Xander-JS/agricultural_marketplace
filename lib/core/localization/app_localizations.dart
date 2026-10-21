@@ -1052,6 +1052,48 @@ abstract class AppLocalizations {
   /// **'No se pudieron cargar los datos.'**
   String get profile_no_data;
 
+  /// No description provided for @reputation_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Reputación'**
+  String get reputation_title;
+
+  /// No description provided for @reputation_average_label.
+  ///
+  /// In es, this message translates to:
+  /// **'Calificación promedio'**
+  String get reputation_average_label;
+
+  /// No description provided for @reputation_reviews_received.
+  ///
+  /// In es, this message translates to:
+  /// **'Calificaciones recibidas'**
+  String get reputation_reviews_received;
+
+  /// No description provided for @reputation_no_ratings.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin calificaciones aún'**
+  String get reputation_no_ratings;
+
+  /// No description provided for @reputation_new.
+  ///
+  /// In es, this message translates to:
+  /// **'Nuevo'**
+  String get reputation_new;
+
+  /// No description provided for @reputation_loading.
+  ///
+  /// In es, this message translates to:
+  /// **'Cargando reputación...'**
+  String get reputation_loading;
+
+  /// No description provided for @reputation_load_error.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo cargar la reputación.'**
+  String get reputation_load_error;
+
   /// No description provided for @market_title.
   ///
   /// In es, this message translates to:
@@ -1147,6 +1189,54 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Función de IA próximamente...'**
   String get market_ai_coming_soon;
+
+  /// No description provided for @market_search_hint.
+  ///
+  /// In es, this message translates to:
+  /// **'Buscar por título o tipo de cultivo'**
+  String get market_search_hint;
+
+  /// No description provided for @market_search_clear.
+  ///
+  /// In es, this message translates to:
+  /// **'Borrar búsqueda'**
+  String get market_search_clear;
+
+  /// No description provided for @market_sort_recent.
+  ///
+  /// In es, this message translates to:
+  /// **'Más recientes'**
+  String get market_sort_recent;
+
+  /// No description provided for @market_sort_price_asc.
+  ///
+  /// In es, this message translates to:
+  /// **'Menor precio'**
+  String get market_sort_price_asc;
+
+  /// No description provided for @market_sort_price_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Mayor precio'**
+  String get market_sort_price_desc;
+
+  /// No description provided for @market_sort_reputation.
+  ///
+  /// In es, this message translates to:
+  /// **'Mejor reputación'**
+  String get market_sort_reputation;
+
+  /// No description provided for @market_no_results.
+  ///
+  /// In es, this message translates to:
+  /// **'No se encontraron cosechas que coincidan con estos criterios'**
+  String get market_no_results;
+
+  /// No description provided for @market_clear_filters.
+  ///
+  /// In es, this message translates to:
+  /// **'Limpiar filtros'**
+  String get market_clear_filters;
 
   /// No description provided for @crop_card_available.
   ///
@@ -1837,6 +1927,84 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Calificar comprador'**
   String get deal_detail_rate_buyer;
+
+  /// No description provided for @deal_detail_rate_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Calificar trato'**
+  String get deal_detail_rate_title;
+
+  /// No description provided for @deal_detail_rate_subtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu calificación ayuda a construir confianza en la comunidad.'**
+  String get deal_detail_rate_subtitle;
+
+  /// No description provided for @deal_detail_rate_target.
+  ///
+  /// In es, this message translates to:
+  /// **'Calificas a'**
+  String get deal_detail_rate_target;
+
+  /// No description provided for @deal_detail_rate_stars_label.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu calificación'**
+  String get deal_detail_rate_stars_label;
+
+  /// No description provided for @deal_detail_rate_stars_required.
+  ///
+  /// In es, this message translates to:
+  /// **'Selecciona de 1 a 5 estrellas'**
+  String get deal_detail_rate_stars_required;
+
+  /// No description provided for @deal_detail_rate_comment_label.
+  ///
+  /// In es, this message translates to:
+  /// **'Comentario (opcional)'**
+  String get deal_detail_rate_comment_label;
+
+  /// No description provided for @deal_detail_rate_comment_hint.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuéntanos cómo fue tu experiencia'**
+  String get deal_detail_rate_comment_hint;
+
+  /// No description provided for @deal_detail_rate_submit.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviar calificación'**
+  String get deal_detail_rate_submit;
+
+  /// No description provided for @deal_detail_rate_success.
+  ///
+  /// In es, this message translates to:
+  /// **'Calificación enviada correctamente'**
+  String get deal_detail_rate_success;
+
+  /// No description provided for @deal_detail_rate_error.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo enviar la calificación. Inténtalo de nuevo.'**
+  String get deal_detail_rate_error;
+
+  /// No description provided for @deal_detail_rate_loading.
+  ///
+  /// In es, this message translates to:
+  /// **'Verificando calificación...'**
+  String get deal_detail_rate_loading;
+
+  /// No description provided for @deal_detail_rated.
+  ///
+  /// In es, this message translates to:
+  /// **'Trato calificado'**
+  String get deal_detail_rated;
+
+  /// No description provided for @deal_detail_rated_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya enviaste tu calificación para este trato.'**
+  String get deal_detail_rated_desc;
 
   /// No description provided for @deal_detail_proposal_cancelled.
   ///

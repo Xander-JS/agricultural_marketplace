@@ -8,6 +8,7 @@ import '../models/negotiation_model.dart';
 import '../models/negotiation_offer_model.dart';
 import '../models/negotiation_status.dart';
 import '../services/negotiation_service.dart';
+import '../../review/services/review_service.dart';
 import 'counter_offer_screen.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/localization/app_localizations.dart';
@@ -19,6 +20,7 @@ class DealDetailScreen extends StatefulWidget {
   final String? role;
   final NegotiationModel? initialNegotiation;
   final NegotiationService? service;
+  final ReviewService? reviewService;
 
   const DealDetailScreen({
     super.key,
@@ -26,6 +28,7 @@ class DealDetailScreen extends StatefulWidget {
     this.role,
     this.initialNegotiation,
     this.service,
+    this.reviewService,
   });
 
   @override
@@ -34,9 +37,14 @@ class DealDetailScreen extends StatefulWidget {
 
 class _DealDetailScreenState extends State<DealDetailScreen> {
   late final NegotiationService _service;
+  late final ReviewService _reviewService;
   bool _isLoading = true;
   bool _isLoadingContact = false;
   bool _isActionInProgress = false;
+  bool _isLoadingReviewStatus = false;
+  bool _isSubmittingReview = false;
+  bool? _hasReviewed;
+  String? _reviewStatusError;
   String? _errorMessage;
   NegotiationModel? _negotiation;
   NegotiationContactInfo? _contactInfo;
@@ -64,6 +72,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
   void initState() {
     super.initState();
     _service = widget.service ?? NegotiationService();
+    _reviewService = widget.reviewService ?? ReviewService();
 
     if (widget.initialNegotiation != null) {
       _negotiation = widget.initialNegotiation;
@@ -81,6 +90,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
           status == NegotiationStatus.completada) {
         unawaited(_loadContactInfo());
       }
+      _loadReviewStatusIfNeeded();
       return;
     }
 
@@ -104,6 +114,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
           negotiation.status == NegotiationStatus.completada) {
         unawaited(_loadContactInfo());
       }
+      _loadReviewStatusIfNeeded(force: reload);
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -115,6 +126,51 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
           _isLoading = false;
         });
       }
+    }
+  }
+
+  /// Consulta el estado de calificación únicamente cuando el trato está
+  /// completado. Un fallo de esta consulta no oculta el detalle del trato.
+  void _loadReviewStatusIfNeeded({bool force = false}) {
+    final negotiation = _negotiation;
+    if (negotiation == null ||
+        negotiation.status != NegotiationStatus.completada) {
+      return;
+    }
+    unawaited(_loadReviewStatus(force: force));
+  }
+
+  Future<void> _loadReviewStatus({bool force = false}) async {
+    if (_isLoadingReviewStatus) return;
+    if (!force && _hasReviewed != null) return;
+
+    final negotiation = _negotiation;
+    if (negotiation == null ||
+        negotiation.status != NegotiationStatus.completada) {
+      return;
+    }
+
+    setState(() {
+      _isLoadingReviewStatus = true;
+      _reviewStatusError = null;
+    });
+
+    try {
+      final hasReviewed = await _reviewService.hasReviewedNegotiation(
+        negotiation.id,
+      );
+      if (!mounted) return;
+      setState(() {
+        _hasReviewed = hasReviewed;
+        _isLoadingReviewStatus = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _hasReviewed = null;
+        _reviewStatusError = _readableError(e);
+        _isLoadingReviewStatus = false;
+      });
     }
   }
 
@@ -356,42 +412,221 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                 color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
               ),
               const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'La calificación de tratos estará disponible pronto.',
-                        ),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.star_outline),
-                  label: Text(
-                    _isBuyer ? 'Calificar productor' : 'Calificar comprador',
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: isDark
-                        ? AppColors.darkTertiary
-                        : AppColors.lightTertiary,
-                    foregroundColor: isDark
-                        ? AppColors.darkBackground
-                        : Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
+              _buildRatingSection(n, isDark, l10n),
             ],
             const SizedBox(height: 32),
           ],
         ),
       ),
     );
+  }
+
+  /// Sección de calificación postventa. Solo se muestra para tratos
+  /// completados y deshabilita el formulario cuando ya existe una reseña del
+  /// usuario autenticado.
+  Widget _buildRatingSection(
+    NegotiationModel n,
+    bool isDark,
+    AppLocalizations? l10n,
+  ) {
+    final rateLabel = _isBuyer
+        ? (l10n?.deal_detail_rate_farmer ?? 'Calificar productor')
+        : (l10n?.deal_detail_rate_buyer ?? 'Calificar comprador');
+    final textPrimary = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final textSecondary = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                _hasReviewed == true
+                    ? Icons.star_rounded
+                    : Icons.star_outline_rounded,
+                color: AppColors.warning,
+                size: 22,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  l10n?.deal_detail_rate_title ?? 'Calificar trato',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (_isLoadingReviewStatus)
+            Row(
+              children: [
+                const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  l10n?.deal_detail_rate_loading ??
+                      'Verificando calificación...',
+                  style: TextStyle(fontSize: 13, color: textSecondary),
+                ),
+              ],
+            )
+          else if (_hasReviewed == true)
+            Row(
+              children: [
+                const Icon(
+                  Icons.verified_rounded,
+                  color: AppColors.success,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n?.deal_detail_rated ?? 'Trato calificado',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.success,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        l10n?.deal_detail_rated_desc ??
+                            'Ya enviaste tu calificación para este trato.',
+                        style: TextStyle(fontSize: 13, color: textSecondary),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            )
+          else if (_reviewStatusError != null)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _reviewStatusError!,
+                  style: const TextStyle(fontSize: 13, color: AppColors.error),
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: () => _loadReviewStatus(force: true),
+                  icon: const Icon(Icons.refresh, size: 18),
+                  label: Text(l10n?.market_retry ?? 'Reintentar'),
+                ),
+              ],
+            )
+          else
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n?.deal_detail_rate_subtitle ?? 'Tu calificación ayuda a construir confianza en la comunidad.',
+                  style: TextStyle(fontSize: 13, color: textSecondary),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: _hasReviewed == false
+                        ? () => _openRatingSheet(n)
+                        : null,
+                    icon: const Icon(Icons.star_outline),
+                    label: Text(rateLabel),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: isDark
+                          ? AppColors.darkTertiary
+                          : AppColors.lightTertiary,
+                      foregroundColor: isDark
+                          ? AppColors.darkBackground
+                          : Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openRatingSheet(NegotiationModel n) async {
+    if (_isSubmittingReview || _hasReviewed != false) return;
+
+    final submitted = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _RatingSheet(
+        counterpartLabel: _isBuyer
+            ? (AppLocalizations.of(context)?.deal_counterpart_farmer ??
+                  'Productor')
+            : (AppLocalizations.of(context)?.deal_counterpart_buyer ??
+                  'Comprador'),
+        onSubmit: (rating, comment) async {
+          _isSubmittingReview = true;
+          try {
+            await _reviewService.submitReview(
+              negotiationId: n.id,
+              rating: rating,
+              comment: comment,
+            );
+          } finally {
+            _isSubmittingReview = false;
+          }
+        },
+      ),
+    );
+
+    if (submitted != true || !mounted) return;
+
+    setState(() {
+      _hasReviewed = true;
+      _reviewStatusError = null;
+    });
+    final l10n = AppLocalizations.of(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          l10n?.deal_detail_rate_success ??
+              'Calificación enviada correctamente',
+        ),
+        backgroundColor: AppColors.success,
+      ),
+    );
+  }
+
+  String _readableError(Object error) {
+    final message = error.toString().replaceFirst('Exception: ', '').trim();
+    return message.isEmpty
+        ? 'No se pudo completar la operación. Inténtalo de nuevo.'
+        : message;
   }
 
   /// Construye la tarjeta integral de contacto de la contraparte y configuración
@@ -1705,6 +1940,239 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
         _isActionInProgress = false;
       }
     }
+  }
+}
+
+/// Modal de calificación postventa. Mantiene el formulario abierto si el
+/// envío falla para que el usuario pueda corregir o reintentar.
+class _RatingSheet extends StatefulWidget {
+  final String counterpartLabel;
+  final Future<void> Function(int rating, String? comment) onSubmit;
+
+  const _RatingSheet({required this.counterpartLabel, required this.onSubmit});
+
+  @override
+  State<_RatingSheet> createState() => _RatingSheetState();
+}
+
+class _RatingSheetState extends State<_RatingSheet> {
+  final TextEditingController _commentController = TextEditingController();
+  int _rating = 0;
+  bool _isSubmitting = false;
+  String? _errorMessage;
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (_rating < 1 || _rating > 5 || _isSubmitting) return;
+
+    setState(() {
+      _isSubmitting = true;
+      _errorMessage = null;
+    });
+
+    try {
+      await widget.onSubmit(_rating, _commentController.text.trim());
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+    } catch (e) {
+      if (!mounted) return;
+      final message = e.toString().replaceFirst('Exception: ', '').trim();
+      final readable = message.isEmpty
+          ? (AppLocalizations.of(context)?.deal_detail_rate_error ??
+                'No se pudo enviar la calificación. Inténtalo de nuevo.')
+          : message;
+      setState(() {
+        _isSubmitting = false;
+        _errorMessage = readable;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(readable), backgroundColor: AppColors.error),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
+    final textPrimary = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final textSecondary = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: EdgeInsets.only(
+        top: 24,
+        left: 20,
+        right: 20,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.grey[700] : Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                const Icon(
+                  Icons.star_rounded,
+                  color: AppColors.warning,
+                  size: 28,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    l10n?.deal_detail_rate_title ?? 'Calificar trato',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: textPrimary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '${l10n?.deal_detail_rate_subtitle ?? 'Tu calificación ayuda a construir confianza en la comunidad.'}\n'
+              '${l10n?.deal_detail_rate_target ?? 'Calificas a'}: ${widget.counterpartLabel}',
+              style: TextStyle(fontSize: 14, color: textSecondary),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              l10n?.deal_detail_rate_stars_label ?? 'Tu calificación',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: textPrimary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: List.generate(5, (index) {
+                final value = index + 1;
+                return IconButton(
+                  key: ValueKey('rating_star_$value'),
+                  tooltip: '$value',
+                  onPressed: _isSubmitting
+                      ? null
+                      : () => setState(() => _rating = value),
+                  iconSize: 38,
+                  color: AppColors.warning,
+                  icon: Icon(
+                    value <= _rating
+                        ? Icons.star_rounded
+                        : Icons.star_outline_rounded,
+                  ),
+                );
+              }),
+            ),
+            if (_rating == 0)
+              Text(
+                l10n?.deal_detail_rate_stars_required ??
+                    'Selecciona de 1 a 5 estrellas',
+                style: TextStyle(fontSize: 12, color: textSecondary),
+              ),
+            const SizedBox(height: 16),
+            Text(
+              l10n?.deal_detail_rate_comment_label ?? 'Comentario (opcional)',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              key: const ValueKey('rating_comment_field'),
+              controller: _commentController,
+              enabled: !_isSubmitting,
+              maxLines: 3,
+              maxLength: 500,
+              textInputAction: TextInputAction.newline,
+              decoration: InputDecoration(
+                hintText:
+                    l10n?.deal_detail_rate_comment_hint ??
+                    'Cuéntanos cómo fue tu experiencia',
+                hintStyle: TextStyle(fontSize: 14, color: textSecondary),
+                filled: true,
+                fillColor: isDark
+                    ? AppColors.darkSurface
+                    : AppColors.lightSurface,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+            if (_errorMessage != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                _errorMessage!,
+                style: const TextStyle(fontSize: 13, color: AppColors.error),
+              ),
+            ],
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                key: const ValueKey('rating_submit_button'),
+                onPressed: (_rating >= 1 && _rating <= 5 && !_isSubmitting)
+                    ? _submit
+                    : null,
+                icon: _isSubmitting
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(Icons.send),
+                label: Text(
+                  l10n?.deal_detail_rate_submit ?? 'Enviar calificación',
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isDark
+                      ? AppColors.darkTertiary
+                      : AppColors.lightTertiary,
+                  foregroundColor: isDark
+                      ? AppColors.darkBackground
+                      : Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

@@ -4,6 +4,7 @@ import '../models/crop_model.dart';
 import '../services/crop_service.dart';
 import 'crop_status_badge.dart';
 import '../../geo/models/simulated_location.dart';
+import '../../review/models/review_model.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/utils/app_formatters.dart';
@@ -13,11 +14,17 @@ class CropCard extends StatelessWidget {
   final VoidCallback onTap;
   final DistanceEvaluation? distanceEvaluation;
 
+  /// Reputación del productor dueño de la cosecha. `null` mientras se carga
+  /// o si la consulta falló; en ese caso no se muestra ningún indicador para
+  /// evitar presentar datos ficticios.
+  final ReviewSummary? reputation;
+
   const CropCard({
     super.key,
     required this.crop,
     required this.onTap,
     this.distanceEvaluation,
+    this.reputation,
   });
 
   @override
@@ -110,6 +117,10 @@ class CropCard extends StatelessWidget {
                       _buildLocationAndDistance(isDark),
                     ],
                   ),
+                  if (reputation != null) ...[
+                    const SizedBox(height: 8),
+                    _buildReputationChip(isDark, l10n),
+                  ],
                   const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -191,6 +202,36 @@ class CropCard extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+
+  Widget _buildReputationChip(bool isDark, AppLocalizations? l10n) {
+    final summary = reputation!;
+    final label = summary.hasRatings
+        ? '★ ${summary.averageRating.toStringAsFixed(1)} (${summary.totalReviews})'
+        : '★ ${l10n?.reputation_new ?? 'New'}';
+
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        key: ValueKey('crop_reputation_${crop.id}'),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: AppColors.warning.withValues(alpha: isDark ? 0.18 : 0.12),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.warning.withValues(alpha: 0.35)),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: isDark
+                ? AppColors.darkTextPrimary
+                : AppColors.lightTextPrimary,
+          ),
+        ),
+      ),
     );
   }
 

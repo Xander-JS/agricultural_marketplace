@@ -45,6 +45,8 @@ class ModerationRequest {
 
   bool get isApproved => status == UserVerificationStatus.aprobado;
   bool get isRejected => status == UserVerificationStatus.rechazado;
+  bool get isSuspended => status == UserVerificationStatus.suspendido;
+  bool get isUnderAiReview => status == UserVerificationStatus.enRevisionIa;
 
   factory ModerationRequest.fromJson(Map<String, dynamic> json) {
     // Si viene anidado desde profiles (join) o plano

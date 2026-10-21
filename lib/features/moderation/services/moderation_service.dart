@@ -372,4 +372,68 @@ class ModerationService {
       );
     }
   }
+
+  /// Marca una solicitud en proceso de revisión ('en_revision_ia').
+  Future<ModerationDecisionResult> markInReview({
+    required String attemptId,
+    required String userId,
+  }) async {
+    final handler = decisionHandler;
+    if (handler != null) {
+      return await handler(
+        attemptId: attemptId,
+        userId: userId,
+        decision: 'en_revision_ia',
+      );
+    }
+
+    final isMod = await isCurrentUserModerator();
+    if (!isMod) {
+      return ModerationDecisionResult.failure(
+        errorMessage: 'Acceso no autorizado: se requiere el rol de moderador.',
+        errorCode: '403',
+      );
+    }
+
+    final client = _client;
+    if (client == null) {
+      return ModerationDecisionResult.failure(
+        errorMessage: 'SupabaseClient no disponible.',
+        errorCode: '500',
+      );
+    }
+
+    try {
+      final nowUtc = DateTime.now().toUtc().toIso8601String();
+      await client.from('verification_attempts').update({
+        'status': 'en_revision_ia',
+        'updated_at': nowUtc,
+      }).eq('id', attemptId);
+
+      await client.from('profiles').update({
+        'verification_status': 'en_revision_ia',
+        'updated_at': nowUtc,
+      }).eq('id', userId);
+
+      return ModerationDecisionResult.success(
+        updatedStatus: UserVerificationStatus.enRevisionIa,
+      );
+    } on PostgrestException catch (e) {
+      debugPrint(
+        '[ModerationService] PostgrestException al marcar en revisión: ${e.message} (${e.code})',
+      );
+      return ModerationDecisionResult.failure(
+        errorMessage: e.message,
+        errorCode: e.code,
+      );
+    } catch (e) {
+      debugPrint(
+        '[ModerationService] Error inesperado al marcar en revisión: $e',
+      );
+      return ModerationDecisionResult.failure(
+        errorMessage: e.toString(),
+        errorCode: '500',
+      );
+    }
+  }
 }

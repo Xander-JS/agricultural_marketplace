@@ -32,6 +32,7 @@ class _ModerationQueueScreenState extends State<ModerationQueueScreen> {
   bool _isAuthorized = true;
   String? _errorMessage;
   List<ModerationRequest> _requests = [];
+  String? _statusFilter;
 
   @override
   void initState() {
@@ -64,9 +65,10 @@ class _ModerationQueueScreenState extends State<ModerationQueueScreen> {
     await _loadRequests();
   }
 
-  Future<void> _loadRequests() async {
+  Future<void> _loadRequests({String? filter}) async {
+    final statusFilter = filter ?? _statusFilter;
     try {
-      final items = await _service.fetchPendingRequests();
+      final items = await _service.fetchPendingRequests(statusFilter: statusFilter);
       if (!mounted) return;
       setState(() {
         _requests = items;
@@ -90,7 +92,12 @@ class _ModerationQueueScreenState extends State<ModerationQueueScreen> {
           // Si ya no es pendiente, remover de la cola activa
           _requests.removeAt(index);
         } else {
-          _requests[index] = updated;
+          // Si hay filtro activo y el nuevo estado no coincide con el filtro, remover
+          if (_statusFilter != null && updated.status.toDbValue() != _statusFilter) {
+            _requests.removeAt(index);
+          } else {
+            _requests[index] = updated;
+          }
         }
       }
     });
@@ -107,7 +114,7 @@ class _ModerationQueueScreenState extends State<ModerationQueueScreen> {
           IconButton(
             tooltip: l10n?.verification_status_update_status ?? 'Actualizar',
             icon: const Icon(Icons.refresh),
-            onPressed: _isLoading ? null : _loadRequests,
+            onPressed: _isLoading ? null : () => _loadRequests(),
           ),
           if (widget.onSignOut != null)
             IconButton(
@@ -197,115 +204,227 @@ class _ModerationQueueScreenState extends State<ModerationQueueScreen> {
 
     // 4. Estado de Cola Vacía
     if (_requests.isEmpty) {
-      return RefreshIndicator(
-        onRefresh: _loadRequests,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          children: [
-            SizedBox(
-              height: MediaQuery.of(context).size.height * 0.65,
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.inbox_outlined, size: 72, color: Colors.grey),
-                      const SizedBox(height: 16),
-                      Text(
-                        l10n?.moderation_queue_empty_title ?? 'No hay solicitudes pendientes',
-                        style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold),
+      return Column(
+        children: [
+          _buildFilterBar(context, l10n),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: () => _loadRequests(),
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: [
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.55,
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.inbox_outlined, size: 72, color: Colors.grey),
+                            const SizedBox(height: 16),
+                            Text(
+                              l10n?.moderation_queue_empty_title ?? 'No hay solicitudes pendientes',
+                              style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              l10n?.moderation_queue_empty_desc ??
+                                  'Todas las solicitudes de verificación han sido resueltas o no hay envíos pendientes.',
+                              textAlign: TextAlign.center,
+                              style: AppTextStyles.bodyMedium.copyWith(color: Colors.grey),
+                            ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        l10n?.moderation_queue_empty_desc ??
-                            'Todas las solicitudes de verificación han sido resueltas o no hay envíos pendientes.',
-                        textAlign: TextAlign.center,
-                        style: AppTextStyles.bodyMedium.copyWith(color: Colors.grey),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       );
     }
 
     // 5. Lista de Solicitudes
-    return RefreshIndicator(
-      onRefresh: _loadRequests,
-      child: ListView.separated(
-        padding: const EdgeInsets.all(12),
-        itemCount: _requests.length,
-        separatorBuilder: (context, index) => const SizedBox(height: 8),
-        itemBuilder: (ctx, index) {
-          final req = _requests[index];
-          return Card(
-            elevation: 1.5,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              leading: CircleAvatar(
-                backgroundColor: req.userRole == UserRole.comprador
-                    ? Colors.blue.withValues(alpha: 0.2)
-                    : Colors.green.withValues(alpha: 0.2),
-                child: Icon(
-                  req.userRole == UserRole.comprador ? Icons.shopping_bag_outlined : Icons.spa_outlined,
-                  color: req.userRole == UserRole.comprador ? Colors.blue[800] : Colors.green[800],
-                ),
-              ),
-              title: Text(
-                req.fullName,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          req.userRole.displayName,
-                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-                        ),
+    return Column(
+      children: [
+        _buildFilterBar(context, l10n),
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: () => _loadRequests(),
+            child: ListView.separated(
+              padding: const EdgeInsets.all(12),
+              itemCount: _requests.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 8),
+              itemBuilder: (ctx, index) {
+                final req = _requests[index];
+                return Card(
+                  key: ValueKey('moderation_queue_card_${req.id}'),
+                  elevation: 1.5,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    leading: CircleAvatar(
+                      backgroundColor: req.userRole == UserRole.comprador
+                          ? Colors.blue.withValues(alpha: 0.2)
+                          : Colors.green.withValues(alpha: 0.2),
+                      child: Icon(
+                        req.userRole == UserRole.comprador ? Icons.shopping_bag_outlined : Icons.spa_outlined,
+                        color: req.userRole == UserRole.comprador ? Colors.blue[800] : Colors.green[800],
                       ),
-                      const SizedBox(width: 8),
-                      Text(req.phone, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    req.createdAt.toLocal().toString().split('.')[0],
-                    style: const TextStyle(fontSize: 11, color: Colors.grey),
-                  ),
-                ],
-              ),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () async {
-                final updated = await Navigator.of(context).push<ModerationRequest?>(
-                  MaterialPageRoute(
-                    builder: (ctx) => ModerationDetailScreen(
-                      request: req,
-                      moderationService: _service,
-                      onRequestUpdated: _handleRequestUpdated,
                     ),
+                    title: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            req.fullName,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        _buildStatusChip(req.status, req.id),
+                      ],
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                req.userRole.displayName,
+                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(req.phone, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          req.createdAt.toLocal().toString().split('.')[0],
+                          style: const TextStyle(fontSize: 11, color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () async {
+                      final updated = await Navigator.of(context).push<ModerationRequest?>(
+                        MaterialPageRoute(
+                          builder: (ctx) => ModerationDetailScreen(
+                            request: req,
+                            moderationService: _service,
+                            onRequestUpdated: _handleRequestUpdated,
+                          ),
+                        ),
+                      );
+                      if (updated != null) {
+                        _handleRequestUpdated(updated);
+                      }
+                    },
                   ),
                 );
-                if (updated != null) {
-                  _handleRequestUpdated(updated);
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFilterBar(BuildContext context, AppLocalizations? l10n) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            FilterChip(
+              key: const ValueKey('moderation_filter_all'),
+              label: Text(l10n?.moderation_filter_all ?? 'Todos'),
+              selected: _statusFilter == null,
+              onSelected: (selected) {
+                if (selected && _statusFilter != null) {
+                  setState(() => _statusFilter = null);
+                  _loadRequests(filter: null);
                 }
               },
             ),
-          );
-        },
+            const SizedBox(width: 8),
+            FilterChip(
+              key: const ValueKey('moderation_filter_pending'),
+              label: Text(l10n?.moderation_filter_pending ?? 'Pendientes'),
+              selected: _statusFilter == 'pendiente',
+              onSelected: (selected) {
+                final newFilter = selected ? 'pendiente' : null;
+                setState(() => _statusFilter = newFilter);
+                _loadRequests(filter: newFilter);
+              },
+            ),
+            const SizedBox(width: 8),
+            FilterChip(
+              key: const ValueKey('moderation_filter_in_review'),
+              label: Text(l10n?.moderation_filter_in_review ?? 'En revisión'),
+              selected: _statusFilter == 'en_revision_ia',
+              onSelected: (selected) {
+                final newFilter = selected ? 'en_revision_ia' : null;
+                setState(() => _statusFilter = newFilter);
+                _loadRequests(filter: newFilter);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusChip(UserVerificationStatus status, String id) {
+    Color bg;
+    Color fg;
+    switch (status) {
+      case UserVerificationStatus.pendiente:
+        bg = Colors.orange.withValues(alpha: 0.2);
+        fg = Colors.orange[800]!;
+        break;
+      case UserVerificationStatus.enRevisionIa:
+        bg = Colors.blue.withValues(alpha: 0.2);
+        fg = Colors.blue[800]!;
+        break;
+      case UserVerificationStatus.aprobado:
+        bg = Colors.green.withValues(alpha: 0.2);
+        fg = Colors.green[800]!;
+        break;
+      case UserVerificationStatus.rechazado:
+        bg = Colors.red.withValues(alpha: 0.2);
+        fg = Colors.red[800]!;
+        break;
+      case UserVerificationStatus.suspendido:
+        bg = Colors.purple.withValues(alpha: 0.2);
+        fg = Colors.purple[800]!;
+        break;
+      case UserVerificationStatus.desconocido:
+        bg = Colors.grey.withValues(alpha: 0.2);
+        fg = Colors.grey[800]!;
+        break;
+    }
+
+    return Container(
+      key: ValueKey('moderation_queue_item_status_$id'),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        status.displayName,
+        style: TextStyle(color: fg, fontWeight: FontWeight.bold, fontSize: 11),
       ),
     );
   }

@@ -11,6 +11,7 @@ import 'package:agricultural_marketplace/core/localization/localization_config.d
 import 'package:agricultural_marketplace/core/theme/app_theme.dart';
 import 'package:agricultural_marketplace/features/auth/login/screens/login_screen.dart';
 import 'package:agricultural_marketplace/features/auth/recovery/screens/reset_password_screen.dart';
+import 'package:agricultural_marketplace/features/auth/registro/screens/complete_registration_screen.dart';
 import 'package:agricultural_marketplace/features/auth/verificacion/screens/verification_status_screen.dart';
 import 'package:agricultural_marketplace/features/auth/verificacion/services/verification_service.dart';
 import 'package:agricultural_marketplace/features/auth/widgets/auth_gate.dart';
@@ -252,7 +253,7 @@ void main() {
     });
 
     // 6. Perfil inexistente
-    testWidgets('6. Perfil inexistente muestra vista informativa segura con reintento',
+    testWidgets('6. Perfil inexistente muestra la pantalla segura para completar el registro',
         (tester) async {
       final session = createMockSession(userId: 'u-no-profile');
 
@@ -269,10 +270,13 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
-      expect(find.byIcon(Icons.person_off_outlined), findsOneWidget);
-      expect(find.text('Estado Desconocido'), findsOneWidget);
-      expect(find.text('Reintentar'), findsOneWidget);
-      expect(find.text('Cerrar sesión'), findsOneWidget);
+      expect(find.byType(CompleteRegistrationScreen), findsOneWidget);
+      expect(find.text('Completa tu registro'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('complete_registration_submit')),
+        findsOneWidget,
+      );
+      expect(find.text('Estado Desconocido'), findsNothing);
       expect(find.byType(MainDashboardScreen), findsNothing);
     });
 

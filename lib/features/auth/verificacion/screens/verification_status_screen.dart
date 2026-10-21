@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:agricultural_marketplace/core/localization/app_localizations.dart';
@@ -8,13 +9,18 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/loading/app_loading.dart';
 import '../../../../core/widgets/loading/loading_indicator.dart';
 import '../../../dashboard/screens/main_dashboard_screen.dart';
+import '../../widgets/document_image_picker.dart';
+import '../services/document_submission_service.dart';
 import '../services/verification_service.dart';
+import 'document_upload_screen.dart';
 
 class VerificationStatusScreen extends StatefulWidget {
   final VerificationStatusData? initialData;
   final void Function(VerificationStatusData data)? onVerificationApproved;
   final Future<void> Function()? onSignOut;
   final VerificationService? verificationService;
+  final DocumentSubmissionService? documentSubmissionService;
+  final DocumentImageSelector? imageSelector;
   final bool enableAutoPolling;
 
   const VerificationStatusScreen({
@@ -23,6 +29,8 @@ class VerificationStatusScreen extends StatefulWidget {
     this.onVerificationApproved,
     this.onSignOut,
     this.verificationService,
+    this.documentSubmissionService,
+    this.imageSelector,
     this.enableAutoPolling = true,
   });
 
@@ -93,8 +101,31 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
 
   void _retry() {
     setState(() {
-      _statusFuture = _service.getCurrentVerificationStatus();
+      _statusFuture = _service.getCurrentVerificationStatus().then((data) {
+        if (data.status == 'aprobado' && mounted) {
+          _pollTimer?.cancel();
+          if (widget.onVerificationApproved != null) {
+            widget.onVerificationApproved!(data);
+          }
+        }
+        return data;
+      });
     });
+  }
+
+  Future<void> _openDocumentUpload() async {
+    final uploaded = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => DocumentUploadScreen(
+          submissionService: widget.documentSubmissionService,
+          imageSelector: widget.imageSelector,
+        ),
+      ),
+    );
+    if (!mounted) return;
+    if (uploaded == true) {
+      _retry();
+    }
   }
 
   Future<void> _handleSignOut() async {
@@ -105,7 +136,9 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
         await Supabase.instance.client.auth.signOut();
       } catch (e) {
         try {
-          await Supabase.instance.client.auth.signOut(scope: SignOutScope.local);
+          await Supabase.instance.client.auth.signOut(
+            scope: SignOutScope.local,
+          );
         } catch (_) {}
       }
     }
@@ -126,8 +159,17 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
           }
 
           final data = snapshot.data!;
-          return SingleChildScrollView(
-            child: _buildStatusState(context, data),
+          return RefreshIndicator(
+            onRefresh: () async {
+              _retry();
+              try {
+                await _statusFuture;
+              } catch (_) {}
+            },
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: _buildStatusState(context, data),
+            ),
           );
         },
       ),
@@ -171,6 +213,7 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
         ),
         const SizedBox(height: 32),
         ElevatedButton(
+          key: const ValueKey('verification_status_retry_btn'),
           onPressed: _retry,
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.white,
@@ -207,7 +250,8 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
         break;
       case 'en_revision_ia':
         title = l10n.verification_status_review_title;
-        description = l10n.verification_status_review_desc;
+        description =
+            'Diagnóstico simulado en revisión; tu cuenta está a la espera de aprobación por un moderador.';
         iconData = Icons.analytics_outlined;
         statusColor = AppColors.info;
         break;
@@ -219,7 +263,9 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
         break;
       case 'rechazado':
         title = l10n.verification_status_rejected_title;
-        description = data.rejectionReason ?? l10n.verification_status_default_reject_reason;
+        description =
+            data.rejectionReason ??
+            l10n.verification_status_default_reject_reason;
         iconData = Icons.cancel_outlined;
         statusColor = AppColors.error;
         break;
@@ -238,7 +284,8 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
 
     final showSuccessText =
         data.status == 'pendiente' || data.status == 'en_revision_ia';
-    final isSpinning = data.status == 'en_revision_ia' || data.status == 'pendiente';
+    final isSpinning =
+        data.status == 'en_revision_ia' || data.status == 'pendiente';
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -256,13 +303,14 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
         ],
 
         Container(
+          key: const ValueKey('verification_status_card'),
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 10,
                 offset: const Offset(0, 5),
               ),
@@ -273,14 +321,32 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
+                  color: statusColor.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(iconData, color: statusColor, size: 32),
               ),
+              const SizedBox(height: 12),
+              Container(
+                key: const ValueKey('verification_status_badge'),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: statusColor.withValues(alpha: 0.4)),
+                ),
+                child: Text(
+                  data.verificationStatus.displayName,
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: statusColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
               const SizedBox(height: 16),
               Text(
                 title,
+                key: const ValueKey('verification_status_title'),
                 textAlign: TextAlign.center,
                 style: AppTextStyles.headlineMedium.copyWith(
                   color: AppColors.lightTextPrimary,
@@ -289,6 +355,7 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
               const SizedBox(height: 12),
               Text(
                 description,
+                key: const ValueKey('verification_status_description'),
                 textAlign: TextAlign.center,
                 style: AppTextStyles.bodyMedium.copyWith(
                   color: AppColors.lightTextSecondary,
@@ -300,15 +367,11 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
 
         const SizedBox(height: 48),
 
-        if (data.status == 'rechazado' || data.status == 'pendiente')
+        if (data.status == 'rechazado' ||
+            (data.status == 'pendiente' && data.hasAllDocuments != true))
           ElevatedButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(l10n.verification_status_reupload_coming_soon),
-                ),
-              );
-            },
+            key: const ValueKey('verification_upload_documents'),
+            onPressed: _openDocumentUpload,
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
               foregroundColor: AppColors.loadingBackground,
@@ -318,15 +381,15 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
           )
         else if (data.status == 'aprobado')
           ElevatedButton(
+            key: const ValueKey('verification_status_enter_app'),
             onPressed: () {
               if (widget.onVerificationApproved != null) {
                 widget.onVerificationApproved!(data);
               } else {
                 Navigator.of(context).pushReplacement(
                   MaterialPageRoute(
-                    builder: (_) => MainDashboardScreen(
-                      role: data.role ?? 'desconocido',
-                    ),
+                    builder: (_) =>
+                        MainDashboardScreen(role: data.role ?? 'desconocido'),
                   ),
                 );
               }
@@ -338,8 +401,9 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
             ),
             child: Text(l10n.verification_status_enter_app),
           )
-        else
+        else if (data.status != 'suspendido')
           TextButton(
+            key: const ValueKey('verification_status_refresh'),
             onPressed: _retry,
             child: Text(
               l10n.verification_status_update_status,
@@ -350,6 +414,7 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
         if (data.status != 'aprobado') ...[
           const SizedBox(height: 16),
           TextButton(
+            key: const ValueKey('verification_status_logout'),
             onPressed: _handleSignOut,
             child: Text(
               l10n.profile_logout,

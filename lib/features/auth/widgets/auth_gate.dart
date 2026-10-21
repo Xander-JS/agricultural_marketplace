@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -109,7 +110,8 @@ class _AuthGateState extends State<AuthGate> {
       _status = _AuthGateStatus.initialLoading;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && _status == _AuthGateStatus.initialLoading) {
-          final lateSession = widget.initialSession ?? _client?.auth.currentSession;
+          final lateSession =
+              widget.initialSession ?? _client?.auth.currentSession;
           if (lateSession == null) {
             setState(() {
               _status = _AuthGateStatus.unauthenticated;
@@ -130,7 +132,8 @@ class _AuthGateState extends State<AuthGate> {
     switch (event) {
       case AuthChangeEvent.initialSession:
         if (session != null) {
-          if (_activeUserId != session.user.id || _status != _AuthGateStatus.authenticatedApproved) {
+          if (_activeUserId != session.user.id ||
+              _status != _AuthGateStatus.authenticatedApproved) {
             _activeUserId = session.user.id;
             _resolveProfile(session.user.id, ++_resolutionEpoch);
           }
@@ -148,7 +151,8 @@ class _AuthGateState extends State<AuthGate> {
 
       case AuthChangeEvent.signedIn:
         if (session != null) {
-          if (_activeUserId != session.user.id || _status != _AuthGateStatus.authenticatedApproved) {
+          if (_activeUserId != session.user.id ||
+              _status != _AuthGateStatus.authenticatedApproved) {
             _activeUserId = session.user.id;
             _resolveProfile(session.user.id, ++_resolutionEpoch);
           }
@@ -210,19 +214,30 @@ class _AuthGateState extends State<AuthGate> {
 
     if (res == null) return null;
 
-    if (res['verification_status'] == 'rechazado') {
-      try {
-        final attempt = await client
-            .from('verification_attempts')
-            .select('rejection_reason')
-            .eq('user_id', userId)
-            .order('created_at', ascending: false)
-            .limit(1)
-            .maybeSingle();
-        if (attempt != null && attempt['rejection_reason'] != null) {
+    try {
+      final attempt = await client
+          .from('verification_attempts')
+          .select(
+            'status, rejection_reason, document_front_path, document_back_path, selfie_path',
+          )
+          .eq('user_id', userId)
+          .order('created_at', ascending: false)
+          .limit(1)
+          .maybeSingle();
+      if (attempt != null) {
+        res['has_verification_attempt'] = true;
+        res['has_all_documents'] = [
+          attempt['document_front_path'],
+          attempt['document_back_path'],
+          attempt['selfie_path'],
+        ].every((path) => path is String && path.trim().isNotEmpty);
+        if (attempt['rejection_reason'] != null) {
           res['rejection_reason'] = attempt['rejection_reason'];
         }
-      } catch (_) {}
+      }
+    } catch (_) {
+      // La pantalla de verificación puede reintentar la consulta sin bloquear
+      // la resolución del perfil.
     }
 
     return res;
@@ -259,7 +274,8 @@ class _AuthGateState extends State<AuthGate> {
       if (!mounted || epoch != _resolutionEpoch) return true;
 
       final refreshErrStr = refreshErr.toString();
-      final isNetwork = refreshErr is SocketException ||
+      final isNetwork =
+          refreshErr is SocketException ||
           refreshErrStr.contains('SocketException') ||
           refreshErrStr.contains('ClientException') ||
           refreshErrStr.contains('Network') ||
@@ -331,13 +347,16 @@ class _AuthGateState extends State<AuthGate> {
             status: verificationStatus.toDbValue(),
             role: role,
             rejectionReason: profile['rejection_reason'] as String?,
+            hasVerificationAttempt: profile['has_verification_attempt'] == true,
+            hasAllDocuments: profile['has_all_documents'] == true,
           );
         });
       }
     } on PostgrestException catch (e) {
       if (!mounted || epoch != _resolutionEpoch) return;
 
-      final isAuthOrExpired = e.code == '28000' ||
+      final isAuthOrExpired =
+          e.code == '28000' ||
           e.code == 'PGRST301' ||
           e.code == '401' ||
           e.message.toLowerCase().contains('jwt') ||
@@ -358,7 +377,8 @@ class _AuthGateState extends State<AuthGate> {
       if (!mounted || epoch != _resolutionEpoch) return;
 
       final errStr = e.toString().toLowerCase();
-      final isAuthOrExpired = e.statusCode == '401' ||
+      final isAuthOrExpired =
+          e.statusCode == '401' ||
           errStr.contains('jwt') ||
           errStr.contains('token') ||
           errStr.contains('unauthorized') ||
@@ -381,7 +401,8 @@ class _AuthGateState extends State<AuthGate> {
       final errStr = e.toString();
       final errLower = errStr.toLowerCase();
 
-      final isNetwork = e is SocketException ||
+      final isNetwork =
+          e is SocketException ||
           errStr.contains('SocketException') ||
           errStr.contains('ClientException') ||
           errStr.contains('Network') ||
@@ -396,7 +417,8 @@ class _AuthGateState extends State<AuthGate> {
         return;
       }
 
-      final isAuthOrExpired = errLower.contains('jwt expired') ||
+      final isAuthOrExpired =
+          errLower.contains('jwt expired') ||
           errLower.contains('token is expired') ||
           errLower.contains('pgrst301') ||
           errLower.contains('28000');
@@ -549,8 +571,7 @@ class _AuthGateState extends State<AuthGate> {
           ),
           const SizedBox(height: 16),
           Text(
-            l10n?.verification_status_unknown_desc ??
-                'No pudimos determinar el estado de verificación. Por favor, contacta a soporte.',
+            l10n?.verification_status_unknown_desc ?? 'No pudimos determinar el estado de verificación. Por favor, contacta a soporte.',
             textAlign: TextAlign.center,
             style: AppTextStyles.bodyMedium.copyWith(color: Colors.white70),
           ),
@@ -592,8 +613,7 @@ class _AuthGateState extends State<AuthGate> {
           ),
           const SizedBox(height: 16),
           Text(
-            l10n?.verification_status_unknown_desc ??
-                'No pudimos determinar el estado de verificación. Por favor, contacta a soporte.',
+            l10n?.verification_status_unknown_desc ?? 'No pudimos determinar el estado de verificación. Por favor, contacta a soporte.',
             textAlign: TextAlign.center,
             style: AppTextStyles.bodyMedium.copyWith(color: Colors.white70),
           ),

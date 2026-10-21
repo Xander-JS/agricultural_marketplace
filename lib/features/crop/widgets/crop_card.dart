@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/crop_model.dart';
 import '../services/crop_service.dart';
 import 'crop_status_badge.dart';
@@ -49,7 +50,9 @@ class CropCard extends StatelessWidget {
           children: [
             // Imagen de la cosecha
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(16),
+              ),
               child: primaryImageUrl != null
                   ? Image.network(
                       primaryImageUrl,
@@ -61,7 +64,7 @@ class CropCard extends StatelessWidget {
                     )
                   : _buildImagePlaceholder(isDark),
             ),
-            
+
             // Detalles de la cosecha
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -76,7 +79,9 @@ class CropCard extends StatelessWidget {
                           crop.title,
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                            color: isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.lightTextPrimary,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -94,7 +99,9 @@ class CropCard extends StatelessWidget {
                         child: Text(
                           crop.cropType,
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : AppColors.lightTextSecondary,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -111,7 +118,7 @@ class CropCard extends StatelessWidget {
                         context,
                         icon: Icons.inventory_2_outlined,
                         label: l10n?.crop_card_available ?? 'Disponible',
-                        value: UnitFormatters.formatKg(crop.stockTotal),
+                        value: UnitFormatters.formatKg(crop.availableStock),
                         isDark: isDark,
                       ),
                       _buildInfoItem(
@@ -158,7 +165,9 @@ class CropCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w500,
-              color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+              color: isDark
+                  ? AppColors.darkTextSecondary
+                  : AppColors.lightTextSecondary,
             ),
           ),
           if (hasValidDistance)
@@ -166,7 +175,9 @@ class CropCard extends StatelessWidget {
               ' · ',
               style: TextStyle(
                 fontSize: 11,
-                color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                color: isDark
+                    ? AppColors.darkTextSecondary
+                    : AppColors.lightTextSecondary,
               ),
             ),
         ],
@@ -186,12 +197,16 @@ class CropCard extends StatelessWidget {
   Widget _buildImagePlaceholder(bool isDark) {
     return Container(
       height: 140,
-      color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSecondary.withValues(alpha: 0.3),
+      color: isDark
+          ? AppColors.darkSurfaceVariant
+          : AppColors.lightSecondary.withValues(alpha: 0.3),
       child: Center(
         child: Icon(
           Icons.image_not_supported_outlined,
           size: 48,
-          color: isDark ? AppColors.darkTextDisabled : AppColors.lightTextDisabled,
+          color: isDark
+              ? AppColors.darkTextDisabled
+              : AppColors.lightTextDisabled,
         ),
       ),
     );
@@ -219,7 +234,9 @@ class CropCard extends StatelessWidget {
               label,
               style: TextStyle(
                 fontSize: 10,
-                color: isDark ? AppColors.darkTextDisabled : AppColors.lightTextSecondary,
+                color: isDark
+                    ? AppColors.darkTextDisabled
+                    : AppColors.lightTextSecondary,
               ),
             ),
             Text(
@@ -227,7 +244,9 @@ class CropCard extends StatelessWidget {
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 14,
-                color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                color: isDark
+                    ? AppColors.darkTextPrimary
+                    : AppColors.lightTextPrimary,
               ),
             ),
           ],

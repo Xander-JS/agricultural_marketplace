@@ -201,6 +201,7 @@ class _UnitEquivalencesSheetState extends State<UnitEquivalencesSheet> {
 
               // Campo interactivo para calcular otra cantidad en kg
               TextFormField(
+                key: const Key('unit_equivalences_input'),
                 controller: _calculatorController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 onChanged: _onInputChanged,
@@ -231,10 +232,11 @@ class _UnitEquivalencesSheetState extends State<UnitEquivalencesSheet> {
                 final rateText = '1 ${unit.displayName} = ${UnitFormatters.formatKg(unit.kgEquivalent)}';
 
                 return Container(
+                  key: Key('unit_equivalence_${unit.name}'),
                   margin: const EdgeInsets.only(bottom: 8),
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                    color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightBackground,
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: isDark ? AppColors.darkBorder : AppColors.lightBorder,

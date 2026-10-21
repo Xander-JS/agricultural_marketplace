@@ -13,6 +13,8 @@ import '../../geo/services/geo_simulation_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/constants/user_roles.dart';
+import '../../ai_assistant/models/voice_crop_draft.dart';
+import '../../ai_assistant/widgets/voice_crop_assistant_sheet.dart';
 
 class MarketplaceScreen extends StatefulWidget {
   final String? role;
@@ -184,14 +186,39 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
     } catch (_) {}
   }
 
-  void _navigateToPublish() async {
+  void _navigateToPublish({VoiceCropDraft? initialDraft}) async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const PublishCropScreen()),
+      MaterialPageRoute(
+        builder: (context) => PublishCropScreen(
+          initialDraft: initialDraft,
+          role: widget.role ?? _userRole,
+        ),
+      ),
     );
 
     if (result == true) {
       _loadCrops();
+    }
+  }
+
+  Future<void> _openVoiceAssistant() async {
+    final result = await showModalBottomSheet<VoiceCropAssistantResult>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const VoiceCropAssistantSheet(),
+    );
+
+    if (!mounted || result == null) return;
+    if (result.openManual) {
+      _navigateToPublish();
+      return;
+    }
+    final draft = result.draft;
+    if (draft != null) {
+      _navigateToPublish(initialDraft: draft);
     }
   }
 
@@ -270,13 +297,9 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                 ),
                 onTap: () {
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        l10n?.market_ai_coming_soon ?? 'Función de IA próximamente...',
-                      ),
-                    ),
-                  );
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted) _openVoiceAssistant();
+                  });
                 },
               ),
               const SizedBox(height: 16),

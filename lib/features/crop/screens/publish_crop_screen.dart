@@ -4,19 +4,25 @@ import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/crop_model.dart';
 import '../services/crop_service.dart';
+import '../../ai_assistant/models/voice_crop_draft.dart';
 import '../../geo/services/geo_simulation_service.dart';
 import '../../../core/utils/app_formatters.dart';
+import '../../../core/constants/user_roles.dart';
 
 class PublishCropScreen extends StatefulWidget {
   final CropModel? cropToEdit;
   final CropService? cropService;
   final String? currentUserIdForTesting;
+  final VoiceCropDraft? initialDraft;
+  final String? role;
 
   const PublishCropScreen({
     super.key,
     this.cropToEdit,
     this.cropService,
     this.currentUserIdForTesting,
+    this.initialDraft,
+    this.role,
   });
 
   @override
@@ -47,6 +53,7 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
 
   final List<File> _selectedImages = [];
   late List<String> _existingImageUrls;
+  VoiceCropDraft? _voiceDraft;
 
   @override
   void initState() {
@@ -55,9 +62,33 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
     _existingImageUrls = List<String>.from(widget.cropToEdit?.imageUrls ?? const []);
     
     if (widget.cropToEdit != null) {
+      // La edición de un cultivo existente siempre tiene prioridad sobre un
+      // borrador de voz, para no alterar el flujo de edición.
       _loadCropData(widget.cropToEdit!);
     } else {
       _departmentController.text = 'Nariño';
+      if (widget.initialDraft != null) {
+        _voiceDraft = widget.initialDraft;
+        _applyVoiceDraft(widget.initialDraft!);
+      }
+    }
+  }
+
+  void _applyVoiceDraft(VoiceCropDraft draft) {
+    if (draft.cropType != null) {
+      _cropTypeController.text = draft.cropType!;
+    }
+    if (draft.pricePerKg != null) {
+      _priceController.text = UnitFormatters.formatCleanValue(
+        draft.pricePerKg,
+        useLocaleSeparators: false,
+      );
+    }
+    if (draft.quantityKg != null) {
+      _stockController.text = UnitFormatters.formatCleanValue(
+        draft.quantityKg,
+        useLocaleSeparators: false,
+      );
     }
   }
 
@@ -139,6 +170,28 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
       final userId = widget.currentUserIdForTesting ?? user?.id;
       if (userId == null) throw Exception('No autenticado');
 
+      if (widget.role != null && !UserRole.isFarmerRole(widget.role)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Acceso denegado: solo los agricultores pueden publicar cosechas.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      if (widget.cropToEdit != null &&
+          widget.cropToEdit!.farmerId.isNotEmpty &&
+          widget.cropToEdit!.farmerId != userId) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Acceso denegado: no puedes editar una cosecha perteneciente a otro productor.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
       final originalImages = widget.cropToEdit?.imageUrls ?? const [];
       final removedImages = originalImages
           .where((path) => !_existingImageUrls.contains(path))
@@ -216,6 +269,35 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.role != null && !UserRole.isFarmerRole(widget.role)) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(widget.cropToEdit == null ? 'Publicar Cosecha' : 'Editar Cosecha'),
+        ),
+        body: const Center(
+          child: Padding(
+            padding: EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.gpp_bad_outlined, size: 72, color: Colors.red),
+                SizedBox(height: 16),
+                Text(
+                  'Acceso No Autorizado',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'Solo los agricultores registrados y verificados pueden publicar cosechas.',
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.cropToEdit == null ? 'Publicar Cosecha' : 'Editar Cosecha'),
@@ -229,6 +311,10 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    if (_voiceDraft != null && widget.cropToEdit == null) ...[
+                      _buildVoiceDraftBanner(_voiceDraft!),
+                      const SizedBox(height: 24),
+                    ],
                     _buildSectionTitle('1. Información General'),
                     _buildTextField(
                       controller: _titleController,
@@ -494,6 +580,98 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
                 ),
               ),
             ),
+    );
+  }
+
+  Widget _buildVoiceDraftBanner(VoiceCropDraft draft) {
+    final theme = Theme.of(context);
+    final missing = <String>[
+      ...draft.missingFields.map((field) => field.label),
+      'Título',
+      'Descripción',
+      'Ubicación',
+    ];
+
+    return Container(
+      key: const Key('voice_draft_banner'),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.auto_awesome, color: theme.colorScheme.primary),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'Borrador creado por voz',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Revisa los datos reconocidos. No se publicará nada hasta que confirmes el formulario.',
+          ),
+          const SizedBox(height: 10),
+          if (draft.cropType != null)
+            _buildVoiceDraftLine('Cultivo', draft.cropType!),
+          if (draft.quantityDescription != null)
+            _buildVoiceDraftLine('Cantidad', draft.quantityDescription!),
+          if (draft.pricePerKg != null)
+            _buildVoiceDraftLine(
+              'Precio',
+              CurrencyFormatters.formatPricePerKg(draft.pricePerKg),
+            ),
+          if (draft.reviewFields.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              'Confirma: ${draft.reviewFields.map((field) => field.label).join(', ')}',
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ],
+          if (missing.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              'Faltan o debes completar: ${missing.join(', ')}.',
+              style: TextStyle(color: theme.colorScheme.error),
+            ),
+          ],
+          if (draft.warnings.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            ...draft.warnings.map(
+              (warning) => Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      size: 16,
+                      color: theme.colorScheme.tertiary,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(child: Text(warning)),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVoiceDraftLine(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Text('$label: $value'),
     );
   }
 

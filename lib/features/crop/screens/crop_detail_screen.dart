@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../models/crop_model.dart';
 import '../services/crop_service.dart';
 import '../widgets/crop_status_badge.dart';
 import '../widgets/make_offer_sheet.dart';
 import 'publish_crop_screen.dart';
 import '../../deals/services/negotiation_service.dart';
+import '../../deals/screens/deals_screen.dart';
 import '../../profile/models/farmer_profile_data.dart';
 import '../../profile/services/profile_service.dart';
 import '../../../core/theme/app_colors.dart';
@@ -16,6 +18,9 @@ import '../../geo/models/simulated_location.dart';
 import '../../geo/services/geo_simulation_service.dart';
 import '../../../core/utils/app_formatters.dart';
 import '../widgets/unit_equivalences_sheet.dart';
+import '../../costs/models/regional_price_reference.dart';
+import '../../costs/data/simulated_regional_price_references.dart';
+import '../../costs/services/regional_price_reference_service.dart';
 
 class CropDetailScreen extends StatefulWidget {
   final CropModel crop;
@@ -27,6 +32,8 @@ class CropDetailScreen extends StatefulWidget {
   final NegotiationService? negotiationService;
   final CropService? cropService;
   final ProfileService? profileService;
+  final RegionalPriceReferenceService? regionalReferenceService;
+  final RegionalPriceReference? initialRegionalReference;
 
   const CropDetailScreen({
     super.key,
@@ -39,6 +46,8 @@ class CropDetailScreen extends StatefulWidget {
     this.negotiationService,
     this.cropService,
     this.profileService,
+    this.regionalReferenceService,
+    this.initialRegionalReference,
   });
 
   @override
@@ -50,14 +59,18 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
   late final CropService _cropService;
   late final ProfileService _profileService;
   late final PageController _pageController;
+  late final RegionalPriceReferenceService _referenceService;
+  RegionalPriceReference? _regionalReference;
   int _currentImageIndex = 0;
   FarmerProfileData? _farmerProfile;
   DistanceEvaluation? _distanceEvaluation;
   bool _isLoading = false;
+  String? _currentUserRole;
 
   bool get _isBuyer {
-    if (widget.role != null) {
-      return UserRole.isBuyerRole(widget.role);
+    final effectiveRole = widget.role ?? _currentUserRole;
+    if (effectiveRole != null && effectiveRole.trim().isNotEmpty) {
+      return UserRole.isBuyerRole(effectiveRole);
     }
     final user = Supabase.instance.client.auth.currentUser;
     if (user != null && user.id != _crop.farmerId) {
@@ -86,6 +99,20 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
     _farmerProfile = widget.initialFarmerProfile;
     _distanceEvaluation = widget.initialDistanceEvaluation;
 
+    _referenceService =
+        widget.regionalReferenceService ?? RegionalPriceReferenceService();
+    _regionalReference =
+        widget.initialRegionalReference ??
+        SimulatedRegionalPriceReferences.findForCrop(
+          cropType: _crop.cropType,
+          title: _crop.title,
+        );
+    _loadRegionalReference();
+
+    if (widget.role == null) {
+      _loadCurrentUserRole();
+    }
+
     if (_isBuyer) {
       if (_distanceEvaluation == null) {
         _resolveDistanceEvaluation(initialBuyer: widget.initialBuyerProfile);
@@ -96,14 +123,50 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
     }
   }
 
+  Future<void> _loadRegionalReference() async {
+    try {
+      final ref = await _referenceService.findForCrop(
+        cropType: _crop.cropType,
+        title: _crop.title,
+      );
+      if (mounted && ref != null) {
+        setState(() {
+          _regionalReference = ref;
+        });
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _loadCurrentUserRole() async {
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user != null) {
+        final profileRes = await Supabase.instance.client
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .maybeSingle();
+        final role = profileRes?['role'] as String?;
+        if (mounted && role != null) {
+          setState(() {
+            _currentUserRole = role;
+          });
+        }
+      }
+    } catch (_) {}
+  }
+
   @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
   }
 
-  Future<void> _resolveDistanceEvaluation({FarmerProfileData? initialBuyer}) async {
-    if (_distanceEvaluation != null && _distanceEvaluation!.hasValidDistance) return;
+  Future<void> _resolveDistanceEvaluation({
+    FarmerProfileData? initialBuyer,
+  }) async {
+    if (_distanceEvaluation != null && _distanceEvaluation!.hasValidDistance)
+      return;
     try {
       FarmerProfileData? buyer = initialBuyer;
       if (buyer == null) {
@@ -129,10 +192,14 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
 
   Future<void> _loadFarmerProfile() async {
     try {
-      final profile = await _profileService.getFarmerProfileData(_crop.farmerId);
+      final profile = await _profileService.getFarmerProfileData(
+        _crop.farmerId,
+      );
       if (mounted) {
         setState(() => _farmerProfile = profile);
-        if (_isBuyer && (_distanceEvaluation == null || !_distanceEvaluation!.hasValidDistance)) {
+        if (_isBuyer &&
+            (_distanceEvaluation == null ||
+                !_distanceEvaluation!.hasValidDistance)) {
           _resolveDistanceEvaluation(initialBuyer: widget.initialBuyerProfile);
         }
       }
@@ -150,32 +217,41 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
 
   void _showEquivalencesModal(BuildContext context) {
     if (!_isBuyer) return;
+    final reference = _crop.availableStock;
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => UnitEquivalencesSheet(
-        referenceKg: _crop.availableStock,
-        cropTitle: _crop.title,
-      ),
+      builder: (ctx) =>
+          UnitEquivalencesSheet(referenceKg: reference, cropTitle: _crop.title),
     );
   }
 
   Future<void> _updateStatus(CropStatus newStatus) async {
     final l10n = AppLocalizations.of(context);
+    if (!_isOwner) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Acceso denegado: solo el productor dueño puede modificar esta publicación.',
+          ),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
     setState(() => _isLoading = true);
     try {
       await _cropService.updateCropStatus(_crop.id, newStatus);
       setState(() {
-        _crop = _crop.copyWith(
-          status: newStatus,
-          updatedAt: DateTime.now(),
-        );
+        _crop = _crop.copyWith(status: newStatus, updatedAt: DateTime.now());
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(l10n?.crop_detail_status_updated ?? 'Estado actualizado'),
+            content: Text(
+              l10n?.crop_detail_status_updated ?? 'Estado actualizado',
+            ),
             backgroundColor: AppColors.success,
           ),
         );
@@ -183,7 +259,10 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: AppColors.error,
+          ),
         );
       }
     } finally {
@@ -194,12 +273,25 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
   }
 
   void _navigateToEdit() async {
+    if (!_isOwner) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Acceso denegado: no puedes editar publicaciones de otros usuarios.',
+          ),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => PublishCropScreen(
           cropToEdit: _crop,
           cropService: _cropService,
+          role: widget.role ?? _currentUserRole,
         ),
       ),
     );
@@ -212,14 +304,26 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
   }
 
   Future<void> _confirmDelete() async {
+    if (!_isOwner) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Acceso denegado: no puedes borrar publicaciones de otros usuarios.',
+          ),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
     final l10n = AppLocalizations.of(context);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(l10n?.crop_detail_confirm_delete_title ?? 'Borrar Publicación'),
+        title: Text(
+          l10n?.crop_detail_confirm_delete_title ?? 'Borrar Publicación',
+        ),
         content: Text(
-          l10n?.crop_detail_confirm_delete_desc ??
-              '¿Estás seguro de que deseas borrar esta publicación? Esta acción no se puede deshacer.',
+          l10n?.crop_detail_confirm_delete_desc ?? '¿Estás seguro de que deseas borrar esta publicación? Esta acción no se puede deshacer.',
         ),
         actions: [
           TextButton(
@@ -246,7 +350,8 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                l10n?.crop_detail_delete_success ?? 'Publicación borrada exitosamente',
+                l10n?.crop_detail_delete_success ??
+                    'Publicación borrada exitosamente',
               ),
               backgroundColor: AppColors.success,
             ),
@@ -257,7 +362,9 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('${l10n?.crop_detail_delete_error ?? "Error al borrar"}: $e'),
+              content: Text(
+                '${l10n?.crop_detail_delete_error ?? "Error al borrar"}: $e',
+              ),
               backgroundColor: AppColors.error,
             ),
           );
@@ -271,11 +378,24 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
   Future<void> _openMakeOfferSheet() async {
     final l10n = AppLocalizations.of(context);
 
+    // 0. Validar que no sea el productor dueño
+    if (_isOwner) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No puedes iniciar una oferta en tu propia cosecha.'),
+          backgroundColor: AppColors.warning,
+        ),
+      );
+      return;
+    }
+
     // 1. Validar que la cosecha tenga stock disponible
     if (_crop.availableStock <= 0 || _crop.status == CropStatus.agotada) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Esta cosecha se encuentra agotada o sin stock disponible.'),
+          content: Text(
+            'Esta cosecha se encuentra agotada o sin stock disponible.',
+          ),
           backgroundColor: AppColors.warning,
         ),
       );
@@ -301,15 +421,19 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
             showDialog(
               context: context,
               builder: (ctx) => AlertDialog(
-                title: Text(l10n?.crop_unapproved_dialog_title ?? 'Verificación requerida'),
+                title: Text(
+                  l10n?.crop_unapproved_dialog_title ??
+                      'Verificación requerida',
+                ),
                 content: Text(
-                  l10n?.crop_unapproved_dialog_desc ??
-                      'Para realizar ofertas y negociar con los agricultores, tu perfil debe estar verificado y aprobado por un moderador.',
+                  l10n?.crop_unapproved_dialog_desc ?? 'Para realizar ofertas y negociar con los agricultores, tu perfil debe estar verificado y aprobado por un moderador.',
                 ),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(ctx),
-                    child: Text(l10n?.crop_unapproved_dialog_action ?? 'Entendido'),
+                    child: Text(
+                      l10n?.crop_unapproved_dialog_action ?? 'Entendido',
+                    ),
                   ),
                 ],
               ),
@@ -323,7 +447,7 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
     }
 
     if (!mounted) return;
-    showModalBottomSheet(
+    final result = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -332,6 +456,28 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
         negotiationService: widget.negotiationService,
       ),
     );
+
+    if (result == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Oferta enviada exitosamente.'),
+          action: SnackBarAction(
+            label: 'Ver Tratos',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DealsScreen(
+                    role: 'comprador',
+                    service: widget.negotiationService,
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -341,7 +487,9 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: isDark
+          ? AppColors.darkBackground
+          : AppColors.lightBackground,
       appBar: AppBar(
         title: Text(l10n?.crop_detail_title ?? 'Detalle de Cosecha'),
         actions: _isOwner
@@ -383,7 +531,9 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
                                 _crop.title,
                                 style: theme.textTheme.headlineSmall?.copyWith(
                                   fontWeight: FontWeight.bold,
-                                  color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                                  color: isDark
+                                      ? AppColors.darkTextPrimary
+                                      : AppColors.lightTextPrimary,
                                 ),
                               ),
                             ),
@@ -395,20 +545,26 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
                         Text(
                           _crop.cropType,
                           style: theme.textTheme.titleMedium?.copyWith(
-                            color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : AppColors.lightTextSecondary,
                           ),
                         ),
                         const SizedBox(height: 16),
                         Text(
                           _crop.description,
                           style: theme.textTheme.bodyLarge?.copyWith(
-                            color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                            color: isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.lightTextPrimary,
                           ),
                         ),
 
                         Divider(
                           height: 32,
-                          color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+                          color: isDark
+                              ? AppColors.darkDivider
+                              : AppColors.lightDivider,
                         ),
 
                         // Datos de precio y existencias
@@ -417,35 +573,80 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
                           CurrencyFormatters.formatCop(_crop.pricePerKg),
                           isDark,
                         ),
+                        if (_regionalReference != null) ...[
+                          const SizedBox(height: 4),
+                          _buildRegionalReferenceBanner(isDark),
+                          const SizedBox(height: 8),
+                        ],
                         _buildInfoRow(
-                          l10n?.crop_detail_available_stock ?? 'Total Disponible',
-                          UnitFormatters.formatKgWithEquivalence(_crop.stockTotal),
+                          l10n?.crop_detail_available_stock ??
+                              'Total Disponible',
+                          UnitFormatters.formatKgWithEquivalence(
+                            _crop.availableStock,
+                          ),
                           isDark,
+                          onTap: _isBuyer
+                              ? () => _showEquivalencesModal(context)
+                              : null,
                         ),
                         if (_isBuyer)
                           Padding(
-                            padding: const EdgeInsets.only(bottom: 6.0),
+                            padding: const EdgeInsets.only(
+                              top: 4.0,
+                              bottom: 8.0,
+                            ),
                             child: Align(
                               alignment: Alignment.centerRight,
-                              child: TextButton.icon(
-                                key: const Key('crop_detail_equivalences_button'),
-                                onPressed: () => _showEquivalencesModal(context),
-                                style: TextButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              child: OutlinedButton.icon(
+                                key: const Key(
+                                  'crop_detail_equivalences_button',
+                                ),
+                                onPressed: () =>
+                                    _showEquivalencesModal(context),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: isDark
+                                      ? AppColors.darkTertiary
+                                      : AppColors.lightTertiary,
+                                  backgroundColor:
+                                      (isDark
+                                              ? AppColors.darkTertiary
+                                              : AppColors.lightTertiary)
+                                          .withValues(alpha: 0.08),
+                                  side: BorderSide(
+                                    color:
+                                        (isDark
+                                                ? AppColors.darkTertiary
+                                                : AppColors.lightTertiary)
+                                            .withValues(alpha: 0.8),
+                                    width: 1.4,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 8,
+                                  ),
                                   minimumSize: Size.zero,
-                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
                                 ),
                                 icon: Icon(
                                   Icons.calculate_outlined,
-                                  size: 16,
-                                  color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+                                  size: 18,
+                                  color: isDark
+                                      ? AppColors.darkTertiary
+                                      : AppColors.lightTertiary,
                                 ),
                                 label: Text(
-                                  l10n?.crop_detail_view_equivalences ?? 'Ver equivalencias',
+                                  l10n?.crop_detail_view_equivalences ??
+                                      'Ver equivalencias',
                                   style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark
+                                        ? AppColors.darkTertiary
+                                        : AppColors.lightTertiary,
                                   ),
                                 ),
                               ),
@@ -458,7 +659,8 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
                         ),
                         _buildInfoRow(
                           l10n?.crop_detail_location ?? 'Ubicación',
-                          _distanceEvaluation != null && _distanceEvaluation!.hasValidDistance
+                          _distanceEvaluation != null &&
+                                  _distanceEvaluation!.hasValidDistance
                               ? '${_crop.municipality}, ${_crop.department} (${_distanceEvaluation!.formatted})'
                               : '${_crop.municipality}, ${_crop.department}',
                           isDark,
@@ -474,40 +676,55 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
                             isDark,
                           ),
                         _buildInfoRow(
-                          l10n?.crop_detail_publication_date ?? 'Fecha de publicación',
+                          l10n?.crop_detail_publication_date ??
+                              'Fecha de publicación',
                           DateFormatters.formatMediumDate(_crop.createdAt),
                           isDark,
                         ),
-                        if (!_crop.isEarlySale && _crop.estimatedHarvestDate != null)
+                        if (!_crop.isEarlySale &&
+                            _crop.estimatedHarvestDate != null)
                           _buildInfoRow(
-                            l10n?.crop_detail_estimated_harvest ?? 'Fecha est. de cosecha',
-                            DateFormatters.formatHarvestDateLong(_crop.estimatedHarvestDate),
+                            l10n?.crop_detail_estimated_harvest ??
+                                'Fecha est. de cosecha',
+                            DateFormatters.formatHarvestDateLong(
+                              _crop.estimatedHarvestDate,
+                            ),
                             isDark,
                           ),
 
                         if (_crop.isEarlySale) ...[
                           Divider(
                             height: 32,
-                            color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+                            color: isDark
+                                ? AppColors.darkDivider
+                                : AppColors.lightDivider,
                           ),
                           Text(
                             l10n?.crop_detail_early_sale ?? 'Venta Anticipada',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                              color: isDark
+                                  ? AppColors.darkTextPrimary
+                                  : AppColors.lightTextPrimary,
                             ),
                           ),
                           const SizedBox(height: 8),
                           if (_crop.estimatedHarvestDate != null)
                             _buildInfoRow(
-                              l10n?.crop_detail_estimated_harvest ?? 'Fecha est. de cosecha',
-                              DateFormatters.formatHarvestDateLong(_crop.estimatedHarvestDate),
+                              l10n?.crop_detail_estimated_harvest ??
+                                  'Fecha est. de cosecha',
+                              DateFormatters.formatHarvestDateLong(
+                                _crop.estimatedHarvestDate,
+                              ),
                               isDark,
                             ),
                           if (_crop.estimatedYieldKg != null)
                             _buildInfoRow(
-                              l10n?.crop_detail_estimated_yield ?? 'Rendimiento estimado',
-                              UnitFormatters.formatKgWithEquivalence(_crop.estimatedYieldKg),
+                              l10n?.crop_detail_estimated_yield ??
+                                  'Rendimiento estimado',
+                              UnitFormatters.formatKgWithEquivalence(
+                                _crop.estimatedYieldKg,
+                              ),
                               isDark,
                             ),
                         ],
@@ -516,7 +733,9 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
                         if (_isBuyer) ...[
                           Divider(
                             height: 32,
-                            color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+                            color: isDark
+                                ? AppColors.darkDivider
+                                : AppColors.lightDivider,
                           ),
                           _buildFarmerInfoCard(isDark, l10n),
                         ],
@@ -524,13 +743,17 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
                         // Sección de Acciones
                         Divider(
                           height: 32,
-                          color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+                          color: isDark
+                              ? AppColors.darkDivider
+                              : AppColors.lightDivider,
                         ),
                         Text(
                           l10n?.crop_detail_quick_actions ?? 'Acciones Rápidas',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                            color: isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.lightTextPrimary,
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -539,64 +762,133 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
                         if (_isOwner) ...[
                           if (_crop.status == CropStatus.activa)
                             ElevatedButton.icon(
-                              onPressed: () => _updateStatus(CropStatus.pausada),
+                              onPressed: () =>
+                                  _updateStatus(CropStatus.pausada),
                               icon: const Icon(Icons.pause),
-                              label: Text(l10n?.crop_detail_pause_crop ?? 'Pausar Publicación'),
+                              label: Text(
+                                l10n?.crop_detail_pause_crop ??
+                                    'Pausar Publicación',
+                              ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppColors.warning,
                                 foregroundColor: Colors.white,
                                 minimumSize: const Size.fromHeight(48),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
                             )
-                          else if (_crop.status == CropStatus.pausada || _crop.status == CropStatus.borrador)
+                          else if (_crop.status == CropStatus.pausada ||
+                              _crop.status == CropStatus.borrador)
                             ElevatedButton.icon(
                               onPressed: () => _updateStatus(CropStatus.activa),
                               icon: const Icon(Icons.play_arrow),
-                              label: Text(l10n?.crop_detail_activate_crop ?? 'Activar Publicación'),
+                              label: Text(
+                                l10n?.crop_detail_activate_crop ??
+                                    'Activar Publicación',
+                              ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppColors.success,
                                 foregroundColor: Colors.white,
                                 minimumSize: const Size.fromHeight(48),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
                             ),
                           const SizedBox(height: 16),
                           OutlinedButton.icon(
+                            key: const Key(
+                              'crop_detail_farmer_negotiations_button',
+                            ),
                             onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    l10n?.crop_detail_negotiations_coming_soon ??
-                                        'Próximamente: Ver negociaciones',
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => DealsScreen(
+                                    role: 'agricultor',
+                                    service: widget.negotiationService,
                                   ),
                                 ),
                               );
                             },
                             icon: const Icon(Icons.handshake),
-                            label: Text(l10n?.crop_detail_view_negotiations ?? 'Ver Negociaciones'),
+                            label: Text(
+                              l10n?.crop_detail_view_negotiations ??
+                                  'Ver Negociaciones',
+                            ),
                             style: OutlinedButton.styleFrom(
                               minimumSize: const Size.fromHeight(48),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
                           ),
                         ],
 
-                        // Si es comprador: Hacer oferta / Negociar
+                        // Si es comprador: Hacer oferta / Negociar y Ver equivalencias
                         if (_isBuyer) ...[
                           ElevatedButton.icon(
                             onPressed: _openMakeOfferSheet,
                             icon: const Icon(Icons.handshake_outlined),
                             label: Text(
-                              l10n?.crop_detail_make_offer ?? 'Hacer oferta / Negociar',
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              l10n?.crop_detail_make_offer ??
+                                  'Hacer oferta / Negociar',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: isDark ? AppColors.darkTertiary : AppColors.lightTertiary,
-                              foregroundColor: isDark ? AppColors.darkBackground : Colors.white,
+                              backgroundColor: isDark
+                                  ? AppColors.darkTertiary
+                                  : AppColors.lightTertiary,
+                              foregroundColor: isDark
+                                  ? AppColors.darkBackground
+                                  : Colors.white,
                               minimumSize: const Size.fromHeight(52),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
                               elevation: 2,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          OutlinedButton.icon(
+                            key: const Key(
+                              'crop_detail_equivalences_action_button',
+                            ),
+                            onPressed: () => _showEquivalencesModal(context),
+                            icon: Icon(
+                              Icons.scale_outlined,
+                              color: isDark
+                                  ? AppColors.darkTertiary
+                                  : AppColors.lightTertiary,
+                            ),
+                            label: Text(
+                              l10n?.crop_detail_view_equivalences ??
+                                  'Ver equivalencias',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: isDark
+                                    ? AppColors.darkTertiary
+                                    : AppColors.lightTertiary,
+                              ),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size.fromHeight(48),
+                              side: BorderSide(
+                                color:
+                                    (isDark
+                                            ? AppColors.darkTertiary
+                                            : AppColors.lightTertiary)
+                                        .withValues(alpha: 0.8),
+                                width: 1.4,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
                           ),
                         ],
@@ -622,13 +914,18 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
         child: Image.network(
           url,
           fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) => _buildImageFallback(isDark),
+          errorBuilder: (context, error, stackTrace) =>
+              _buildImageFallback(isDark),
           loadingBuilder: (context, child, loadingProgress) {
             if (loadingProgress == null) return child;
             return Container(
               height: 250,
-              color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightDivider,
-              child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+              color: isDark
+                  ? AppColors.darkSurfaceVariant
+                  : AppColors.lightDivider,
+              child: const Center(
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
             );
           },
         ),
@@ -650,16 +947,23 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
                   });
                 },
                 itemBuilder: (context, index) {
-                  final url = _cropService.getPublicImageUrl(_crop.imageUrls[index]);
+                  final url = _cropService.getPublicImageUrl(
+                    _crop.imageUrls[index],
+                  );
                   return Image.network(
                     url,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => _buildImageFallback(isDark),
+                    errorBuilder: (context, error, stackTrace) =>
+                        _buildImageFallback(isDark),
                     loadingBuilder: (context, child, loadingProgress) {
                       if (loadingProgress == null) return child;
                       return Container(
-                        color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightDivider,
-                        child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                        color: isDark
+                            ? AppColors.darkSurfaceVariant
+                            : AppColors.lightDivider,
+                        child: const Center(
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
                       );
                     },
                   );
@@ -670,7 +974,10 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
                 right: 12,
                 child: Container(
                   key: const Key('crop_gallery_indicator'),
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.black.withValues(alpha: 0.65),
                     borderRadius: BorderRadius.circular(16),
@@ -697,7 +1004,9 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
                       width: isSelected ? 18 : 6,
                       height: 6,
                       decoration: BoxDecoration(
-                        color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.4),
+                        color: isSelected
+                            ? Colors.white
+                            : Colors.white.withValues(alpha: 0.4),
                         borderRadius: BorderRadius.circular(3),
                       ),
                     );
@@ -718,7 +1027,9 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
             separatorBuilder: (_, _) => const SizedBox(width: 8),
             itemBuilder: (context, index) {
               final isSelected = index == _currentImageIndex;
-              final url = _cropService.getPublicImageUrl(_crop.imageUrls[index]);
+              final url = _cropService.getPublicImageUrl(
+                _crop.imageUrls[index],
+              );
               final borderColor = isSelected
                   ? (isDark ? AppColors.darkTertiary : AppColors.lightTertiary)
                   : Colors.transparent;
@@ -744,8 +1055,13 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
                       url,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) => Container(
-                        color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightDivider,
-                        child: const Icon(Icons.image_not_supported_outlined, size: 20),
+                        color: isDark
+                            ? AppColors.darkSurfaceVariant
+                            : AppColors.lightDivider,
+                        child: const Icon(
+                          Icons.image_not_supported_outlined,
+                          size: 20,
+                        ),
                       ),
                     ),
                   ),
@@ -761,13 +1077,91 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
   Widget _buildImageFallback(bool isDark) {
     return Container(
       height: 200,
-      color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSecondary.withValues(alpha: 0.35),
+      color: isDark
+          ? AppColors.darkSurfaceVariant
+          : AppColors.lightSecondary.withValues(alpha: 0.35),
       child: Center(
         child: Icon(
           Icons.image_not_supported_outlined,
           size: 64,
-          color: isDark ? AppColors.darkTextDisabled : AppColors.lightTextDisabled,
+          color: isDark
+              ? AppColors.darkTextDisabled
+              : AppColors.lightTextDisabled,
         ),
+      ),
+    );
+  }
+
+  Widget _buildRegionalReferenceBanner(bool isDark) {
+    final ref = _regionalReference!;
+    final diff = _crop.pricePerKg - ref.referencePricePerKg;
+    final diffPercent = ref.referencePricePerKg > 0
+        ? (diff / ref.referencePricePerKg) * 100
+        : 0.0;
+    final sign = diff > 0 ? '+' : '';
+    final comparisonText = diff == 0
+        ? 'Precio igual a la referencia regional (${CurrencyFormatters.formatCop(ref.referencePricePerKg)}/kg)'
+        : '$sign${CurrencyFormatters.formatCop(diff)}/kg ($sign${diffPercent.toStringAsFixed(1)}%) vs referencia regional (${CurrencyFormatters.formatCop(ref.referencePricePerKg)}/kg)';
+
+    return Container(
+      key: const Key('crop_detail_regional_reference_card'),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDark
+            ? AppColors.darkSurfaceVariant
+            : Colors.amber.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.analytics_outlined,
+                size: 16,
+                color: Colors.amber,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  'Referencia regional (${ref.region})',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+              Chip(
+                label: const Text('SIMULADA'),
+                visualDensity: VisualDensity.compact,
+                backgroundColor: Colors.orange.shade100,
+                labelStyle: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.orange.shade900,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            comparisonText,
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            SimulatedRegionalPriceReferences.notice,
+            style: TextStyle(
+              fontSize: 11,
+              fontStyle: FontStyle.italic,
+              color: isDark
+                  ? AppColors.darkTextDisabled
+                  : AppColors.lightTextSecondary,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -777,7 +1171,9 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
         ? _farmerProfile!.fullName
         : '${l10n?.crop_detail_producer ?? "Productor"} (${_crop.municipality})';
 
-    final avatarUrl = _farmerProfile?.profilePath != null && _farmerProfile!.profilePath!.isNotEmpty
+    final avatarUrl =
+        _farmerProfile?.profilePath != null &&
+            _farmerProfile!.profilePath!.isNotEmpty
         ? _profileService.getPublicProfileImageUrl(_farmerProfile!.profilePath!)
         : null;
 
@@ -804,7 +1200,9 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
                 borderColor: isDark
                     ? AppColors.darkTertiary.withValues(alpha: 0.4)
                     : AppColors.lightSecondary,
-                iconColor: isDark ? AppColors.darkTertiary : AppColors.lightTertiary,
+                iconColor: isDark
+                    ? AppColors.darkTertiary
+                    : AppColors.lightTertiary,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -812,10 +1210,13 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      l10n?.crop_detail_farmer_info ?? 'Información del Productor',
+                      l10n?.crop_detail_farmer_info ??
+                          'Información del Productor',
                       style: TextStyle(
                         fontSize: 11,
-                        color: isDark ? AppColors.darkTextDisabled : AppColors.lightTextSecondary,
+                        color: isDark
+                            ? AppColors.darkTextDisabled
+                            : AppColors.lightTextSecondary,
                       ),
                     ),
                     Text(
@@ -823,7 +1224,9 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                        color: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary,
                       ),
                     ),
                   ],
@@ -840,14 +1243,18 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
                 Icon(
                   Icons.phone,
                   size: 16,
-                  color: isDark ? AppColors.darkTertiary : AppColors.lightTertiary,
+                  color: isDark
+                      ? AppColors.darkTertiary
+                      : AppColors.lightTertiary,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   _farmerProfile!.phone,
                   style: TextStyle(
                     fontSize: 14,
-                    color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.lightTextPrimary,
                   ),
                 ),
               ],
@@ -858,8 +1265,13 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
     );
   }
 
-  Widget _buildInfoRow(String label, String value, bool isDark) {
-    return Padding(
+  Widget _buildInfoRow(
+    String label,
+    String value,
+    bool isDark, {
+    VoidCallback? onTap,
+  }) {
+    final rowContent = Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -867,18 +1279,34 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
           Text(
             label,
             style: TextStyle(
-              color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+              color: isDark
+                  ? AppColors.darkTextSecondary
+                  : AppColors.lightTextSecondary,
             ),
           ),
-          Text(
-            value,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: isDark
+                    ? AppColors.darkTextPrimary
+                    : AppColors.lightTextPrimary,
+              ),
             ),
           ),
         ],
       ),
     );
+
+    if (onTap != null) {
+      return InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: rowContent,
+      );
+    }
+    return rowContent;
   }
 }

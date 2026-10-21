@@ -3,6 +3,9 @@ import 'dart:io';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/utils/diagnostic_utils.dart';
+import '../../../../core/utils/document_upload_utils.dart';
+
 /// Fallos controlados del envío documental. La UI traduce cada valor a un
 /// mensaje localizado sin exponer rutas, archivos ni detalles sensibles.
 enum DocumentSubmissionFailure {
@@ -20,13 +23,26 @@ class DocumentSubmissionResult {
   final bool isSuccess;
   final DocumentSubmissionFailure? failure;
 
-  const DocumentSubmissionResult._({required this.isSuccess, this.failure});
+  /// Detalle sanitizado para depuración. Nunca debe mostrarse al usuario.
+  final String? debugReason;
+
+  const DocumentSubmissionResult._({
+    required this.isSuccess,
+    this.failure,
+    this.debugReason,
+  });
 
   factory DocumentSubmissionResult.success() =>
       const DocumentSubmissionResult._(isSuccess: true);
 
-  factory DocumentSubmissionResult.failure(DocumentSubmissionFailure failure) =>
-      DocumentSubmissionResult._(isSuccess: false, failure: failure);
+  factory DocumentSubmissionResult.failure(
+    DocumentSubmissionFailure failure, {
+    String? debugReason,
+  }) => DocumentSubmissionResult._(
+    isSuccess: false,
+    failure: failure,
+    debugReason: debugReason,
+  );
 }
 
 typedef DocumentStorageUploader = Future<void> Function(
@@ -44,6 +60,9 @@ typedef VerificationAttemptInserter = Future<void> Function(
   Map<String, dynamic> attemptData,
 );
 
+typedef PendingVerificationAttemptFetcher =
+    Future<Map<String, dynamic>?> Function(String userId);
+
 /// Guarda las tres imágenes de verificación en el bucket privado existente
 /// `user_documents` y registra una nueva solicitud en `verification_attempts`.
 ///
@@ -56,6 +75,7 @@ class DocumentSubmissionService {
   final DocumentStorageUploader? _uploader;
   final DocumentStorageRemover? _remover;
   final VerificationAttemptInserter? _attemptInserter;
+  final PendingVerificationAttemptFetcher? _pendingAttemptFetcher;
   final String? Function()? _userIdFetcher;
   final DateTime Function()? _now;
 
@@ -66,12 +86,14 @@ class DocumentSubmissionService {
     DocumentStorageUploader? uploader,
     DocumentStorageRemover? remover,
     VerificationAttemptInserter? attemptInserter,
+    PendingVerificationAttemptFetcher? pendingAttemptFetcher,
     String? Function()? userIdFetcher,
     DateTime Function()? now,
   }) : _clientOverride = client,
        _uploader = uploader,
        _remover = remover,
        _attemptInserter = attemptInserter,
+       _pendingAttemptFetcher = pendingAttemptFetcher,
        _userIdFetcher = userIdFetcher,
        _now = now;
 
@@ -99,67 +121,131 @@ class DocumentSubmissionService {
     required File? selfie,
   }) async {
     if (_isSubmitting) {
-      return DocumentSubmissionResult.failure(
+      return _failure(
         DocumentSubmissionFailure.inProgress,
+        'stage=submit; reason=already_in_progress',
       );
     }
 
     if (documentFront == null || documentBack == null || selfie == null) {
-      return DocumentSubmissionResult.failure(
+      return _failure(
         DocumentSubmissionFailure.missingDocuments,
+        'stage=validation; reason=missing_documents',
       );
     }
 
     final userId = _userId;
     if (userId == null || userId.trim().isEmpty) {
-      return DocumentSubmissionResult.failure(
+      return _failure(
         DocumentSubmissionFailure.unauthorized,
+        'stage=session; reason=no_authenticated_user',
       );
     }
 
     final client = _client;
     if (client == null && _uploader == null) {
-      return DocumentSubmissionResult.failure(
+      return _failure(
         DocumentSubmissionFailure.storage,
+        'stage=client; reason=no_supabase_client',
       );
+    }
+
+    // Cuando se usa la sesión real (no dependencias inyectadas), se verifica
+    // que exista una sesión activa y que su identidad coincida con la carpeta
+    // donde se escribirán los documentos. Un `currentUser` sin sesión o una
+    // identidad distinta provoca 403/400 en Storage y es la causa habitual de
+    // fallos de carga posteriores a un registro.
+    if (_userIdFetcher == null && client != null) {
+      final sessionUserId = client.auth.currentSession?.user.id;
+      if (sessionUserId == null) {
+        return _failure(
+          DocumentSubmissionFailure.unauthorized,
+          'stage=session; reason=no_active_session',
+        );
+      }
+      if (sessionUserId != userId) {
+        return _failure(
+          DocumentSubmissionFailure.unauthorized,
+          'stage=session; reason=session_user_mismatch',
+        );
+      }
     }
 
     _isSubmitting = true;
     final uploadedPaths = <String>[];
 
     try {
-      for (final file in [documentFront, documentBack, selfie]) {
-        if (!file.existsSync()) {
+      // Idempotencia: si ya existe una solicitud pendiente completa (por ejemplo,
+      // el usuario reintentó tras perder la respuesta de red), no se vuelven a
+      // subir archivos ni se intenta insertar un duplicado.
+      final pendingAttempt = await _findPendingAttempt(userId);
+      if (pendingAttempt != null) {
+        if (_hasAllDocumentPaths(pendingAttempt)) {
+          return DocumentSubmissionResult.success();
+        }
+        return _failure(
+          DocumentSubmissionFailure.pendingExists,
+          'stage=pending_lookup; reason=pending_attempt_incomplete',
+        );
+      }
+
+      final files = [documentFront, documentBack, selfie];
+      for (final file in files) {
+        try {
+          if (!file.existsSync() || file.lengthSync() <= 0) {
+            await _cleanupNewUploads(uploadedPaths);
+            return _failure(
+              DocumentSubmissionFailure.fileUnavailable,
+              'stage=file_validation; reason=file_missing_or_empty',
+            );
+          }
+        } on FileSystemException catch (error) {
           await _cleanupNewUploads(uploadedPaths);
-          return DocumentSubmissionResult.failure(
+          return _failure(
             DocumentSubmissionFailure.fileUnavailable,
+            describeException(
+              error,
+              stage: 'file_validation',
+              redact: [userId],
+            ),
           );
         }
       }
 
       final milliseconds = (_now ?? DateTime.now)().millisecondsSinceEpoch;
       final paths = <String>[
-        '$userId/front_$milliseconds.jpg',
-        '$userId/back_$milliseconds.jpg',
-        '$userId/selfie_$milliseconds.jpg',
+        '$userId/front_$milliseconds.${documentFileExtension(documentFront.path)}',
+        '$userId/back_$milliseconds.${documentFileExtension(documentBack.path)}',
+        '$userId/selfie_$milliseconds.${documentFileExtension(selfie.path)}',
       ];
 
       final uploader = _uploader;
+      const stages = ['upload_front', 'upload_back', 'upload_selfie'];
       try {
         for (var i = 0; i < paths.length; i++) {
           final path = paths[i];
-          final file = [documentFront, documentBack, selfie][i];
+          final file = files[i];
           if (uploader != null) {
             await uploader(bucket, path, file);
           } else {
-            await client!.storage.from(bucket).upload(path, file);
+            await client!.storage
+                .from(bucket)
+                .upload(
+                  path,
+                  file,
+                  fileOptions: documentUploadFileOptions(file.path),
+                );
           }
           uploadedPaths.add(path);
         }
-      } catch (_) {
+      } catch (error) {
         await _cleanupNewUploads(uploadedPaths);
-        return DocumentSubmissionResult.failure(
+        final stage = uploadedPaths.length < stages.length
+            ? stages[uploadedPaths.length]
+            : 'upload';
+        return _failure(
           DocumentSubmissionFailure.storage,
+          describeException(error, stage: stage, redact: [userId]),
         );
       }
 
@@ -178,32 +264,87 @@ class DocumentSubmissionService {
         } else {
           await client!.from('verification_attempts').insert(attemptData);
         }
-      } on PostgrestException catch (e) {
+      } on PostgrestException catch (error) {
         await _cleanupNewUploads(uploadedPaths);
-        if (e.code == '23505') {
-          return DocumentSubmissionResult.failure(
+        if (error.code == '23505') {
+          return _failure(
             DocumentSubmissionFailure.pendingExists,
+            describeException(error, stage: 'attempt_insert', redact: [userId]),
           );
         }
-        return DocumentSubmissionResult.failure(
+        return _failure(
           DocumentSubmissionFailure.attempt,
+          describeException(error, stage: 'attempt_insert', redact: [userId]),
         );
-      } catch (_) {
+      } catch (error) {
         await _cleanupNewUploads(uploadedPaths);
-        return DocumentSubmissionResult.failure(
+        return _failure(
           DocumentSubmissionFailure.attempt,
+          describeException(error, stage: 'attempt_insert', redact: [userId]),
         );
       }
 
       return DocumentSubmissionResult.success();
-    } catch (_) {
+    } catch (error) {
       await _cleanupNewUploads(uploadedPaths);
-      return DocumentSubmissionResult.failure(
+      return _failure(
         DocumentSubmissionFailure.unknown,
+        describeException(error, stage: 'submit', redact: [userId]),
       );
     } finally {
       _isSubmitting = false;
     }
+  }
+
+  DocumentSubmissionResult _failure(
+    DocumentSubmissionFailure failure,
+    String? debugReason,
+  ) {
+    final reason = debugReason == null ? null : sanitizeDiagnostic(debugReason);
+    if (reason != null) {
+      logAuthDiagnostic('documents', reason);
+    }
+    return DocumentSubmissionResult.failure(failure, debugReason: reason);
+  }
+
+  /// Consulta de mejor esfuerzo. Si falla, se continúa con la subida y el
+  /// índice único de la base de datos sigue evitando solicitudes duplicadas.
+  Future<Map<String, dynamic>?> _findPendingAttempt(String userId) async {
+    final fetcher = _pendingAttemptFetcher;
+    if (fetcher != null) return fetcher(userId);
+
+    // En pruebas con dependencias inyectadas no se debe tocar la red.
+    if (_uploader != null || _attemptInserter != null) return null;
+
+    final client = _client;
+    if (client == null) return null;
+
+    try {
+      return await client
+          .from('verification_attempts')
+          .select(
+            'status, document_front_path, document_back_path, selfie_path',
+          )
+          .eq('user_id', userId)
+          .inFilter('status', ['pendiente', 'en_revision_ia'])
+          .order('created_at', ascending: false)
+          .limit(1)
+          .maybeSingle();
+    } catch (error) {
+      logAuthDiagnostic(
+        'documents',
+        describeException(error, stage: 'pending_lookup', redact: [userId]),
+      );
+      return null;
+    }
+  }
+
+  bool _hasAllDocumentPaths(Map<String, dynamic> attempt) {
+    return [
+      attempt['document_front_path'],
+      attempt['document_back_path'],
+      attempt['selfie_path'],
+    ].every((path) => path is String && path.trim().isNotEmpty);
   }
 
   Future<void> _cleanupNewUploads(List<String> paths) async {

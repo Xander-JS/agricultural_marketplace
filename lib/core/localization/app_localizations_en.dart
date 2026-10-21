@@ -619,6 +619,155 @@ class AppLocalizationsEn extends AppLocalizations {
   String get market_clear_filters => 'Clear filters';
 
   @override
+  String get market_own_profile => 'My profile';
+
+  @override
+  String get publish_title_new => 'Publish Crop';
+
+  @override
+  String get publish_title_edit => 'Edit Crop';
+
+  @override
+  String get publish_unauthorized_title => 'Unauthorized Access';
+
+  @override
+  String get publish_unauthorized_desc =>
+      'Only registered and verified farmers can publish crops.';
+
+  @override
+  String get publish_validation_incomplete =>
+      'Please complete the required fields correctly.';
+
+  @override
+  String get publish_harvest_date_required =>
+      'You must indicate the estimated harvest date for pre-sale.';
+
+  @override
+  String get publish_not_authenticated => 'Not authenticated';
+
+  @override
+  String get publish_access_farmer_only =>
+      'Access denied: only farmers can publish crops.';
+
+  @override
+  String get publish_access_other_crop =>
+      'Access denied: you cannot edit a crop belonging to another producer.';
+
+  @override
+  String get publish_success_active => 'Crop published successfully!';
+
+  @override
+  String get publish_success_draft => 'Draft saved.';
+
+  @override
+  String publish_save_error(String error) {
+    return 'Error saving: $error';
+  }
+
+  @override
+  String get publish_section_general => '1. General Information';
+
+  @override
+  String get publish_section_prices => '2. Prices and Quantities';
+
+  @override
+  String get publish_section_location => '3. Location';
+
+  @override
+  String get publish_section_sale_mode => '4. Sale Method';
+
+  @override
+  String get publish_section_images => '5. Images';
+
+  @override
+  String get publish_field_title => 'Listing title';
+
+  @override
+  String get publish_field_crop_type =>
+      'Product type (e.g. Papa Capira, Café Castillo)';
+
+  @override
+  String get publish_field_description => 'Crop description';
+
+  @override
+  String get publish_field_price => 'Price per kg (\$)';
+
+  @override
+  String get publish_field_stock => 'Total avail. (kg)';
+
+  @override
+  String get publish_field_min_order => 'Minimum order (kg)';
+
+  @override
+  String get publish_field_department => 'Department';
+
+  @override
+  String get publish_field_municipality => 'Municipality';
+
+  @override
+  String get publish_early_sale_title => 'Is it a pre-sale?';
+
+  @override
+  String get publish_early_sale_desc =>
+      'Useful if the crop is not ready yet but you want to secure sales.';
+
+  @override
+  String get publish_field_estimated_yield => 'Est. yield (kg)';
+
+  @override
+  String get publish_field_harvest_date => 'Harvest date';
+
+  @override
+  String get publish_select_date => 'Select...';
+
+  @override
+  String get publish_current_images => 'Current listing images:';
+
+  @override
+  String get publish_add_images => 'Add Images';
+
+  @override
+  String get publish_save_draft => 'Save Draft';
+
+  @override
+  String get publish_submit => 'Publish';
+
+  @override
+  String get publish_validation_required => 'Required';
+
+  @override
+  String get publish_validation_greater_zero => 'Greater than 0';
+
+  @override
+  String get publish_validation_non_negative => 'Greater than or equal to 0';
+
+  @override
+  String get publish_voice_banner_title => 'Voice-created draft';
+
+  @override
+  String get publish_voice_banner_desc =>
+      'Review the recognized data. Nothing will be published until you confirm the form.';
+
+  @override
+  String publish_voice_confirm(String fields) {
+    return 'Confirm: $fields';
+  }
+
+  @override
+  String publish_voice_missing(String fields) {
+    return 'Missing or to complete: $fields.';
+  }
+
+  @override
+  String get publish_voice_label_title => 'Title';
+
+  @override
+  String get publish_voice_label_description => 'Description';
+
+  @override
+  String get publish_voice_label_location => 'Location';
+
+  @override
   String get crop_card_available => 'Available';
 
   @override
@@ -663,6 +812,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get crop_detail_location => 'Location';
+
+  @override
+  String get crop_detail_estimated_distance => 'Estimated distance';
 
   @override
   String get crop_detail_publication_date => 'Publication date';
@@ -866,6 +1018,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Modify the terms of the offer for the selected crop.';
 
   @override
+  String counter_offer_subtitle_crop(String crop) {
+    return 'Modify the terms of the offer for $crop.';
+  }
+
+  @override
   String get counter_offer_quantity_label => 'Quantity (kg)';
 
   @override
@@ -973,7 +1130,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Deal reviews will be available soon.';
 
   @override
-  String get deal_detail_rate_farmer => 'Rate farmer';
+  String get deal_detail_rate_farmer => 'Rate producer';
 
   @override
   String get deal_detail_rate_buyer => 'Rate buyer';
@@ -1051,7 +1208,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deals_status_cancelled => 'Cancelled';
 
   @override
-  String get offer_sheet_base_price => 'Base';
+  String offer_sheet_base_price(String price) {
+    return 'Base: $price';
+  }
 
   @override
   String get offer_sheet_min_order => 'Min';
@@ -1173,6 +1332,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get moderation_queue_title => 'Moderation Queue';
+
+  @override
+  String get moderation_error_title => 'Could not load requests';
+
+  @override
+  String get moderation_error_processing => 'Error processing the request';
+
+  @override
+  String get moderation_error_rejecting => 'Error rejecting the request';
+
+  @override
+  String get moderation_error_updating => 'Error updating the request';
 
   @override
   String get moderation_queue_empty_title => 'No pending requests';
@@ -1479,4 +1650,1062 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get moderation_filter_in_review => 'In review';
+
+  @override
+  String get common_retry => 'Retry';
+
+  @override
+  String get common_cancel => 'Cancel';
+
+  @override
+  String get common_close => 'Close';
+
+  @override
+  String get common_delete => 'Delete';
+
+  @override
+  String get common_edit => 'Edit';
+
+  @override
+  String get common_save_changes => 'Save changes';
+
+  @override
+  String get common_back => 'Back';
+
+  @override
+  String get common_understood => 'Understood';
+
+  @override
+  String get common_accept => 'Accept';
+
+  @override
+  String get common_not_available => 'Not available';
+
+  @override
+  String get common_simulated => 'SIMULATED';
+
+  @override
+  String get common_field_required => 'Required field';
+
+  @override
+  String get common_greater_than_zero => 'Must be greater than 0';
+
+  @override
+  String common_unexpected_error(String error) {
+    return 'Unexpected error: $error';
+  }
+
+  @override
+  String get common_operation_error =>
+      'The operation could not be completed. Please try again.';
+
+  @override
+  String common_error_prefix(String error) {
+    return 'An error occurred: $error';
+  }
+
+  @override
+  String product_card_variety(String variety) {
+    return 'Variety: $variety';
+  }
+
+  @override
+  String get product_card_view_details => 'View details';
+
+  @override
+  String get seller_details_reliability => 'Reliability';
+
+  @override
+  String get seller_details_volume => 'Available Volume';
+
+  @override
+  String get seller_details_min_order => 'Minimum Order';
+
+  @override
+  String get seller_details_condition => 'Condition & Logistics';
+
+  @override
+  String get otp_error_incomplete => 'Please enter all 6 digits';
+
+  @override
+  String get otp_resend_simulated => 'Code resent (Simulated)';
+
+  @override
+  String get personal_info_phone_invalid => 'Invalid phone number';
+
+  @override
+  String get personal_info_password_min => 'At least 6 characters';
+
+  @override
+  String get processing_confirmation_required =>
+      'Account created. Please confirm your contact method to continue.';
+
+  @override
+  String get verification_status_simulated_review =>
+      'Simulated review in progress; your account is awaiting moderator approval.';
+
+  @override
+  String get auth_gate_invalid_role =>
+      'The profile role is invalid or undefined.';
+
+  @override
+  String get auth_gate_checking => 'Checking status...';
+
+  @override
+  String get auth_gate_generic_error_title => 'An error has occurred';
+
+  @override
+  String get auth_gate_unknown_status =>
+      'We could not determine the verification status. Please contact support.';
+
+  @override
+  String get costs_title => 'Costs';
+
+  @override
+  String get costs_intro =>
+      'Keep track of the expenses\nassociated with your crops.';
+
+  @override
+  String costs_per_kg_calculated(String amount) {
+    return 'Cost per kg: $amount';
+  }
+
+  @override
+  String get costs_per_kg_no_costs => 'Cost per kg: no costs recorded';
+
+  @override
+  String get costs_per_kg_invalid_total => 'Cost per kg: invalid total';
+
+  @override
+  String get costs_per_kg_invalid_quantity => 'Cost per kg: invalid quantity';
+
+  @override
+  String get costs_per_kg_pending_yield =>
+      'Cost per kg: estimated yield pending';
+
+  @override
+  String get costs_total => 'Total costs';
+
+  @override
+  String get costs_view => 'View costs';
+
+  @override
+  String get costs_empty_title => 'You must create a crop first';
+
+  @override
+  String get costs_empty_desc =>
+      'To keep a cost record, you need at least one registered crop.';
+
+  @override
+  String get costs_create_crop => 'Create crop';
+
+  @override
+  String get costs_add => 'Add cost';
+
+  @override
+  String get costs_add_title => 'Add Cost';
+
+  @override
+  String get costs_edit_title => 'Edit Cost';
+
+  @override
+  String get costs_category => 'Category';
+
+  @override
+  String get costs_description => 'Description';
+
+  @override
+  String get costs_description_hint => 'E.g.: Harvest labor';
+
+  @override
+  String get costs_description_required => 'Please enter a description';
+
+  @override
+  String get costs_value => 'Amount';
+
+  @override
+  String get costs_value_hint => 'E.g.: 150000 or 150000.50';
+
+  @override
+  String get costs_value_required => 'Please enter an amount';
+
+  @override
+  String get costs_value_invalid => 'Enter a numeric amount greater than 0';
+
+  @override
+  String get costs_save => 'Save cost';
+
+  @override
+  String get costs_update => 'Update cost';
+
+  @override
+  String get costs_added => 'Cost added successfully';
+
+  @override
+  String get costs_updated => 'Cost updated successfully';
+
+  @override
+  String costs_save_error(String error) {
+    return 'Error saving: $error';
+  }
+
+  @override
+  String get costs_delete_title => 'Delete this cost?';
+
+  @override
+  String get costs_delete_desc => 'This action cannot be undone.';
+
+  @override
+  String get costs_deleted => 'Cost deleted';
+
+  @override
+  String costs_delete_error(String error) {
+    return 'Error deleting: $error';
+  }
+
+  @override
+  String get costs_estimated_per_kg => 'Estimated cost per kg';
+
+  @override
+  String costs_quantity_used(String quantity, String source) {
+    return 'Quantity used: $quantity ($source)';
+  }
+
+  @override
+  String costs_source_field(String field) {
+    return 'Field: $field';
+  }
+
+  @override
+  String get costs_profitability_title => 'Margin and suggested price';
+
+  @override
+  String get costs_profitability_subtitle =>
+      'Calculate profit and margin, and compare with simulated references.';
+
+  @override
+  String get costs_empty_detail_title => 'You have no costs recorded yet';
+
+  @override
+  String get costs_empty_detail_desc =>
+      'Add the expenses related to this crop for better control.';
+
+  @override
+  String get profitability_title => 'Margin and suggested price';
+
+  @override
+  String get profitability_cost_per_kg => 'Production cost per kg';
+
+  @override
+  String profitability_used_quantity(
+    String quantity,
+    String source,
+    String field,
+  ) {
+    return 'Quantity used: $quantity ($source) · $field';
+  }
+
+  @override
+  String get profitability_current_price => 'Current published price';
+
+  @override
+  String get profitability_invalid_current_price =>
+      'The current price is invalid. You can enter a temporary price for the simulation.';
+
+  @override
+  String get profitability_unavailable_title =>
+      'Margin and suggested price cannot be calculated';
+
+  @override
+  String get profitability_unavailable_desc =>
+      'Fix the costs or crop data to continue. Estimated values are not shown to avoid misleading results.';
+
+  @override
+  String get profitability_evaluate_title => 'Evaluate your selling price';
+
+  @override
+  String get profitability_selling_price => 'Selling price per kg';
+
+  @override
+  String get profitability_edit_note =>
+      'You can edit this value for the simulation; it does not save or change the published price.';
+
+  @override
+  String get profitability_temporary_price =>
+      'Temporary simulation price; it has not been saved.';
+
+  @override
+  String get profitability_invalid_price =>
+      'Enter a valid selling price greater than 0.';
+
+  @override
+  String get profitability_loss_per_kg => 'Estimated loss per kg';
+
+  @override
+  String get profitability_profit_per_kg => 'Estimated profit per kg';
+
+  @override
+  String get profitability_margin_over_price => 'Margin over the selling price';
+
+  @override
+  String get profitability_loss_message =>
+      'The evaluated price is below the production cost.';
+
+  @override
+  String get profitability_low_margin =>
+      'The margin is below the prototype\'s 15% reference.';
+
+  @override
+  String get profitability_margin_formula =>
+      'Margin = (price − cost) / price × 100';
+
+  @override
+  String get profitability_suggested_title =>
+      'Suggested price based on target margin';
+
+  @override
+  String get profitability_target_margin => 'Target margin (%)';
+
+  @override
+  String get profitability_margin_note =>
+      'The margin applies to the selling price; it is not a markup on cost.';
+
+  @override
+  String get profitability_invalid_margin =>
+      'Enter a margin between 0% and less than 100%.';
+
+  @override
+  String get profitability_orientation =>
+      'Guidance price. It does not modify or publish the crop price.';
+
+  @override
+  String get profitability_regional_reference => 'Simulated regional reference';
+
+  @override
+  String get profitability_reference_missing =>
+      'No simulated reference is configured for this crop.';
+
+  @override
+  String get profitability_reference_crop => 'Reference crop';
+
+  @override
+  String get profitability_reference_region => 'Region';
+
+  @override
+  String get profitability_reference_price => 'Simulated reference price';
+
+  @override
+  String get profitability_reference_type => 'Data type';
+
+  @override
+  String get profitability_reference_simulated => 'Simulated for the prototype';
+
+  @override
+  String get profitability_reference_difference =>
+      'Difference from the simulated reference';
+
+  @override
+  String get profitability_reference_difference_note =>
+      'The difference is calculated as evaluated price − reference.';
+
+  @override
+  String get crop_detail_less_than_km => '< 1 km';
+
+  @override
+  String crop_detail_km(String km) {
+    return '$km km';
+  }
+
+  @override
+  String get crop_detail_owner_edit_denied =>
+      'Access denied: only the owning producer can modify this listing.';
+
+  @override
+  String crop_detail_error(String error) {
+    return 'Error: $error';
+  }
+
+  @override
+  String get crop_detail_other_edit_denied =>
+      'Access denied: you cannot edit other users\' listings.';
+
+  @override
+  String get crop_detail_other_delete_denied =>
+      'Access denied: you cannot delete other users\' listings.';
+
+  @override
+  String get crop_detail_delete_title => 'Delete Listing';
+
+  @override
+  String get crop_detail_delete_confirm =>
+      'Are you sure you want to delete this listing? This action cannot be undone.';
+
+  @override
+  String get crop_detail_deleted => 'Listing deleted successfully';
+
+  @override
+  String get crop_detail_own_offer_error =>
+      'You cannot make an offer on your own crop.';
+
+  @override
+  String get crop_detail_out_of_stock =>
+      'This crop is sold out or has no available stock.';
+
+  @override
+  String get crop_detail_verification_required => 'Verification required';
+
+  @override
+  String get crop_detail_verification_desc =>
+      'To make offers and negotiate with farmers, your profile must be verified and approved by a moderator.';
+
+  @override
+  String get crop_detail_offer_sent => 'Offer sent successfully.';
+
+  @override
+  String get crop_detail_view_deals => 'View Deals';
+
+  @override
+  String get crop_detail_total_available => 'Total Available';
+
+  @override
+  String crop_detail_price_matches_reference(String price) {
+    return 'Price matches the regional reference ($price/kg)';
+  }
+
+  @override
+  String crop_detail_price_vs_reference(
+    String sign,
+    String amount,
+    String percent,
+    String reference,
+  ) {
+    return '$sign$amount/kg ($sign$percent%) vs regional reference ($reference/kg)';
+  }
+
+  @override
+  String crop_detail_regional_reference_region(String region) {
+    return 'Regional reference ($region)';
+  }
+
+  @override
+  String crop_detail_producer_with_location(String producer, String location) {
+    return '$producer ($location)';
+  }
+
+  @override
+  String get crop_status_draft => 'Draft';
+
+  @override
+  String get crop_status_active => 'Active';
+
+  @override
+  String get crop_status_paused => 'Paused';
+
+  @override
+  String get crop_status_exhausted => 'Sold out';
+
+  @override
+  String offer_sheet_min_stock(String min, String stock) {
+    return 'Min: $min | Stock: $stock';
+  }
+
+  @override
+  String get units_title => 'Unit Equivalences';
+
+  @override
+  String get units_close => 'Close';
+
+  @override
+  String get units_reference_quantity => 'Reference quantity (available)';
+
+  @override
+  String get units_calculate_quantity => 'Calculate quantity (kg)';
+
+  @override
+  String get units_input_hint => 'E.g. 500';
+
+  @override
+  String get units_approximate_equivalents =>
+      'Approximate traditional equivalents';
+
+  @override
+  String units_equivalence_rate(String unit, String value) {
+    return '1 $unit = $value';
+  }
+
+  @override
+  String get units_disclaimer =>
+      'Approximate conversions for informational purposes only. They do not modify inventory, prices, or orders.';
+
+  @override
+  String units_empty(String unit) {
+    return '0 $unit';
+  }
+
+  @override
+  String units_approx(String value, String unit) {
+    return '≈ $value $unit';
+  }
+
+  @override
+  String deals_error_prefix(String error) {
+    return 'An error occurred: $error';
+  }
+
+  @override
+  String get deals_producer => 'Producer';
+
+  @override
+  String get deals_buyer => 'Buyer';
+
+  @override
+  String deals_producer_with_location(String location) {
+    return 'Producer ($location)';
+  }
+
+  @override
+  String deals_counterpart_name(String label, String name) {
+    return '$label: $name';
+  }
+
+  @override
+  String get deal_detail_offer_history => 'Offer history';
+
+  @override
+  String get deal_detail_rating_sent => 'Rating sent successfully';
+
+  @override
+  String get deal_detail_generic_error =>
+      'The operation could not be completed. Please try again.';
+
+  @override
+  String get deal_detail_the_farmer => 'The producer';
+
+  @override
+  String get deal_detail_the_buyer => 'The buyer';
+
+  @override
+  String get deal_detail_authorized => 'Authorized';
+
+  @override
+  String get deal_detail_private => 'Private';
+
+  @override
+  String get deal_detail_location_authorized_status => 'Authorized';
+
+  @override
+  String get deal_detail_location_private_status => 'Private';
+
+  @override
+  String deal_detail_permissions_update_error(String error) {
+    return 'Error updating permissions: $error';
+  }
+
+  @override
+  String get deal_detail_share_farm_location_permission =>
+      'Share the farm location';
+
+  @override
+  String get deal_detail_contact_farmer => 'Producer contact information';
+
+  @override
+  String get deal_detail_contact_buyer => 'Buyer contact information';
+
+  @override
+  String get deal_detail_phone_whatsapp => 'Authorized phone / WhatsApp:';
+
+  @override
+  String get deal_detail_call => 'Call';
+
+  @override
+  String get deal_detail_whatsapp => 'WhatsApp';
+
+  @override
+  String get deal_detail_copy => 'Copy';
+
+  @override
+  String get deal_detail_phone => 'Phone';
+
+  @override
+  String deal_detail_contact_not_shared(String role) {
+    return '$role has not authorized sharing their phone or WhatsApp.';
+  }
+
+  @override
+  String get deal_detail_location_authorized => 'Authorized physical location:';
+
+  @override
+  String deal_detail_coordinates(String lat, String lon) {
+    return 'Coordinates: $lat, $lon';
+  }
+
+  @override
+  String get deal_detail_view_location => 'View location details';
+
+  @override
+  String deal_detail_location_not_shared(String role) {
+    return '$role has not authorized sharing their physical location.';
+  }
+
+  @override
+  String get deal_detail_my_permissions => 'Your permissions for this deal:';
+
+  @override
+  String deal_detail_phone_permission(String status) {
+    return 'Phone: $status';
+  }
+
+  @override
+  String deal_detail_location_permission(String status) {
+    return 'Location: $status';
+  }
+
+  @override
+  String get deal_detail_modify => 'Modify';
+
+  @override
+  String deal_detail_copied(String label, String text) {
+    return '$label copied to clipboard: $text';
+  }
+
+  @override
+  String deal_detail_phone_copied(String phone) {
+    return 'Phone $phone copied. Ready to dial from your phone.';
+  }
+
+  @override
+  String deal_detail_whatsapp_copied(String phone) {
+    return 'WhatsApp contact $phone copied. Open WhatsApp to start a conversation.';
+  }
+
+  @override
+  String get deal_detail_municipality_department =>
+      'Municipality / Department:';
+
+  @override
+  String get deal_detail_geo_coordinates => 'Geographic coordinates:';
+
+  @override
+  String deal_detail_lat_lon(String lat, String lon) {
+    return 'Lat: $lat\nLon: $lon';
+  }
+
+  @override
+  String get deal_detail_location_verified =>
+      'Verified location for the delivery of this batch.';
+
+  @override
+  String get deal_detail_coordinates_label => 'Coordinates';
+
+  @override
+  String get deal_detail_copy_coordinates => 'Copy coordinates';
+
+  @override
+  String get deal_detail_you => 'You';
+
+  @override
+  String deal_detail_delivery(String method) {
+    return 'Delivery: $method';
+  }
+
+  @override
+  String get deal_detail_cancel_proposal => 'Cancel proposal';
+
+  @override
+  String deal_detail_consent_save_error(String error) {
+    return 'Warning: initial consent could not be saved: $error';
+  }
+
+  @override
+  String get deal_detail_agreed_success => 'Deal agreed successfully';
+
+  @override
+  String get deal_detail_permissions_updated =>
+      'Contact permissions updated successfully';
+
+  @override
+  String get deal_detail_reject_confirm_desc_extended =>
+      'This action cannot be undone and the deal will close.';
+
+  @override
+  String get deal_detail_rejected => 'The deal has been rejected';
+
+  @override
+  String get deal_detail_cancel_confirm_title => 'Cancel this agreement?';
+
+  @override
+  String get deal_detail_cancel_proposal_title => 'Cancel this proposal?';
+
+  @override
+  String get deal_detail_cancel_confirm_desc =>
+      'This action will cancel the agreed deal, release reserved stock, and close the negotiation.';
+
+  @override
+  String get deal_detail_cancel_proposal_desc =>
+      'This action will cancel the submitted proposal, release reserved stock, and close the negotiation.';
+
+  @override
+  String get deal_detail_cancel_agreed_btn => 'Cancel agreement';
+
+  @override
+  String get deal_detail_cancel_proposal_btn => 'Cancel proposal';
+
+  @override
+  String get deal_detail_cancelled_success =>
+      'Agreement cancelled successfully';
+
+  @override
+  String get deal_detail_proposal_cancelled_success =>
+      'Proposal cancelled successfully';
+
+  @override
+  String get deal_detail_complete_confirm_title => 'Complete this deal?';
+
+  @override
+  String get deal_detail_complete_confirm_desc =>
+      'This action will confirm the physical delivery of the product and record the final sale in inventory.';
+
+  @override
+  String get deal_detail_complete => 'Complete';
+
+  @override
+  String get deal_detail_completed => 'Deal completed successfully';
+
+  @override
+  String get deal_detail_rating_error =>
+      'The rating could not be sent. Please try again.';
+
+  @override
+  String get deal_detail_stars_required => 'Select 1 to 5 stars';
+
+  @override
+  String get deal_detail_comment_optional => 'Comment (optional)';
+
+  @override
+  String get deal_detail_comment_hint => 'Tell us about your experience';
+
+  @override
+  String get deal_detail_submit_rating => 'Submit rating';
+
+  @override
+  String get deal_detail_accept_terms_title => 'Accept offer and agree deal';
+
+  @override
+  String get deal_detail_accept_terms_desc =>
+      'When formalizing the agreement, the agreed inventory will be reserved in the system. Select which contact details you authorize to share with the counterpart to coordinate physical delivery:';
+
+  @override
+  String get deal_detail_share_phone => 'Share my phone and WhatsApp';
+
+  @override
+  String get deal_detail_share_phone_desc =>
+      'Allows the counterpart to call or message you on WhatsApp to coordinate.';
+
+  @override
+  String get deal_detail_share_location => 'Share my delivery location';
+
+  @override
+  String get deal_detail_share_farm_location => 'Share the farm location';
+
+  @override
+  String get deal_detail_share_location_desc =>
+      'Allows viewing the municipality and coordinates to plan the delivery route.';
+
+  @override
+  String get deal_detail_confirm_agreement => 'Confirm agreement';
+
+  @override
+  String get deal_detail_my_permissions_title => 'My contact permissions';
+
+  @override
+  String get deal_detail_my_permissions_desc =>
+      'Control which private details you authorize the counterpart to see to coordinate this deal. You can revoke or grant permissions at any time:';
+
+  @override
+  String get deal_detail_share_phone_desc_permission =>
+      'The counterpart will be able to see your number for calls or messages.';
+
+  @override
+  String get deal_detail_share_location_desc_permission =>
+      'The counterpart will be able to see the municipality and coordinates for logistics.';
+
+  @override
+  String get moderation_reject_sheet_title => 'Reject Request';
+
+  @override
+  String get moderation_reject_reason_desc =>
+      'Enter the rejection reason so the user can correct it:';
+
+  @override
+  String get moderation_lbl_email => 'Email:';
+
+  @override
+  String get moderation_lbl_user_id => 'User ID:';
+
+  @override
+  String get moderation_queue_refresh => 'Refresh';
+
+  @override
+  String get moderation_status_pending => 'Pending';
+
+  @override
+  String get moderation_status_approved => 'Approved';
+
+  @override
+  String get moderation_status_rejected => 'Rejected';
+
+  @override
+  String get moderation_status_suspended => 'Suspended';
+
+  @override
+  String get moderation_status_unknown => 'Unknown';
+
+  @override
+  String get profile_title => 'My Profile';
+
+  @override
+  String get profile_my_farm => 'My Farm';
+
+  @override
+  String get profile_settings => 'Settings';
+
+  @override
+  String get profile_load_data_error => 'The data could not be loaded.';
+
+  @override
+  String get profile_location => 'Location';
+
+  @override
+  String get profile_whatsapp => 'WhatsApp';
+
+  @override
+  String get profile_stats_heading => 'Statistics';
+
+  @override
+  String get profile_published => 'Published';
+
+  @override
+  String get profile_negotiating => 'Negotiating';
+
+  @override
+  String get profile_closed_female => 'Closed';
+
+  @override
+  String get profile_closed_male => 'Closed';
+
+  @override
+  String profile_update_error(String error) {
+    return 'Error updating data: $error';
+  }
+
+  @override
+  String profile_photo_error(String error) {
+    return 'Error uploading image: $error';
+  }
+
+  @override
+  String get profile_reputation_title => 'Reputation';
+
+  @override
+  String get profile_reputation_loading => 'Loading reputation...';
+
+  @override
+  String get profile_reputation_error => 'Reputation could not be loaded.';
+
+  @override
+  String purchases_error_prefix(String error) {
+    return 'An error occurred: $error';
+  }
+
+  @override
+  String get purchases_merchant_role => 'Merchant Role';
+
+  @override
+  String get purchase_card_producer_local => 'Local producer';
+
+  @override
+  String purchase_card_producer_municipality(String municipality) {
+    return 'Producer ($municipality)';
+  }
+
+  @override
+  String get purchase_card_agreed_crop => 'Agreed crop';
+
+  @override
+  String get purchase_card_quantity => 'Quantity';
+
+  @override
+  String get purchase_card_price_per_kg => 'Price / kg';
+
+  @override
+  String get purchase_card_total_agreed => 'Agreed total';
+
+  @override
+  String get ai_close => 'Close';
+
+  @override
+  String get ai_title => 'Publish by voice';
+
+  @override
+  String get ai_subtitle =>
+      'Tell us what you want to sell. You will review everything before publishing.';
+
+  @override
+  String get ai_examples_title => 'You can mention:';
+
+  @override
+  String get ai_examples_desc =>
+      'Crop name, quantity and unit (kg, sack, arroba, crate, box or ton), and price per kg or per unit.';
+
+  @override
+  String get ai_example_text =>
+      'Example: “I have 50 sacks of potatoes at 2,000 pesos per kilo.”';
+
+  @override
+  String get ai_unavailable_title =>
+      'Automatic interpretation is not available in this environment because AI_API_KEY is missing.';
+
+  @override
+  String get ai_unavailable_desc =>
+      'You can dictate and review the transcript, or continue manually.';
+
+  @override
+  String get ai_preparing => 'Preparing the microphone...';
+
+  @override
+  String get ai_permission_title => 'Microphone permission denied';
+
+  @override
+  String get ai_permission_desc =>
+      'We cannot access the microphone. Enable the permission in system settings or continue manually.';
+
+  @override
+  String get ai_voice_unavailable_title => 'Voice recognition unavailable';
+
+  @override
+  String get ai_voice_unavailable_desc =>
+      'This device does not offer the voice recognition service required by the app. You can publish manually.';
+
+  @override
+  String get ai_transcribing => 'Transcribing what you said...';
+
+  @override
+  String get ai_interpreting => 'Interpreting the data with AI...';
+
+  @override
+  String get ai_intro =>
+      'Tap the microphone and describe your crop in your own words. Nothing will be published automatically.';
+
+  @override
+  String get ai_start => 'Start speaking';
+
+  @override
+  String get ai_manual => 'I prefer to fill out the form manually';
+
+  @override
+  String get ai_retry_mic => 'Retry microphone';
+
+  @override
+  String get ai_continue_manual => 'Continue manually';
+
+  @override
+  String get ai_listening => 'Listening...';
+
+  @override
+  String get ai_listening_hint => 'Speak now. You can stop when you are done.';
+
+  @override
+  String get ai_stop_review => 'Stop and review';
+
+  @override
+  String get ai_review_transcript_title => 'Review the transcript';
+
+  @override
+  String get ai_review_transcript_desc =>
+      'If the microphone misheard any word, correct it before interpreting the data.';
+
+  @override
+  String get ai_transcript_label => 'Transcript';
+
+  @override
+  String get ai_interpret => 'Interpret with AI';
+
+  @override
+  String get ai_record_again => 'Record again';
+
+  @override
+  String get ai_recognized_title => 'Recognized data';
+
+  @override
+  String get ai_recognized_desc =>
+      'This data will be pre-filled in the form. You can still correct it and must complete what is missing.';
+
+  @override
+  String get ai_no_data_desc =>
+      'No usable data was identified. You can retry the interpretation, record again, or continue manually.';
+
+  @override
+  String get ai_warnings => 'Warnings';
+
+  @override
+  String get ai_confirm_data => 'Confirm this data';
+
+  @override
+  String get ai_missing_data => 'Missing data to complete';
+
+  @override
+  String get ai_review_continue => 'Review and continue';
+
+  @override
+  String get ai_retry_interpret => 'Retry interpretation';
+
+  @override
+  String get ai_crop => 'Crop';
+
+  @override
+  String get ai_quantity => 'Quantity';
+
+  @override
+  String get ai_price => 'Price';
+
+  @override
+  String get ai_note => 'Note';
+
+  @override
+  String get ai_no_data => 'No data identified.';
+
+  @override
+  String get ai_failed_title => 'Could not complete';
+
+  @override
+  String get ai_failed_desc =>
+      'A problem occurred. Try again or continue manually.';
+
+  @override
+  String get ai_error_mic_start =>
+      'The microphone could not be started. Check the permission or continue manually.';
+
+  @override
+  String get ai_error_mic_stop =>
+      'Voice recognition could not be stopped. Try again or continue manually.';
+
+  @override
+  String get ai_error_no_speech =>
+      'No voice was recognized. Move closer to the microphone, try again, or continue manually.';
+
+  @override
+  String get ai_error_no_speech_retry =>
+      'No voice was recognized. Try speaking closer to the microphone or continue manually.';
+
+  @override
+  String get ai_error_empty_transcript =>
+      'The transcript is empty. Record again or type what you want to publish.';
+
+  @override
+  String get ai_error_not_configured =>
+      'AI interpretation is not configured. AI_API_KEY is missing. You can continue manually.';
+
+  @override
+  String get ai_error_interpret =>
+      'The transcript could not be interpreted. Try again or continue manually.';
 }

@@ -10,9 +10,12 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/loading/app_loading.dart';
 import '../../../../core/widgets/loading/loading_indicator.dart';
+import 'document_image_picker.dart';
 import '../login/screens/login_screen.dart';
 import '../recovery/screens/reset_password_screen.dart';
 import '../recovery/services/recovery_service.dart';
+import '../registro/screens/complete_registration_screen.dart';
+import '../registro/services/account_completion_service.dart';
 import '../verificacion/screens/verification_status_screen.dart';
 import '../verificacion/services/verification_service.dart';
 import '../../dashboard/screens/main_dashboard_screen.dart';
@@ -47,6 +50,8 @@ class AuthGate extends StatefulWidget {
   final RecoveryService? recoveryService;
   final ModerationService? moderationService;
   final Future<AuthResponse> Function()? sessionRefresher;
+  final AccountCompletionService? accountCompletionService;
+  final DocumentImageSelector? completionImageSelector;
 
   const AuthGate({
     super.key,
@@ -58,6 +63,8 @@ class AuthGate extends StatefulWidget {
     this.recoveryService,
     this.moderationService,
     this.sessionRefresher,
+    this.accountCompletionService,
+    this.completionImageSelector,
   });
 
   @override
@@ -531,7 +538,18 @@ class _AuthGateState extends State<AuthGate> {
         return _buildNetworkErrorView(context);
 
       case _AuthGateStatus.profileNotFound:
-        return _buildProfileNotFoundView(context);
+        return CompleteRegistrationScreen(
+          currentUser: widget.initialSession?.user ?? _client?.auth.currentUser,
+          completionService: widget.accountCompletionService,
+          imageSelector: widget.completionImageSelector,
+          onCompleted: () async {
+            final userId = _activeUserId;
+            if (userId != null) {
+              await _resolveProfile(userId, ++_resolutionEpoch);
+            }
+          },
+          onSignOut: _handleSignOut,
+        );
 
       case _AuthGateStatus.recoverableError:
         return _buildRecoverableErrorView(context);
@@ -566,48 +584,6 @@ class _AuthGateState extends State<AuthGate> {
           const SizedBox(height: 24),
           Text(
             l10n?.verification_status_error_title ?? 'Ha ocurrido un error',
-            textAlign: TextAlign.center,
-            style: AppTextStyles.headlineMedium.copyWith(color: Colors.white),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            l10n?.verification_status_unknown_desc ?? 'No pudimos determinar el estado de verificación. Por favor, contacta a soporte.',
-            textAlign: TextAlign.center,
-            style: AppTextStyles.bodyMedium.copyWith(color: Colors.white70),
-          ),
-          const SizedBox(height: 32),
-          ElevatedButton(
-            onPressed: _retryResolution,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: AppColors.loadingBackground,
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-            ),
-            child: Text(l10n?.verification_status_retry ?? 'Reintentar'),
-          ),
-          const SizedBox(height: 16),
-          TextButton(
-            onPressed: _handleSignOut,
-            child: Text(
-              l10n?.profile_logout ?? 'Cerrar sesión',
-              style: const TextStyle(color: Colors.white70),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProfileNotFoundView(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return AppLoading(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.person_off_outlined, color: Colors.orange, size: 80),
-          const SizedBox(height: 24),
-          Text(
-            l10n?.verification_status_unknown_title ?? 'Estado Desconocido',
             textAlign: TextAlign.center,
             style: AppTextStyles.headlineMedium.copyWith(color: Colors.white),
           ),

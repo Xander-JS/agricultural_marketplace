@@ -355,17 +355,18 @@ BEGIN
 
     -- 4.A: Cancelación con reserva activa
     test_code := '4.A';
-    description := 'Aceptar trato (reserva activa) y posterior cancelación liberando exactamente una vez';
-    expected := 'Stock reservado 100 kg, liberado 100 kg, stock final comprometido 0';
+    description := 'Aceptar trato ya reservado desde la propuesta y posterior cancelación liberando exactamente una vez';
+    expected := 'Reserva compartida 250 kg (100 Neg 1 + 150 Neg 2); tras cancelar Neg 1 quedan 150 kg comprometidos y 1 liberación';
     BEGIN
-        -- Comprador acepta la contraoferta del agricultor (100 kg a 4900)
+        -- Comprador acepta la contraoferta del agricultor (100 kg a 4900).
+        -- La propuesta ya reservó 100 kg; Neg 2 mantiene otros 150 kg reservados.
         PERFORM set_config('role', 'authenticated', true);
         PERFORM set_config('request.jwt.claims', json_build_object('sub', c_buyer1_id, 'role', 'authenticated')::text, true);
         v_json := public.accept_negotiation(v_neg_id);
 
         SELECT stock_committed INTO v_stock_comm FROM public.crops WHERE id = c_crop1_id;
-        IF v_stock_comm != 100 THEN
-            RAISE EXCEPTION 'Reserva inicial incorrecta: % (esperado 100)', v_stock_comm;
+        IF v_stock_comm != 250 THEN
+            RAISE EXCEPTION 'Reserva compartida inicial incorrecta: % (esperado 250)', v_stock_comm;
         END IF;
 
         -- Comprador cancela la negociación acordada
@@ -374,7 +375,7 @@ BEGIN
         SELECT count(*) INTO v_count FROM public.inventory_movements WHERE negotiation_id = v_neg_id AND movement_type = 'liberacion_reserva';
 
         obtained := 'Comprometido final: ' || v_stock_comm || ' kg, Liberaciones registradas: ' || v_count;
-        IF v_stock_comm = 0 AND v_count = 1 THEN
+        IF v_stock_comm = 150 AND v_count = 1 THEN
             verdict := 'APROBADO';
         ELSE
             verdict := 'FALLIDO';
@@ -441,15 +442,15 @@ BEGIN
     END;
     RETURN NEXT;
 
-    -- 4.D: Cancelación sin reserva previa
+    -- 4.D: Cancelación de propuesta con reserva (sin aceptación)
     test_code := '4.D';
-    description := 'Cancelar una propuesta que nunca estuvo acordada ni reservó stock';
-    expected := 'Negociación cancelada, 0 movimientos de liberación creados, stock comprometido 0';
+    description := 'Cancelar una propuesta inicial que ya había reservado stock, sin haber sido aceptada';
+    expected := 'Negociación cancelada, reserva y liberación registradas (2 movimientos), stock comprometido 0';
     BEGIN
-        -- Crear negociación temporal para prueba 4.D
+        -- Crear negociación temporal para prueba 4.D: reserva 80 kg desde la propuesta
         PERFORM set_config('role', 'authenticated', true);
         PERFORM set_config('request.jwt.claims', json_build_object('sub', c_buyer1_id, 'role', 'authenticated')::text, true);
-        v_json := public.create_negotiation_with_offer(c_crop1_id, 80, 4900, 'en_finca', 'Propuesta a cancelar sin reserva');
+        v_json := public.create_negotiation_with_offer(c_crop1_id, 80, 4900, 'en_finca', 'Propuesta a cancelar con reserva');
         v_neg_id := (v_json->>'id')::uuid;
 
         -- Cancelar inmediatamente estando en estado propuesta
@@ -459,7 +460,7 @@ BEGIN
         SELECT stock_committed INTO v_stock_comm FROM public.crops WHERE id = c_crop1_id;
 
         obtained := 'Movimientos: ' || v_count || ', Comprometido: ' || v_stock_comm || ' kg';
-        IF v_count = 0 AND v_stock_comm = 0 THEN
+        IF v_count = 2 AND v_stock_comm = 0 THEN
             verdict := 'APROBADO';
         ELSE
             verdict := 'FALLIDO';

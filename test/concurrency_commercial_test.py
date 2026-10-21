@@ -69,35 +69,23 @@ def setup_base_data():
 def test_c1_concurrent_overbooking():
     print("\n--- Test C1: Dos compradores intentan reservar cantidades que superan el stock disponible ---")
     setup_base_data()
-    farmer_id = 'f0000000-0000-0000-0000-000000000001'
     buyer1_id = 'f0000000-0000-0000-0000-000000000002'
     buyer2_id = 'f0000000-0000-0000-0000-000000000003'
     crop_id = 'e0000000-0000-0000-0000-000000000001'
 
-    # Buyer 1 propone 600 kg
-    neg1_id = run_sql(f"""
-        SET ROLE authenticated;
-        SET request.jwt.claims = '{{"sub": "{buyer1_id}", "role": "authenticated"}}';
-        SELECT public.create_negotiation_with_offer('{crop_id}', 600, 1500, 'en_finca', 'B1 600kg')->>'id';
-    """)
-
-    # Buyer 2 propone 600 kg
-    neg2_id = run_sql(f"""
-        SET ROLE authenticated;
-        SET request.jwt.claims = '{{"sub": "{buyer2_id}", "role": "authenticated"}}';
-        SELECT public.create_negotiation_with_offer('{crop_id}', 600, 1500, 'transportadora', 'B2 600kg')->>'id';
-    """)
-
-    # Ejecutar accept_negotiation en paralelo con dos hilos
+    # Ambas propuestas de 600 kg compiten por 1000 kg y reservan al crearse.
     results = [None, None]
     barrier = threading.Barrier(2)
 
-    def worker(idx, neg_id):
+    def worker(idx, buyer_id, delivery, message):
         barrier.wait()
-        results[idx] = exec_as_user(farmer_id, f"SELECT public.accept_negotiation('{neg_id}');")
+        results[idx] = exec_as_user(
+            buyer_id,
+            f"SELECT public.create_negotiation_with_offer('{crop_id}', 600, 1500, '{delivery}', '{message}')->>'id';"
+        )
 
-    t1 = threading.Thread(target=worker, args=(0, neg1_id))
-    t2 = threading.Thread(target=worker, args=(1, neg2_id))
+    t1 = threading.Thread(target=worker, args=(0, buyer1_id, 'en_finca', 'B1 600kg'))
+    t2 = threading.Thread(target=worker, args=(1, buyer2_id, 'transportadora', 'B2 600kg'))
     t1.start()
     t2.start()
     t1.join()
@@ -109,12 +97,14 @@ def test_c1_concurrent_overbooking():
     # Validar inventario en base de datos
     committed = float(run_sql(f"SELECT stock_committed FROM public.crops WHERE id = '{crop_id}';"))
     reservations = int(run_sql(f"SELECT count(*) FROM public.inventory_movements WHERE crop_id = '{crop_id}' AND movement_type = 'reserva';"))
+    negotiations = int(run_sql(f"SELECT count(*) FROM public.negotiations WHERE crop_id = '{crop_id}';"))
 
     print(f"Resultados concurrentes: {successes} exitosos, {failures} rechazados")
     print(f"Stock comprometido en DB: {committed} kg (esperado: 600.0 kg)")
     print(f"Movimientos de reserva: {reservations} (esperado: 1)")
+    print(f"Negociaciones creadas: {negotiations} (esperado: 1)")
 
-    if successes == 1 and failures == 1 and committed == 600.0 and reservations == 1:
+    if successes == 1 and failures == 1 and committed == 600.0 and reservations == 1 and negotiations == 1:
         print("VEREDICTO C1: APROBADO (Prevención estricta de sobreventa por bloqueo FOR UPDATE)")
         return True
     else:

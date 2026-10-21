@@ -67,39 +67,59 @@ void main() {
       shareLocation: true,
       shareWhatsapp: true,
     ),
-    stats: FarmerStatsData(
-      published: 3,
-      negotiating: 1,
-      closed: 5,
-    ),
+    stats: FarmerStatsData(published: 3, negotiating: 1, closed: 5),
   );
 
   group('Etapa 4 — MarketplaceScreen por Rol', () {
-    testWidgets('Comprador ve título "Mercado", NO ve botón flotante "Publicar" y ve cosechas', (tester) async {
-      await tester.pumpWidget(
-        createTestWidget(
-          child: MarketplaceScreen(
-            role: 'comprador',
-            initialCrops: [sampleCrop],
+    testWidgets(
+      'Comprador ve título "Mercado", NO ve botón flotante "Publicar" y ve cosechas',
+      (tester) async {
+        await tester.pumpWidget(
+          createTestWidget(
+            child: MarketplaceScreen(
+              role: 'comprador',
+              initialCrops: [sampleCrop],
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      // Debe mostrar el título del comprador
-      expect(find.text('Mercado'), findsOneWidget);
-      expect(find.text('Mi Mercado'), findsNothing);
+        // Debe mostrar el título del comprador
+        expect(find.text('Mercado'), findsOneWidget);
+        expect(find.text('Mi Mercado'), findsNothing);
 
-      // NO debe tener el FloatingActionButton de publicar
-      expect(find.byType(FloatingActionButton), findsNothing);
-      expect(find.text('Publicar'), findsNothing);
+        // NO debe tener el FloatingActionButton de publicar
+        expect(find.byType(FloatingActionButton), findsNothing);
+        expect(find.text('Publicar'), findsNothing);
 
-      // Debe mostrar la cosecha
-      expect(find.text('Aguacate Hass de Exportación'), findsOneWidget);
-      expect(find.text('Aguacate'), findsOneWidget);
-    });
+        // Debe mostrar la cosecha
+        expect(find.text('Aguacate Hass de Exportación'), findsOneWidget);
+        expect(find.text('Aguacate'), findsOneWidget);
+      },
+    );
 
-    testWidgets('Comerciante es sinónimo de comprador en MarketplaceScreen', (tester) async {
+    testWidgets(
+      'CropCard muestra el stock disponible (total - comprometido - vendido), no el stock total',
+      (tester) async {
+        await tester.pumpWidget(
+          createTestWidget(
+            child: MarketplaceScreen(
+              role: 'comprador',
+              initialCrops: [sampleCrop],
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // sampleCrop: 1000 total - 100 comprometido - 50 vendido = 850 disponible
+        expect(find.text('850 kg'), findsOneWidget);
+        expect(find.text('1.000 kg'), findsNothing);
+      },
+    );
+
+    testWidgets('Comerciante es sinónimo de comprador en MarketplaceScreen', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         createTestWidget(
           child: MarketplaceScreen(
@@ -114,59 +134,111 @@ void main() {
       expect(find.byType(FloatingActionButton), findsNothing);
     });
 
-    testWidgets('Agricultor ve título "Mi Mercado" y SÍ ve botón flotante "Publicar"', (tester) async {
-      await tester.pumpWidget(
-        createTestWidget(
-          child: MarketplaceScreen(
-            role: 'agricultor',
-            initialCrops: [sampleCrop],
+    testWidgets(
+      'Variantes buyer, mayúsculas y espacios no muestran accidentalmente interfaz de agricultor',
+      (tester) async {
+        final buyerVariants = [
+          'buyer',
+          ' BUYER ',
+          '  comprador  ',
+          '  Comerciante  ',
+        ];
+        for (final variant in buyerVariants) {
+          await tester.pumpWidget(
+            createTestWidget(
+              child: MarketplaceScreen(
+                role: variant,
+                initialCrops: [sampleCrop],
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          expect(
+            find.text('Mercado'),
+            findsOneWidget,
+            reason: 'Falló para variante: "$variant"',
+          );
+          expect(
+            find.text('Mi Mercado'),
+            findsNothing,
+            reason: 'Mostró Mi Mercado para variante: "$variant"',
+          );
+          expect(
+            find.byType(FloatingActionButton),
+            findsNothing,
+            reason: 'Mostró FAB para variante: "$variant"',
+          );
+          expect(
+            find.text('Publicar'),
+            findsNothing,
+            reason: 'Mostró Publicar para variante: "$variant"',
+          );
+        }
+      },
+    );
+
+    testWidgets(
+      'Agricultor ve título "Mi Mercado" y SÍ ve botón flotante "Publicar"',
+      (tester) async {
+        await tester.pumpWidget(
+          createTestWidget(
+            child: MarketplaceScreen(
+              role: 'agricultor',
+              initialCrops: [sampleCrop],
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      // Debe mostrar el título del agricultor
-      expect(find.text('Mi Mercado'), findsOneWidget);
+        // Debe mostrar el título del agricultor
+        expect(find.text('Mi Mercado'), findsOneWidget);
 
-      // SÍ debe mostrar el FloatingActionButton
-      expect(find.byType(FloatingActionButton), findsOneWidget);
-      expect(find.text('Publicar'), findsOneWidget);
-    });
+        // SÍ debe mostrar el FloatingActionButton
+        expect(find.byType(FloatingActionButton), findsOneWidget);
+        expect(find.text('Publicar'), findsOneWidget);
+      },
+    );
 
-    testWidgets('Comprador con lista vacía ve estado vacío con botón Actualizar y sin Publicar', (tester) async {
-      await tester.pumpWidget(
-        createTestWidget(
-          child: const MarketplaceScreen(
-            role: 'comprador',
-            initialCrops: [],
+    testWidgets(
+      'Comprador con lista vacía ve estado vacío con botón Actualizar y sin Publicar',
+      (tester) async {
+        await tester.pumpWidget(
+          createTestWidget(
+            child: const MarketplaceScreen(role: 'comprador', initialCrops: []),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.text('No hay cosechas disponibles'), findsOneWidget);
-      expect(find.text('Actualizar'), findsOneWidget);
-      expect(find.text('Publicar mi primera cosecha'), findsNothing);
-      expect(find.byType(FloatingActionButton), findsNothing);
-    });
+        expect(find.text('No hay cosechas disponibles'), findsOneWidget);
+        expect(find.text('Actualizar'), findsOneWidget);
+        expect(find.text('Publicar mi primera cosecha'), findsNothing);
+        expect(find.byType(FloatingActionButton), findsNothing);
+      },
+    );
 
-    testWidgets('Agricultor con lista vacía ve estado vacío para crear su primera publicación', (tester) async {
-      await tester.pumpWidget(
-        createTestWidget(
-          child: const MarketplaceScreen(
-            role: 'agricultor',
-            initialCrops: [],
+    testWidgets(
+      'Agricultor con lista vacía ve estado vacío para crear su primera publicación',
+      (tester) async {
+        await tester.pumpWidget(
+          createTestWidget(
+            child: const MarketplaceScreen(
+              role: 'agricultor',
+              initialCrops: [],
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.text('Aún no tienes cosechas publicadas'), findsOneWidget);
-      expect(find.text('Publicar mi primera cosecha'), findsOneWidget);
-      expect(find.byType(FloatingActionButton), findsOneWidget);
-    });
+        expect(find.text('Aún no tienes cosechas publicadas'), findsOneWidget);
+        expect(find.text('Publicar mi primera cosecha'), findsOneWidget);
+        expect(find.byType(FloatingActionButton), findsOneWidget);
+      },
+    );
 
-    testWidgets('MarketplaceScreen soporta modo oscuro sin excepciones', (tester) async {
+    testWidgets('MarketplaceScreen soporta modo oscuro sin excepciones', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         createTestWidget(
           themeMode: ThemeMode.dark,
@@ -184,64 +256,72 @@ void main() {
   });
 
   group('Etapa 4 — CropDetailScreen por Rol', () {
-    testWidgets('Comprador en CropDetailScreen NO ve botones Editar/Borrar y ve "Hacer oferta / Negociar"', (tester) async {
-      await tester.pumpWidget(
-        createTestWidget(
-          child: CropDetailScreen(
-            crop: sampleCrop,
-            role: 'comprador',
-            isOwner: false,
-            initialFarmerProfile: sampleFarmerProfile,
+    testWidgets(
+      'Comprador en CropDetailScreen NO ve botones Editar/Borrar y ve "Hacer oferta / Negociar"',
+      (tester) async {
+        await tester.pumpWidget(
+          createTestWidget(
+            child: CropDetailScreen(
+              crop: sampleCrop,
+              role: 'comprador',
+              isOwner: false,
+              initialFarmerProfile: sampleFarmerProfile,
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      // Título
-      expect(find.text('Detalle de Cosecha'), findsOneWidget);
+        // Título
+        expect(find.text('Detalle de Cosecha'), findsOneWidget);
 
-      // NO debe tener acciones de edición o borrado
-      expect(find.byIcon(Icons.edit), findsNothing);
-      expect(find.byIcon(Icons.delete), findsNothing);
+        // NO debe tener acciones de edición o borrado
+        expect(find.byIcon(Icons.edit), findsNothing);
+        expect(find.byIcon(Icons.delete), findsNothing);
 
-      // NO debe tener acciones de pausar cultivo
-      expect(find.text('Pausar Publicación'), findsNothing);
-      expect(find.text('Ver Negociaciones'), findsNothing);
+        // NO debe tener acciones de pausar cultivo
+        expect(find.text('Pausar Publicación'), findsNothing);
+        expect(find.text('Ver Negociaciones'), findsNothing);
 
-      // SÍ debe mostrar el botón para hacer oferta / negociar
-      expect(find.text('Hacer oferta / Negociar'), findsOneWidget);
+        // SÍ debe mostrar el botón para hacer oferta / negociar
+        expect(find.text('Hacer oferta / Negociar'), findsOneWidget);
 
-      // SÍ debe mostrar la tarjeta con la información del productor
-      expect(find.text('Información del Productor'), findsOneWidget);
-      expect(find.text('Don Carlos Restrepo'), findsOneWidget);
-      expect(find.text('+57 300 123 4567'), findsOneWidget);
-    });
+        // SÍ debe mostrar la tarjeta con la información del productor
+        expect(find.text('Información del Productor'), findsOneWidget);
+        expect(find.text('Don Carlos Restrepo'), findsOneWidget);
+        expect(find.text('+57 300 123 4567'), findsOneWidget);
+      },
+    );
 
-    testWidgets('Agricultor dueño en CropDetailScreen ve botones Editar/Borrar y Pausar', (tester) async {
-      await tester.pumpWidget(
-        createTestWidget(
-          child: CropDetailScreen(
-            crop: sampleCrop,
-            role: 'agricultor',
-            isOwner: true,
+    testWidgets(
+      'Agricultor dueño en CropDetailScreen ve botones Editar/Borrar y Pausar',
+      (tester) async {
+        await tester.pumpWidget(
+          createTestWidget(
+            child: CropDetailScreen(
+              crop: sampleCrop,
+              role: 'agricultor',
+              isOwner: true,
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      // SÍ debe tener acciones de edición y borrado
-      expect(find.byIcon(Icons.edit), findsOneWidget);
-      expect(find.byIcon(Icons.delete), findsOneWidget);
+        // SÍ debe tener acciones de edición y borrado
+        expect(find.byIcon(Icons.edit), findsOneWidget);
+        expect(find.byIcon(Icons.delete), findsOneWidget);
 
-      // SÍ debe tener acción para pausar
-      expect(find.text('Pausar Publicación'), findsOneWidget);
-      expect(find.text('Ver Negociaciones'), findsOneWidget);
+        // SÍ debe tener acción para pausar
+        expect(find.text('Pausar Publicación'), findsOneWidget);
+        expect(find.text('Ver Negociaciones'), findsOneWidget);
 
-      // NO debe tener botón de hacer oferta
-      expect(find.text('Hacer oferta / Negociar'), findsNothing);
-    });
+        // NO debe tener botón de hacer oferta
+        expect(find.text('Hacer oferta / Negociar'), findsNothing);
+      },
+    );
 
-    testWidgets('CropDetailScreen soporta modo oscuro sin excepciones', (tester) async {
+    testWidgets('CropDetailScreen soporta modo oscuro sin excepciones', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         createTestWidget(
           themeMode: ThemeMode.dark,
@@ -261,37 +341,41 @@ void main() {
   });
 
   group('Etapa 4 — MakeOfferSheet Validación y Términos', () {
-    testWidgets('MakeOfferSheet inicializa con pedido mínimo y precio base y calcula subtotal', (tester) async {
+    testWidgets(
+      'MakeOfferSheet inicializa con pedido mínimo y precio base y calcula subtotal',
+      (tester) async {
+        await tester.pumpWidget(
+          createTestWidget(
+            child: Scaffold(body: MakeOfferSheet(crop: sampleCrop)),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Título
+        expect(find.text('Nueva Oferta'), findsOneWidget);
+        expect(
+          find.text('Aguacate Hass de Exportación — Aguacate'),
+          findsOneWidget,
+        );
+
+        // Campos inicializados con stock y pedido mínimo
+        expect(find.text('100'), findsOneWidget); // minOrderKg = 100
+        expect(find.text('4500'), findsOneWidget); // pricePerKg = 4500
+
+        // Subtotal estimado inicial: 100 * 4500 = 450000 -> $ 450.000
+        expect(find.text(r'$ 450.000'), findsOneWidget);
+
+        // Opciones de método de entrega presentes
+        expect(find.text('En finca'), findsOneWidget);
+      },
+    );
+
+    testWidgets('MakeOfferSheet valida pedido mínimo menor al requerido', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         createTestWidget(
-          child: Scaffold(
-            body: MakeOfferSheet(crop: sampleCrop),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      // Título
-      expect(find.text('Nueva Oferta'), findsOneWidget);
-      expect(find.text('Aguacate Hass de Exportación — Aguacate'), findsOneWidget);
-
-      // Campos inicializados con stock y pedido mínimo
-      expect(find.text('100'), findsOneWidget); // minOrderKg = 100
-      expect(find.text('4500'), findsOneWidget); // pricePerKg = 4500
-
-      // Subtotal estimado inicial: 100 * 4500 = 450000
-      expect(find.text('\$ 450000'), findsOneWidget);
-
-      // Opciones de método de entrega presentes
-      expect(find.text('En finca'), findsOneWidget);
-    });
-
-    testWidgets('MakeOfferSheet valida pedido mínimo menor al requerido', (tester) async {
-      await tester.pumpWidget(
-        createTestWidget(
-          child: Scaffold(
-            body: MakeOfferSheet(crop: sampleCrop),
-          ),
+          child: Scaffold(body: MakeOfferSheet(crop: sampleCrop)),
         ),
       );
       await tester.pumpAndSettle();
@@ -306,15 +390,18 @@ void main() {
       await tester.pumpAndSettle();
 
       // Debe mostrar error de validación de pedido mínimo
-      expect(find.text('La cantidad no cumple con el pedido mínimo'), findsOneWidget);
+      expect(
+        find.text('La cantidad no cumple con el pedido mínimo'),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('MakeOfferSheet valida cantidad mayor al stock disponible', (tester) async {
+    testWidgets('MakeOfferSheet valida cantidad mayor al stock disponible', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         createTestWidget(
-          child: Scaffold(
-            body: MakeOfferSheet(crop: sampleCrop),
-          ),
+          child: Scaffold(body: MakeOfferSheet(crop: sampleCrop)),
         ),
       );
       await tester.pumpAndSettle();
@@ -329,7 +416,10 @@ void main() {
       await tester.pumpAndSettle();
 
       // Debe mostrar error de validación de stock
-      expect(find.text('La cantidad supera el stock disponible'), findsOneWidget);
+      expect(
+        find.text('La cantidad supera el stock disponible'),
+        findsOneWidget,
+      );
     });
   });
 }

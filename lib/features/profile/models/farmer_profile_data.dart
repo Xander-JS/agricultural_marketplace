@@ -49,6 +49,10 @@ class FarmerProfileData {
   final String email;
   final String phone;
   final String? profilePath;
+  final String department;
+  final String municipality;
+  final double? latitude;
+  final double? longitude;
   final FarmerSettingsData settings;
   final FarmerStatsData stats;
 
@@ -59,9 +63,15 @@ class FarmerProfileData {
     required this.email,
     required this.phone,
     this.profilePath,
+    this.department = 'Nariño',
+    this.municipality = '',
+    this.latitude,
+    this.longitude,
     required this.settings,
     required this.stats,
   });
+
+  bool get hasSimulatedLocation => latitude != null && longitude != null;
 
   factory FarmerProfileData.fromMap({
     required Map<String, dynamic> profileMap,
@@ -75,8 +85,43 @@ class FarmerProfileData {
       email: profileMap['email'] ?? '',
       phone: profileMap['phone'] ?? '',
       profilePath: profileMap['profile_path'],
+      department: (profileMap['department'] as String?)?.trim() ?? 'Nariño',
+      municipality: (profileMap['municipality'] as String?)?.trim() ?? '',
+      latitude: (profileMap['latitude'] as num?)?.toDouble(),
+      longitude: (profileMap['longitude'] as num?)?.toDouble(),
       settings: FarmerSettingsData.fromMap(settingsMap),
       stats: stats,
+    );
+  }
+
+  FarmerProfileData copyWith({
+    String? id,
+    String? fullName,
+    String? role,
+    String? email,
+    String? phone,
+    String? profilePath,
+    bool clearProfilePath = false,
+    String? department,
+    String? municipality,
+    double? latitude,
+    double? longitude,
+    FarmerSettingsData? settings,
+    FarmerStatsData? stats,
+  }) {
+    return FarmerProfileData(
+      id: id ?? this.id,
+      fullName: fullName ?? this.fullName,
+      role: role ?? this.role,
+      email: email ?? this.email,
+      phone: phone ?? this.phone,
+      profilePath: clearProfilePath ? null : (profilePath ?? this.profilePath),
+      department: department ?? this.department,
+      municipality: municipality ?? this.municipality,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      settings: settings ?? this.settings,
+      stats: stats ?? this.stats,
     );
   }
 }

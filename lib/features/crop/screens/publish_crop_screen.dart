@@ -4,11 +4,26 @@ import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/crop_model.dart';
 import '../services/crop_service.dart';
+import '../../ai_assistant/models/voice_crop_draft.dart';
+import '../../geo/services/geo_simulation_service.dart';
+import '../../../core/utils/app_formatters.dart';
+import '../../../core/constants/user_roles.dart';
 
 class PublishCropScreen extends StatefulWidget {
   final CropModel? cropToEdit;
+  final CropService? cropService;
+  final String? currentUserIdForTesting;
+  final VoiceCropDraft? initialDraft;
+  final String? role;
 
-  const PublishCropScreen({super.key, this.cropToEdit});
+  const PublishCropScreen({
+    super.key,
+    this.cropToEdit,
+    this.cropService,
+    this.currentUserIdForTesting,
+    this.initialDraft,
+    this.role,
+  });
 
   @override
   State<PublishCropScreen> createState() => _PublishCropScreenState();
@@ -16,7 +31,7 @@ class PublishCropScreen extends StatefulWidget {
 
 class _PublishCropScreenState extends State<PublishCropScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _cropService = CropService();
+  late final CropService _cropService = widget.cropService ?? CropService();
   final _imagePicker = ImagePicker();
 
   bool _isLoading = false;
@@ -37,14 +52,43 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
   DateTime? _estimatedHarvestDate;
 
   final List<File> _selectedImages = [];
+  late List<String> _existingImageUrls;
+  VoiceCropDraft? _voiceDraft;
 
   @override
   void initState() {
     super.initState();
     _minOrderController.text = '1';
+    _existingImageUrls = List<String>.from(widget.cropToEdit?.imageUrls ?? const []);
     
     if (widget.cropToEdit != null) {
+      // La edición de un cultivo existente siempre tiene prioridad sobre un
+      // borrador de voz, para no alterar el flujo de edición.
       _loadCropData(widget.cropToEdit!);
+    } else {
+      _departmentController.text = 'Nariño';
+      if (widget.initialDraft != null) {
+        _voiceDraft = widget.initialDraft;
+        _applyVoiceDraft(widget.initialDraft!);
+      }
+    }
+  }
+
+  void _applyVoiceDraft(VoiceCropDraft draft) {
+    if (draft.cropType != null) {
+      _cropTypeController.text = draft.cropType!;
+    }
+    if (draft.pricePerKg != null) {
+      _priceController.text = UnitFormatters.formatCleanValue(
+        draft.pricePerKg,
+        useLocaleSeparators: false,
+      );
+    }
+    if (draft.quantityKg != null) {
+      _stockController.text = UnitFormatters.formatCleanValue(
+        draft.quantityKg,
+        useLocaleSeparators: false,
+      );
     }
   }
 
@@ -52,15 +96,15 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
     _titleController.text = crop.title;
     _descriptionController.text = crop.description;
     _cropTypeController.text = crop.cropType;
-    _priceController.text = crop.pricePerKg.toString();
-    _stockController.text = crop.stockTotal.toString();
-    _minOrderController.text = crop.minOrderKg.toString();
+    _priceController.text = UnitFormatters.formatCleanValue(crop.pricePerKg, useLocaleSeparators: false);
+    _stockController.text = UnitFormatters.formatCleanValue(crop.stockTotal, useLocaleSeparators: false);
+    _minOrderController.text = UnitFormatters.formatCleanValue(crop.minOrderKg, useLocaleSeparators: false);
     _departmentController.text = crop.department;
     _municipalityController.text = crop.municipality;
     
     _isEarlySale = crop.isEarlySale;
     if (crop.estimatedYieldKg != null) {
-      _estimatedYieldController.text = crop.estimatedYieldKg.toString();
+      _estimatedYieldController.text = UnitFormatters.formatCleanValue(crop.estimatedYieldKg, useLocaleSeparators: false);
     }
     _estimatedHarvestDate = crop.estimatedHarvestDate;
   }
@@ -123,11 +167,53 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
 
     try {
       final user = Supabase.instance.client.auth.currentUser;
-      if (user == null) throw Exception('No autenticado');
+      final userId = widget.currentUserIdForTesting ?? user?.id;
+      if (userId == null) throw Exception('No autenticado');
+
+      if (widget.role != null && !UserRole.isFarmerRole(widget.role)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Acceso denegado: solo los agricultores pueden publicar cosechas.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      if (widget.cropToEdit != null &&
+          widget.cropToEdit!.farmerId.isNotEmpty &&
+          widget.cropToEdit!.farmerId != userId) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Acceso denegado: no puedes editar una cosecha perteneciente a otro productor.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      final originalImages = widget.cropToEdit?.imageUrls ?? const [];
+      final removedImages = originalImages
+          .where((path) => !_existingImageUrls.contains(path))
+          .toList();
+
+      // Preservar coordenadas existentes al editar o asignar simulación determinista para nuevo
+      double? lat = widget.cropToEdit?.latitude;
+      double? lon = widget.cropToEdit?.longitude;
+
+      if (lat == null || lon == null) {
+        final cropLocation = GeoSimulationService.assignSimulatedLocation(
+          seed: 'crop_${userId}_${_titleController.text.trim()}',
+          municipality: _municipalityController.text.trim(),
+          department: _departmentController.text.trim(),
+        );
+        lat = cropLocation.latitude;
+        lon = cropLocation.longitude;
+      }
 
       final newCrop = CropModel(
         id: widget.cropToEdit?.id ?? '',
-        farmerId: user.id,
+        farmerId: userId,
         title: _titleController.text.trim(),
         description: _descriptionController.text.trim(),
         cropType: _cropTypeController.text.trim(),
@@ -136,6 +222,8 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
         minOrderKg: double.tryParse(_minOrderController.text.trim()) ?? 1,
         department: _departmentController.text.trim(),
         municipality: _municipalityController.text.trim(),
+        latitude: lat,
+        longitude: lon,
         isEarlySale: _isEarlySale,
         estimatedYieldKg: _isEarlySale && _estimatedYieldController.text.isNotEmpty 
             ? double.tryParse(_estimatedYieldController.text.trim()) 
@@ -144,9 +232,14 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
         status: targetStatus,
         createdAt: widget.cropToEdit?.createdAt ?? DateTime.now(),
         updatedAt: DateTime.now(),
+        imageUrls: _existingImageUrls,
       );
 
-      await _cropService.saveCrop(newCrop, newImages: _selectedImages.isNotEmpty ? _selectedImages : null);
+      await _cropService.saveCrop(
+        newCrop,
+        newImages: _selectedImages.isNotEmpty ? _selectedImages : null,
+        removedImages: removedImages.isNotEmpty ? removedImages : null,
+      );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -176,6 +269,35 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.role != null && !UserRole.isFarmerRole(widget.role)) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(widget.cropToEdit == null ? 'Publicar Cosecha' : 'Editar Cosecha'),
+        ),
+        body: const Center(
+          child: Padding(
+            padding: EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.gpp_bad_outlined, size: 72, color: Colors.red),
+                SizedBox(height: 16),
+                Text(
+                  'Acceso No Autorizado',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'Solo los agricultores registrados y verificados pueden publicar cosechas.',
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.cropToEdit == null ? 'Publicar Cosecha' : 'Editar Cosecha'),
@@ -189,6 +311,10 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    if (_voiceDraft != null && widget.cropToEdit == null) ...[
+                      _buildVoiceDraftBanner(_voiceDraft!),
+                      const SizedBox(height: 24),
+                    ],
                     _buildSectionTitle('1. Información General'),
                     _buildTextField(
                       controller: _titleController,
@@ -311,7 +437,7 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
                                 ),
                                 child: Text(
                                   _estimatedHarvestDate != null
-                                      ? '${_estimatedHarvestDate!.day}/${_estimatedHarvestDate!.month}/${_estimatedHarvestDate!.year}'
+                                      ? DateFormatters.formatHarvestDate(_estimatedHarvestDate)
                                       : 'Seleccionar...',
                                 ),
                               ),
@@ -323,6 +449,71 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
 
                     const SizedBox(height: 32),
                     _buildSectionTitle('5. Imágenes'),
+                    if (_existingImageUrls.isNotEmpty) ...[
+                      const Text(
+                        'Imágenes actuales de la publicación:',
+                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        height: 90,
+                        child: ListView.separated(
+                          key: const Key('existing_images_list'),
+                          scrollDirection: Axis.horizontal,
+                          itemCount: _existingImageUrls.length,
+                          separatorBuilder: (_, _) => const SizedBox(width: 8),
+                          itemBuilder: (context, index) {
+                            final path = _existingImageUrls[index];
+                            final url = _cropService.getPublicImageUrl(path);
+                            return Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.network(
+                                    url,
+                                    width: 80,
+                                    height: 80,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, _, _) => Container(
+                                      width: 80,
+                                      height: 80,
+                                      color: Colors.grey.shade200,
+                                      child: const Icon(Icons.image_not_supported_outlined, size: 24),
+                                    ),
+                                  ),
+                                ),
+                                Positioned(
+                                  top: -4,
+                                  right: -4,
+                                  child: GestureDetector(
+                                    key: Key('remove_existing_image_$index'),
+                                    onTap: () {
+                                      setState(() {
+                                        _existingImageUrls.removeAt(index);
+                                      });
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.all(2),
+                                      decoration: const BoxDecoration(
+                                        color: Colors.red,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.close,
+                                        color: Colors.white,
+                                        size: 16,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
                     ElevatedButton.icon(
                       onPressed: _pickImages,
                       icon: const Icon(Icons.add_a_photo),
@@ -389,6 +580,98 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
                 ),
               ),
             ),
+    );
+  }
+
+  Widget _buildVoiceDraftBanner(VoiceCropDraft draft) {
+    final theme = Theme.of(context);
+    final missing = <String>[
+      ...draft.missingFields.map((field) => field.label),
+      'Título',
+      'Descripción',
+      'Ubicación',
+    ];
+
+    return Container(
+      key: const Key('voice_draft_banner'),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.auto_awesome, color: theme.colorScheme.primary),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'Borrador creado por voz',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Revisa los datos reconocidos. No se publicará nada hasta que confirmes el formulario.',
+          ),
+          const SizedBox(height: 10),
+          if (draft.cropType != null)
+            _buildVoiceDraftLine('Cultivo', draft.cropType!),
+          if (draft.quantityDescription != null)
+            _buildVoiceDraftLine('Cantidad', draft.quantityDescription!),
+          if (draft.pricePerKg != null)
+            _buildVoiceDraftLine(
+              'Precio',
+              CurrencyFormatters.formatPricePerKg(draft.pricePerKg),
+            ),
+          if (draft.reviewFields.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              'Confirma: ${draft.reviewFields.map((field) => field.label).join(', ')}',
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ],
+          if (missing.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              'Faltan o debes completar: ${missing.join(', ')}.',
+              style: TextStyle(color: theme.colorScheme.error),
+            ),
+          ],
+          if (draft.warnings.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            ...draft.warnings.map(
+              (warning) => Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      size: 16,
+                      color: theme.colorScheme.tertiary,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(child: Text(warning)),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVoiceDraftLine(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Text('$label: $value'),
     );
   }
 

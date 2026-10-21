@@ -64,7 +64,10 @@ void main() {
     offers: [sampleOffer],
   );
 
-  Widget createTestApp({required Widget child, ThemeMode themeMode = ThemeMode.light}) {
+  Widget createTestApp({
+    required Widget child,
+    ThemeMode themeMode = ThemeMode.light,
+  }) {
     return MaterialApp(
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
@@ -100,7 +103,12 @@ void main() {
       expect(mapped, isA<CommercialAuthorizationException>());
       expect(mapped, isNot(isA<CommercialAuthException>()));
       expect(mapped.code, equals('42501'));
-      expect(mapped.toString(), equals('Acceso denegado: no tienes permisos para realizar esta operación comercial.'));
+      expect(
+        mapped.toString(),
+        equals(
+          'Acceso denegado: no tienes permisos para realizar esta operación comercial.',
+        ),
+      );
     });
 
     test('10.3. Error 42501 por cuenta no aprobada se clasifica como CommercialValidationException', () {
@@ -134,12 +142,18 @@ void main() {
       expect(mapped.toString(), contains('rol de comprador'));
     });
 
-    test('10.6. Excepciones no filtran tokens sensibles, JWT ni PII en toString()', () {
-      const sensitiveToken = 'eyJh...secret_token';
-      const exc = CommercialAuthorizationException('Acceso denegado', details: sensitiveToken);
-      expect(exc.toString(), equals('Acceso denegado'));
-      expect(exc.toString().contains(sensitiveToken), isFalse);
-    });
+    test(
+      '10.6. Excepciones no filtran tokens sensibles, JWT ni PII en toString()',
+      () {
+        const sensitiveToken = 'eyJh...secret_token';
+        const exc = CommercialAuthorizationException(
+          'Acceso denegado',
+          details: sensitiveToken,
+        );
+        expect(exc.toString(), equals('Acceso denegado'));
+        expect(exc.toString().contains(sensitiveToken), isFalse);
+      },
+    );
 
     test('10.7. Error 22000 por stock insuficiente se clasifica como InsufficientStockException', () {
       const pe = PostgrestException(
@@ -169,7 +183,10 @@ void main() {
       final mapped = NegotiationService.mapPostgrestError(pe);
       expect(mapped, isA<CommercialValidationException>());
       expect(mapped.code, equals('23514'));
-      expect(mapped.toString(), contains('restricciones de integridad comercial'));
+      expect(
+        mapped.toString(),
+        contains('restricciones de integridad comercial'),
+      );
     });
   });
 
@@ -238,7 +255,10 @@ void main() {
       expect(sentParams?['p_quantity_kg'], equals(100.0));
       expect(sentParams?['p_proposed_price_per_kg'], equals(27000.0));
       expect(sentParams?['p_delivery_method'], equals('en_finca'));
-      expect(sentParams?['p_message'], equals('Oferta seria con pago inmediato.'));
+      expect(
+        sentParams?['p_message'],
+        equals('Oferta seria con pago inmediato.'),
+      );
 
       expect(result.id, equals('neg-test-uuid'));
       expect(result.status, equals(NegotiationStatus.propuesta));
@@ -320,138 +340,163 @@ void main() {
   // ==========================================================================
   // GRUPO 3: PRUEBAS ESTÁTICAS Y DE DISEÑO DE SEGURIDAD RLS (REQUISITOS 1 A 9)
   // ==========================================================================
-  group('Grupo 3: Pruebas Estáticas de Especificación y Reglas de Seguridad RLS', () {
-    test('1.2. Intento de inserción REST directa en negotiations es denegado (REVOKE INSERT)', () {
-      const directInsertError = PostgrestException(
-        message: 'permission denied for table negotiations',
-        code: '42501',
-      );
-      final mapped = NegotiationService.mapPostgrestError(directInsertError);
-      expect(mapped, isA<CommercialAuthorizationException>());
-      expect(mapped.code, equals('42501'));
-    });
+  group(
+    'Grupo 3: Pruebas Estáticas de Especificación y Reglas de Seguridad RLS',
+    () {
+      test('1.2. Intento de inserción REST directa en negotiations es denegado (REVOKE INSERT)', () {
+        const directInsertError = PostgrestException(
+          message: 'permission denied for table negotiations',
+          code: '42501',
+        );
+        final mapped = NegotiationService.mapPostgrestError(directInsertError);
+        expect(mapped, isA<CommercialAuthorizationException>());
+        expect(mapped.code, equals('42501'));
+      });
 
-    test('2.1. Comprador intentando forzar status = "acordada" vía REST directo es denegado por RLS', () {
-      const directForceAgreedError = PostgrestException(
-        message: 'new row violates row-level security policy for table "negotiations"',
-        code: '42501',
-      );
-      final mapped = NegotiationService.mapPostgrestError(directForceAgreedError);
-      expect(mapped, isA<CommercialAuthorizationException>());
-    });
+      test('2.1. Comprador intentando forzar status = "acordada" vía REST directo es denegado por RLS', () {
+        const directForceAgreedError = PostgrestException(
+          message: 'new row violates row-level security policy for table "negotiations"',
+          code: '42501',
+        );
+        final mapped = NegotiationService.mapPostgrestError(
+          directForceAgreedError,
+        );
+        expect(mapped, isA<CommercialAuthorizationException>());
+      });
 
-    test('3.1. Mutación de campos inmutables (crop_id, buyer_id) en negotiations es bloqueada por trigger', () {
-      const immutableError = PostgrestException(
-        message: 'El comprador de la negociación es inmutable',
-        code: '42501',
-      );
-      final mapped = NegotiationService.mapPostgrestError(immutableError);
-      expect(mapped, isA<CommercialAuthorizationException>());
-    });
+      test('3.1. Mutación de campos inmutables (crop_id, buyer_id) en negotiations es bloqueada por trigger', () {
+        const immutableError = PostgrestException(
+          message: 'El comprador de la negociación es inmutable',
+          code: '42501',
+        );
+        final mapped = NegotiationService.mapPostgrestError(immutableError);
+        expect(mapped, isA<CommercialAuthorizationException>());
+      });
 
-    test('4.1. Modificación directa de stock_committed o stock_sold en crops es bloqueada por trigger y permisos', () {
-      const cropStockTamperError = PostgrestException(
-        message: 'No está permitido modificar directamente la columna stock_committed',
-        code: '42501',
-      );
-      final mapped = NegotiationService.mapPostgrestError(cropStockTamperError);
-      expect(mapped, isA<CommercialAuthorizationException>());
-    });
+      test('4.1. Modificación directa de stock_committed o stock_sold en crops es bloqueada por trigger y permisos', () {
+        const cropStockTamperError = PostgrestException(
+          message: 'No está permitido modificar directamente la columna stock_committed',
+          code: '42501',
+        );
+        final mapped = NegotiationService.mapPostgrestError(
+          cropStockTamperError,
+        );
+        expect(mapped, isA<CommercialAuthorizationException>());
+      });
 
-    test('5.1. Consulta no autorizada a movimientos ajenos en inventory_movements es denegada', () {
-      const unauthorizedMovementRead = PostgrestException(
-        message: 'permission denied for table inventory_movements',
-        code: '42501',
-      );
-      final mapped = NegotiationService.mapPostgrestError(unauthorizedMovementRead);
-      expect(mapped, isA<CommercialAuthorizationException>());
-    });
+      test('5.1. Consulta no autorizada a movimientos ajenos en inventory_movements es denegada', () {
+        const unauthorizedMovementRead = PostgrestException(
+          message: 'permission denied for table inventory_movements',
+          code: '42501',
+        );
+        final mapped = NegotiationService.mapPostgrestError(
+          unauthorizedMovementRead,
+        );
+        expect(mapped, isA<CommercialAuthorizationException>());
+      });
 
-    test('6.1. Ofertas en negotiation_offers permanecen inmutables (REVOKE UPDATE, DELETE)', () {
-      const offerUpdateAttempt = PostgrestException(
-        message: 'permission denied for table negotiation_offers',
-        code: '42501',
-      );
-      final mapped = NegotiationService.mapPostgrestError(offerUpdateAttempt);
-      expect(mapped, isA<CommercialAuthorizationException>());
-    });
+      test('6.1. Ofertas en negotiation_offers permanecen inmutables (REVOKE UPDATE, DELETE)', () {
+        const offerUpdateAttempt = PostgrestException(
+          message: 'permission denied for table negotiation_offers',
+          code: '42501',
+        );
+        final mapped = NegotiationService.mapPostgrestError(offerUpdateAttempt);
+        expect(mapped, isA<CommercialAuthorizationException>());
+      });
 
-    test('8.1. Especificación formal: Aceptación concurrente exige bloqueo FOR UPDATE sobre crops en fase de cierre', () {
-      // Regla técnica documentada: La concurrencia de aceptación no se resuelve mediante FOR SHARE en propuesta,
-      // sino con SELECT ... FOR UPDATE en la RPC accept_negotiation para recalcular stock disponible.
-      expect(sampleCrop.availableStock, equals(700.0));
-    });
+      test('8.1. Especificación formal: Aceptación concurrente exige bloqueo FOR UPDATE sobre crops en fase de cierre', () {
+        // Regla técnica documentada: La concurrencia de aceptación no se resuelve mediante FOR SHARE en propuesta,
+        // sino con SELECT ... FOR UPDATE en la RPC accept_negotiation para recalcular stock disponible.
+        expect(sampleCrop.availableStock, equals(700.0));
+      });
 
-    test('9.1. Rollback documentado recupera estado funcional y evita default-deny outage (0 políticas)', () {
-      // El script 20261016180000_...rollback.sql recrea políticas operativas para negotiations,
-      // crops, negotiation_offers, profiles e inventory_movements.
-      const hasRestorationSection = true;
-      expect(hasRestorationSection, isTrue);
-    });
-  });
+      test('9.1. Rollback documentado recupera estado funcional y evita default-deny outage (0 políticas)', () {
+        // El script 20261016180000_...rollback.sql recrea políticas operativas para negotiations,
+        // crops, negotiation_offers, profiles e inventory_movements.
+        const hasRestorationSection = true;
+        expect(hasRestorationSection, isTrue);
+      });
+    },
+  );
 
   // ==========================================================================
   // GRUPO 4: COMPATIBILIDAD CON WIDGETS DE UI (MakeOfferSheet)
   // ==========================================================================
   group('Grupo 4: Compatibilidad con MakeOfferSheet en UI', () {
-    testWidgets('MakeOfferSheet despliega mensaje amigable cuando ocurre InsufficientStockException', (tester) async {
-      final mockService = NegotiationService(
-        currentUserIdForTesting: 'buyer-test-uuid',
-        rpcInvoker: (func, {params}) async {
-          throw const InsufficientStockException(
+    testWidgets(
+      'MakeOfferSheet despliega mensaje amigable cuando ocurre InsufficientStockException',
+      (tester) async {
+        final mockService = NegotiationService(
+          currentUserIdForTesting: 'buyer-test-uuid',
+          rpcInvoker: (func, {params}) async {
+            throw const InsufficientStockException(
+              'La cantidad solicitada supera el stock disponible (700 kg)',
+              code: '22000',
+            );
+          },
+        );
+
+        await tester.pumpWidget(
+          createTestApp(
+            child: MakeOfferSheet(
+              crop: sampleCrop,
+              negotiationService: mockService,
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final submitButton = find.text('Enviar propuesta');
+        expect(submitButton, findsOneWidget);
+        await tester.tap(submitButton);
+        await tester.pumpAndSettle();
+
+        expect(
+          find.text(
             'La cantidad solicitada supera el stock disponible (700 kg)',
-            code: '22000',
-          );
-        },
-      );
-
-      await tester.pumpWidget(
-        createTestApp(
-          child: MakeOfferSheet(
-            crop: sampleCrop,
-            negotiationService: mockService,
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+          findsOneWidget,
+        );
+      },
+    );
 
-      final submitButton = find.text('Enviar propuesta');
-      expect(submitButton, findsOneWidget);
-      await tester.tap(submitButton);
-      await tester.pumpAndSettle();
+    testWidgets(
+      'MakeOfferSheet despliega mensaje amigable cuando ocurre DuplicateNegotiationException',
+      (tester) async {
+        final mockService = NegotiationService(
+          currentUserIdForTesting: 'buyer-test-uuid',
+          rpcInvoker: (func, {params}) async {
+            throw const DuplicateNegotiationException(
+              'Ya tienes una negociación activa para este cultivo.',
+              code: '23505',
+            );
+          },
+        );
 
-      expect(find.text('La cantidad solicitada supera el stock disponible (700 kg)'), findsOneWidget);
-    });
-
-    testWidgets('MakeOfferSheet despliega mensaje amigable cuando ocurre DuplicateNegotiationException', (tester) async {
-      final mockService = NegotiationService(
-        currentUserIdForTesting: 'buyer-test-uuid',
-        rpcInvoker: (func, {params}) async {
-          throw const DuplicateNegotiationException(
-            'Ya tienes una negociación activa para este cultivo.',
-            code: '23505',
-          );
-        },
-      );
-
-      await tester.pumpWidget(
-        createTestApp(
-          child: MakeOfferSheet(
-            crop: sampleCrop,
-            negotiationService: mockService,
+        await tester.pumpWidget(
+          createTestApp(
+            child: MakeOfferSheet(
+              crop: sampleCrop,
+              negotiationService: mockService,
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      final submitButton = find.text('Enviar propuesta');
-      await tester.tap(submitButton);
-      await tester.pumpAndSettle();
+        final submitButton = find.text('Enviar propuesta');
+        await tester.tap(submitButton);
+        await tester.pumpAndSettle();
 
-      expect(find.text('Ya tienes una negociación activa para este cultivo.'), findsOneWidget);
-    });
+        expect(
+          find.text('Ya tienes una negociación activa para este cultivo.'),
+          findsOneWidget,
+        );
+      },
+    );
 
-    testWidgets('MakeOfferSheet soporta renderizado completo en modo oscuro', (tester) async {
+    testWidgets('MakeOfferSheet soporta renderizado completo en modo oscuro', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         createTestApp(
           themeMode: ThemeMode.dark,
@@ -470,7 +515,10 @@ void main() {
   // ==========================================================================
   group('Grupo 5: Pruebas de Integración Remota (Especificación Formal)', () {
     test('Diferenciación estricta: las pruebas de integración remota no se marcan como aprobadas si no se ejecutan', () {
-      const isRemoteTestConfigured = bool.fromEnvironment('RUN_REMOTE_INTEGRATION_TESTS', defaultValue: false);
+      const isRemoteTestConfigured = bool.fromEnvironment(
+        'RUN_REMOTE_INTEGRATION_TESTS',
+        defaultValue: false,
+      );
       if (!isRemoteTestConfigured) {
         expect(isRemoteTestConfigured, isFalse);
       }
@@ -519,13 +567,14 @@ void main() {
       expect(sentParams?['p_quantity_kg'], equals(80.0));
       expect(sentParams?['p_proposed_price_per_kg'], equals(29000.0));
       expect(sentParams?['p_delivery_method'], equals('en_finca'));
-      expect(sentParams?['p_message'], equals('Precio mínimo de cosecha 29000'));
+      expect(
+        sentParams?['p_message'],
+        equals('Precio mínimo de cosecha 29000'),
+      );
     });
 
     test('6.2. Intento de contraoferta sin autenticación lanza CommercialAuthException', () async {
-      final service = NegotiationService(
-        currentUserIdForTesting: null,
-      );
+      final service = NegotiationService(currentUserIdForTesting: null);
 
       expect(
         () => service.counterOffer(
@@ -833,14 +882,14 @@ void main() {
     // ------------------------------------------------------------------------
     // 6.16 a 6.18: Rechazar y Cancelar con Liberación de Reserva
     // ------------------------------------------------------------------------
-    test('6.16. Rechazo exitoso invoca RPC reject_negotiation liberando stock_committed si estaba acordada', () async {
+    test('6.16. Rechazo exitoso invoca RPC reject_or_cancel_negotiation con estado rechazada y libera la reserva', () async {
       bool rpcInvoked = false;
       Map<String, dynamic>? sentParams;
 
       final service = NegotiationService(
         currentUserIdForTesting: 'farmer-test-uuid',
         rpcInvoker: (func, {params}) async {
-          expect(func, equals('reject_negotiation'));
+          expect(func, equals('reject_or_cancel_negotiation'));
           rpcInvoked = true;
           sentParams = params;
           return {
@@ -854,11 +903,42 @@ void main() {
         },
       );
 
-      await service.rejectOffer('neg-test-uuid', reason: 'Precio acordado ya no viable');
+      await service.rejectOffer(
+        'neg-test-uuid',
+        reason: 'Precio acordado ya no viable',
+      );
 
       expect(rpcInvoked, isTrue);
       expect(sentParams?['p_negotiation_id'], equals('neg-test-uuid'));
+      expect(sentParams?['p_target_status'], equals('rechazada'));
       expect(sentParams?['p_reason'], equals('Precio acordado ya no viable'));
+    });
+
+    test('6.16.b. Cancelación exitosa invoca RPC reject_or_cancel_negotiation con estado cancelada (distinto de rechazo)', () async {
+      bool rpcInvoked = false;
+      Map<String, dynamic>? sentParams;
+
+      final service = NegotiationService(
+        currentUserIdForTesting: 'buyer-test-uuid',
+        rpcInvoker: (func, {params}) async {
+          expect(func, equals('reject_or_cancel_negotiation'));
+          rpcInvoked = true;
+          sentParams = params;
+          return {
+            'success': true,
+            'id': 'neg-test-uuid',
+            'negotiation_id': 'neg-test-uuid',
+            'status': 'cancelada',
+            'released_kg': 100.0,
+          };
+        },
+      );
+
+      await service.cancelOffer('neg-test-uuid');
+
+      expect(rpcInvoked, isTrue);
+      expect(sentParams?['p_target_status'], equals('cancelada'));
+      expect(sentParams?['p_reason'], isNull);
     });
 
     test('6.17. Intento de cancelar propuesta inicial por un no-comprador lanza CommercialAuthorizationException', () async {
@@ -878,7 +958,9 @@ void main() {
           isA<CommercialAuthorizationException>().having(
             (e) => e.message,
             'message',
-            contains('Solo el comprador proponente puede cancelar una propuesta inicial'),
+            contains(
+              'Solo el comprador proponente puede cancelar una propuesta inicial',
+            ),
           ),
         ),
       );

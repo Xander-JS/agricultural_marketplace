@@ -198,7 +198,7 @@ void main() {
       expect(find.byType(FloatingActionButton), findsNothing);
       expect(find.text('Cacao Fino de Aroma'), findsOneWidget);
       expect(find.text('Cacao'), findsOneWidget);
-      expect(find.text('1500 kg'), findsOneWidget);
+      expect(find.text('1.500 kg'), findsOneWidget);
     });
 
     testWidgets('Comprador en CropDetailScreen ve información del productor y botón Hacer oferta', (tester) async {

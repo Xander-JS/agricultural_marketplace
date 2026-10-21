@@ -6,7 +6,7 @@ import '../../../core/localization/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/services/app_preferences_service.dart';
-import '../../auth/login/screens/login_screen.dart';
+import '../../../core/widgets/avatars/user_avatar.dart';
 import '../models/farmer_profile_data.dart';
 import '../services/profile_service.dart';
 
@@ -17,10 +17,16 @@ import '../services/profile_service.dart';
 /// y las opciones de configuración, respetando temas claro y oscuro y localización.
 class FarmerProfileScreen extends StatefulWidget {
   final FarmerProfileData? initialProfileData;
+  final Future<void> Function()? onSignOut;
+  final ProfileService? profileService;
+  final ImagePicker? imagePicker;
 
   const FarmerProfileScreen({
     super.key,
     this.initialProfileData,
+    this.onSignOut,
+    this.profileService,
+    this.imagePicker,
   });
 
   @override
@@ -28,8 +34,8 @@ class FarmerProfileScreen extends StatefulWidget {
 }
 
 class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
-  final ProfileService _profileService = ProfileService();
-  final ImagePicker _imagePicker = ImagePicker();
+  late final ProfileService _profileService = widget.profileService ?? ProfileService();
+  late final ImagePicker _imagePicker = widget.imagePicker ?? ImagePicker();
 
   bool _isLoading = true;
   bool _isSaving = false;
@@ -85,11 +91,16 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
 
     if (widget.initialProfileData != null) {
       _profileData = widget.initialProfileData;
+      _profileService.profilePathNotifier.value = _profileData!.profilePath;
       _emailController.text = _profileData!.email;
       _phoneController.text = _profileData!.phone;
       _isLoading = false;
     } else {
-      _loadProfileData();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _loadProfileData();
+        }
+      });
     }
   }
 
@@ -112,6 +123,8 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
       final userId = currentUser.id;
       final data = await _profileService.getFarmerProfileData(userId);
       if (mounted) {
+        _profileService.invalidateCache(data.profilePath);
+        _profileService.profilePathNotifier.value = data.profilePath;
         setState(() {
           _profileData = data;
           _emailController.text = data.email;
@@ -236,10 +249,16 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
     setState(() => _isSaving = true);
     try {
       final file = File(image.path);
-      await _profileService.uploadProfilePicture(_profileData!.id, file);
-      await _loadProfileData();
-
+      final newPath = await _profileService.uploadProfilePicture(
+        _profileData!.id,
+        file,
+        oldProfilePath: _profileData?.profilePath,
+      );
       if (mounted) {
+        _profileService.profilePathNotifier.value = newPath;
+        setState(() {
+          _profileData = _profileData!.copyWith(profilePath: newPath);
+        });
         final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -308,14 +327,18 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
     );
 
     if (confirm == true) {
-      try {
-        await Supabase.instance.client.auth.signOut();
-      } catch (_) {}
-      if (mounted) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
-          (route) => false,
-        );
+      _profileService.profilePathNotifier.value = null;
+      if (widget.onSignOut != null) {
+        await widget.onSignOut!();
+      } else {
+        try {
+          await Supabase.instance.client.auth.signOut();
+        } catch (e) {
+          debugPrint('Sign out remote error: $e');
+          try {
+            await Supabase.instance.client.auth.signOut(scope: SignOutScope.local);
+          } catch (_) {}
+        }
       }
     }
   }
@@ -670,15 +693,24 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
         Stack(
           alignment: Alignment.bottomRight,
           children: [
-            CircleAvatar(
-              radius: 50,
-              backgroundColor: borderColor,
-              backgroundImage: imageUrl != null ? NetworkImage(imageUrl) : null,
-              child: imageUrl == null
-                  ? const Icon(Icons.person, size: 50, color: AppColors.lightTextDisabled)
-                  : null,
+            ValueListenableBuilder<String?>(
+              valueListenable: _profileService.profilePathNotifier,
+              builder: (context, livePath, _) {
+                final currentPath = livePath ?? _profileData?.profilePath;
+                final resolvedImageUrl = (currentPath != null && currentPath.isNotEmpty)
+                    ? _profileService.getPublicProfileImageUrl(currentPath)
+                    : imageUrl;
+                return UserAvatar(
+                  imageUrl: resolvedImageUrl,
+                  radius: 50,
+                  backgroundColor: isDark ? AppColors.darkSurfaceVariant : borderColor,
+                  borderColor: borderColor,
+                  iconColor: isDark ? AppColors.darkTextDisabled : AppColors.lightTextDisabled,
+                );
+              },
             ),
             GestureDetector(
+              key: const Key('change_avatar_button'),
               onTap: _isSaving ? null : _pickAndUploadImage,
               child: Container(
                 padding: const EdgeInsets.all(8),

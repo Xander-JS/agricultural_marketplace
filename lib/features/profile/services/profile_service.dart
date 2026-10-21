@@ -1,19 +1,86 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../geo/services/geo_simulation_service.dart';
 import '../models/farmer_profile_data.dart';
 
 class ProfileService {
-  final SupabaseClient _supabase = Supabase.instance.client;
+  final SupabaseClient _supabase;
+
+  static final ValueNotifier<String?> currentProfilePathNotifier = ValueNotifier<String?>(null);
+  ValueNotifier<String?> get profilePathNotifier => currentProfilePathNotifier;
+
+  ProfileService({SupabaseClient? client})
+      : _supabase = client ?? Supabase.instance.client;
+
+  Future<String?> getProfilePath(String userId) async {
+    try {
+      final res = await _supabase
+          .from('profiles')
+          .select('profile_path')
+          .eq('id', userId)
+          .maybeSingle();
+      final path = res?['profile_path'] as String?;
+      if (_supabase.auth.currentUser?.id == userId) {
+        currentProfilePathNotifier.value = path;
+      }
+      return path;
+    } catch (_) {
+      return null;
+    }
+  }
 
   Future<FarmerProfileData> getFarmerProfileData(String userId) async {
-    // 1. Obtener datos del perfil
-    final profileResponse = await _supabase
-        .from('profiles')
-        .select()
-        .eq('id', userId)
-        .single();
+    // 1. Obtener datos del perfil (usando RPC segura get_my_profile para perfil propio)
+    final currentUid = _supabase.auth.currentUser?.id;
+    Map<String, dynamic> rawProfile;
+    if (userId == currentUid) {
+      try {
+        final myProfileRes = await _supabase.rpc('get_my_profile');
+        rawProfile = myProfileRes is Map<String, dynamic>
+            ? myProfileRes
+            : Map<String, dynamic>.from(myProfileRes as Map);
+      } catch (_) {
+        final profileResponse = await _supabase
+            .from('profiles')
+            .select('id, full_name, role, verification_status, profile_path, department, municipality')
+            .eq('id', userId)
+            .single();
+        rawProfile = Map<String, dynamic>.from(profileResponse);
+      }
+    } else {
+      final profileResponse = await _supabase
+          .from('profiles')
+          .select('id, full_name, role, verification_status, profile_path, department, municipality')
+          .eq('id', userId)
+          .single();
+      rawProfile = Map<String, dynamic>.from(profileResponse);
+    }
+    final profilePath = rawProfile['profile_path'] as String?;
+    if (_supabase.auth.currentUser?.id == userId) {
+      currentProfilePathNotifier.value = profilePath;
+    }
+    final rawLat = (rawProfile['latitude'] as num?)?.toDouble();
+    final rawLon = (rawProfile['longitude'] as num?)?.toDouble();
 
-    final role = (profileResponse['role'] as String? ?? 'agricultor').trim().toLowerCase();
+    // Si no existen coordenadas persistidas en la BD, proveer ubicación simulada estable por semilla
+    if (rawLat == null || rawLon == null) {
+      final fallback = GeoSimulationService.getFallbackUserLocation(
+        userId,
+        municipality: rawProfile['municipality'] as String?,
+        department: rawProfile['department'] as String?,
+      );
+      rawProfile['department'] = (rawProfile['department'] as String?)?.isNotEmpty == true
+          ? rawProfile['department']
+          : fallback.department;
+      rawProfile['municipality'] = (rawProfile['municipality'] as String?)?.isNotEmpty == true
+          ? rawProfile['municipality']
+          : fallback.municipality;
+      rawProfile['latitude'] = fallback.latitude;
+      rawProfile['longitude'] = fallback.longitude;
+    }
+
+    final role = (rawProfile['role'] as String? ?? 'agricultor').trim().toLowerCase();
     final isBuyer = role == 'comprador' || role == 'comerciante';
 
     // 2. Obtener configuraciones: solo consultar o insertar farmer_settings si es agricultor
@@ -118,16 +185,28 @@ class ProfileService {
     );
 
     return FarmerProfileData.fromMap(
-      profileMap: profileResponse,
+      profileMap: rawProfile,
       settingsMap: settingsMap,
       stats: stats,
     );
   }
 
-  Future<void> updateProfileData(String userId, {String? email, String? phone}) async {
+  Future<void> updateProfileData(
+    String userId, {
+    String? email,
+    String? phone,
+    String? department,
+    String? municipality,
+    double? latitude,
+    double? longitude,
+  }) async {
     final Map<String, dynamic> updates = {};
     if (email != null && email.isNotEmpty) updates['email'] = email;
     if (phone != null && phone.isNotEmpty) updates['phone'] = phone;
+    if (department != null && department.isNotEmpty) updates['department'] = department;
+    if (municipality != null && municipality.isNotEmpty) updates['municipality'] = municipality;
+    if (latitude != null) updates['latitude'] = latitude;
+    if (longitude != null) updates['longitude'] = longitude;
 
     if (updates.isNotEmpty) {
       updates['updated_at'] = DateTime.now().toIso8601String();
@@ -143,32 +222,125 @@ class ProfileService {
     await _supabase.from('farmer_settings').upsert(data);
   }
 
-  Future<String> uploadProfilePicture(String userId, File imageFile) async {
+  Future<String> uploadProfilePicture(
+    String userId,
+    File imageFile, {
+    String? oldProfilePath,
+  }) async {
     final extension = imageFile.path.split('.').last.toLowerCase();
     // Validar extensión simple para evitar problemas
     final ext = ['jpg', 'jpeg', 'png'].contains(extension) ? extension : 'jpg';
     final filePath = '$userId/avatar.$ext';
 
-    // Subir imagen. Usamos upsert para sobreescribir la anterior y no dejar basura
+    // Resolver ruta anterior si no fue provista explícitamente
+    String? previousPath = oldProfilePath;
+    if (previousPath == null) {
+      try {
+        final currentProfile = await _supabase
+            .from('profiles')
+            .select('profile_path')
+            .eq('id', userId)
+            .maybeSingle();
+        previousPath = currentProfile?['profile_path'] as String?;
+      } catch (_) {}
+    }
+
+    // 1. Subir nueva imagen a Storage primero (upsert para sobrescribir si coincide extensión)
     await _supabase.storage.from('profiles').upload(
       filePath,
       imageFile,
       fileOptions: const FileOptions(upsert: true),
     );
 
-    // Obtener ruta (en Supabase suele guardarse el path o la URL pública, el requerimiento dice guardar el profile_path)
-    // El requerimiento dice: "Guardar en profiles.profile_path la ruta correspondiente de la imagen."
-    // Generalmente guardamos solo el nombre del path o la URL completa.
-    // Usaremos el path para poder obtener la url pública luego.
-    await _supabase.from('profiles').update({'profile_path': filePath}).eq('id', userId);
+    // 2. Confirmar actualización en la base de datos
+    try {
+      final updated = await _supabase
+          .from('profiles')
+          .update({
+            'profile_path': filePath,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', userId)
+          .select('id, profile_path');
+
+      if (updated.isEmpty) {
+        throw Exception(
+          'Error al actualizar perfil en base de datos: 0 filas modificadas.',
+        );
+      }
+    } catch (e) {
+      // En caso de fallo en BD, limpiar el archivo recién subido si era de distinta ruta para evitar huérfanos
+      if (previousPath != filePath) {
+        try {
+          await _supabase.storage.from('profiles').remove([filePath]);
+        } catch (_) {}
+      }
+      rethrow;
+    }
+
+    // 3. Solo tras confirmar éxito en BD, si la foto anterior tenía ruta diferente dentro de su carpeta,
+    // eliminarla para no dejar archivos huérfanos
+    if (previousPath != null &&
+        previousPath != filePath &&
+        previousPath.startsWith('$userId/') &&
+        !previousPath.contains('..') &&
+        !previousPath.startsWith('http://') &&
+        !previousPath.startsWith('https://')) {
+      try {
+        await _supabase.storage.from('profiles').remove([previousPath]);
+      } catch (_) {}
+    }
+
+    // 4. Actualizar versión en memoria para invalidar caché de forma segura y notificar
+    _pathVersions[filePath] = DateTime.now().millisecondsSinceEpoch.toString();
+    currentProfilePathNotifier.value = filePath;
 
     return filePath;
   }
 
+  Future<void> deleteProfilePicture(String userId, String? profilePath) async {
+    // Validar que la ruta pertenezca estrictamente a la carpeta del usuario y no contenga traversal
+    final isAllowedPath = profilePath != null &&
+        profilePath.isNotEmpty &&
+        profilePath.startsWith('$userId/') &&
+        !profilePath.contains('..') &&
+        !profilePath.startsWith('http://') &&
+        !profilePath.startsWith('https://');
+
+    if (isAllowedPath) {
+      try {
+        await _supabase.storage.from('profiles').remove([profilePath]);
+      } catch (_) {}
+    }
+    await _supabase.from('profiles').update({
+      'profile_path': null,
+      'updated_at': DateTime.now().toIso8601String(),
+    }).eq('id', userId);
+
+    if (profilePath != null) {
+      _pathVersions.remove(profilePath);
+    }
+    currentProfilePathNotifier.value = null;
+  }
+
+  static final Map<String, String> _pathVersions = {};
+
+  void invalidateCache([String? profilePath]) {
+    if (profilePath != null && profilePath.isNotEmpty) {
+      _pathVersions[profilePath] = DateTime.now().millisecondsSinceEpoch.toString();
+    }
+  }
+
   String getPublicProfileImageUrl(String profilePath) {
-    // Agregamos un timestamp para el cache busting
+    if (profilePath.startsWith('http://') || profilePath.startsWith('https://')) {
+      return profilePath;
+    }
+    // Generar o reutilizar un timestamp estable para cache busting
     final url = _supabase.storage.from('profiles').getPublicUrl(profilePath);
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
-    return '$url?t=$timestamp';
+    final v = _pathVersions.putIfAbsent(
+      profilePath,
+      () => DateTime.now().millisecondsSinceEpoch.toString(),
+    );
+    return '$url?t=$v';
   }
 }

@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../../core/utils/unit_formatters.dart';
 import '../models/crop_cost_model.dart';
+import '../services/crop_cost_calculator.dart';
 import '../services/crop_cost_service.dart';
 
 class AddCropCostScreen extends StatefulWidget {
   final String cropId;
   final CropCostModel? costToEdit;
+  final CropCostService? costService;
 
   const AddCropCostScreen({
     super.key,
     required this.cropId,
     this.costToEdit,
+    this.costService,
   });
 
   @override
@@ -19,7 +23,7 @@ class AddCropCostScreen extends StatefulWidget {
 
 class _AddCropCostScreenState extends State<AddCropCostScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _costService = CropCostService();
+  late final CropCostService _costService;
 
   late CostCategory _selectedCategory;
   late TextEditingController _descriptionController;
@@ -30,10 +34,18 @@ class _AddCropCostScreenState extends State<AddCropCostScreen> {
   @override
   void initState() {
     super.initState();
+    _costService = widget.costService ?? CropCostService();
     _selectedCategory = widget.costToEdit?.category ?? CostCategory.jornales;
-    _descriptionController = TextEditingController(text: widget.costToEdit?.description ?? '');
+    _descriptionController = TextEditingController(
+      text: widget.costToEdit?.description ?? '',
+    );
     _amountController = TextEditingController(
-      text: widget.costToEdit != null ? widget.costToEdit!.amount.toInt().toString() : '',
+      text: widget.costToEdit != null
+          ? UnitFormatters.formatCleanValue(
+              widget.costToEdit!.amount,
+              useLocaleSeparators: false,
+            )
+          : '',
     );
   }
 
@@ -52,8 +64,11 @@ class _AddCropCostScreenState extends State<AddCropCostScreen> {
     });
 
     try {
-      final amountStr = _amountController.text.replaceAll(RegExp(r'[^0-9]'), '');
-      final amount = double.parse(amountStr);
+      final amount = CropCostCalculator.parseAmount(_amountController.text);
+      if (amount == null) {
+        _formKey.currentState?.validate();
+        return;
+      }
 
       final cost = CropCostModel(
         id: widget.costToEdit?.id ?? '',
@@ -174,23 +189,24 @@ class _AddCropCostScreenState extends State<AddCropCostScreen> {
                     TextFormField(
                       controller: _amountController,
                       decoration: InputDecoration(
-                        hintText: '0',
+                        hintText: 'Ej: 150000 o 150000,50',
                         prefixText: '\$ ',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      keyboardType: TextInputType.number,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
+                        FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
                       ],
                       validator: (value) {
-                        if (value == null || value.isEmpty) {
+                        if (value == null || value.trim().isEmpty) {
                           return 'Por favor ingresa un valor';
                         }
-                        final numValue = double.tryParse(value);
-                        if (numValue == null || numValue <= 0) {
-                          return 'El valor debe ser mayor a 0';
+                        if (CropCostCalculator.parseAmount(value) == null) {
+                          return 'Ingresa un importe numérico mayor que 0';
                         }
                         return null;
                       },

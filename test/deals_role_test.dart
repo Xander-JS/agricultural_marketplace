@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -11,6 +13,7 @@ import 'package:agricultural_marketplace/features/deals/models/negotiation_statu
 import 'package:agricultural_marketplace/features/deals/screens/counter_offer_screen.dart';
 import 'package:agricultural_marketplace/features/deals/screens/deal_detail_screen.dart';
 import 'package:agricultural_marketplace/features/deals/screens/deals_screen.dart';
+import 'package:agricultural_marketplace/features/deals/services/negotiation_service.dart';
 
 void main() {
   setUpAll(() async {
@@ -106,107 +109,127 @@ void main() {
   );
 
   group('Etapa 5 — DealsScreen por Rol y Turnos', () {
-    testWidgets('Agricultor ve "Comprador: Andrés Mercader" y "Tu turno" cuando responder es farmer', (tester) async {
-      await tester.pumpWidget(
-        createTestWidget(
-          child: DealsScreen(
-            role: 'agricultor',
-            initialNegotiations: [negotiationFarmerTurn],
+    testWidgets(
+      'Agricultor ve "Comprador: Andrés Mercader" y "Tu turno" cuando responder es farmer',
+      (tester) async {
+        await tester.pumpWidget(
+          createTestWidget(
+            child: DealsScreen(
+              role: 'agricultor',
+              initialNegotiations: [negotiationFarmerTurn],
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.text('Tratos'), findsOneWidget);
-      expect(find.text('Café Especial Castillo'), findsOneWidget);
-      expect(find.text('Comprador: Andrés Mercader'), findsOneWidget);
-      expect(find.text('Tu turno'), findsOneWidget);
-      expect(find.text('Esperando respuesta'), findsNothing);
-    });
+        expect(find.text('Tratos'), findsOneWidget);
+        expect(find.text('Café Especial Castillo'), findsOneWidget);
+        expect(find.text('Comprador: Andrés Mercader'), findsOneWidget);
+        expect(find.text('Tu turno'), findsOneWidget);
+        expect(find.text('Esperando respuesta'), findsNothing);
+      },
+    );
 
-    testWidgets('Agricultor ve "Esperando respuesta" cuando responder es buyer', (tester) async {
-      await tester.pumpWidget(
-        createTestWidget(
-          child: DealsScreen(
-            role: 'agricultor',
-            initialNegotiations: [negotiationBuyerTurn],
+    testWidgets(
+      'Agricultor ve "Esperando respuesta" cuando responder es buyer',
+      (tester) async {
+        await tester.pumpWidget(
+          createTestWidget(
+            child: DealsScreen(
+              role: 'agricultor',
+              initialNegotiations: [negotiationBuyerTurn],
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.text('Comprador: Andrés Mercader'), findsOneWidget);
-      expect(find.text('Esperando respuesta'), findsOneWidget);
-      expect(find.text('Tu turno'), findsNothing);
-    });
+        expect(find.text('Comprador: Andrés Mercader'), findsOneWidget);
+        expect(find.text('Esperando respuesta'), findsOneWidget);
+        expect(find.text('Tu turno'), findsNothing);
+      },
+    );
 
-    testWidgets('Comprador ve "Productor: Don Jaime Cafetero" y "Tu turno" cuando responder es buyer', (tester) async {
-      await tester.pumpWidget(
-        createTestWidget(
-          child: DealsScreen(
-            role: 'comprador',
-            initialNegotiations: [negotiationBuyerTurn],
+    testWidgets(
+      'Comprador ve "Productor: Don Jaime Cafetero" y "Tu turno" cuando responder es buyer',
+      (tester) async {
+        await tester.pumpWidget(
+          createTestWidget(
+            child: DealsScreen(
+              role: 'comprador',
+              initialNegotiations: [negotiationBuyerTurn],
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.text('Tratos'), findsOneWidget);
-      expect(find.text('Café Especial Castillo'), findsOneWidget);
-      expect(find.text('Productor: Don Jaime Cafetero'), findsOneWidget);
-      expect(find.text('Tu turno'), findsOneWidget);
-      expect(find.text('Esperando respuesta'), findsNothing);
-    });
+        expect(find.text('Tratos'), findsOneWidget);
+        expect(find.text('Café Especial Castillo'), findsOneWidget);
+        expect(find.text('Productor: Don Jaime Cafetero'), findsOneWidget);
+        expect(find.text('Tu turno'), findsOneWidget);
+        expect(find.text('Esperando respuesta'), findsNothing);
+      },
+    );
 
-    testWidgets('Comprador ve "Esperando respuesta" cuando responder es farmer', (tester) async {
-      await tester.pumpWidget(
-        createTestWidget(
-          child: DealsScreen(
-            role: 'comprador',
-            initialNegotiations: [negotiationFarmerTurn],
+    testWidgets(
+      'Comprador ve "Esperando respuesta" cuando responder es farmer',
+      (tester) async {
+        await tester.pumpWidget(
+          createTestWidget(
+            child: DealsScreen(
+              role: 'comprador',
+              initialNegotiations: [negotiationFarmerTurn],
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.text('Productor: Don Jaime Cafetero'), findsOneWidget);
-      expect(find.text('Esperando respuesta'), findsOneWidget);
-      expect(find.text('Tu turno'), findsNothing);
-    });
+        expect(find.text('Productor: Don Jaime Cafetero'), findsOneWidget);
+        expect(find.text('Esperando respuesta'), findsOneWidget);
+        expect(find.text('Tu turno'), findsNothing);
+      },
+    );
 
-    testWidgets('Comprador con lista vacía ve estado vacío adaptado y botón "Explorar mercado"', (tester) async {
-      await tester.pumpWidget(
-        createTestWidget(
-          child: const DealsScreen(
-            role: 'comprador',
-            initialNegotiations: [],
+    testWidgets(
+      'Comprador con lista vacía ve estado vacío adaptado y botón "Explorar mercado"',
+      (tester) async {
+        await tester.pumpWidget(
+          createTestWidget(
+            child: const DealsScreen(
+              role: 'comprador',
+              initialNegotiations: [],
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.text('Aún no tienes tratos'), findsWidgets);
-      expect(find.text('Explorar mercado'), findsOneWidget);
-      expect(find.text('Ver mis cosechas'), findsNothing);
-    });
+        expect(find.text('Aún no tienes tratos'), findsWidgets);
+        expect(find.text('Explorar mercado'), findsOneWidget);
+        expect(find.text('Ver mis cosechas'), findsNothing);
+      },
+    );
 
-    testWidgets('Agricultor con lista vacía ve estado vacío adaptado y botón "Ver mis cosechas"', (tester) async {
-      await tester.pumpWidget(
-        createTestWidget(
-          child: const DealsScreen(
-            role: 'agricultor',
-            initialNegotiations: [],
+    testWidgets(
+      'Agricultor con lista vacía ve estado vacío adaptado y botón "Ver mis cosechas"',
+      (tester) async {
+        await tester.pumpWidget(
+          createTestWidget(
+            child: const DealsScreen(
+              role: 'agricultor',
+              initialNegotiations: [],
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.text('Aún no tienes tratos'), findsWidgets);
-      expect(find.text('Ver mis cosechas'), findsOneWidget);
-      expect(find.text('Explorar mercado'), findsNothing);
-    });
+        expect(find.text('Aún no tienes tratos'), findsWidgets);
+        expect(find.text('Ver mis cosechas'), findsOneWidget);
+        expect(find.text('Explorar mercado'), findsNothing);
+      },
+    );
 
-    testWidgets('DealsScreen soporta modo oscuro sin excepciones', (tester) async {
+    testWidgets('DealsScreen soporta modo oscuro sin excepciones', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         createTestWidget(
           themeMode: ThemeMode.dark,
@@ -225,72 +248,83 @@ void main() {
   });
 
   group('Etapa 5 — DealDetailScreen por Rol y Respuestas', () {
-    testWidgets('Agricultor en su turno ve acciones de Aceptar, Contraofertar y Rechazar', (tester) async {
-      await tester.pumpWidget(
-        createTestWidget(
-          child: DealDetailScreen(
-            negotiationId: 'neg-1',
-            role: 'agricultor',
-            initialNegotiation: negotiationFarmerTurn,
+    testWidgets(
+      'Agricultor en su turno ve acciones de Aceptar, Contraofertar y Rechazar',
+      (tester) async {
+        await tester.pumpWidget(
+          createTestWidget(
+            child: DealDetailScreen(
+              negotiationId: 'neg-1',
+              role: 'agricultor',
+              initialNegotiation: negotiationFarmerTurn,
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      // Contraparte
-      expect(find.text('Comprador'), findsWidgets);
-      expect(find.text('Andrés Mercader'), findsOneWidget);
+        // Contraparte
+        expect(find.text('Comprador'), findsWidgets);
+        expect(find.text('Andrés Mercader'), findsOneWidget);
 
-      // Botones de acción disponibles porque es su turno
-      expect(find.text('Aceptar oferta'), findsOneWidget);
-      expect(find.text('Contraofertar'), findsOneWidget);
-      expect(find.text('Rechazar trato'), findsOneWidget);
-    });
+        // Botones de acción disponibles porque es su turno
+        expect(find.text('Aceptar oferta'), findsOneWidget);
+        expect(find.text('Contraofertar'), findsOneWidget);
+        expect(find.text('Rechazar trato'), findsOneWidget);
+      },
+    );
 
-    testWidgets('Comprador en su turno ve acciones de Aceptar, Contraofertar y Rechazar', (tester) async {
-      await tester.pumpWidget(
-        createTestWidget(
-          child: DealDetailScreen(
-            negotiationId: 'neg-2',
-            role: 'comprador',
-            initialNegotiation: negotiationBuyerTurn,
+    testWidgets(
+      'Comprador en su turno ve acciones de Aceptar, Contraofertar y Rechazar',
+      (tester) async {
+        await tester.pumpWidget(
+          createTestWidget(
+            child: DealDetailScreen(
+              negotiationId: 'neg-2',
+              role: 'comprador',
+              initialNegotiation: negotiationBuyerTurn,
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      // Contraparte
-      expect(find.text('Productor'), findsWidgets);
-      expect(find.text('Don Jaime Cafetero'), findsOneWidget);
+        // Contraparte
+        expect(find.text('Productor'), findsWidgets);
+        expect(find.text('Don Jaime Cafetero'), findsOneWidget);
 
-      // Botones de acción disponibles para el comprador
-      expect(find.text('Aceptar oferta'), findsOneWidget);
-      expect(find.text('Contraofertar'), findsOneWidget);
-      expect(find.text('Rechazar trato'), findsOneWidget);
-    });
+        // Botones de acción disponibles para el comprador
+        expect(find.text('Aceptar oferta'), findsOneWidget);
+        expect(find.text('Contraofertar'), findsOneWidget);
+        expect(find.text('Rechazar trato'), findsOneWidget);
+      },
+    );
 
-    testWidgets('Comprador esperando respuesta del productor ve banner informativo', (tester) async {
-      await tester.pumpWidget(
-        createTestWidget(
-          child: DealDetailScreen(
-            negotiationId: 'neg-1',
-            role: 'comprador',
-            initialNegotiation: negotiationFarmerTurn,
+    testWidgets(
+      'Comprador esperando respuesta del productor ve banner informativo',
+      (tester) async {
+        await tester.pumpWidget(
+          createTestWidget(
+            child: DealDetailScreen(
+              negotiationId: 'neg-1',
+              role: 'comprador',
+              initialNegotiation: negotiationFarmerTurn,
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      // No debe ver botones de responder
-      expect(find.text('Aceptar oferta'), findsNothing);
-      expect(find.text('Contraofertar'), findsNothing);
+        // No debe ver botones de responder
+        expect(find.text('Aceptar oferta'), findsNothing);
+        expect(find.text('Contraofertar'), findsNothing);
 
-      // Debe ver aviso de espera del productor
-      expect(find.text('Esperando respuesta del productor'), findsOneWidget);
-      expect(find.text('Cancelar propuesta'), findsOneWidget);
-    });
+        // Debe ver aviso de espera del productor
+        expect(find.text('Esperando respuesta del productor'), findsOneWidget);
+        expect(find.text('Cancelar propuesta'), findsOneWidget);
+      },
+    );
 
-    testWidgets('DealDetailScreen soporta modo oscuro sin excepciones', (tester) async {
+    testWidgets('DealDetailScreen soporta modo oscuro sin excepciones', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         createTestWidget(
           themeMode: ThemeMode.dark,
@@ -309,26 +343,177 @@ void main() {
     });
   });
 
-  group('Etapa 5 — CounterOfferScreen', () {
-    testWidgets('CounterOfferScreen inicializa con datos de la última oferta y calcula subtotal', (tester) async {
-      await tester.pumpWidget(
-        createTestWidget(
-          child: CounterOfferScreen(
-            negotiation: negotiationBuyerTurn,
-            latestOffer: negotiationBuyerTurn.offers!.last,
-            role: 'comprador',
-          ),
-        ),
+  group('Regresión — Detalle de trato acordado y visibilidad de estados', () {
+    NegotiationModel negotiationWithStatus(
+      NegotiationStatus status, {
+      required String id,
+    }) {
+      return NegotiationModel(
+        id: id,
+        cropId: sampleCrop.id,
+        buyerId: 'buyer-001',
+        status: status,
+        currentResponder: 'agricultor',
+        createdAt: DateTime.now().subtract(const Duration(days: 1)),
+        updatedAt: DateTime.now(),
+        crop: sampleCrop,
+        buyerProfile: {'full_name': 'Andrés Mercader'},
+        farmerProfile: {'full_name': 'Don Jaime Cafetero'},
+        offers: [sampleOffer],
       );
-      await tester.pumpAndSettle();
+    }
 
-      expect(find.text('Contraoferta'), findsOneWidget);
-      // Cantidad inicial 200, precio 14800 -> total 2960000
-      expect(find.text('200'), findsOneWidget);
-      expect(find.text('14800'), findsOneWidget);
-      expect(find.text('\$ 2960000'), findsOneWidget);
+    testWidgets(
+      'Comprador ve el detalle acordado aunque la RPC de contacto nunca responda',
+      (tester) async {
+        final contactCompleter = Completer<Map<String, dynamic>>();
+        final service = NegotiationService(
+          currentUserIdForTesting: 'buyer-001',
+          rpcInvoker: (func, {params}) {
+            if (func == 'get_negotiation_counterpart_contact') {
+              return contactCompleter.future;
+            }
+            throw StateError('RPC inesperada: $func');
+          },
+        );
+        final agreed = negotiationWithStatus(
+          NegotiationStatus.acordada,
+          id: 'neg-agreed-buyer',
+        );
 
-      expect(find.text('Enviar contraoferta'), findsOneWidget);
-    });
+        await tester.pumpWidget(
+          createTestWidget(
+            child: DealDetailScreen(
+              negotiationId: agreed.id,
+              role: 'comprador',
+              initialNegotiation: agreed,
+              service: service,
+            ),
+          ),
+        );
+        await tester.pump();
+
+        expect(find.text('Café Especial Castillo'), findsOneWidget);
+        expect(find.text('Acordado'), findsOneWidget);
+        expect(find.text('Don Jaime Cafetero'), findsOneWidget);
+        expect(
+          find.text('Confirmar entrega y completar trato'),
+          findsOneWidget,
+        );
+        expect(find.text('Cancelar acuerdo'), findsOneWidget);
+        expect(find.byType(CircularProgressIndicator), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'Agricultor ve el detalle acordado aunque la RPC de contacto falle',
+      (tester) async {
+        final service = NegotiationService(
+          currentUserIdForTesting: 'farmer-001',
+          rpcInvoker: (func, {params}) async {
+            throw StateError('contacto no disponible');
+          },
+        );
+        final agreed = negotiationWithStatus(
+          NegotiationStatus.acordada,
+          id: 'neg-agreed-farmer',
+        );
+
+        await tester.pumpWidget(
+          createTestWidget(
+            child: DealDetailScreen(
+              negotiationId: agreed.id,
+              role: 'agricultor',
+              initialNegotiation: agreed,
+              service: service,
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Café Especial Castillo'), findsOneWidget);
+        expect(find.text('Acordado'), findsOneWidget);
+        expect(find.text('Andrés Mercader'), findsOneWidget);
+        expect(
+          find.text('Confirmar entrega y completar trato'),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'Ambos roles ven los seis estados de negociación sin pantalla en blanco',
+      (tester) async {
+        final service = NegotiationService(
+          currentUserIdForTesting: 'buyer-001',
+          rpcInvoker: (func, {params}) async {
+            throw StateError('contacto no disponible');
+          },
+        );
+
+        for (final role in ['comprador', 'agricultor']) {
+          for (final status in NegotiationStatus.values) {
+            final negotiation = negotiationWithStatus(
+              status,
+              id: 'neg-${status.name}-$role',
+            );
+
+            await tester.pumpWidget(
+              createTestWidget(
+                child: DealDetailScreen(
+                  // Una key distinta por estado fuerza un State nuevo; sin ella
+                  // Flutter reutiliza el State y conserva la negociación previa.
+                  key: ValueKey(negotiation.id),
+                  negotiationId: negotiation.id,
+                  role: role,
+                  initialNegotiation: negotiation,
+                  service: service,
+                ),
+              ),
+            );
+            await tester.pumpAndSettle();
+
+            expect(
+              find.text('Café Especial Castillo'),
+              findsOneWidget,
+              reason:
+                  'El cultivo debe verse para $role en estado ${status.name}',
+            );
+            expect(
+              find.text(status.toDisplayName()),
+              findsWidgets,
+              reason: 'El estado ${status.name} debe verse para $role',
+            );
+            expect(tester.takeException(), isNull);
+          }
+        }
+      },
+    );
+  });
+
+  group('Etapa 5 — CounterOfferScreen', () {
+    testWidgets(
+      'CounterOfferScreen inicializa con datos de la última oferta y calcula subtotal',
+      (tester) async {
+        await tester.pumpWidget(
+          createTestWidget(
+            child: CounterOfferScreen(
+              negotiation: negotiationBuyerTurn,
+              latestOffer: negotiationBuyerTurn.offers!.last,
+              role: 'comprador',
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Contraoferta'), findsOneWidget);
+        // Cantidad inicial 200, precio 14800 -> total 2960000 -> $ 2.960.000
+        expect(find.text('200'), findsOneWidget);
+        expect(find.text('14800'), findsOneWidget);
+        expect(find.text(r'$ 2.960.000'), findsOneWidget);
+
+        expect(find.text('Enviar contraoferta'), findsOneWidget);
+      },
+    );
   });
 }

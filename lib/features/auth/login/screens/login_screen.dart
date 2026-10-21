@@ -7,11 +7,17 @@ import '../../../../core/widgets/inputs/custom_text_field.dart';
 import '../../../../core/widgets/buttons/primary_action_button.dart';
 import '../../registro/screens/welcome_screen.dart';
 import '../services/login_service.dart';
-import '../../verificacion/screens/verification_status_screen.dart';
 import '../widgets/topo_header.dart';
+import '../../recovery/screens/forgot_password_screen.dart';
+import '../../recovery/services/recovery_service.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  final RecoveryService? recoveryService;
+
+  const LoginScreen({
+    super.key,
+    this.recoveryService,
+  });
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -47,11 +53,9 @@ class _LoginScreenState extends State<LoginScreen> {
         );
 
         if (!mounted) return;
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (_) => const VerificationStatusScreen(),
-          ),
-        );
+        if (Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
       } catch (e) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -175,7 +179,15 @@ class _LoginScreenState extends State<LoginScreen> {
                             ],
                           ),
                           TextButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => ForgotPasswordScreen(
+                                    recoveryService: widget.recoveryService,
+                                  ),
+                                ),
+                              );
+                            },
                             child: Text(
                               l10n.login_forgot_password,
                               style: AppTextStyles.labelMedium.copyWith(
@@ -203,7 +215,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           GestureDetector(
                             onTap: () {
-                              Navigator.of(context).pushReplacement(
+                              Navigator.of(context).push(
                                 MaterialPageRoute(
                                   builder: (_) => const WelcomeScreen(),
                                 ),

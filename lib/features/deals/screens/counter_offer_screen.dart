@@ -7,6 +7,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/constants/user_roles.dart';
 import '../../../core/constants/delivery_methods.dart';
+import '../../../core/utils/app_formatters.dart';
 
 class CounterOfferScreen extends StatefulWidget {
   final NegotiationModel negotiation;
@@ -56,10 +57,16 @@ class _CounterOfferScreenState extends State<CounterOfferScreen> {
     _service = widget.service ?? NegotiationService();
 
     _quantityController = TextEditingController(
-      text: widget.latestOffer.quantityKg.toStringAsFixed(0),
+      text: UnitFormatters.formatCleanValue(
+        widget.latestOffer.quantityKg,
+        useLocaleSeparators: false,
+      ),
     );
     _priceController = TextEditingController(
-      text: widget.latestOffer.proposedPricePerKg.toStringAsFixed(0),
+      text: UnitFormatters.formatCleanValue(
+        widget.latestOffer.proposedPricePerKg,
+        useLocaleSeparators: false,
+      ),
     );
     _messageController = TextEditingController();
 
@@ -263,7 +270,7 @@ class _CounterOfferScreenState extends State<CounterOfferScreen> {
                             ),
                           ),
                           Text(
-                            '\$ ${_estimatedTotal.toStringAsFixed(0)}',
+                            CurrencyFormatters.formatCop(_estimatedTotal),
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../constants/user_roles.dart';
 import '../../localization/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
@@ -19,10 +20,7 @@ class AppBottomNavigation extends StatelessWidget {
     this.role = 'agricultor',
   });
 
-  bool get _isBuyer {
-    final normalized = role.trim().toLowerCase();
-    return normalized == 'comprador' || normalized == 'comerciante';
-  }
+  bool get _isBuyer => UserRole.isBuyerRole(role);
 
   @override
   Widget build(BuildContext context) {

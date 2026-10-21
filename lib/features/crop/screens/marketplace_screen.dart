@@ -6,18 +6,30 @@ import '../widgets/crop_card.dart';
 import 'publish_crop_screen.dart';
 import 'crop_detail_screen.dart';
 import '../../../core/widgets/avatars/user_avatar.dart';
+import '../../profile/models/farmer_profile_data.dart';
 import '../../profile/services/profile_service.dart';
+import '../../geo/models/simulated_location.dart';
+import '../../geo/services/geo_simulation_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/localization/app_localizations.dart';
+import '../../../core/constants/user_roles.dart';
+import '../../ai_assistant/models/voice_crop_draft.dart';
+import '../../ai_assistant/widgets/voice_crop_assistant_sheet.dart';
 
 class MarketplaceScreen extends StatefulWidget {
   final String? role;
   final List<CropModel>? initialCrops;
+  final VoidCallback? onProfileTap;
+  final ProfileService? profileService;
+  final FarmerProfileData? initialUserProfile;
 
   const MarketplaceScreen({
     super.key,
     this.role,
     this.initialCrops,
+    this.onProfileTap,
+    this.profileService,
+    this.initialUserProfile,
   });
 
   @override
@@ -26,33 +38,58 @@ class MarketplaceScreen extends StatefulWidget {
 
 class _MarketplaceScreenState extends State<MarketplaceScreen> {
   final _cropService = CropService();
-  final _profileService = ProfileService();
+  late final ProfileService _profileService = widget.profileService ?? ProfileService();
 
   List<CropModel> _crops = [];
   String? _profileImageUrl;
   String? _userRole;
+  FarmerProfileData? _currentUserProfile;
   bool _isLoading = true;
   String? _errorMessage;
 
-  bool get _isBuyer {
-    if (widget.role != null) {
-      final r = widget.role!.trim().toLowerCase();
-      return r == 'comprador' || r == 'comerciante';
-    }
-    if (_userRole != null) {
-      final r = _userRole!.trim().toLowerCase();
-      return r == 'comprador' || r == 'comerciante';
-    }
-    return false;
-  }
+  bool get _isBuyer => UserRole.isBuyerRole(widget.role ?? _userRole);
 
   @override
   void initState() {
     super.initState();
+    if (widget.initialUserProfile != null) {
+      _currentUserProfile = widget.initialUserProfile;
+    }
     _loadData();
   }
 
+  Future<void> _loadUserProfile() async {
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user != null) {
+        final profile = await _profileService.getFarmerProfileData(user.id);
+        if (mounted) {
+          setState(() {
+            _currentUserProfile = profile;
+            if (profile.profilePath != null && profile.profilePath!.isNotEmpty) {
+              _profileImageUrl = _profileService.getPublicProfileImageUrl(profile.profilePath!);
+            }
+          });
+        }
+      }
+    } catch (_) {}
+  }
+
+  DistanceEvaluation? _getDistanceForCrop(CropModel crop) {
+    if (!_isBuyer) return null;
+    final buyer = _currentUserProfile;
+    if (buyer == null) return null;
+    if (buyer.id == crop.farmerId) return null;
+    final eval = GeoSimulationService.evaluateBuyerProfileToCrop(
+      buyerProfile: buyer,
+      crop: crop,
+    );
+    return eval.hasValidDistance ? eval : null;
+  }
+
   Future<void> _loadData() async {
+    _loadUserProfile();
+
     if (widget.initialCrops != null) {
       setState(() {
         _crops = widget.initialCrops!;
@@ -149,14 +186,39 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
     } catch (_) {}
   }
 
-  void _navigateToPublish() async {
+  void _navigateToPublish({VoiceCropDraft? initialDraft}) async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const PublishCropScreen()),
+      MaterialPageRoute(
+        builder: (context) => PublishCropScreen(
+          initialDraft: initialDraft,
+          role: widget.role ?? _userRole,
+        ),
+      ),
     );
 
     if (result == true) {
       _loadCrops();
+    }
+  }
+
+  Future<void> _openVoiceAssistant() async {
+    final result = await showModalBottomSheet<VoiceCropAssistantResult>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const VoiceCropAssistantSheet(),
+    );
+
+    if (!mounted || result == null) return;
+    if (result.openManual) {
+      _navigateToPublish();
+      return;
+    }
+    final draft = result.draft;
+    if (draft != null) {
+      _navigateToPublish(initialDraft: draft);
     }
   }
 
@@ -235,13 +297,9 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                 ),
                 onTap: () {
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        l10n?.market_ai_coming_soon ?? 'Función de IA próximamente...',
-                      ),
-                    ),
-                  );
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted) _openVoiceAssistant();
+                  });
                 },
               ),
               const SizedBox(height: 16),
@@ -252,11 +310,18 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
     );
   }
 
-  void _navigateToDetail(CropModel crop) async {
+  void _navigateToDetail(CropModel crop, [DistanceEvaluation? distanceEval]) async {
+    final effectiveEval = distanceEval ?? _getDistanceForCrop(crop);
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => CropDetailScreen(crop: crop, role: widget.role),
+        builder: (context) => CropDetailScreen(
+          crop: crop,
+          role: widget.role ?? _userRole,
+          initialDistanceEvaluation: effectiveEval,
+          initialBuyerProfile: _currentUserProfile,
+          profileService: _profileService,
+        ),
       ),
     );
 
@@ -282,11 +347,24 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
             child: Center(
-              child: UserAvatar(
-                imageUrl: _profileImageUrl,
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Este es tu perfil')),
+              child: ValueListenableBuilder<String?>(
+                valueListenable: _profileService.profilePathNotifier,
+                builder: (context, livePath, _) {
+                  final effectivePath = (livePath != null && livePath.isNotEmpty)
+                      ? livePath
+                      : null;
+                  final effectiveUrl = effectivePath != null
+                      ? _profileService.getPublicProfileImageUrl(effectivePath)
+                      : _profileImageUrl;
+
+                  return UserAvatar(
+                    imageUrl: effectiveUrl,
+                    onTap: widget.onProfileTap ??
+                        () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Este es tu perfil')),
+                          );
+                        },
                   );
                 },
               ),
@@ -356,9 +434,11 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
         itemCount: _crops.length,
         itemBuilder: (context, index) {
           final crop = _crops[index];
+          final distanceEval = _getDistanceForCrop(crop);
           return CropCard(
             crop: crop,
-            onTap: () => _navigateToDetail(crop),
+            distanceEvaluation: distanceEval,
+            onTap: () => _navigateToDetail(crop, distanceEval),
           );
         },
       ),

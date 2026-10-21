@@ -15,14 +15,13 @@ class SimulatedDocumentDiagnosisCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Card(
       elevation: 2,
-      color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+      color: context.appSurface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: AppColors.warning.withValues(alpha: 0.6)),
+        side: BorderSide(color: context.appWarning.withValues(alpha: 0.6)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -31,13 +30,14 @@ class SimulatedDocumentDiagnosisCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Icon(Icons.analytics_outlined, color: AppColors.warning),
+                Icon(Icons.analytics_outlined, color: context.appWarning),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     l10n.moderation_diagnosis_title,
                     style: AppTextStyles.titleMedium.copyWith(
                       fontWeight: FontWeight.bold,
+                      color: context.appTextPrimary,
                     ),
                   ),
                 ),
@@ -47,17 +47,17 @@ class SimulatedDocumentDiagnosisCard extends StatelessWidget {
                     vertical: 3,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.warning.withValues(alpha: 0.16),
+                    color: context.appWarning.withValues(alpha: 0.16),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: AppColors.warning.withValues(alpha: 0.7),
+                      color: context.appWarning.withValues(alpha: 0.7),
                     ),
                   ),
                   child: Text(
                     l10n.moderation_diagnosis_simulated,
                     key: const ValueKey('moderation_diagnosis_simulated_badge'),
                     style: AppTextStyles.labelSmall.copyWith(
-                      color: AppColors.warning,
+                      color: context.appWarning,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -68,14 +68,12 @@ class SimulatedDocumentDiagnosisCard extends StatelessWidget {
             Text(
               l10n.moderation_diagnosis_disclaimer,
               style: AppTextStyles.bodySmall.copyWith(
-                color: isDark
-                    ? AppColors.darkTextSecondary
-                    : AppColors.lightTextSecondary,
+                color: context.appTextSecondary,
               ),
             ),
             const SizedBox(height: 14),
             ...report.documents.map(
-              (document) => _buildDocumentRow(document, l10n),
+              (document) => _buildDocumentRow(context, document, l10n),
             ),
             const SizedBox(height: 6),
             Text(
@@ -83,6 +81,7 @@ class SimulatedDocumentDiagnosisCard extends StatelessWidget {
               '${report.availableDocuments}/${report.totalDocuments}',
               style: AppTextStyles.bodySmall.copyWith(
                 fontWeight: FontWeight.w700,
+                color: context.appTextPrimary,
               ),
             ),
             const SizedBox(height: 12),
@@ -90,7 +89,7 @@ class SimulatedDocumentDiagnosisCard extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: AppColors.infoLight.withValues(alpha: 0.08),
+                color: context.appInfoContainer.withValues(alpha: 0.35),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
@@ -98,7 +97,7 @@ class SimulatedDocumentDiagnosisCard extends StatelessWidget {
                 key: const ValueKey('moderation_diagnosis_pending_human'),
                 style: AppTextStyles.bodySmall.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: AppColors.success,
+                  color: context.appSuccess,
                 ),
               ),
             ),
@@ -108,11 +107,12 @@ class SimulatedDocumentDiagnosisCard extends StatelessWidget {
                 l10n.moderation_diagnosis_observations_title,
                 style: AppTextStyles.titleSmall.copyWith(
                   fontWeight: FontWeight.bold,
+                  color: context.appTextPrimary,
                 ),
               ),
               const SizedBox(height: 6),
               ...report.observations.map(
-                (observation) => _buildObservation(observation, l10n),
+                (observation) => _buildObservation(context, observation, l10n),
               ),
             ],
             const SizedBox(height: 12),
@@ -123,16 +123,16 @@ class SimulatedDocumentDiagnosisCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 6),
-            _buildBullet(l10n.moderation_diagnosis_limit_authenticity),
-            _buildBullet(l10n.moderation_diagnosis_limit_biometrics),
-            _buildBullet(l10n.moderation_diagnosis_limit_external),
-            _buildBullet(l10n.moderation_diagnosis_limit_auto),
+            _buildBullet(context, l10n.moderation_diagnosis_limit_authenticity),
+            _buildBullet(context, l10n.moderation_diagnosis_limit_biometrics),
+            _buildBullet(context, l10n.moderation_diagnosis_limit_external),
+            _buildBullet(context, l10n.moderation_diagnosis_limit_auto),
             const SizedBox(height: 10),
             Text(
               l10n.moderation_diagnosis_no_auto,
               key: const ValueKey('moderation_diagnosis_no_auto'),
               style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.warning,
+                color: context.appWarning,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -143,6 +143,7 @@ class SimulatedDocumentDiagnosisCard extends StatelessWidget {
   }
 
   Widget _buildDocumentRow(
+    BuildContext context,
     DocumentDiagnosisDocument document,
     AppLocalizations l10n,
   ) {
@@ -155,13 +156,17 @@ class SimulatedDocumentDiagnosisCard extends StatelessWidget {
                 ? Icons.check_circle_outline
                 : Icons.cancel_outlined,
             size: 18,
-            color: document.isAvailable ? AppColors.success : AppColors.error,
+            color: document.isAvailable
+                ? context.appSuccess
+                : context.appError,
           ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               _documentLabel(document.type, l10n),
-              style: AppTextStyles.bodySmall,
+              style: AppTextStyles.bodySmall.copyWith(
+                color: context.appTextPrimary,
+              ),
             ),
           ),
           Text(
@@ -169,7 +174,9 @@ class SimulatedDocumentDiagnosisCard extends StatelessWidget {
                 ? l10n.moderation_diagnosis_present
                 : l10n.moderation_diagnosis_missing,
             style: AppTextStyles.labelSmall.copyWith(
-              color: document.isAvailable ? AppColors.success : AppColors.error,
+              color: document.isAvailable
+                ? context.appSuccess
+                : context.appError,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -179,6 +186,7 @@ class SimulatedDocumentDiagnosisCard extends StatelessWidget {
   }
 
   Widget _buildObservation(
+    BuildContext context,
     DocumentDiagnosisObservation observation,
     AppLocalizations l10n,
   ) {
@@ -192,21 +200,28 @@ class SimulatedDocumentDiagnosisCard extends StatelessWidget {
       DocumentDiagnosisObservation.emailNotProvided =>
         l10n.moderation_diagnosis_obs_email,
     };
-    return _buildBullet(message);
+    return _buildBullet(context, message);
   }
 
-  Widget _buildBullet(String text) {
+  Widget _buildBullet(BuildContext context, String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
-            padding: EdgeInsets.only(top: 5),
-            child: Icon(Icons.circle, size: 5, color: AppColors.warning),
+          Padding(
+            padding: const EdgeInsets.only(top: 5),
+            child: Icon(Icons.circle, size: 5, color: context.appWarning),
           ),
           const SizedBox(width: 8),
-          Expanded(child: Text(text, style: AppTextStyles.bodySmall)),
+          Expanded(
+            child: Text(
+              text,
+              style: AppTextStyles.bodySmall.copyWith(
+                color: context.appTextSecondary,
+              ),
+            ),
+          ),
         ],
       ),
     );

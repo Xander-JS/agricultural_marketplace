@@ -62,7 +62,6 @@ class _DocumentImagePreviewState extends State<DocumentImagePreview> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final path = widget.path;
     final hasPath = path != null && path.trim().isNotEmpty;
     final isValidPath = DocumentPathValidator.isValid(path);
@@ -83,7 +82,7 @@ class _DocumentImagePreviewState extends State<DocumentImagePreview> {
                       ? Icons.verified_user_outlined
                       : Icons.report_gmailerrorred_outlined,
                   size: 20,
-                  color: isValidPath ? AppColors.success : AppColors.warning,
+                  color: isValidPath ? context.appSuccess : context.appWarning,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -102,9 +101,7 @@ class _DocumentImagePreviewState extends State<DocumentImagePreview> {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(10),
                 child: Container(
-                  color: isDark
-                      ? AppColors.darkSurfaceVariant
-                      : AppColors.lightBackground,
+                  color: context.appSurfaceVariant,
                   child: _buildContent(
                     context,
                     l10n,
@@ -123,10 +120,8 @@ class _DocumentImagePreviewState extends State<DocumentImagePreview> {
                   : l10n.document_image_missing,
               style: AppTextStyles.bodySmall.copyWith(
                 color: isValidPath
-                    ? AppColors.success
-                    : isDark
-                    ? AppColors.darkTextSecondary
-                    : AppColors.lightTextSecondary,
+                    ? context.appSuccess
+                    : context.appTextSecondary,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -146,14 +141,14 @@ class _DocumentImagePreviewState extends State<DocumentImagePreview> {
       return _status(
         Icons.no_photography_outlined,
         l10n.document_image_missing,
-        AppColors.lightTextSecondary,
+        context.appTextDisabled,
       );
     }
     if (!isValidPath) {
       return _status(
         Icons.link_off,
         l10n.document_image_invalid,
-        AppColors.warning,
+        context.appWarning,
       );
     }
 
@@ -164,7 +159,7 @@ class _DocumentImagePreviewState extends State<DocumentImagePreview> {
           return _status(
             Icons.lock_clock_outlined,
             l10n.document_image_loading,
-            AppColors.info,
+            context.appInfo,
             showProgress: true,
           );
         }
@@ -174,7 +169,7 @@ class _DocumentImagePreviewState extends State<DocumentImagePreview> {
           return Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.lock_outline, color: AppColors.error, size: 34),
+              Icon(Icons.lock_outline, color: context.appError, size: 34),
               const SizedBox(height: 6),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -182,7 +177,7 @@ class _DocumentImagePreviewState extends State<DocumentImagePreview> {
                   l10n.document_image_error,
                   textAlign: TextAlign.center,
                   style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.error,
+                    color: context.appError,
                   ),
                 ),
               ),
@@ -208,14 +203,14 @@ class _DocumentImagePreviewState extends State<DocumentImagePreview> {
             return _status(
               Icons.lock_clock_outlined,
               l10n.document_image_loading,
-              AppColors.info,
+              context.appInfo,
               showProgress: true,
             );
           },
           errorBuilder: (_, _, _) => _status(
             Icons.broken_image_outlined,
             l10n.document_image_display_error,
-            AppColors.error,
+            context.appError,
           ),
         );
       },

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../core/theme/app_colors.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/utils/currency_formatters.dart';
 import '../../../core/utils/unit_formatters.dart';
 import '../../crop/models/crop_model.dart';
@@ -99,6 +101,7 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final costPerKg = widget.costPerKgResult.isCalculated
         ? widget.costPerKgResult.costPerKg
         : null;
@@ -112,7 +115,8 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
     );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Margen y precio sugerido')),
+      backgroundColor: context.appBackground,
+      appBar: AppBar(title: Text(l10n.profitability_title)),
       body: Column(
         children: [
           _buildSimulatedNoticeBanner(),
@@ -122,17 +126,17 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _buildCostSummary(),
+                  _buildCostSummary(l10n),
                   const SizedBox(height: 16),
                   if (!widget.costPerKgResult.isCalculated)
-                    _buildUnavailableCard()
+                    _buildUnavailableCard(l10n)
                   else ...[
-                    _buildPriceEvaluationCard(marginResult),
+                    _buildPriceEvaluationCard(l10n, marginResult),
                     const SizedBox(height: 16),
-                    _buildSuggestedPriceCard(suggestedResult),
+                    _buildSuggestedPriceCard(l10n, suggestedResult),
                   ],
                   const SizedBox(height: 16),
-                  _buildRegionalReferenceCard(),
+                  _buildRegionalReferenceCard(l10n),
                 ],
               ),
             ),
@@ -146,14 +150,14 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      color: Colors.amber.withValues(alpha: 0.18),
+      color: context.appWarningContainer,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
             Icons.info_outline,
             size: 18,
-            color: Theme.of(context).colorScheme.onSurface,
+            color: context.appTextPrimary,
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -163,7 +167,7 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: Theme.of(context).colorScheme.onSurface,
+                color: context.appTextPrimary,
               ),
             ),
           ),
@@ -172,13 +176,12 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
     );
   }
 
-  Widget _buildCostSummary() {
+  Widget _buildCostSummary(AppLocalizations l10n) {
     final result = widget.costPerKgResult;
-    final primary = Theme.of(context).primaryColor;
 
     return Card(
       elevation: 0,
-      color: primary.withValues(alpha: 0.08),
+      color: context.appPrimaryContainer,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -187,11 +190,14 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
           children: [
             Row(
               children: [
-                Icon(Icons.scale_outlined, size: 20, color: primary),
+                Icon(Icons.scale_outlined, size: 20, color: context.appPrimary),
                 const SizedBox(width: 8),
-                const Text(
-                  'Costo de producción por kg',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                Text(
+                  l10n.profitability_cost_per_kg,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: context.appTextPrimary,
+                  ),
                 ),
               ],
             ),
@@ -203,31 +209,36 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: primary,
+                  color: context.appPrimary,
                 ),
               )
             else
               Text(
                 result.message,
                 key: const Key('profit_cost_unavailable_message'),
-                style: TextStyle(color: Colors.grey.shade800),
+                style: TextStyle(color: context.appTextSecondary),
               ),
             if (result.denominator != null) ...[
               const SizedBox(height: 4),
               Text(
-                'Cantidad usada: ${UnitFormatters.formatKg(result.denominator)} '
-                '(${result.denominatorSource.displayName}) · '
-                '${result.denominatorSource.fieldName}',
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                l10n.profitability_used_quantity(
+                  UnitFormatters.formatKg(result.denominator),
+                  result.denominatorSource.displayName,
+                  result.denominatorSource.fieldName,
+                ),
+                style: TextStyle(fontSize: 12, color: context.appTextSecondary),
               ),
             ],
-            const Divider(height: 24),
+            Divider(height: 24, color: context.appDivider),
             Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'Precio actual publicado',
-                    style: TextStyle(fontWeight: FontWeight.w600),
+                    l10n.profitability_current_price,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: context.appTextPrimary,
+                    ),
                   ),
                 ),
                 Text(
@@ -235,17 +246,20 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
                       ? CurrencyFormatters.formatPricePerKg(
                           widget.crop.pricePerKg,
                         )
-                      : 'No disponible',
+                      : l10n.common_not_available,
                   key: const Key('profit_current_price'),
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: context.appTextPrimary,
+                  ),
                 ),
               ],
             ),
             if (!_hasCurrentPrice) ...[
               const SizedBox(height: 4),
               Text(
-                'El precio actual no es válido. Puedes introducir un precio temporal para la simulación.',
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                l10n.profitability_invalid_current_price,
+                style: TextStyle(fontSize: 12, color: context.appTextSecondary),
               ),
             ],
           ],
@@ -254,11 +268,10 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
     );
   }
 
-  Widget _buildUnavailableCard() {
+  Widget _buildUnavailableCard(AppLocalizations l10n) {
     return Card(
       elevation: 0,
-      color: Theme.of(context).colorScheme.errorContainer
-          .withValues(alpha: 0.3),
+      color: context.appErrorContainer,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -267,23 +280,32 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
           children: [
             Icon(
               Icons.info_outline,
-              color: Theme.of(context).colorScheme.error,
+              color: context.appError,
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'No se puede calcular el margen ni el precio sugerido',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                  Text(
+                    l10n.profitability_unavailable_title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: context.appTextPrimary,
+                    ),
                   ),
                   const SizedBox(height: 6),
-                  Text(widget.costPerKgResult.message),
+                  Text(
+                    widget.costPerKgResult.message,
+                    style: TextStyle(color: context.appTextSecondary),
+                  ),
                   const SizedBox(height: 6),
-                  const Text(
-                    'Corrige los costos o los datos del cultivo para continuar. No se muestran valores estimados para evitar resultados engañosos.',
-                    style: TextStyle(fontSize: 12),
+                  Text(
+                    l10n.profitability_unavailable_desc,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: context.appTextSecondary,
+                    ),
                   ),
                 ],
               ),
@@ -294,21 +316,27 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
     );
   }
 
-  Widget _buildPriceEvaluationCard(ProfitMarginResult marginResult) {
-    final color = marginResult.isLoss
-        ? Theme.of(context).colorScheme.error
-        : Colors.green.shade700;
+  Widget _buildPriceEvaluationCard(
+    AppLocalizations l10n,
+    ProfitMarginResult marginResult,
+  ) {
+    final color = marginResult.isLoss ? context.appError : context.appSuccess;
 
     return Card(
+      color: context.appSurface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Evalúa tu precio de venta',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            Text(
+              l10n.profitability_evaluate_title,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: context.appTextPrimary,
+              ),
             ),
             const SizedBox(height: 12),
             TextFormField(
@@ -321,7 +349,7 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
               ],
               decoration: InputDecoration(
-                labelText: 'Precio de venta por kg',
+                labelText: l10n.profitability_selling_price,
                 prefixText: '\$ ',
                 suffixText: '/ kg',
                 border: OutlineInputBorder(
@@ -337,28 +365,28 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Puedes editar este valor para la simulación; no se guarda ni modifica el precio publicado.',
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+              l10n.profitability_edit_note,
+              style: TextStyle(fontSize: 12, color: context.appTextSecondary),
             ),
             if (_isUsingTemporaryPrice) ...[
               const SizedBox(height: 4),
               Text(
-                'Precio temporal para simulación; no se ha guardado.',
+                l10n.profitability_temporary_price,
                 key: const Key('profit_temporary_price_note'),
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: Colors.orange.shade800,
+                  color: context.appWarning,
                 ),
               ),
             ],
             const SizedBox(height: 12),
             if (_evaluatedPrice == null)
               Text(
-                'Ingresa un precio de venta válido mayor que 0.',
+                l10n.profitability_invalid_price,
                 key: const Key('profit_price_error'),
                 style: TextStyle(
-                  color: Theme.of(context).colorScheme.error,
+                  color: context.appError,
                   fontWeight: FontWeight.w600,
                 ),
               )
@@ -375,9 +403,12 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
                   children: [
                     Text(
                       marginResult.isLoss
-                          ? 'Pérdida estimada por kg'
-                          : 'Ganancia estimada por kg',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                          ? l10n.profitability_loss_per_kg
+                          : l10n.profitability_profit_per_kg,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: context.appTextPrimary,
+                      ),
                     ),
                     Text(
                       CurrencyFormatters.formatPricePerKg(
@@ -391,12 +422,15 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
-                      'Margen sobre el precio de venta',
-                      style: TextStyle(fontWeight: FontWeight.w600),
+                    Text(
+                      l10n.profitability_margin_over_price,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: context.appTextPrimary,
+                      ),
                     ),
                     Text(
-                      _formatPercentage(marginResult.marginPercentage),
+                      _formatPercentage(l10n, marginResult.marginPercentage),
                       key: const Key('profit_margin_value'),
                       style: TextStyle(
                         fontSize: 20,
@@ -406,7 +440,7 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
                     ),
                     if (marginResult.isLoss)
                       Text(
-                        'El precio evaluado está por debajo del costo de producción.',
+                        l10n.profitability_loss_message,
                         key: const Key('profit_loss_message'),
                         style: TextStyle(
                           color: color,
@@ -416,19 +450,19 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
                     else if ((marginResult.marginPercentage ?? 0) <
                         ProfitMarginCalculator.referenceMarginPercentage)
                       Text(
-                        'El margen está por debajo del 15 % de referencia del prototipo.',
+                        l10n.profitability_low_margin,
                         key: const Key('profit_low_margin_warning'),
                         style: TextStyle(
-                          color: Colors.orange.shade800,
+                          color: context.appWarning,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                     const SizedBox(height: 4),
                     Text(
-                      'Margen = (precio − costo) / precio × 100',
+                      l10n.profitability_margin_formula,
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey.shade700,
+                        color: context.appTextSecondary,
                       ),
                     ),
                   ],
@@ -438,7 +472,7 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
               Text(
                 marginResult.message,
                 key: const Key('profit_margin_message'),
-                style: TextStyle(color: Colors.grey.shade800),
+                style: TextStyle(color: context.appTextSecondary),
               ),
           ],
         ),
@@ -446,17 +480,25 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
     );
   }
 
-  Widget _buildSuggestedPriceCard(SuggestedPriceResult suggestedResult) {
+  Widget _buildSuggestedPriceCard(
+    AppLocalizations l10n,
+    SuggestedPriceResult suggestedResult,
+  ) {
     return Card(
+      color: context.appSurface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Precio sugerido según margen objetivo',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            Text(
+              l10n.profitability_suggested_title,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: context.appTextPrimary,
+              ),
             ),
             const SizedBox(height: 12),
             TextFormField(
@@ -469,7 +511,7 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
               ],
               decoration: InputDecoration(
-                labelText: 'Margen objetivo (%)',
+                labelText: l10n.profitability_target_margin,
                 suffixText: '%',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -485,16 +527,16 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'El margen se aplica sobre el precio de venta; no es un recargo sobre el costo.',
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+              l10n.profitability_margin_note,
+              style: TextStyle(fontSize: 12, color: context.appTextSecondary),
             ),
             const SizedBox(height: 12),
             if (_targetMargin == null)
               Text(
-                'Ingresa un margen entre 0 % y menos de 100 %.',
+                l10n.profitability_invalid_margin,
                 key: const Key('profit_target_margin_error'),
                 style: TextStyle(
-                  color: Theme.of(context).colorScheme.error,
+                  color: context.appError,
                   fontWeight: FontWeight.w600,
                 ),
               )
@@ -507,19 +549,22 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: Theme.of(context).primaryColor,
+                  color: context.appPrimary,
                 ),
               ),
               const SizedBox(height: 4),
-              const Text(
-                'Precio orientativo. No modifica ni publica el precio del cultivo.',
-                style: TextStyle(fontSize: 12),
+              Text(
+                l10n.profitability_orientation,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: context.appTextSecondary,
+                ),
               ),
             ] else
               Text(
                 suggestedResult.message,
                 key: const Key('profit_suggested_message'),
-                style: TextStyle(color: Colors.grey.shade800),
+                style: TextStyle(color: context.appTextSecondary),
               ),
           ],
         ),
@@ -527,13 +572,12 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
     );
   }
 
-  Widget _buildRegionalReferenceCard() {
+  Widget _buildRegionalReferenceCard(AppLocalizations l10n) {
     final reference = _regionalReference;
 
     return Card(
       elevation: 0,
-      color: Theme.of(context).colorScheme.secondaryContainer
-          .withValues(alpha: 0.45),
+      color: context.appSurfaceVariant,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -542,40 +586,48 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
           children: [
             Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'Referencia regional simulada',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    l10n.profitability_regional_reference,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: context.appTextPrimary,
+                    ),
                   ),
                 ),
                 if (reference?.isSimulated == true)
                   Chip(
-                    label: const Text('SIMULADA'),
+                    label: Text(l10n.common_simulated),
                     visualDensity: VisualDensity.compact,
-                    backgroundColor: Colors.orange.shade100,
+                    backgroundColor: context.appWarningContainer,
                     labelStyle: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
-                      color: Colors.orange.shade900,
+                      color: context.appWarning,
                     ),
                   ),
               ],
             ),
             const SizedBox(height: 8),
             if (reference == null)
-              const Text(
-                'No hay una referencia simulada configurada para este cultivo.',
-                key: Key('simulated_reference_missing'),
+              Text(
+                l10n.profitability_reference_missing,
+                key: const Key('simulated_reference_missing'),
+                style: TextStyle(color: context.appTextSecondary),
               )
             else
-              _buildReferenceDetails(reference),
+              _buildReferenceDetails(l10n, reference),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildReferenceDetails(RegionalPriceReference reference) {
+  Widget _buildReferenceDetails(
+    AppLocalizations l10n,
+    RegionalPriceReference reference,
+  ) {
     final comparison = ProfitMarginCalculator.compareToReference(
       evaluatedPricePerKg: _evaluatedPrice,
       referencePricePerKg: reference.referencePricePerKg,
@@ -584,18 +636,21 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildInfoRow('Cultivo de referencia', reference.cropName),
-        _buildInfoRow('Región', reference.region),
+        _buildInfoRow(l10n.profitability_reference_crop, reference.cropName),
+        _buildInfoRow(l10n.profitability_reference_region, reference.region),
         _buildInfoRow(
-          'Precio de referencia simulado',
+          l10n.profitability_reference_price,
           CurrencyFormatters.formatPricePerKg(reference.referencePricePerKg),
           valueKey: const Key('simulated_reference_price'),
         ),
-        _buildInfoRow('Tipo de dato', 'Simulado para el prototipo'),
-        const Divider(height: 24),
+        _buildInfoRow(
+          l10n.profitability_reference_type,
+          l10n.profitability_reference_simulated,
+        ),
+        Divider(height: 24, color: context.appDivider),
         if (comparison.isCalculated) ...[
           _buildInfoRow(
-            'Diferencia frente a la referencia simulada',
+            l10n.profitability_reference_difference,
             CurrencyFormatters.formatPricePerKg(comparison.differencePerKg),
             valueKey: const Key('simulated_reference_difference'),
           ),
@@ -603,20 +658,20 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
             comparison.message,
             style: TextStyle(
               fontSize: 12,
-              color: Colors.grey.shade800,
+              color: context.appTextSecondary,
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 4),
           Text(
-            'La diferencia se calcula como precio evaluado − referencia.',
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+            l10n.profitability_reference_difference_note,
+            style: TextStyle(fontSize: 12, color: context.appTextSecondary),
           ),
         ] else
           Text(
             comparison.message,
             key: const Key('simulated_reference_difference_unavailable'),
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade800),
+            style: TextStyle(fontSize: 12, color: context.appTextSecondary),
           ),
       ],
     );
@@ -631,7 +686,7 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
           Expanded(
             child: Text(
               label,
-              style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+              style: TextStyle(fontSize: 13, color: context.appTextSecondary),
             ),
           ),
           const SizedBox(width: 12),
@@ -640,7 +695,11 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
               value,
               key: valueKey,
               textAlign: TextAlign.end,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: context.appTextPrimary,
+              ),
             ),
           ),
         ],
@@ -648,8 +707,8 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
     );
   }
 
-  String _formatPercentage(double? value) {
-    if (value == null || !value.isFinite) return 'No disponible';
+  String _formatPercentage(AppLocalizations l10n, double? value) {
+    if (value == null || !value.isFinite) return l10n.common_not_available;
     return '${UnitFormatters.formatCleanValue(value, maxDecimals: 2)} %';
   }
 }

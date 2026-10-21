@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -116,15 +117,20 @@ class MockCropServiceForLifecycle extends CropService {
       }
     }
 
-    final updatedUrls = currentImages.map((e) => e['image_path'] as String).toList();
+    final updatedUrls = currentImages
+        .map((e) => e['image_path'] as String)
+        .toList();
     return crop.copyWith(imageUrls: updatedUrls);
   }
 
   @override
   Future<void> deleteCropImage(String cropId, String imagePath) async {
     // Sanitización de seguridad: debe pertenecer a la carpeta del cultivo y sin traversal
-    final isAllowed = imagePath.startsWith('$cropId/') && !imagePath.contains('..');
-    if (isAllowed && !imagePath.startsWith('http://') && !imagePath.startsWith('https://')) {
+    final isAllowed =
+        imagePath.startsWith('$cropId/') && !imagePath.contains('..');
+    if (isAllowed &&
+        !imagePath.startsWith('http://') &&
+        !imagePath.startsWith('https://')) {
       deletedImagePaths.add(imagePath);
       executionLog.add('storage.remove:$imagePath');
     }
@@ -233,86 +239,101 @@ void main() {
       shareLocation: true,
       shareWhatsapp: true,
     ),
-    stats: FarmerStatsData(
-      published: 5,
-      negotiating: 2,
-      closed: 8,
-    ),
+    stats: FarmerStatsData(published: 5, negotiating: 2, closed: 8),
   );
 
   group('Fase 2 — Subetapa 2.7: Auditoría del Ciclo de Vida de los Cultivos', () {
     // =========================================================================
     // SECCIÓN A: PUBLICACIÓN DE UN CULTIVO
     // =========================================================================
-    testWidgets('A1. Publicación válida con campos obligatorios asigna simulación geo si no tiene coordenadas', (tester) async {
-      final mockService = MockCropServiceForLifecycle();
+    testWidgets(
+      'A1. Publicación válida con campos obligatorios asigna simulación geo si no tiene coordenadas',
+      (tester) async {
+        final mockService = MockCropServiceForLifecycle();
 
-      await tester.pumpWidget(
-        createTestWidget(
-          child: PublishCropScreen(
-            cropService: mockService,
-            currentUserIdForTesting: 'farmer-uuid-001',
+        await tester.pumpWidget(
+          createTestWidget(
+            child: PublishCropScreen(
+              cropService: mockService,
+              currentUserIdForTesting: 'farmer-uuid-001',
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      // Completar campos obligatorios
-      await tester.enterText(find.byType(TextFormField).at(0), 'Papa Pastusa Selecta');
-      await tester.enterText(find.byType(TextFormField).at(1), 'Papa de primera calidad para mercado mayorista.');
-      await tester.enterText(find.byType(TextFormField).at(2), 'Papa');
-      await tester.enterText(find.byType(TextFormField).at(3), '2200');
-      await tester.enterText(find.byType(TextFormField).at(4), '800');
-      await tester.enterText(find.byType(TextFormField).at(5), '50');
-      await tester.enterText(find.byType(TextFormField).at(7), 'Ipiales');
+        // Completar campos obligatorios
+        await tester.enterText(
+          find.byType(TextFormField).at(0),
+          'Papa Pastusa Selecta',
+        );
+        await tester.enterText(
+          find.byType(TextFormField).at(1),
+          'Papa de primera calidad para mercado mayorista.',
+        );
+        await tester.enterText(find.byType(TextFormField).at(2), 'Papa');
+        await tester.enterText(find.byType(TextFormField).at(3), '2200');
+        await tester.enterText(find.byType(TextFormField).at(4), '800');
+        await tester.enterText(find.byType(TextFormField).at(5), '50');
+        await tester.enterText(find.byType(TextFormField).at(7), 'Ipiales');
 
-      // Presionar Guardar Borrador
-      await tester.ensureVisible(find.text('Guardar Borrador'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Guardar Borrador'));
-      await tester.pumpAndSettle();
+        // Presionar Guardar Borrador
+        await tester.ensureVisible(find.text('Guardar Borrador'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Guardar Borrador'));
+        await tester.pumpAndSettle();
 
-      expect(mockService.lastSavedCrop, isNotNull);
-      final saved = mockService.lastSavedCrop!;
-      expect(saved.title, equals('Papa Pastusa Selecta'));
-      expect(saved.pricePerKg, equals(2200.0));
-      expect(saved.stockTotal, equals(800.0));
-      expect(saved.minOrderKg, equals(50.0));
-      expect(saved.department, equals('Nariño'));
-      expect(saved.municipality, equals('Ipiales'));
-      expect(saved.farmerId, equals('farmer-uuid-001'));
-      expect(saved.status, equals(CropStatus.borrador));
+        expect(mockService.lastSavedCrop, isNotNull);
+        final saved = mockService.lastSavedCrop!;
+        expect(saved.title, equals('Papa Pastusa Selecta'));
+        expect(saved.pricePerKg, equals(2200.0));
+        expect(saved.stockTotal, equals(800.0));
+        expect(saved.minOrderKg, equals(50.0));
+        expect(saved.department, equals('Nariño'));
+        expect(saved.municipality, equals('Ipiales'));
+        expect(saved.farmerId, equals('farmer-uuid-001'));
+        expect(saved.status, equals(CropStatus.borrador));
 
-      // Verificación de ubicación geográfica simulada determinista
-      expect(saved.latitude, isNotNull);
-      expect(saved.longitude, isNotNull);
-      expect(saved.latitude, inInclusiveRange(-90.0, 90.0));
-      expect(saved.longitude, inInclusiveRange(-180.0, 180.0));
-    });
+        // Verificación de ubicación geográfica simulada determinista
+        expect(saved.latitude, isNotNull);
+        expect(saved.longitude, isNotNull);
+        expect(saved.latitude, inInclusiveRange(-90.0, 90.0));
+        expect(saved.longitude, inInclusiveRange(-180.0, 180.0));
+      },
+    );
 
-    testWidgets('A2. Publicación rechaza formulario incompleto y no envía datos al servicio', (tester) async {
-      final mockService = MockCropServiceForLifecycle();
+    testWidgets(
+      'A2. Publicación rechaza formulario incompleto y no envía datos al servicio',
+      (tester) async {
+        final mockService = MockCropServiceForLifecycle();
 
-      await tester.pumpWidget(
-        createTestWidget(
-          child: PublishCropScreen(
-            cropService: mockService,
-            currentUserIdForTesting: 'farmer-uuid-001',
+        await tester.pumpWidget(
+          createTestWidget(
+            child: PublishCropScreen(
+              cropService: mockService,
+              currentUserIdForTesting: 'farmer-uuid-001',
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      // Dejar campos vacíos y presionar Publicar
-      await tester.ensureVisible(find.widgetWithText(ElevatedButton, 'Publicar'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Publicar'));
-      await tester.pumpAndSettle();
+        // Dejar campos vacíos y presionar Publicar
+        await tester.ensureVisible(
+          find.widgetWithText(ElevatedButton, 'Publicar'),
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(ElevatedButton, 'Publicar'));
+        await tester.pumpAndSettle();
 
-      // No debe haberse invocado el servicio
-      expect(mockService.lastSavedCrop, isNull);
-      expect(find.text('Por favor, completa los campos obligatorios correctamente.'), findsOneWidget);
-    });
+        // No debe haberse invocado el servicio
+        expect(mockService.lastSavedCrop, isNull);
+        expect(
+          find.text(
+            'Por favor, completa los campos obligatorios correctamente.',
+          ),
+          findsOneWidget,
+        );
+      },
+    );
 
     test('A3. Publicación sin imágenes es válida y crea el cultivo con lista de imágenes vacía', () async {
       final mockService = MockCropServiceForLifecycle();
@@ -335,7 +356,10 @@ void main() {
       final result = await mockService.saveCrop(newCrop, newImages: null);
       expect(result.id, equals('new-crop-generated-uuid'));
       expect(result.imageUrls, isEmpty);
-      expect(mockService.executionLog, contains('db.insert_crop:Cebolla Junca'));
+      expect(
+        mockService.executionLog,
+        contains('db.insert_crop:Cebolla Junca'),
+      );
       expect(mockService.executionLog, isNot(contains('storage.upload')));
     });
 
@@ -361,9 +385,22 @@ void main() {
       final result = await mockService.saveCrop(newCrop, newImages: images);
 
       expect(result.imageUrls.length, equals(2));
-      expect(result.imageUrls.first, equals('new-crop-generated-uuid/image_0.jpg'));
-      expect(mockService.executionLog, contains('db.insert_crop_image:new-crop-generated-uuid/image_0.jpg:primary=true'));
-      expect(mockService.executionLog, contains('db.insert_crop_image:new-crop-generated-uuid/image_1.jpg:primary=false'));
+      expect(
+        result.imageUrls.first,
+        equals('new-crop-generated-uuid/image_0.jpg'),
+      );
+      expect(
+        mockService.executionLog,
+        contains(
+          'db.insert_crop_image:new-crop-generated-uuid/image_0.jpg:primary=true',
+        ),
+      );
+      expect(
+        mockService.executionLog,
+        contains(
+          'db.insert_crop_image:new-crop-generated-uuid/image_1.jpg:primary=false',
+        ),
+      );
     });
 
     test('A5. Fallo de subida de imágenes durante la publicación revierte el cultivo en BD (anti-huérfanos)', () async {
@@ -384,56 +421,66 @@ void main() {
       );
 
       expect(
-        () async => await mockService.saveCrop(newCrop, newImages: [File('cacao.jpg')]),
+        () async =>
+            await mockService.saveCrop(newCrop, newImages: [File('cacao.jpg')]),
         throwsA(isA<Exception>()),
       );
 
-      expect(mockService.executionLog, contains('db.rollback_delete_crop:new-crop-generated-uuid'));
+      expect(
+        mockService.executionLog,
+        contains('db.rollback_delete_crop:new-crop-generated-uuid'),
+      );
     });
 
     // =========================================================================
     // SECCIÓN B: EDICIÓN DE UN CULTIVO
     // =========================================================================
-    testWidgets('B1. Edición conserva coordenadas originales cuando no se modifica la ubicación', (tester) async {
-      tester.view.physicalSize = const Size(800, 1400);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(() {
-        tester.view.resetPhysicalSize();
-        tester.view.resetDevicePixelRatio();
-      });
+    testWidgets(
+      'B1. Edición conserva coordenadas originales cuando no se modifica la ubicación',
+      (tester) async {
+        tester.view.physicalSize = const Size(800, 1400);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(() {
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
+        });
 
-      final mockService = MockCropServiceForLifecycle();
+        final mockService = MockCropServiceForLifecycle();
 
-      await tester.pumpWidget(
-        createTestWidget(
-          child: PublishCropScreen(
-            cropToEdit: baseActiveCrop,
-            cropService: mockService,
-            currentUserIdForTesting: 'farmer-uuid-001',
+        await tester.pumpWidget(
+          createTestWidget(
+            child: PublishCropScreen(
+              cropToEdit: baseActiveCrop,
+              cropService: mockService,
+              currentUserIdForTesting: 'farmer-uuid-001',
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      // Modificar únicamente el precio (campo en índice 3)
-      final priceField = find.byType(TextFormField).at(3);
-      await tester.ensureVisible(priceField);
-      await tester.pumpAndSettle();
-      await tester.enterText(priceField, '21000');
+        // Modificar únicamente el precio (campo en índice 3)
+        final priceField = find.byType(TextFormField).at(3);
+        await tester.ensureVisible(priceField);
+        await tester.pumpAndSettle();
+        await tester.enterText(priceField, '21000');
 
-      // Desplazar el formulario para asegurar que los botones inferiores estén visibles
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -500));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Guardar Borrador'));
-      await tester.pumpAndSettle();
+        // Desplazar el formulario para asegurar que los botones inferiores estén visibles
+        await tester.drag(
+          find.byType(SingleChildScrollView),
+          const Offset(0, -500),
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Guardar Borrador'));
+        await tester.pumpAndSettle();
 
-      expect(mockService.lastSavedCrop, isNotNull);
-      final edited = mockService.lastSavedCrop!;
-      expect(edited.pricePerKg, equals(21000.0));
-      // Coordenadas deben conservarse idénticas
-      expect(edited.latitude, equals(baseActiveCrop.latitude));
-      expect(edited.longitude, equals(baseActiveCrop.longitude));
-    });
+        expect(mockService.lastSavedCrop, isNotNull);
+        final edited = mockService.lastSavedCrop!;
+        expect(edited.pricePerKg, equals(21000.0));
+        // Coordenadas deben conservarse idénticas
+        expect(edited.latitude, equals(baseActiveCrop.latitude));
+        expect(edited.longitude, equals(baseActiveCrop.longitude));
+      },
+    );
 
     test('B2. Invariante de inventario: CropModel.toJson() NUNCA envía stock_committed ni stock_sold', () {
       final cropWithCommitted = baseActiveCrop.copyWith(
@@ -444,12 +491,21 @@ void main() {
 
       final jsonPayload = cropWithCommitted.toJson();
 
-      expect(jsonPayload.containsKey('stock_committed'), isFalse,
-          reason: 'stock_committed no debe existir en toJson para proteger las columnas de inventario');
-      expect(jsonPayload.containsKey('stock_sold'), isFalse,
-          reason: 'stock_sold no debe existir en toJson para proteger las columnas de inventario');
+      expect(
+        jsonPayload.containsKey('stock_committed'),
+        isFalse,
+        reason: 'stock_committed no debe existir en toJson para proteger las columnas de inventario',
+      );
+      expect(
+        jsonPayload.containsKey('stock_sold'),
+        isFalse,
+        reason: 'stock_sold no debe existir en toJson para proteger las columnas de inventario',
+      );
       expect(jsonPayload['stock_total'], equals(1200.0));
-      expect(cropWithCommitted.availableStock, equals(750.0)); // 1200 - 300 - 150
+      expect(
+        cropWithCommitted.availableStock,
+        equals(750.0),
+      ); // 1200 - 300 - 150
     });
 
     test('B3. Edición con eliminación de imagen principal promueve la siguiente imagen a principal', () async {
@@ -457,161 +513,195 @@ void main() {
       const cropId = 'crop-narino-001';
 
       mockService.inMemoryImages[cropId] = [
-        {'id': 'img-1', 'image_path': '$cropId/primary.jpg', 'is_primary': true},
-        {'id': 'img-2', 'image_path': '$cropId/second.jpg', 'is_primary': false},
+        {
+          'id': 'img-1',
+          'image_path': '$cropId/primary.jpg',
+          'is_primary': true,
+        },
+        {
+          'id': 'img-2',
+          'image_path': '$cropId/second.jpg',
+          'is_primary': false,
+        },
       ];
 
       // Eliminar la imagen primaria a través de deleteCropImage
       await mockService.deleteCropImage(cropId, '$cropId/primary.jpg');
 
-      expect(mockService.executionLog, contains('storage.remove:$cropId/primary.jpg'));
-      expect(mockService.executionLog, contains('db.promote_primary:$cropId/second.jpg'));
+      expect(
+        mockService.executionLog,
+        contains('storage.remove:$cropId/primary.jpg'),
+      );
+      expect(
+        mockService.executionLog,
+        contains('db.promote_primary:$cropId/second.jpg'),
+      );
       expect(mockService.inMemoryImages[cropId]!.first['is_primary'], isTrue);
     });
 
-    testWidgets('B4. Error durante la edición en base de datos muestra SnackBar sin corromper la interfaz', (tester) async {
-      final mockService = MockCropServiceForLifecycle();
-      mockService.simulateUpdateError = true;
+    testWidgets(
+      'B4. Error durante la edición en base de datos muestra SnackBar sin corromper la interfaz',
+      (tester) async {
+        final mockService = MockCropServiceForLifecycle();
+        mockService.simulateUpdateError = true;
 
-      await tester.pumpWidget(
-        createTestWidget(
-          child: PublishCropScreen(
-            cropToEdit: baseActiveCrop,
-            cropService: mockService,
-            currentUserIdForTesting: 'farmer-uuid-001',
+        await tester.pumpWidget(
+          createTestWidget(
+            child: PublishCropScreen(
+              cropToEdit: baseActiveCrop,
+              cropService: mockService,
+              currentUserIdForTesting: 'farmer-uuid-001',
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      await tester.ensureVisible(find.text('Guardar Borrador'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Guardar Borrador'));
-      await tester.pumpAndSettle();
+        await tester.ensureVisible(find.text('Guardar Borrador'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Guardar Borrador'));
+        await tester.pumpAndSettle();
 
-      expect(find.textContaining('Error al guardar:'), findsOneWidget);
-      // La pantalla sigue abierta (no hizo Navigator.pop)
-      expect(find.byType(PublishCropScreen), findsOneWidget);
-    });
+        expect(find.textContaining('Error al guardar:'), findsOneWidget);
+        // La pantalla sigue abierta (no hizo Navigator.pop)
+        expect(find.byType(PublishCropScreen), findsOneWidget);
+      },
+    );
 
     // =========================================================================
     // SECCIÓN C: VISUALIZACIÓN DEL CULTIVO
     // =========================================================================
-    testWidgets('C1. CropCard muestra precios en COP, cantidades en kg y placeholder ante imagen nula', (tester) async {
-      final cropNoImages = baseActiveCrop.copyWith(imageUrls: []);
+    testWidgets(
+      'C1. CropCard muestra precios en COP, cantidades en kg y placeholder ante imagen nula',
+      (tester) async {
+        final cropNoImages = baseActiveCrop.copyWith(imageUrls: []);
 
-      await tester.pumpWidget(
-        createTestWidget(
-          child: CropCard(
-            crop: cropNoImages,
-            onTap: () {},
+        await tester.pumpWidget(
+          createTestWidget(
+            child: CropCard(crop: cropNoImages, onTap: () {}),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      // Debe mostrar título y tipo
-      expect(find.text('Café Nariño Supremo'), findsOneWidget);
-      expect(find.text('Café'), findsOneWidget);
+        // Debe mostrar título y tipo
+        expect(find.text('Café Nariño Supremo'), findsOneWidget);
+        expect(find.text('Café'), findsOneWidget);
 
-      // Debe mostrar precio formateado COP con punto de miles ($ 19.500)
-      expect(find.text(CurrencyFormatters.formatCop(19500)), findsOneWidget);
+        // Debe mostrar precio formateado COP con punto de miles ($ 19.500)
+        expect(find.text(CurrencyFormatters.formatCop(19500)), findsOneWidget);
 
-      // Debe mostrar stock total formateado en kg limpio
-      expect(find.text(UnitFormatters.formatKg(cropNoImages.stockTotal)), findsOneWidget);
+        // Debe mostrar el stock disponible (total - comprometido - vendido),
+        // no el stock total bruto.
+        expect(
+          find.text(UnitFormatters.formatKg(cropNoImages.availableStock)),
+          findsOneWidget,
+        );
+        expect(
+          find.text(UnitFormatters.formatKg(cropNoImages.stockTotal)),
+          findsNothing,
+        );
 
-      // Debe mostrar placeholder al no tener imágenes
-      expect(find.byIcon(Icons.image_not_supported_outlined), findsOneWidget);
-    });
+        // Debe mostrar placeholder al no tener imágenes
+        expect(find.byIcon(Icons.image_not_supported_outlined), findsOneWidget);
+      },
+    );
 
-    testWidgets('C2. CropCard muestra distancia calculada únicamente cuando distanceEvaluation es provista', (tester) async {
-      const distanceEval = DistanceEvaluation(
-        distanceKm: 42.5,
-        category: DistanceRangeCategory.regionalShort,
-        formatted: '42.5 km',
-      );
+    testWidgets(
+      'C2. CropCard muestra distancia calculada únicamente cuando distanceEvaluation es provista',
+      (tester) async {
+        const distanceEval = DistanceEvaluation(
+          distanceKm: 42.5,
+          category: DistanceRangeCategory.regionalShort,
+          formatted: '42.5 km',
+        );
 
-      await tester.pumpWidget(
-        createTestWidget(
-          child: CropCard(
-            crop: baseActiveCrop,
-            onTap: () {},
-            distanceEvaluation: distanceEval,
+        await tester.pumpWidget(
+          createTestWidget(
+            child: CropCard(
+              crop: baseActiveCrop,
+              onTap: () {},
+              distanceEvaluation: distanceEval,
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.text('42.5 km'), findsOneWidget);
-    });
+        expect(find.text('42.5 km'), findsOneWidget);
+      },
+    );
 
-    testWidgets('C3. CropDetailScreen despliega carrusel de imágenes, detalles formateados y perfil del productor', (tester) async {
-      await tester.pumpWidget(
-        createTestWidget(
-          child: CropDetailScreen(
-            crop: baseActiveCrop,
-            role: 'comprador',
-            isOwner: false,
-            initialFarmerProfile: sampleFarmerProfile,
+    testWidgets(
+      'C3. CropDetailScreen despliega carrusel de imágenes, detalles formateados y perfil del productor',
+      (tester) async {
+        await tester.pumpWidget(
+          createTestWidget(
+            child: CropDetailScreen(
+              crop: baseActiveCrop,
+              role: 'comprador',
+              isOwner: false,
+              initialFarmerProfile: sampleFarmerProfile,
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      // Título y datos del productor
-      expect(find.text('Café Nariño Supremo'), findsOneWidget);
-      expect(find.text('Don Laureano Gómez'), findsOneWidget);
+        // Título y datos del productor
+        expect(find.text('Café Nariño Supremo'), findsOneWidget);
+        expect(find.text('Don Laureano Gómez'), findsOneWidget);
 
-      // Precios y unidades formateadas
-      expect(find.text(CurrencyFormatters.formatCop(19500)), findsWidgets);
+        // Precios y unidades formateadas
+        expect(find.text(CurrencyFormatters.formatCop(19500)), findsWidgets);
 
-      // Indicador de galería para 2 imágenes (1 / 2)
-      expect(find.byKey(const Key('crop_gallery_indicator')), findsOneWidget);
-      expect(find.text('1 / 2'), findsOneWidget);
+        // Indicador de galería para 2 imágenes (1 / 2)
+        expect(find.byKey(const Key('crop_gallery_indicator')), findsOneWidget);
+        expect(find.text('1 / 2'), findsOneWidget);
 
-      // No debe mostrar botón de editar o borrar a un comprador
-      expect(find.byIcon(Icons.edit), findsNothing);
-      expect(find.byIcon(Icons.delete), findsNothing);
-    });
+        // No debe mostrar botón de editar o borrar a un comprador
+        expect(find.byIcon(Icons.edit), findsNothing);
+        expect(find.byIcon(Icons.delete), findsNothing);
+      },
+    );
 
     // =========================================================================
     // SECCIÓN D: ELIMINACIÓN DEL CULTIVO Y PERMISOS
     // =========================================================================
-    testWidgets('D1. CropDetailScreen propietario puede solicitar borrado con diálogo de confirmación', (tester) async {
-      final mockService = MockCropServiceForLifecycle();
+    testWidgets(
+      'D1. CropDetailScreen propietario puede solicitar borrado con diálogo de confirmación',
+      (tester) async {
+        final mockService = MockCropServiceForLifecycle();
 
-      await tester.pumpWidget(
-        createTestWidget(
-          child: CropDetailScreen(
-            crop: baseActiveCrop,
-            role: 'agricultor',
-            isOwner: true,
-            cropService: mockService,
-            initialFarmerProfile: sampleFarmerProfile,
+        await tester.pumpWidget(
+          createTestWidget(
+            child: CropDetailScreen(
+              crop: baseActiveCrop,
+              role: 'agricultor',
+              isOwner: true,
+              cropService: mockService,
+              initialFarmerProfile: sampleFarmerProfile,
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      // Botón de borrar debe ser visible para el propietario en la barra superior
-      final deleteBtn = find.byIcon(Icons.delete);
-      expect(deleteBtn, findsOneWidget);
+        // Botón de borrar debe ser visible para el propietario en la barra superior
+        final deleteBtn = find.byIcon(Icons.delete);
+        expect(deleteBtn, findsOneWidget);
 
-      // Presionar botón de borrar
-      await tester.tap(deleteBtn);
-      await tester.pumpAndSettle();
+        // Presionar botón de borrar
+        await tester.tap(deleteBtn);
+        await tester.pumpAndSettle();
 
-      // Diálogo de confirmación debe desplegarse
-      expect(find.byType(AlertDialog), findsOneWidget);
-      expect(find.text('Borrar Publicación'), findsOneWidget);
+        // Diálogo de confirmación debe desplegarse
+        expect(find.byType(AlertDialog), findsOneWidget);
+        expect(find.text('Borrar Publicación'), findsOneWidget);
 
-      // Confirmar borrado
-      await tester.tap(find.text('Borrar'));
-      await tester.pumpAndSettle();
+        // Confirmar borrado
+        await tester.tap(find.text('Borrar'));
+        await tester.pumpAndSettle();
 
-      // deleteCrop debe haberse ejecutado
-      expect(mockService.deletedCropIds, contains(baseActiveCrop.id));
-    });
+        // deleteCrop debe haberse ejecutado
+        expect(mockService.deletedCropIds, contains(baseActiveCrop.id));
+      },
+    );
 
     test('D2. deleteCrop elimina archivos de Storage antes de borrar en BD y filtra rutas ajenas', () async {
       final mockService = MockCropServiceForLifecycle();
@@ -620,49 +710,69 @@ void main() {
       mockService.inMemoryImages[cropId] = [
         {'id': 'img-1', 'image_path': '$cropId/img_1.jpg', 'is_primary': true},
         // Ruta manipulada ajena
-        {'id': 'img-2', 'image_path': 'other_crop/stolen.jpg', 'is_primary': false},
+        {
+          'id': 'img-2',
+          'image_path': 'other_crop/stolen.jpg',
+          'is_primary': false,
+        },
       ];
 
       await mockService.deleteCrop(cropId);
 
       // Comprobar orden de ejecución
-      final storageIndex = mockService.executionLog.indexOf('storage.remove_on_crop_delete:$cropId/img_1.jpg');
-      final dbIndex = mockService.executionLog.indexOf('db.delete_crop:$cropId');
+      final storageIndex = mockService.executionLog.indexOf(
+        'storage.remove_on_crop_delete:$cropId/img_1.jpg',
+      );
+      final dbIndex = mockService.executionLog.indexOf(
+        'db.delete_crop:$cropId',
+      );
 
       expect(storageIndex, isNot(-1));
       expect(dbIndex, isNot(-1));
-      expect(storageIndex, lessThan(dbIndex),
-          reason: 'Storage remove debe ocurrir antes del delete en BD para permitir verificación de permisos');
+      expect(
+        storageIndex,
+        lessThan(dbIndex),
+        reason: 'Storage remove debe ocurrir antes del delete en BD para permitir verificación de permisos',
+      );
 
       // Ruta ajena no debe haber sido enviada a Storage
-      expect(mockService.executionLog, isNot(contains('storage.remove_on_crop_delete:other_crop/stolen.jpg')));
-    });
-
-    testWidgets('D3. Error al eliminar cultivo muestra SnackBar de error y no cierra la pantalla', (tester) async {
-      final mockService = MockCropServiceForLifecycle();
-      mockService.simulateDeleteError = true;
-
-      await tester.pumpWidget(
-        createTestWidget(
-          child: CropDetailScreen(
-            crop: baseActiveCrop,
-            role: 'agricultor',
-            isOwner: true,
-            cropService: mockService,
-            initialFarmerProfile: sampleFarmerProfile,
-          ),
-        ),
+      expect(
+        mockService.executionLog,
+        isNot(contains('storage.remove_on_crop_delete:other_crop/stolen.jpg')),
       );
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.byIcon(Icons.delete));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Borrar'));
-      await tester.pumpAndSettle();
-
-      expect(find.textContaining('DB_DELETE_CONSTRAINT_ERROR'), findsOneWidget);
-      expect(find.byType(CropDetailScreen), findsOneWidget);
     });
+
+    testWidgets(
+      'D3. Error al eliminar cultivo muestra SnackBar de error y no cierra la pantalla',
+      (tester) async {
+        final mockService = MockCropServiceForLifecycle();
+        mockService.simulateDeleteError = true;
+
+        await tester.pumpWidget(
+          createTestWidget(
+            child: CropDetailScreen(
+              crop: baseActiveCrop,
+              role: 'agricultor',
+              isOwner: true,
+              cropService: mockService,
+              initialFarmerProfile: sampleFarmerProfile,
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byIcon(Icons.delete));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Borrar'));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.textContaining('DB_DELETE_CONSTRAINT_ERROR'),
+          findsOneWidget,
+        );
+        expect(find.byType(CropDetailScreen), findsOneWidget);
+      },
+    );
   });
 }

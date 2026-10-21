@@ -12,6 +12,7 @@ import 'package:agricultural_marketplace/features/dashboard/screens/main_dashboa
 import 'package:agricultural_marketplace/features/moderation/models/moderation_request.dart';
 import 'package:agricultural_marketplace/features/moderation/screens/moderation_detail_screen.dart';
 import 'package:agricultural_marketplace/features/moderation/screens/moderation_queue_screen.dart';
+import 'package:agricultural_marketplace/features/moderation/services/document_image_service.dart';
 import 'package:agricultural_marketplace/features/moderation/services/moderation_service.dart';
 
 Session createMockSession({required String userId}) {
@@ -61,6 +62,14 @@ ModerationRequest createSampleRequest({
     selfiePath: 'mock/path/selfie.jpg',
     rejectionReason: rejectionReason,
     createdAt: DateTime.now().subtract(const Duration(hours: 2)),
+  );
+}
+
+DocumentImageUrlService createOfflineDocumentImageService() {
+  return DocumentImageUrlService(
+    signer: (bucket, path, expiresInSeconds) async {
+      throw Exception('offline');
+    },
   );
 }
 
@@ -252,12 +261,15 @@ void main() {
           child: ModerationDetailScreen(
             request: sample,
             moderationService: service,
+            documentImageService: createOfflineDocumentImageService(),
           ),
         ),
       );
       await tester.pumpAndSettle();
 
       expect(find.text('Aprobar'), findsOneWidget);
+      await tester.ensureVisible(find.text('Aprobar'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Aprobar'));
       await tester.pumpAndSettle();
 
@@ -309,12 +321,15 @@ void main() {
           child: ModerationDetailScreen(
             request: sample,
             moderationService: service,
+            documentImageService: createOfflineDocumentImageService(),
           ),
         ),
       );
       await tester.pumpAndSettle();
 
       expect(find.text('Rechazar'), findsOneWidget);
+      await tester.ensureVisible(find.text('Rechazar'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Rechazar'));
       await tester.pumpAndSettle();
 
@@ -351,6 +366,7 @@ void main() {
         createTestApp(
           child: ModerationDetailScreen(
             request: sampleResolved,
+            documentImageService: createOfflineDocumentImageService(),
           ),
         ),
       );
@@ -394,11 +410,14 @@ void main() {
           child: ModerationDetailScreen(
             request: sample,
             moderationService: service,
+            documentImageService: createOfflineDocumentImageService(),
           ),
         ),
       );
       await tester.pumpAndSettle();
 
+      await tester.ensureVisible(find.text('Aprobar'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Aprobar'));
       await tester.pumpAndSettle();
 
@@ -493,6 +512,7 @@ void main() {
         createTestApp(
           child: ModerationDetailScreen(
             request: sampleWithRejection,
+            documentImageService: createOfflineDocumentImageService(),
           ),
         ),
       );
@@ -501,7 +521,14 @@ void main() {
       expect(find.text('Motivo de Rechazo Registrado'), findsOneWidget);
       expect(find.text('Firma en cédula no concuerda con registro civil'), findsOneWidget);
       expect(find.text('Documentos Presentados'), findsOneWidget);
-      expect(find.text('Archivos locales/simulados. La integración con Supabase Storage se completará en la Fase 2.'), findsOneWidget);
+      expect(
+        find.text(
+          'Los documentos se consultan mediante enlaces firmados temporales del almacenamiento privado. No se comparten públicamente.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Diagnóstico documental'), findsOneWidget);
+      expect(find.text('SIMULADO'), findsOneWidget);
     });
 
     // 14. Integración en AuthGate: Moderador aprobado es enrutado directamente a ModerationQueueScreen

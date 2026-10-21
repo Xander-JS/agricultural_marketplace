@@ -523,6 +523,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profile_no_data => 'Could not load data.';
 
   @override
+  String get reputation_title => 'Reputation';
+
+  @override
+  String get reputation_average_label => 'Average rating';
+
+  @override
+  String get reputation_reviews_received => 'Reviews received';
+
+  @override
+  String get reputation_no_ratings => 'No ratings yet';
+
+  @override
+  String get reputation_new => 'New';
+
+  @override
+  String get reputation_loading => 'Loading reputation...';
+
+  @override
+  String get reputation_load_error => 'Could not load reputation.';
+
+  @override
   String get market_title => 'Market';
 
   @override
@@ -572,6 +593,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get market_ai_coming_soon => 'AI feature coming soon...';
+
+  @override
+  String get market_search_hint => 'Search by title or crop type';
+
+  @override
+  String get market_search_clear => 'Clear search';
+
+  @override
+  String get market_sort_recent => 'Most recent first';
+
+  @override
+  String get market_sort_price_asc => 'Lowest price first';
+
+  @override
+  String get market_sort_price_desc => 'Highest price first';
+
+  @override
+  String get market_sort_reputation => 'Highest reputation first';
+
+  @override
+  String get market_no_results => 'No crops were found matching these criteria';
+
+  @override
+  String get market_clear_filters => 'Clear filters';
 
   @override
   String get crop_card_available => 'Available';
@@ -932,6 +977,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deal_detail_rate_buyer => 'Rate buyer';
+
+  @override
+  String get deal_detail_rate_title => 'Rate deal';
+
+  @override
+  String get deal_detail_rate_subtitle =>
+      'Your rating helps build trust in the community.';
+
+  @override
+  String get deal_detail_rate_target => 'You are rating';
+
+  @override
+  String get deal_detail_rate_stars_label => 'Your rating';
+
+  @override
+  String get deal_detail_rate_stars_required => 'Select 1 to 5 stars';
+
+  @override
+  String get deal_detail_rate_comment_label => 'Comment (optional)';
+
+  @override
+  String get deal_detail_rate_comment_hint => 'Tell us about your experience';
+
+  @override
+  String get deal_detail_rate_submit => 'Submit rating';
+
+  @override
+  String get deal_detail_rate_success => 'Rating submitted successfully';
+
+  @override
+  String get deal_detail_rate_error =>
+      'Could not submit your rating. Please try again.';
+
+  @override
+  String get deal_detail_rate_loading => 'Checking rating...';
+
+  @override
+  String get deal_detail_rated => 'Deal rated';
+
+  @override
+  String get deal_detail_rated_desc =>
+      'You already submitted your rating for this deal.';
 
   @override
   String get deal_detail_proposal_cancelled => 'Proposal cancelled';

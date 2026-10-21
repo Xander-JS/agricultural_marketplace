@@ -528,6 +528,27 @@ class AppLocalizationsEs extends AppLocalizations {
   String get profile_no_data => 'No se pudieron cargar los datos.';
 
   @override
+  String get reputation_title => 'Reputación';
+
+  @override
+  String get reputation_average_label => 'Calificación promedio';
+
+  @override
+  String get reputation_reviews_received => 'Calificaciones recibidas';
+
+  @override
+  String get reputation_no_ratings => 'Sin calificaciones aún';
+
+  @override
+  String get reputation_new => 'Nuevo';
+
+  @override
+  String get reputation_loading => 'Cargando reputación...';
+
+  @override
+  String get reputation_load_error => 'No se pudo cargar la reputación.';
+
+  @override
   String get market_title => 'Mercado';
 
   @override
@@ -577,6 +598,31 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get market_ai_coming_soon => 'Función de IA próximamente...';
+
+  @override
+  String get market_search_hint => 'Buscar por título o tipo de cultivo';
+
+  @override
+  String get market_search_clear => 'Borrar búsqueda';
+
+  @override
+  String get market_sort_recent => 'Más recientes';
+
+  @override
+  String get market_sort_price_asc => 'Menor precio';
+
+  @override
+  String get market_sort_price_desc => 'Mayor precio';
+
+  @override
+  String get market_sort_reputation => 'Mejor reputación';
+
+  @override
+  String get market_no_results =>
+      'No se encontraron cosechas que coincidan con estos criterios';
+
+  @override
+  String get market_clear_filters => 'Limpiar filtros';
 
   @override
   String get crop_card_available => 'Disponible';
@@ -939,6 +985,49 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get deal_detail_rate_buyer => 'Calificar comprador';
+
+  @override
+  String get deal_detail_rate_title => 'Calificar trato';
+
+  @override
+  String get deal_detail_rate_subtitle =>
+      'Tu calificación ayuda a construir confianza en la comunidad.';
+
+  @override
+  String get deal_detail_rate_target => 'Calificas a';
+
+  @override
+  String get deal_detail_rate_stars_label => 'Tu calificación';
+
+  @override
+  String get deal_detail_rate_stars_required => 'Selecciona de 1 a 5 estrellas';
+
+  @override
+  String get deal_detail_rate_comment_label => 'Comentario (opcional)';
+
+  @override
+  String get deal_detail_rate_comment_hint =>
+      'Cuéntanos cómo fue tu experiencia';
+
+  @override
+  String get deal_detail_rate_submit => 'Enviar calificación';
+
+  @override
+  String get deal_detail_rate_success => 'Calificación enviada correctamente';
+
+  @override
+  String get deal_detail_rate_error =>
+      'No se pudo enviar la calificación. Inténtalo de nuevo.';
+
+  @override
+  String get deal_detail_rate_loading => 'Verificando calificación...';
+
+  @override
+  String get deal_detail_rated => 'Trato calificado';
+
+  @override
+  String get deal_detail_rated_desc =>
+      'Ya enviaste tu calificación para este trato.';
 
   @override
   String get deal_detail_proposal_cancelled => 'Propuesta cancelada';

@@ -83,7 +83,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           content: Text(
             l10n?.reset_password_success ?? result.message,
           ),
-          backgroundColor: AppColors.success,
+          backgroundColor: context.appSuccess,
           duration: const Duration(seconds: 3),
         ),
       );
@@ -104,10 +104,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.appBackground,
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -123,7 +123,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     child: Padding(
                       padding: const EdgeInsets.only(left: 8.0, top: 8.0),
                       child: IconButton(
-                        icon: const Icon(Icons.close, color: AppColors.success),
+                        icon: Icon(Icons.close, color: context.appSuccess),
                         onPressed: widget.onCancel,
                       ),
                     ),
@@ -138,26 +138,25 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      l10n?.reset_password_title ?? 'Nueva contraseña',
+                      l10n.reset_password_title,
                       style: AppTextStyles.headlineMedium.copyWith(
-                        color: AppColors.lightTextPrimary,
+                        color: context.appTextPrimary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      l10n?.reset_password_subtitle ??
-                          'Ingresa tu nueva contraseña para acceder a tu cuenta.',
+                      l10n.reset_password_subtitle,
                       style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.lightTextSecondary,
+                        color: context.appTextSecondary,
                       ),
                     ),
                     const SizedBox(height: 32),
 
                     // Campo de nueva contraseña
                     CustomTextField(
-                      label: l10n?.reset_password_new_label ?? 'Nueva contraseña',
-                      hint: l10n?.reset_password_new_hint ?? 'Mínimo 6 caracteres',
+                      label: l10n.reset_password_new_label,
+                      hint: l10n.reset_password_new_hint,
                       icon: Icons.lock_outline,
                       controller: _passwordController,
                       obscureText: _obscurePassword,
@@ -166,7 +165,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                           _obscurePassword
                               ? Icons.visibility_off_outlined
                               : Icons.visibility_outlined,
-                          color: AppColors.lightTextSecondary,
+                          color: context.appTextSecondary,
                         ),
                         onPressed: () {
                           setState(() {
@@ -177,12 +176,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       validator: (value) {
                         final val = value ?? '';
                         if (val.isEmpty) {
-                          return l10n?.reset_password_required_error ??
-                              'Este campo es requerido.';
+                          return l10n.reset_password_required_error;
                         }
                         if (val.length < 6) {
-                          return l10n?.reset_password_length_error ??
-                              'La contraseña debe tener al menos 6 caracteres.';
+                          return l10n.reset_password_length_error;
                         }
                         return null;
                       },
@@ -191,10 +188,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
                     // Campo de confirmación de contraseña
                     CustomTextField(
-                      label: l10n?.reset_password_confirm_label ??
-                          'Confirmar nueva contraseña',
-                      hint: l10n?.reset_password_confirm_hint ??
-                          'Repite tu nueva contraseña',
+                      label: l10n.reset_password_confirm_label,
+                      hint: l10n.reset_password_confirm_hint,
                       icon: Icons.lock_outline,
                       controller: _confirmPasswordController,
                       obscureText: _obscureConfirmPassword,
@@ -203,7 +198,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                           _obscureConfirmPassword
                               ? Icons.visibility_off_outlined
                               : Icons.visibility_outlined,
-                          color: AppColors.lightTextSecondary,
+                          color: context.appTextSecondary,
                         ),
                         onPressed: () {
                           setState(() {
@@ -214,12 +209,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       validator: (value) {
                         final val = value ?? '';
                         if (val.isEmpty) {
-                          return l10n?.reset_password_required_error ??
-                              'Este campo es requerido.';
+                          return l10n.reset_password_required_error;
                         }
                         if (val != _passwordController.text) {
-                          return l10n?.reset_password_mismatch_error ??
-                              'Las contraseñas no coinciden.';
+                          return l10n.reset_password_mismatch_error;
                         }
                         return null;
                       },
@@ -231,19 +224,19 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: AppColors.error.withValues(alpha: 0.1),
+                          color: context.appError.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: AppColors.error,
+                            color: context.appError,
                             width: 1,
                           ),
                         ),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.error_outline,
-                              color: AppColors.error,
+                              color: context.appError,
                               size: 24,
                             ),
                             const SizedBox(width: 12),
@@ -251,7 +244,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                               child: Text(
                                 _errorMessage!,
                                 style: AppTextStyles.bodyMedium.copyWith(
-                                  color: AppColors.error,
+                                  color: context.appError,
                                 ),
                               ),
                             ),
@@ -267,9 +260,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                           ? null
                           : _handleUpdatePassword,
                       text: _isLoading
-                          ? (l10n?.reset_password_updating ?? 'Actualizando...')
-                          : (l10n?.reset_password_submit_button ??
-                              'Actualizar contraseña'),
+                          ? (l10n.reset_password_updating)
+                          : (l10n.reset_password_submit_button),
                       isLoading: _isLoading,
                     ),
                     const SizedBox(height: 16),
@@ -278,9 +270,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       TextButton(
                         onPressed: _isLoading ? null : widget.onCancel,
                         child: Text(
-                          l10n?.reset_password_cancel ?? 'Cancelar',
+                          l10n.reset_password_cancel,
                           style: AppTextStyles.labelMedium.copyWith(
-                            color: AppColors.lightTextSecondary,
+                            color: context.appTextSecondary,
                           ),
                         ),
                       ),

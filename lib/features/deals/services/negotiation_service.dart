@@ -2,11 +2,13 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/negotiation_model.dart';
 import '../models/negotiation_status.dart';
+import '../models/negotiation_consent_model.dart';
 import '../exceptions/commercial_exception.dart';
 import '../../../core/constants/user_roles.dart';
 import '../../../core/constants/delivery_methods.dart';
 
 export '../exceptions/commercial_exception.dart';
+export '../models/negotiation_consent_model.dart';
 
 typedef RpcInvoker = Future<dynamic> Function(
   String functionName, {
@@ -41,7 +43,7 @@ class NegotiationService {
           .select('''
             *,
             crops!inner(*),
-            profiles:buyer_id(*),
+            profiles:buyer_id(id, full_name, role, profile_path, verification_status, department, municipality),
             negotiation_offers(*)
           ''')
           .eq('crops.farmer_id', farmerId)
@@ -60,8 +62,8 @@ class NegotiationService {
           .from('negotiations')
           .select('''
             *,
-            crops(*, profiles:farmer_id(*)),
-            profiles:buyer_id(*),
+            crops(*, profiles:farmer_id(id, full_name, role, profile_path, verification_status, department, municipality)),
+            profiles:buyer_id(id, full_name, role, profile_path, verification_status, department, municipality),
             negotiation_offers(*)
           ''')
           .eq('buyer_id', buyerId)
@@ -83,8 +85,8 @@ class NegotiationService {
           .from('negotiations')
           .select('''
             *,
-            crops(*, profiles:farmer_id(*)),
-            profiles:buyer_id(*),
+            crops(*, profiles:farmer_id(id, full_name, role, profile_path, verification_status, department, municipality)),
+            profiles:buyer_id(id, full_name, role, profile_path, verification_status, department, municipality),
             negotiation_offers(*)
           ''')
           .eq('id', id)
@@ -217,7 +219,7 @@ class NegotiationService {
     }
   }
 
-  /// Rechaza un trato mediante la función RPC PostgreSQL transaccional `reject_negotiation`.
+  /// Rechaza un trato mediante la función RPC PostgreSQL transaccional `reject_or_cancel_negotiation`.
   ///
   /// Si el trato ya estaba en estado 'acordada', libera atómicamente el `stock_committed`
   /// y registra el movimiento 'liberacion_reserva' en `inventory_movements`.
@@ -236,15 +238,16 @@ class NegotiationService {
 
     final Map<String, dynamic> rpcParams = {
       'p_negotiation_id': negotiationId,
-      'p_reason': ?cleanReason,
+      'p_target_status': 'rechazada',
+      if (cleanReason != null) 'p_reason': cleanReason,
     };
 
     try {
       final invoker = _rpcInvoker;
       if (invoker != null) {
-        await invoker('reject_negotiation', params: rpcParams);
+        await invoker('reject_or_cancel_negotiation', params: rpcParams);
       } else {
-        await _supabase.rpc('reject_negotiation', params: rpcParams);
+        await _supabase.rpc('reject_or_cancel_negotiation', params: rpcParams);
       }
     } on PostgrestException catch (pe) {
       throw mapPostgrestError(pe);
@@ -257,7 +260,7 @@ class NegotiationService {
     }
   }
 
-  /// Cancela una propuesta de negociación mediante la función RPC PostgreSQL transaccional `cancel_negotiation`.
+  /// Cancela una propuesta de negociación mediante la función RPC PostgreSQL transaccional `reject_or_cancel_negotiation`.
   ///
   /// Si el trato ya estaba en estado 'acordada', libera atómicamente el `stock_committed`
   /// y registra el movimiento 'liberacion_reserva' en `inventory_movements`.
@@ -276,15 +279,16 @@ class NegotiationService {
 
     final Map<String, dynamic> rpcParams = {
       'p_negotiation_id': negotiationId,
-      'p_reason': ?cleanReason,
+      'p_target_status': 'cancelada',
+      if (cleanReason != null) 'p_reason': cleanReason,
     };
 
     try {
       final invoker = _rpcInvoker;
       if (invoker != null) {
-        await invoker('cancel_negotiation', params: rpcParams);
+        await invoker('reject_or_cancel_negotiation', params: rpcParams);
       } else {
-        await _supabase.rpc('cancel_negotiation', params: rpcParams);
+        await _supabase.rpc('reject_or_cancel_negotiation', params: rpcParams);
       }
     } on PostgrestException catch (pe) {
       throw mapPostgrestError(pe);
@@ -578,5 +582,84 @@ class NegotiationService {
 
     final negotiationId = data['id'] as String;
     return await getNegotiationById(negotiationId);
+  }
+
+  /// Guarda o actualiza los permisos de consentimiento del usuario autenticado
+  /// de forma segura mediante la RPC `set_negotiation_consent`.
+  Future<void> setNegotiationConsent({
+    required String negotiationId,
+    required bool sharePhone,
+    required bool shareLocation,
+  }) async {
+    final userId = _activeUserId;
+    if (userId == null) {
+      throw const CommercialAuthException(
+        'Usuario no autenticado. Por favor inicia sesión nuevamente.',
+        code: '28000',
+      );
+    }
+
+    final Map<String, dynamic> rpcParams = {
+      'p_negotiation_id': negotiationId,
+      'p_share_phone': sharePhone,
+      'p_share_location': shareLocation,
+    };
+
+    try {
+      final invoker = _rpcInvoker;
+      if (invoker != null) {
+        await invoker('set_negotiation_consent', params: rpcParams);
+      } else {
+        await _supabase.rpc('set_negotiation_consent', params: rpcParams);
+      }
+    } on PostgrestException catch (pe) {
+      throw mapPostgrestError(pe);
+    } catch (e) {
+      if (e is CommercialException) rethrow;
+      throw CommercialDatabaseException(
+        'Error al guardar el consentimiento: $e',
+        originalError: e,
+      );
+    }
+  }
+
+  /// Obtiene los datos de contacto autorizados por la contraparte y el estado
+  /// de los consentimientos mutuos mediante la RPC segura `get_negotiation_counterpart_contact`.
+  Future<NegotiationContactInfo> getCounterpartContact(String negotiationId) async {
+    final userId = _activeUserId;
+    if (userId == null) {
+      throw const CommercialAuthException(
+        'Usuario no autenticado. Por favor inicia sesión nuevamente.',
+        code: '28000',
+      );
+    }
+
+    final Map<String, dynamic> rpcParams = {
+      'p_negotiation_id': negotiationId,
+    };
+
+    try {
+      final dynamic response;
+      final invoker = _rpcInvoker;
+      if (invoker != null) {
+        response = await invoker('get_negotiation_counterpart_contact', params: rpcParams);
+      } else {
+        response = await _supabase.rpc('get_negotiation_counterpart_contact', params: rpcParams);
+      }
+
+      final Map<String, dynamic> data = response is Map<String, dynamic>
+          ? response
+          : Map<String, dynamic>.from(response as Map);
+
+      return NegotiationContactInfo.fromJson(data);
+    } on PostgrestException catch (pe) {
+      throw mapPostgrestError(pe);
+    } catch (e) {
+      if (e is CommercialException) rethrow;
+      throw CommercialDatabaseException(
+        'Error al obtener los datos de contacto: $e',
+        originalError: e,
+      );
+    }
   }
 }

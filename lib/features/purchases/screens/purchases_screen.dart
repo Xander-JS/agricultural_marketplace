@@ -150,41 +150,31 @@ class _PurchasesScreenState extends State<PurchasesScreen>
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    final backgroundColor = isDark ? AppColors.darkBackground : AppColors.lightBackground;
-    final surfaceColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
-    final textPrimary = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final textSecondary = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
-    final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
-    final primaryColor = isDark ? AppColors.darkTertiary : AppColors.lightTertiary;
-
-    final titleText = l10n?.purchases_title ?? 'Compras';
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: context.appBackground,
       appBar: AppBar(
         title: Text(
-          titleText,
+          l10n.purchases_title,
           style: AppTextStyles.displaySmall.copyWith(
-            color: textPrimary,
+            color: context.appTextPrimary,
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: surfaceColor,
+        backgroundColor: context.appSurface,
         elevation: 0,
         centerTitle: false,
         bottom: TabBar(
           controller: _tabController,
-          labelColor: primaryColor,
-          unselectedLabelColor: textSecondary,
-          indicatorColor: primaryColor,
+          labelColor: context.appPrimary,
+          unselectedLabelColor: context.appTextSecondary,
+          indicatorColor: context.appPrimary,
           indicatorWeight: 3,
           tabs: [
-            Tab(text: l10n?.purchases_tab_all ?? 'Todas'),
-            Tab(text: l10n?.purchases_tab_agreed ?? 'Acordadas'),
-            Tab(text: l10n?.purchases_tab_completed ?? 'Completadas'),
+            Tab(text: l10n.purchases_tab_all),
+            Tab(text: l10n.purchases_tab_agreed),
+            Tab(text: l10n.purchases_tab_completed),
           ],
         ),
       ),
@@ -192,7 +182,7 @@ class _PurchasesScreenState extends State<PurchasesScreen>
         child: _isLoading
             ? Center(
                 child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+                  valueColor: AlwaysStoppedAnimation<Color>(context.appPrimary),
                 ),
               )
             : _errorMessage != null
@@ -205,24 +195,24 @@ class _PurchasesScreenState extends State<PurchasesScreen>
                           Icon(
                             Icons.error_outline,
                             size: 48,
-                            color: AppColors.error,
+                            color: context.appError,
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            _errorMessage!,
+                            l10n.purchases_error_prefix(_errorMessage!),
                             textAlign: TextAlign.center,
                             style: AppTextStyles.bodyMedium.copyWith(
-                              color: textPrimary,
+                              color: context.appTextPrimary,
                             ),
                           ),
                           const SizedBox(height: 16),
                           ElevatedButton.icon(
                             onPressed: _loadPurchases,
                             icon: const Icon(Icons.refresh),
-                            label: const Text('Reintentar'),
+                            label: Text(l10n.common_retry),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: primaryColor,
-                              foregroundColor: isDark ? AppColors.darkBackground : Colors.white,
+                              backgroundColor: context.appPrimary,
+                              foregroundColor: context.appOnPrimary,
                             ),
                           ),
                         ],
@@ -233,7 +223,6 @@ class _PurchasesScreenState extends State<PurchasesScreen>
                     children: [
                       // Banner resumen de métricas
                       _buildSummaryBanner(
-                        isDark: isDark,
                         l10n: l10n,
                         agreedCount: _agreedCount,
                         totalInvested: _totalInvested,
@@ -247,35 +236,17 @@ class _PurchasesScreenState extends State<PurchasesScreen>
                             _buildPurchasesList(
                               context: context,
                               items: _getFilteredPurchases(0),
-                              isDark: isDark,
                               l10n: l10n,
-                              textPrimary: textPrimary,
-                              textSecondary: textSecondary,
-                              primaryColor: primaryColor,
-                              surfaceColor: surfaceColor,
-                              borderColor: borderColor,
                             ),
                             _buildPurchasesList(
                               context: context,
                               items: _getFilteredPurchases(1),
-                              isDark: isDark,
                               l10n: l10n,
-                              textPrimary: textPrimary,
-                              textSecondary: textSecondary,
-                              primaryColor: primaryColor,
-                              surfaceColor: surfaceColor,
-                              borderColor: borderColor,
                             ),
                             _buildPurchasesList(
                               context: context,
                               items: _getFilteredPurchases(2),
-                              isDark: isDark,
                               l10n: l10n,
-                              textPrimary: textPrimary,
-                              textSecondary: textSecondary,
-                              primaryColor: primaryColor,
-                              surfaceColor: surfaceColor,
-                              borderColor: borderColor,
                             ),
                           ],
                         ),
@@ -287,8 +258,7 @@ class _PurchasesScreenState extends State<PurchasesScreen>
   }
 
   Widget _buildSummaryBanner({
-    required bool isDark,
-    required AppLocalizations? l10n,
+    required AppLocalizations l10n,
     required int agreedCount,
     required double totalInvested,
     required double totalVolumeKg,
@@ -297,14 +267,14 @@ class _PurchasesScreenState extends State<PurchasesScreen>
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        color: context.appSurface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+          color: context.appBorder,
         ),
         boxShadow: [
           BoxShadow(
-            color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.03),
+            color: context.appShadow,
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -314,39 +284,36 @@ class _PurchasesScreenState extends State<PurchasesScreen>
         children: [
           Expanded(
             child: _buildBannerItem(
-              label: l10n?.purchases_total_agreed ?? 'Acuerdos vigentes',
+              label: l10n.purchases_total_agreed,
               value: agreedCount.toString(),
               icon: Icons.handshake_outlined,
-              isDark: isDark,
-              color: isDark ? AppColors.darkTertiary : AppColors.lightTertiary,
+              color: context.appPrimary,
             ),
           ),
           Container(
             width: 1,
             height: 36,
-            color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+            color: context.appDivider,
           ),
           Expanded(
             child: _buildBannerItem(
-              label: l10n?.purchases_total_invested ?? 'Total pactado',
+              label: l10n.purchases_total_invested,
               value: CurrencyFormatters.formatCop(totalInvested),
               icon: Icons.payments_outlined,
-              isDark: isDark,
-              color: isDark ? const Color(0xFF81C784) : AppColors.success,
+              color: context.appSuccess,
             ),
           ),
           Container(
             width: 1,
             height: 36,
-            color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+            color: context.appDivider,
           ),
           Expanded(
             child: _buildBannerItem(
-              label: l10n?.purchases_total_volume ?? 'Volumen total',
+              label: l10n.purchases_total_volume,
               value: UnitFormatters.formatKg(totalVolumeKg),
               icon: Icons.scale_outlined,
-              isDark: isDark,
-              color: isDark ? const Color(0xFFFFB74D) : const Color(0xFFF57C00),
+              color: context.appWarning,
             ),
           ),
         ],
@@ -358,7 +325,6 @@ class _PurchasesScreenState extends State<PurchasesScreen>
     required String label,
     required String value,
     required IconData icon,
-    required bool isDark,
     required Color color,
   }) {
     return Column(
@@ -371,7 +337,7 @@ class _PurchasesScreenState extends State<PurchasesScreen>
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.bold,
-            color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+            color: context.appTextPrimary,
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -381,7 +347,7 @@ class _PurchasesScreenState extends State<PurchasesScreen>
           label,
           style: TextStyle(
             fontSize: 10,
-            color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+            color: context.appTextSecondary,
           ),
           textAlign: TextAlign.center,
           maxLines: 1,
@@ -394,30 +360,18 @@ class _PurchasesScreenState extends State<PurchasesScreen>
   Widget _buildPurchasesList({
     required BuildContext context,
     required List<NegotiationModel> items,
-    required bool isDark,
-    required AppLocalizations? l10n,
-    required Color textPrimary,
-    required Color textSecondary,
-    required Color primaryColor,
-    required Color surfaceColor,
-    required Color borderColor,
+    required AppLocalizations l10n,
   }) {
     if (items.isEmpty) {
       return RefreshIndicator(
         onRefresh: _loadPurchases,
-        color: primaryColor,
+        color: context.appPrimary,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: AppDimensions.paddingScreen,
           child: _buildEmptyState(
             context: context,
-            isDark: isDark,
             l10n: l10n,
-            textPrimary: textPrimary,
-            textSecondary: textSecondary,
-            primaryColor: primaryColor,
-            surfaceColor: surfaceColor,
-            borderColor: borderColor,
           ),
         ),
       );
@@ -425,7 +379,7 @@ class _PurchasesScreenState extends State<PurchasesScreen>
 
     return RefreshIndicator(
       onRefresh: _loadPurchases,
-      color: primaryColor,
+      color: context.appPrimary,
       child: ListView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         itemCount: items.length,
@@ -442,13 +396,7 @@ class _PurchasesScreenState extends State<PurchasesScreen>
 
   Widget _buildEmptyState({
     required BuildContext context,
-    required bool isDark,
-    required AppLocalizations? l10n,
-    required Color textPrimary,
-    required Color textSecondary,
-    required Color primaryColor,
-    required Color surfaceColor,
-    required Color borderColor,
+    required AppLocalizations l10n,
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -456,14 +404,12 @@ class _PurchasesScreenState extends State<PurchasesScreen>
         vertical: AppDimensions.space32,
       ),
       decoration: BoxDecoration(
-        color: surfaceColor,
+        color: context.appSurface,
         borderRadius: AppDimensions.borderRadiusLG,
-        border: Border.all(color: borderColor),
+        border: Border.all(color: context.appBorder),
         boxShadow: [
           BoxShadow(
-            color: isDark
-                ? Colors.black.withValues(alpha: 0.2)
-                : Colors.black.withValues(alpha: 0.04),
+            color: context.appShadow,
             offset: const Offset(0, 4),
             blurRadius: 12,
           ),
@@ -476,40 +422,39 @@ class _PurchasesScreenState extends State<PurchasesScreen>
             width: 72,
             height: 72,
             decoration: BoxDecoration(
-              color: primaryColor.withValues(alpha: 0.12),
+              color: context.appPrimaryContainer,
               shape: BoxShape.circle,
             ),
             child: Icon(
               Icons.shopping_bag_outlined,
               size: AppDimensions.iconXL,
-              color: primaryColor,
+              color: context.appPrimary,
             ),
           ),
           const SizedBox(height: AppDimensions.space16),
           Text(
-            l10n?.purchases_placeholder_title ?? 'Módulo de Compras',
+            l10n.purchases_placeholder_title,
             textAlign: TextAlign.center,
             style: AppTextStyles.titleLarge.copyWith(
-              color: textPrimary,
+              color: context.appTextPrimary,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: AppDimensions.space8),
           Text(
-            l10n?.purchases_empty_title ?? 'No tienes compras aún',
+            l10n.purchases_empty_title,
             textAlign: TextAlign.center,
             style: AppTextStyles.labelMedium.copyWith(
-              color: primaryColor,
+              color: context.appPrimary,
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: AppDimensions.space8),
           Text(
-            l10n?.purchases_empty_desc ??
-                'Aquí aparecerán los acuerdos que hayas cerrado con los productores agrícolas y tus compras completadas.',
+            l10n.purchases_empty_desc,
             textAlign: TextAlign.center,
             style: AppTextStyles.bodyMedium.copyWith(
-              color: textSecondary,
+              color: context.appTextSecondary,
               height: 1.4,
             ),
           ),
@@ -520,11 +465,10 @@ class _PurchasesScreenState extends State<PurchasesScreen>
               vertical: AppDimensions.space8,
             ),
             decoration: BoxDecoration(
-              color: (isDark ? AppColors.darkSecondary : AppColors.lightSecondary)
-                  .withValues(alpha: 0.5),
+              color: context.appPrimaryContainer,
               borderRadius: AppDimensions.borderRadiusFull,
               border: Border.all(
-                color: primaryColor.withValues(alpha: 0.3),
+                color: context.appPrimary.withValues(alpha: 0.3),
               ),
             ),
             child: Row(
@@ -533,13 +477,13 @@ class _PurchasesScreenState extends State<PurchasesScreen>
                 Icon(
                   Icons.verified_outlined,
                   size: AppDimensions.iconXS,
-                  color: primaryColor,
+                  color: context.appPrimary,
                 ),
                 const SizedBox(width: AppDimensions.space4),
                 Text(
-                  'Rol Comerciante',
+                  l10n.purchases_merchant_role,
                   style: AppTextStyles.labelSmall.copyWith(
-                    color: primaryColor,
+                    color: context.appPrimary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -551,10 +495,10 @@ class _PurchasesScreenState extends State<PurchasesScreen>
             ElevatedButton.icon(
               onPressed: widget.onExploreMarket,
               icon: const Icon(Icons.storefront_outlined),
-              label: Text(l10n?.purchases_empty_action ?? 'Explorar mercado'),
+              label: Text(l10n.purchases_empty_action),
               style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                foregroundColor: isDark ? AppColors.darkBackground : Colors.white,
+                backgroundColor: context.appPrimary,
+                foregroundColor: context.appOnPrimary,
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppDimensions.space24,
                   vertical: AppDimensions.space12,

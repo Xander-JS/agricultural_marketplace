@@ -1,23 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:intl/intl.dart';
+import '../../../core/utils/currency_formatters.dart';
+import '../../../core/utils/unit_formatters.dart';
 import '../../crop/models/crop_model.dart';
 import '../../crop/services/crop_service.dart';
 import '../../crop/screens/publish_crop_screen.dart';
+import '../services/crop_cost_calculator.dart';
 import '../services/crop_cost_service.dart';
 import 'crop_costs_detail_screen.dart';
 
 class CostsScreen extends StatefulWidget {
-  const CostsScreen({super.key});
+  final CropService? cropService;
+  final CropCostService? costService;
+  final String? currentUserIdForTesting;
+
+  const CostsScreen({
+    super.key,
+    this.cropService,
+    this.costService,
+    this.currentUserIdForTesting,
+  });
 
   @override
   State<CostsScreen> createState() => _CostsScreenState();
 }
 
 class _CostsScreenState extends State<CostsScreen> {
-  final _cropService = CropService();
-  final _costService = CropCostService();
-  
+  late final CropService _cropService;
+  late final CropCostService _costService;
+
   List<CropModel> _crops = [];
   Map<String, double> _cropTotals = {};
   bool _isLoading = true;
@@ -26,6 +37,8 @@ class _CostsScreenState extends State<CostsScreen> {
   @override
   void initState() {
     super.initState();
+    _cropService = widget.cropService ?? CropService();
+    _costService = widget.costService ?? CropCostService();
     _loadData();
   }
 
@@ -37,27 +50,34 @@ class _CostsScreenState extends State<CostsScreen> {
 
     try {
       final user = Supabase.instance.client.auth.currentUser;
-      if (user == null) throw Exception('Usuario no autenticado');
+      final userId = widget.currentUserIdForTesting ?? user?.id;
+      if (userId == null || userId.isEmpty) {
+        throw Exception('Usuario no autenticado');
+      }
 
-      final crops = await _cropService.getCropsByFarmerId(user.id);
-      
-      Map<String, double> totals = {};
-      for (var crop in crops) {
+      final crops = await _cropService.getCropsByFarmerId(userId);
+
+      final totals = <String, double>{};
+      for (final crop in crops) {
         totals[crop.id] = await _costService.getTotalCostByCropId(crop.id);
       }
 
+      if (!mounted) return;
       setState(() {
         _crops = crops;
         _cropTotals = totals;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _errorMessage = e.toString();
       });
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -75,7 +95,11 @@ class _CostsScreenState extends State<CostsScreen> {
     await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => CropCostsDetailScreen(crop: crop),
+        builder: (context) => CropCostsDetailScreen(
+          crop: crop,
+          cropService: _cropService,
+          costService: _costService,
+        ),
       ),
     );
     // Reload to update total costs in case they were modified
@@ -144,8 +168,26 @@ class _CostsScreenState extends State<CostsScreen> {
     );
   }
 
+  String _perKgSummary(CropCostPerKgResult result) {
+    switch (result.status) {
+      case CropCostPerKgStatus.calculated:
+        return 'Costo por kg: ${CurrencyFormatters.formatPricePerKg(result.costPerKg)}';
+      case CropCostPerKgStatus.noCosts:
+        return 'Costo por kg: sin costos registrados';
+      case CropCostPerKgStatus.invalidCostTotal:
+        return 'Costo por kg: total inválido';
+      case CropCostPerKgStatus.invalidDenominator:
+        return 'Costo por kg: cantidad inválida';
+      case CropCostPerKgStatus.estimatedYieldPending:
+        return 'Costo por kg: rendimiento estimado pendiente';
+    }
+  }
+
   Widget _buildCropCard(CropModel crop, double totalCost) {
-    final currencyFormatter = NumberFormat.currency(locale: 'es_CO', symbol: '\$', decimalDigits: 0);
+    final perKg = CropCostCalculator.calculatePerKg(
+      crop: crop,
+      totalCost: totalCost,
+    );
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16.0),
@@ -190,13 +232,32 @@ class _CostsScreenState extends State<CostsScreen> {
                         style: TextStyle(color: Colors.grey.shade600),
                       ),
                       Text(
-                        currencyFormatter.format(totalCost),
+                        CurrencyFormatters.formatCop(totalCost),
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                           color: Theme.of(context).primaryColor,
                         ),
                       ),
+                      const SizedBox(height: 6),
+                      Text(
+                        _perKgSummary(perKg),
+                        style: TextStyle(
+                          color: Colors.grey.shade700,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (perKg.denominator != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            '${UnitFormatters.formatKg(perKg.denominator)} · ${perKg.denominatorSource.displayName}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ),

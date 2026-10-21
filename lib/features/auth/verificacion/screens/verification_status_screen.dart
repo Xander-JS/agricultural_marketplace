@@ -186,7 +186,7 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
         Text(
           l10n.verification_status_checking,
           textAlign: TextAlign.center,
-          style: AppTextStyles.titleMedium.copyWith(color: Colors.white),
+          style: AppTextStyles.titleMedium.copyWith(color: AppColors.onBrand),
         ),
       ],
     );
@@ -198,25 +198,25 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Icon(Icons.error_outline, color: AppColors.error, size: 80),
+        Icon(Icons.error_outline, color: context.appError, size: 80),
         const SizedBox(height: 32),
         Text(
           l10n.verification_status_error_title,
           textAlign: TextAlign.center,
-          style: AppTextStyles.headlineMedium.copyWith(color: Colors.white),
+          style: AppTextStyles.headlineMedium.copyWith(color: AppColors.onBrand),
         ),
         const SizedBox(height: 16),
         Text(
           cleanError,
           textAlign: TextAlign.center,
-          style: AppTextStyles.bodyMedium.copyWith(color: Colors.white70),
+          style: AppTextStyles.bodyMedium.copyWith(color: AppColors.onBrandSecondary),
         ),
         const SizedBox(height: 32),
         ElevatedButton(
           key: const ValueKey('verification_status_retry_btn'),
           onPressed: _retry,
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.white,
+            backgroundColor: AppColors.onBrand,
             foregroundColor: AppColors.loadingBackground,
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
           ),
@@ -227,7 +227,7 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
           onPressed: _handleSignOut,
           child: Text(
             l10n.profile_logout,
-            style: const TextStyle(color: Colors.white70),
+            style: TextStyle(color: AppColors.onBrandSecondary),
           ),
         ),
       ],
@@ -239,27 +239,26 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
     String title = '';
     String description = '';
     IconData iconData = Icons.info_outline;
-    Color statusColor = Colors.grey;
+    Color statusColor = context.appTextDisabled;
 
     switch (data.status) {
       case 'pendiente':
         title = l10n.verification_status_pending_title;
         description = l10n.verification_status_pending_desc;
         iconData = Icons.hourglass_empty;
-        statusColor = Colors.orange;
+        statusColor = context.appWarning;
         break;
       case 'en_revision_ia':
         title = l10n.verification_status_review_title;
-        description =
-            'Diagnóstico simulado en revisión; tu cuenta está a la espera de aprobación por un moderador.';
+        description = l10n.verification_status_simulated_review;
         iconData = Icons.analytics_outlined;
-        statusColor = AppColors.info;
+        statusColor = context.appInfo;
         break;
       case 'aprobado':
         title = l10n.verification_status_approved_title;
         description = l10n.verification_status_approved_desc;
         iconData = Icons.check_circle_outline;
-        statusColor = AppColors.success;
+        statusColor = context.appSuccess;
         break;
       case 'rechazado':
         title = l10n.verification_status_rejected_title;
@@ -267,19 +266,19 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
             data.rejectionReason ??
             l10n.verification_status_default_reject_reason;
         iconData = Icons.cancel_outlined;
-        statusColor = AppColors.error;
+        statusColor = context.appError;
         break;
       case 'suspendido':
         title = l10n.verification_status_suspended_title;
         description = l10n.verification_status_suspended_desc;
         iconData = Icons.block;
-        statusColor = AppColors.error;
+        statusColor = context.appError;
         break;
       default:
         title = l10n.verification_status_unknown_title;
         description = l10n.verification_status_unknown_desc;
         iconData = Icons.help_outline;
-        statusColor = Colors.grey;
+        statusColor = context.appTextDisabled;
     }
 
     final showSuccessText =
@@ -297,7 +296,7 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
           Text(
             l10n.verification_status_success_msg,
             textAlign: TextAlign.center,
-            style: AppTextStyles.titleMedium.copyWith(color: Colors.white),
+            style: AppTextStyles.titleMedium.copyWith(color: AppColors.onBrand),
           ),
           const SizedBox(height: 48),
         ],
@@ -306,11 +305,11 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
           key: const ValueKey('verification_status_card'),
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: context.appSurface,
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
+                color: context.appShadow,
                 blurRadius: 10,
                 offset: const Offset(0, 5),
               ),
@@ -349,7 +348,7 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
                 key: const ValueKey('verification_status_title'),
                 textAlign: TextAlign.center,
                 style: AppTextStyles.headlineMedium.copyWith(
-                  color: AppColors.lightTextPrimary,
+                  color: context.appTextPrimary,
                 ),
               ),
               const SizedBox(height: 12),
@@ -358,7 +357,7 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
                 key: const ValueKey('verification_status_description'),
                 textAlign: TextAlign.center,
                 style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.lightTextSecondary,
+                  color: context.appTextSecondary,
                 ),
               ),
             ],
@@ -373,7 +372,7 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
             key: const ValueKey('verification_upload_documents'),
             onPressed: _openDocumentUpload,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
+              backgroundColor: AppColors.onBrand,
               foregroundColor: AppColors.loadingBackground,
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
             ),
@@ -395,7 +394,7 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
+              backgroundColor: AppColors.onBrand,
               foregroundColor: AppColors.loadingBackground,
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
             ),
@@ -407,7 +406,7 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
             onPressed: _retry,
             child: Text(
               l10n.verification_status_update_status,
-              style: const TextStyle(color: Colors.white70),
+              style: TextStyle(color: AppColors.onBrandSecondary),
             ),
           ),
 
@@ -418,7 +417,7 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
             onPressed: _handleSignOut,
             child: Text(
               l10n.profile_logout,
-              style: const TextStyle(color: Colors.white70),
+              style: TextStyle(color: AppColors.onBrandSecondary),
             ),
           ),
         ],

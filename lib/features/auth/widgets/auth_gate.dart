@@ -333,7 +333,7 @@ class _AuthGateState extends State<AuthGate> {
       if (parsedRole == null) {
         setState(() {
           _status = _AuthGateStatus.recoverableError;
-          _errorMessage = 'El rol del perfil no es válido o no está definido.';
+          _errorMessage = AppLocalizations.of(context)?.auth_gate_invalid_role;
         });
         return;
       }
@@ -565,9 +565,9 @@ class _AuthGateState extends State<AuthGate> {
           const LoadingIndicator(isSpinning: true),
           const SizedBox(height: 32),
           Text(
-            l10n?.verification_status_checking ?? 'Consultando estado...',
+            l10n?.auth_gate_checking ?? '',
             textAlign: TextAlign.center,
-            style: AppTextStyles.titleMedium.copyWith(color: Colors.white),
+            style: AppTextStyles.titleMedium.copyWith(color: AppColors.onBrand),
           ),
         ],
       ),
@@ -580,35 +580,35 @@ class _AuthGateState extends State<AuthGate> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.wifi_off_outlined, color: AppColors.error, size: 80),
+          const Icon(Icons.wifi_off_outlined, color: AppColors.onBrand, size: 80),
           const SizedBox(height: 24),
           Text(
-            l10n?.verification_status_error_title ?? 'Ha ocurrido un error',
+            l10n?.auth_gate_generic_error_title ?? '',
             textAlign: TextAlign.center,
-            style: AppTextStyles.headlineMedium.copyWith(color: Colors.white),
+            style: AppTextStyles.headlineMedium.copyWith(color: AppColors.onBrand),
           ),
           const SizedBox(height: 16),
           Text(
-            l10n?.verification_status_unknown_desc ?? 'No pudimos determinar el estado de verificación. Por favor, contacta a soporte.',
+            l10n?.auth_gate_unknown_status ?? '',
             textAlign: TextAlign.center,
-            style: AppTextStyles.bodyMedium.copyWith(color: Colors.white70),
+            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.onBrandSecondary),
           ),
           const SizedBox(height: 32),
           ElevatedButton(
             onPressed: _retryResolution,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
+              backgroundColor: AppColors.onBrand,
               foregroundColor: AppColors.loadingBackground,
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
             ),
-            child: Text(l10n?.verification_status_retry ?? 'Reintentar'),
+            child: Text(l10n?.common_retry ?? ''),
           ),
           const SizedBox(height: 16),
           TextButton(
             onPressed: _handleSignOut,
             child: Text(
-              l10n?.profile_logout ?? 'Cerrar sesión',
-              style: const TextStyle(color: Colors.white70),
+              l10n?.profile_logout ?? '',
+              style: const TextStyle(color: AppColors.onBrandSecondary),
             ),
           ),
         ],
@@ -622,35 +622,35 @@ class _AuthGateState extends State<AuthGate> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error_outline, color: AppColors.error, size: 80),
+          const Icon(Icons.error_outline, color: AppColors.onBrand, size: 80),
           const SizedBox(height: 24),
           Text(
-            l10n?.verification_status_error_title ?? 'Ha ocurrido un error',
+            l10n?.auth_gate_generic_error_title ?? '',
             textAlign: TextAlign.center,
-            style: AppTextStyles.headlineMedium.copyWith(color: Colors.white),
+            style: AppTextStyles.headlineMedium.copyWith(color: AppColors.onBrand),
           ),
           const SizedBox(height: 16),
           Text(
-            _errorMessage ?? (l10n?.verification_status_unknown_desc ?? ''),
+            _errorMessage ?? (l10n?.auth_gate_unknown_status ?? ''),
             textAlign: TextAlign.center,
-            style: AppTextStyles.bodyMedium.copyWith(color: Colors.white70),
+            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.onBrandSecondary),
           ),
           const SizedBox(height: 32),
           ElevatedButton(
             onPressed: _retryResolution,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
+              backgroundColor: AppColors.onBrand,
               foregroundColor: AppColors.loadingBackground,
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
             ),
-            child: Text(l10n?.verification_status_retry ?? 'Reintentar'),
+            child: Text(l10n?.common_retry ?? ''),
           ),
           const SizedBox(height: 16),
           TextButton(
             onPressed: _handleSignOut,
             child: Text(
-              l10n?.profile_logout ?? 'Cerrar sesión',
-              style: const TextStyle(color: Colors.white70),
+              l10n?.profile_logout ?? '',
+              style: const TextStyle(color: AppColors.onBrandSecondary),
             ),
           ),
         ],

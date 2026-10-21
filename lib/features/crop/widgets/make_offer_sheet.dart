@@ -70,7 +70,7 @@ class _MakeOfferSheetState extends State<MakeOfferSheet> {
 
   Future<void> _submit() async {
     if (_isSubmitting) return;
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isSubmitting = true);
@@ -88,8 +88,8 @@ class _MakeOfferSheetState extends State<MakeOfferSheet> {
         Navigator.pop(context, true);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(l10n?.offer_sheet_success ?? 'Propuesta enviada exitosamente'),
-            backgroundColor: AppColors.success,
+            content: Text(l10n.offer_sheet_success),
+            backgroundColor: context.appSuccess,
           ),
         );
       }
@@ -99,7 +99,7 @@ class _MakeOfferSheetState extends State<MakeOfferSheet> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(message),
-            backgroundColor: AppColors.error,
+            backgroundColor: context.appError,
           ),
         );
       }
@@ -112,12 +112,11 @@ class _MakeOfferSheetState extends State<MakeOfferSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        color: context.appSurface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: EdgeInsets.only(
@@ -140,7 +139,7 @@ class _MakeOfferSheetState extends State<MakeOfferSheet> {
                     width: 48,
                     height: 5,
                     decoration: BoxDecoration(
-                      color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+                      color: context.appDivider,
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
@@ -149,11 +148,11 @@ class _MakeOfferSheetState extends State<MakeOfferSheet> {
 
                 // Header
                 Text(
-                  l10n?.offer_sheet_title ?? 'Nueva Oferta',
+                  l10n.offer_sheet_title,
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                    color: context.appTextPrimary,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -161,7 +160,7 @@ class _MakeOfferSheetState extends State<MakeOfferSheet> {
                   '${widget.crop.title} — ${widget.crop.cropType}',
                   style: TextStyle(
                     fontSize: 14,
-                    color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                    color: context.appTextSecondary,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -170,30 +169,31 @@ class _MakeOfferSheetState extends State<MakeOfferSheet> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    color: isDark
-                        ? AppColors.darkSurfaceVariant
-                        : AppColors.lightSecondary.withValues(alpha: 0.35),
+                    color: context.appSurfaceVariant,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-                    ),
+                    border: Border.all(color: context.appBorder),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Base: ${CurrencyFormatters.formatPricePerKg(widget.crop.pricePerKg)}',
+                        l10n.offer_sheet_base_price(
+                          CurrencyFormatters.formatPricePerKg(widget.crop.pricePerKg),
+                        ),
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: isDark ? AppColors.darkTertiary : AppColors.lightTertiary,
+                          color: context.appPrimary,
                         ),
                       ),
                       Text(
-                        'Mín: ${UnitFormatters.formatKg(widget.crop.minOrderKg)} | Stock: ${UnitFormatters.formatKg(widget.crop.availableStock)}',
+                        l10n.offer_sheet_min_stock(
+                          UnitFormatters.formatKg(widget.crop.minOrderKg),
+                          UnitFormatters.formatKg(widget.crop.availableStock),
+                        ),
                         style: TextStyle(
                           fontSize: 13,
-                          color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                          color: context.appTextSecondary,
                         ),
                       ),
                     ],
@@ -206,26 +206,24 @@ class _MakeOfferSheetState extends State<MakeOfferSheet> {
                   controller: _quantityController,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   decoration: InputDecoration(
-                    labelText: l10n?.offer_sheet_quantity_label ?? 'Cantidad (kg)',
+                    labelText: l10n.offer_sheet_quantity_label,
                     suffixText: 'kg',
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                   onChanged: (_) => setState(() {}),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return l10n?.offer_sheet_val_required ?? 'Campo requerido';
+                      return l10n.offer_sheet_val_required;
                     }
                     final parsed = double.tryParse(value.trim());
                     if (parsed == null || parsed <= 0) {
-                      return l10n?.offer_sheet_val_positive ?? 'Debe ser mayor a 0';
+                      return l10n.offer_sheet_val_positive;
                     }
                     if (parsed < widget.crop.minOrderKg) {
-                      return l10n?.offer_sheet_val_min_order ??
-                          'La cantidad no cumple con el pedido mínimo';
+                      return l10n.offer_sheet_val_min_order;
                     }
                     if (parsed > widget.crop.availableStock) {
-                      return l10n?.offer_sheet_val_max_stock ??
-                          'La cantidad supera el stock disponible';
+                      return l10n.offer_sheet_val_max_stock;
                     }
                     return null;
                   },
@@ -237,18 +235,18 @@ class _MakeOfferSheetState extends State<MakeOfferSheet> {
                   controller: _priceController,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   decoration: InputDecoration(
-                    labelText: l10n?.offer_sheet_price_label ?? 'Precio propuesto por kg',
+                    labelText: l10n.offer_sheet_price_label,
                     prefixText: '\$ ',
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                   onChanged: (_) => setState(() {}),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return l10n?.offer_sheet_val_required ?? 'Campo requerido';
+                      return l10n.offer_sheet_val_required;
                     }
                     final parsed = double.tryParse(value.trim());
                     if (parsed == null || parsed <= 0) {
-                      return l10n?.offer_sheet_val_positive ?? 'Debe ser mayor a 0';
+                      return l10n.offer_sheet_val_positive;
                     }
                     return null;
                   },
@@ -259,7 +257,7 @@ class _MakeOfferSheetState extends State<MakeOfferSheet> {
                 DropdownButtonFormField<String>(
                   initialValue: _deliveryMethod,
                   decoration: InputDecoration(
-                    labelText: l10n?.offer_sheet_delivery_label ?? 'Método de entrega',
+                    labelText: l10n.offer_sheet_delivery_label,
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                   items: _deliveryOptions.map((method) {
@@ -281,8 +279,8 @@ class _MakeOfferSheetState extends State<MakeOfferSheet> {
                   controller: _messageController,
                   maxLines: 2,
                   decoration: InputDecoration(
-                    labelText: l10n?.offer_sheet_message_label ?? 'Mensaje para el productor (Opcional)',
-                    hintText: l10n?.offer_sheet_message_hint ?? 'Explica detalles de tu propuesta o requerimientos de entrega',
+                    labelText: l10n.offer_sheet_message_label,
+                    hintText: l10n.offer_sheet_message_hint,
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
@@ -292,18 +290,18 @@ class _MakeOfferSheetState extends State<MakeOfferSheet> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
-                    color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSecondary.withValues(alpha: 0.5),
+                    color: context.appSurfaceVariant,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        l10n?.offer_sheet_estimated_total ?? 'Total estimado',
+                        l10n.offer_sheet_estimated_total,
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                          color: context.appTextPrimary,
                         ),
                       ),
                       Text(
@@ -311,7 +309,7 @@ class _MakeOfferSheetState extends State<MakeOfferSheet> {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? AppColors.darkTertiary : AppColors.lightTertiary,
+                          color: context.appPrimary,
                         ),
                       ),
                     ],
@@ -323,19 +321,22 @@ class _MakeOfferSheetState extends State<MakeOfferSheet> {
                 ElevatedButton(
                   onPressed: _isSubmitting ? null : _submit,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: isDark ? AppColors.darkTertiary : AppColors.lightTertiary,
-                    foregroundColor: isDark ? AppColors.darkBackground : Colors.white,
+                    backgroundColor: context.appPrimary,
+                    foregroundColor: context.appOnPrimary,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
                   child: _isSubmitting
-                      ? const SizedBox(
+                      ? SizedBox(
                           height: 22,
                           width: 22,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: context.appOnPrimary,
+                          ),
                         )
                       : Text(
-                          l10n?.offer_sheet_submit_btn ?? 'Enviar propuesta',
+                          l10n.offer_sheet_submit_btn,
                           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                 ),

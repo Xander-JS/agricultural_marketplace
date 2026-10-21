@@ -4,10 +4,10 @@ import '../../localization/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 
-/// Barra de navegación inferior reutilizable para la aplicación.
+/// Reusable bottom navigation bar for the application.
 ///
-/// Soporta de forma modular tanto el rol agricultor como el rol comerciante/comprador,
-/// adaptando los 4 ítems de navegación según el rol y respetando los modos claro y oscuro.
+/// Adapts its four items to the farmer or buyer role and follows the active
+/// light/dark theme.
 class AppBottomNavigation extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
@@ -24,21 +24,12 @@ class AppBottomNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
 
-    final surfaceColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
-    final selectedColor = isDark ? AppColors.darkTertiary : AppColors.lightTertiary;
-    final unselectedColor = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
-
-    final marketLabel = _isBuyer
-        ? (l10n?.nav_my_market ?? 'Mi mercado')
-        : (l10n?.nav_market ?? 'Mercado');
-    final dealsLabel = l10n?.nav_deals ?? 'Tratos';
-    final thirdTabLabel = _isBuyer
-        ? (l10n?.nav_purchases ?? 'Compras')
-        : (l10n?.nav_costs ?? 'Costos');
-    final farmLabel = l10n?.nav_my_farm ?? 'Mi Finca';
+    final marketLabel = _isBuyer ? l10n.nav_my_market : l10n.nav_market;
+    final thirdTabLabel = _isBuyer ? l10n.nav_purchases : l10n.nav_costs;
 
     final thirdTabIcon = _isBuyer
         ? const Icon(Icons.shopping_bag_outlined)
@@ -49,12 +40,10 @@ class AppBottomNavigation extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: surfaceColor,
+        color: colors.surface,
         boxShadow: [
           BoxShadow(
-            color: isDark
-                ? Colors.black.withValues(alpha: 0.3)
-                : Colors.black.withValues(alpha: 0.05),
+            color: context.appShadow,
             offset: const Offset(0, -4),
             blurRadius: 10,
           ),
@@ -64,11 +53,11 @@ class AppBottomNavigation extends StatelessWidget {
         child: BottomNavigationBar(
           currentIndex: currentIndex,
           onTap: onTap,
-          backgroundColor: surfaceColor,
+          backgroundColor: colors.surface,
           elevation: 0,
           type: BottomNavigationBarType.fixed,
-          selectedItemColor: selectedColor,
-          unselectedItemColor: unselectedColor,
+          selectedItemColor: colors.primary,
+          unselectedItemColor: colors.onSurfaceVariant,
           selectedLabelStyle: AppTextStyles.labelMedium.copyWith(
             fontWeight: FontWeight.bold,
           ),
@@ -82,7 +71,7 @@ class AppBottomNavigation extends StatelessWidget {
             BottomNavigationBarItem(
               icon: const Icon(Icons.handshake_outlined),
               activeIcon: const Icon(Icons.handshake),
-              label: dealsLabel,
+              label: l10n.nav_deals,
             ),
             BottomNavigationBarItem(
               icon: thirdTabIcon,
@@ -92,7 +81,7 @@ class AppBottomNavigation extends StatelessWidget {
             BottomNavigationBarItem(
               icon: const Icon(Icons.spa_outlined),
               activeIcon: const Icon(Icons.spa),
-              label: farmLabel,
+              label: l10n.nav_my_farm,
             ),
           ],
         ),

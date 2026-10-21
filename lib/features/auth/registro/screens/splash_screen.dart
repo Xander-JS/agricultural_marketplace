@@ -4,7 +4,7 @@ import '../../../../core/theme/app_colors.dart';
 import 'welcome_screen.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({Key? key}) : super(key: key);
+  const SplashScreen({super.key});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -28,7 +28,7 @@ class _SplashScreenState extends State<SplashScreen>
       end: 1.2,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
-    // Simulate loading time and navigate to Welcome
+    // Simulate loading time and navigate to Welcome.
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) {
         Navigator.of(context).pushReplacement(
@@ -52,10 +52,12 @@ class _SplashScreenState extends State<SplashScreen>
         child: ScaleTransition(
           scale: _animation,
           child: Image.asset(
-            'assets/images/app_movil_only_lg.png', // Fallback handled by flutter if not found? No, it will crash.
-            // Using errorBuilder to prevent crash if asset doesn't exist
-            errorBuilder: (context, error, stackTrace) =>
-                const Icon(Icons.eco, color: Colors.white, size: 120),
+            'assets/images/app_movil_only_lg.png',
+            errorBuilder: (context, error, stackTrace) => const Icon(
+              Icons.eco,
+              color: AppColors.onBrand,
+              size: 120,
+            ),
             width: 180,
             height: 180,
           ),

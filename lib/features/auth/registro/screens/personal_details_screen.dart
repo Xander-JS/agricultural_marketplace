@@ -73,7 +73,7 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: AppColors.lightBackground,
+      backgroundColor: context.appBackground,
       appBar: CustomAppBar(title: l10n.personal_info_title),
       body: SafeArea(
         child: Form(
@@ -97,7 +97,7 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
                         }
                         final clean = value.replaceAll(RegExp(r'[\s\-()]+'), '');
                         if (!clean.contains('@') && clean.length < 7) {
-                          return 'Número telefónico inválido';
+                          return l10n.personal_info_phone_invalid;
                         }
                         return null;
                       },
@@ -135,7 +135,7 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
                           _isPasswordVisible
                               ? Icons.visibility_outlined
                               : Icons.visibility_off_outlined,
-                          color: AppColors.lightTextDisabled,
+                          color: context.appTextSecondary,
                         ),
                         onPressed: () {
                           setState(() {
@@ -148,7 +148,7 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
                           return l10n.personal_info_required;
                         }
                         if (value.length < 6) {
-                          return 'Mínimo 6 caracteres';
+                          return l10n.personal_info_password_min;
                         }
                         return null;
                       },
@@ -158,7 +158,7 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppColors.lightSecondary,
+                        color: context.appPrimaryContainer,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
@@ -172,7 +172,7 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
                             child: Text(
                               l10n.personal_info_verification_description,
                               style: AppTextStyles.bodySmall.copyWith(
-                                color: AppColors.lightTextSecondary,
+                                color: context.appTextSecondary,
                               ),
                             ),
                           ),

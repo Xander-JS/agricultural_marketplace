@@ -74,7 +74,7 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
 
       if (result.requiresConfirmation) {
         setState(() {
-          _statusMessage = result.message ?? 'Cuenta creada. Por favor confirma tu medio de contacto para continuar.';
+          _statusMessage = result.message ?? l10n.processing_confirmation_required;
           _isSpinning = false;
           _requiresConfirmation = true;
         });

@@ -1238,6 +1238,276 @@ abstract class AppLocalizations {
   /// **'Limpiar filtros'**
   String get market_clear_filters;
 
+  /// No description provided for @market_own_profile.
+  ///
+  /// In es, this message translates to:
+  /// **'Mi perfil'**
+  String get market_own_profile;
+
+  /// No description provided for @publish_title_new.
+  ///
+  /// In es, this message translates to:
+  /// **'Publicar Cosecha'**
+  String get publish_title_new;
+
+  /// No description provided for @publish_title_edit.
+  ///
+  /// In es, this message translates to:
+  /// **'Editar Cosecha'**
+  String get publish_title_edit;
+
+  /// No description provided for @publish_unauthorized_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Acceso No Autorizado'**
+  String get publish_unauthorized_title;
+
+  /// No description provided for @publish_unauthorized_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Solo los agricultores registrados y verificados pueden publicar cosechas.'**
+  String get publish_unauthorized_desc;
+
+  /// No description provided for @publish_validation_incomplete.
+  ///
+  /// In es, this message translates to:
+  /// **'Por favor, completa los campos obligatorios correctamente.'**
+  String get publish_validation_incomplete;
+
+  /// No description provided for @publish_harvest_date_required.
+  ///
+  /// In es, this message translates to:
+  /// **'Debes indicar la fecha estimada de cosecha para venta anticipada.'**
+  String get publish_harvest_date_required;
+
+  /// No description provided for @publish_not_authenticated.
+  ///
+  /// In es, this message translates to:
+  /// **'No autenticado'**
+  String get publish_not_authenticated;
+
+  /// No description provided for @publish_access_farmer_only.
+  ///
+  /// In es, this message translates to:
+  /// **'Acceso denegado: solo los agricultores pueden publicar cosechas.'**
+  String get publish_access_farmer_only;
+
+  /// No description provided for @publish_access_other_crop.
+  ///
+  /// In es, this message translates to:
+  /// **'Acceso denegado: no puedes editar una cosecha perteneciente a otro productor.'**
+  String get publish_access_other_crop;
+
+  /// No description provided for @publish_success_active.
+  ///
+  /// In es, this message translates to:
+  /// **'¡Cosecha publicada exitosamente!'**
+  String get publish_success_active;
+
+  /// No description provided for @publish_success_draft.
+  ///
+  /// In es, this message translates to:
+  /// **'Borrador guardado.'**
+  String get publish_success_draft;
+
+  /// No description provided for @publish_save_error.
+  ///
+  /// In es, this message translates to:
+  /// **'Error al guardar: {error}'**
+  String publish_save_error(String error);
+
+  /// No description provided for @publish_section_general.
+  ///
+  /// In es, this message translates to:
+  /// **'1. Información General'**
+  String get publish_section_general;
+
+  /// No description provided for @publish_section_prices.
+  ///
+  /// In es, this message translates to:
+  /// **'2. Precios y Cantidades'**
+  String get publish_section_prices;
+
+  /// No description provided for @publish_section_location.
+  ///
+  /// In es, this message translates to:
+  /// **'3. Ubicación'**
+  String get publish_section_location;
+
+  /// No description provided for @publish_section_sale_mode.
+  ///
+  /// In es, this message translates to:
+  /// **'4. Modalidad de Venta'**
+  String get publish_section_sale_mode;
+
+  /// No description provided for @publish_section_images.
+  ///
+  /// In es, this message translates to:
+  /// **'5. Imágenes'**
+  String get publish_section_images;
+
+  /// No description provided for @publish_field_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Título de la publicación'**
+  String get publish_field_title;
+
+  /// No description provided for @publish_field_crop_type.
+  ///
+  /// In es, this message translates to:
+  /// **'Tipo de Producto (Ej: Papa Capira, Café Castillo)'**
+  String get publish_field_crop_type;
+
+  /// No description provided for @publish_field_description.
+  ///
+  /// In es, this message translates to:
+  /// **'Descripción de la cosecha'**
+  String get publish_field_description;
+
+  /// No description provided for @publish_field_price.
+  ///
+  /// In es, this message translates to:
+  /// **'Precio por kg (\$)'**
+  String get publish_field_price;
+
+  /// No description provided for @publish_field_stock.
+  ///
+  /// In es, this message translates to:
+  /// **'Total Disp. (kg)'**
+  String get publish_field_stock;
+
+  /// No description provided for @publish_field_min_order.
+  ///
+  /// In es, this message translates to:
+  /// **'Pedido mínimo (kg)'**
+  String get publish_field_min_order;
+
+  /// No description provided for @publish_field_department.
+  ///
+  /// In es, this message translates to:
+  /// **'Departamento'**
+  String get publish_field_department;
+
+  /// No description provided for @publish_field_municipality.
+  ///
+  /// In es, this message translates to:
+  /// **'Municipio'**
+  String get publish_field_municipality;
+
+  /// No description provided for @publish_early_sale_title.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Es Venta Anticipada?'**
+  String get publish_early_sale_title;
+
+  /// No description provided for @publish_early_sale_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Útil si la cosecha aún no está lista pero quieres asegurar ventas.'**
+  String get publish_early_sale_desc;
+
+  /// No description provided for @publish_field_estimated_yield.
+  ///
+  /// In es, this message translates to:
+  /// **'Rendimiento est. (kg)'**
+  String get publish_field_estimated_yield;
+
+  /// No description provided for @publish_field_harvest_date.
+  ///
+  /// In es, this message translates to:
+  /// **'Fecha de Cosecha'**
+  String get publish_field_harvest_date;
+
+  /// No description provided for @publish_select_date.
+  ///
+  /// In es, this message translates to:
+  /// **'Seleccionar...'**
+  String get publish_select_date;
+
+  /// No description provided for @publish_current_images.
+  ///
+  /// In es, this message translates to:
+  /// **'Imágenes actuales de la publicación:'**
+  String get publish_current_images;
+
+  /// No description provided for @publish_add_images.
+  ///
+  /// In es, this message translates to:
+  /// **'Añadir Imágenes'**
+  String get publish_add_images;
+
+  /// No description provided for @publish_save_draft.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardar Borrador'**
+  String get publish_save_draft;
+
+  /// No description provided for @publish_submit.
+  ///
+  /// In es, this message translates to:
+  /// **'Publicar'**
+  String get publish_submit;
+
+  /// No description provided for @publish_validation_required.
+  ///
+  /// In es, this message translates to:
+  /// **'Requerido'**
+  String get publish_validation_required;
+
+  /// No description provided for @publish_validation_greater_zero.
+  ///
+  /// In es, this message translates to:
+  /// **'Mayor a 0'**
+  String get publish_validation_greater_zero;
+
+  /// No description provided for @publish_validation_non_negative.
+  ///
+  /// In es, this message translates to:
+  /// **'Mayor o igual a 0'**
+  String get publish_validation_non_negative;
+
+  /// No description provided for @publish_voice_banner_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Borrador creado por voz'**
+  String get publish_voice_banner_title;
+
+  /// No description provided for @publish_voice_banner_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Revisa los datos reconocidos. No se publicará nada hasta que confirmes el formulario.'**
+  String get publish_voice_banner_desc;
+
+  /// No description provided for @publish_voice_confirm.
+  ///
+  /// In es, this message translates to:
+  /// **'Confirma: {fields}'**
+  String publish_voice_confirm(String fields);
+
+  /// No description provided for @publish_voice_missing.
+  ///
+  /// In es, this message translates to:
+  /// **'Faltan o debes completar: {fields}.'**
+  String publish_voice_missing(String fields);
+
+  /// No description provided for @publish_voice_label_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Título'**
+  String get publish_voice_label_title;
+
+  /// No description provided for @publish_voice_label_description.
+  ///
+  /// In es, this message translates to:
+  /// **'Descripción'**
+  String get publish_voice_label_description;
+
+  /// No description provided for @publish_voice_label_location.
+  ///
+  /// In es, this message translates to:
+  /// **'Ubicación'**
+  String get publish_voice_label_location;
+
   /// No description provided for @crop_card_available.
   ///
   /// In es, this message translates to:
@@ -1327,6 +1597,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Ubicación'**
   String get crop_detail_location;
+
+  /// No description provided for @crop_detail_estimated_distance.
+  ///
+  /// In es, this message translates to:
+  /// **'Distancia estimada'**
+  String get crop_detail_estimated_distance;
 
   /// No description provided for @crop_detail_publication_date.
   ///
@@ -1712,6 +1988,12 @@ abstract class AppLocalizations {
   /// **'Modifica los términos de la oferta para la cosecha seleccionada.'**
   String get counter_offer_subtitle;
 
+  /// No description provided for @counter_offer_subtitle_crop.
+  ///
+  /// In es, this message translates to:
+  /// **'Modifica los términos de la oferta para {crop}.'**
+  String counter_offer_subtitle_crop(String crop);
+
   /// No description provided for @counter_offer_quantity_label.
   ///
   /// In es, this message translates to:
@@ -2069,8 +2351,8 @@ abstract class AppLocalizations {
   /// No description provided for @offer_sheet_base_price.
   ///
   /// In es, this message translates to:
-  /// **'Base'**
-  String get offer_sheet_base_price;
+  /// **'Base: {price}'**
+  String offer_sheet_base_price(String price);
 
   /// No description provided for @offer_sheet_min_order.
   ///
@@ -2287,6 +2569,30 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Cola de Moderación'**
   String get moderation_queue_title;
+
+  /// No description provided for @moderation_error_title.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudieron cargar las solicitudes'**
+  String get moderation_error_title;
+
+  /// No description provided for @moderation_error_processing.
+  ///
+  /// In es, this message translates to:
+  /// **'Error al procesar la solicitud'**
+  String get moderation_error_processing;
+
+  /// No description provided for @moderation_error_rejecting.
+  ///
+  /// In es, this message translates to:
+  /// **'Error al rechazar la solicitud'**
+  String get moderation_error_rejecting;
+
+  /// No description provided for @moderation_error_updating.
+  ///
+  /// In es, this message translates to:
+  /// **'Error al actualizar la solicitud'**
+  String get moderation_error_updating;
 
   /// No description provided for @moderation_queue_empty_title.
   ///
@@ -2821,6 +3127,1815 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'En revisión'**
   String get moderation_filter_in_review;
+
+  /// No description provided for @common_retry.
+  ///
+  /// In es, this message translates to:
+  /// **'Reintentar'**
+  String get common_retry;
+
+  /// No description provided for @common_cancel.
+  ///
+  /// In es, this message translates to:
+  /// **'Cancelar'**
+  String get common_cancel;
+
+  /// No description provided for @common_close.
+  ///
+  /// In es, this message translates to:
+  /// **'Cerrar'**
+  String get common_close;
+
+  /// No description provided for @common_delete.
+  ///
+  /// In es, this message translates to:
+  /// **'Eliminar'**
+  String get common_delete;
+
+  /// No description provided for @common_edit.
+  ///
+  /// In es, this message translates to:
+  /// **'Editar'**
+  String get common_edit;
+
+  /// No description provided for @common_save_changes.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardar cambios'**
+  String get common_save_changes;
+
+  /// No description provided for @common_back.
+  ///
+  /// In es, this message translates to:
+  /// **'Volver'**
+  String get common_back;
+
+  /// No description provided for @common_understood.
+  ///
+  /// In es, this message translates to:
+  /// **'Entendido'**
+  String get common_understood;
+
+  /// No description provided for @common_accept.
+  ///
+  /// In es, this message translates to:
+  /// **'Aceptar'**
+  String get common_accept;
+
+  /// No description provided for @common_not_available.
+  ///
+  /// In es, this message translates to:
+  /// **'No disponible'**
+  String get common_not_available;
+
+  /// No description provided for @common_simulated.
+  ///
+  /// In es, this message translates to:
+  /// **'SIMULADA'**
+  String get common_simulated;
+
+  /// No description provided for @common_field_required.
+  ///
+  /// In es, this message translates to:
+  /// **'Campo requerido'**
+  String get common_field_required;
+
+  /// No description provided for @common_greater_than_zero.
+  ///
+  /// In es, this message translates to:
+  /// **'Debe ser mayor a 0'**
+  String get common_greater_than_zero;
+
+  /// No description provided for @common_unexpected_error.
+  ///
+  /// In es, this message translates to:
+  /// **'Error inesperado: {error}'**
+  String common_unexpected_error(String error);
+
+  /// No description provided for @common_operation_error.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo completar la operación. Inténtalo de nuevo.'**
+  String get common_operation_error;
+
+  /// No description provided for @common_error_prefix.
+  ///
+  /// In es, this message translates to:
+  /// **'Ocurrió un error: {error}'**
+  String common_error_prefix(String error);
+
+  /// No description provided for @product_card_variety.
+  ///
+  /// In es, this message translates to:
+  /// **'Variedad: {variety}'**
+  String product_card_variety(String variety);
+
+  /// No description provided for @product_card_view_details.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver detalles'**
+  String get product_card_view_details;
+
+  /// No description provided for @seller_details_reliability.
+  ///
+  /// In es, this message translates to:
+  /// **'Confiabilidad'**
+  String get seller_details_reliability;
+
+  /// No description provided for @seller_details_volume.
+  ///
+  /// In es, this message translates to:
+  /// **'Volumen Disponible'**
+  String get seller_details_volume;
+
+  /// No description provided for @seller_details_min_order.
+  ///
+  /// In es, this message translates to:
+  /// **'Pedido Mínimo'**
+  String get seller_details_min_order;
+
+  /// No description provided for @seller_details_condition.
+  ///
+  /// In es, this message translates to:
+  /// **'Condición & Logística'**
+  String get seller_details_condition;
+
+  /// No description provided for @otp_error_incomplete.
+  ///
+  /// In es, this message translates to:
+  /// **'Por favor, ingresa los 6 dígitos completos'**
+  String get otp_error_incomplete;
+
+  /// No description provided for @otp_resend_simulated.
+  ///
+  /// In es, this message translates to:
+  /// **'Código reenviado (Simulado)'**
+  String get otp_resend_simulated;
+
+  /// No description provided for @personal_info_phone_invalid.
+  ///
+  /// In es, this message translates to:
+  /// **'Número telefónico inválido'**
+  String get personal_info_phone_invalid;
+
+  /// No description provided for @personal_info_password_min.
+  ///
+  /// In es, this message translates to:
+  /// **'Mínimo 6 caracteres'**
+  String get personal_info_password_min;
+
+  /// No description provided for @processing_confirmation_required.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuenta creada. Por favor confirma tu medio de contacto para continuar.'**
+  String get processing_confirmation_required;
+
+  /// No description provided for @verification_status_simulated_review.
+  ///
+  /// In es, this message translates to:
+  /// **'Diagnóstico simulado en revisión; tu cuenta está a la espera de aprobación por un moderador.'**
+  String get verification_status_simulated_review;
+
+  /// No description provided for @auth_gate_invalid_role.
+  ///
+  /// In es, this message translates to:
+  /// **'El rol del perfil no es válido o no está definido.'**
+  String get auth_gate_invalid_role;
+
+  /// No description provided for @auth_gate_checking.
+  ///
+  /// In es, this message translates to:
+  /// **'Consultando estado...'**
+  String get auth_gate_checking;
+
+  /// No description provided for @auth_gate_generic_error_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Ha ocurrido un error'**
+  String get auth_gate_generic_error_title;
+
+  /// No description provided for @auth_gate_unknown_status.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos determinar el estado de verificación. Por favor, contacta a soporte.'**
+  String get auth_gate_unknown_status;
+
+  /// No description provided for @costs_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Costos'**
+  String get costs_title;
+
+  /// No description provided for @costs_intro.
+  ///
+  /// In es, this message translates to:
+  /// **'Lleva un registro de los gastos\nasociados a tus cosechas.'**
+  String get costs_intro;
+
+  /// No description provided for @costs_per_kg_calculated.
+  ///
+  /// In es, this message translates to:
+  /// **'Costo por kg: {amount}'**
+  String costs_per_kg_calculated(String amount);
+
+  /// No description provided for @costs_per_kg_no_costs.
+  ///
+  /// In es, this message translates to:
+  /// **'Costo por kg: sin costos registrados'**
+  String get costs_per_kg_no_costs;
+
+  /// No description provided for @costs_per_kg_invalid_total.
+  ///
+  /// In es, this message translates to:
+  /// **'Costo por kg: total inválido'**
+  String get costs_per_kg_invalid_total;
+
+  /// No description provided for @costs_per_kg_invalid_quantity.
+  ///
+  /// In es, this message translates to:
+  /// **'Costo por kg: cantidad inválida'**
+  String get costs_per_kg_invalid_quantity;
+
+  /// No description provided for @costs_per_kg_pending_yield.
+  ///
+  /// In es, this message translates to:
+  /// **'Costo por kg: rendimiento estimado pendiente'**
+  String get costs_per_kg_pending_yield;
+
+  /// No description provided for @costs_total.
+  ///
+  /// In es, this message translates to:
+  /// **'Total de costos'**
+  String get costs_total;
+
+  /// No description provided for @costs_view.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver costos'**
+  String get costs_view;
+
+  /// No description provided for @costs_empty_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Primero debes crear una cosecha'**
+  String get costs_empty_title;
+
+  /// No description provided for @costs_empty_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Para llevar un registro de costos, necesitas tener al menos una cosecha registrada.'**
+  String get costs_empty_desc;
+
+  /// No description provided for @costs_create_crop.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear cosecha'**
+  String get costs_create_crop;
+
+  /// No description provided for @costs_add.
+  ///
+  /// In es, this message translates to:
+  /// **'Agregar costo'**
+  String get costs_add;
+
+  /// No description provided for @costs_add_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Agregar Costo'**
+  String get costs_add_title;
+
+  /// No description provided for @costs_edit_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Editar Costo'**
+  String get costs_edit_title;
+
+  /// No description provided for @costs_category.
+  ///
+  /// In es, this message translates to:
+  /// **'Categoría'**
+  String get costs_category;
+
+  /// No description provided for @costs_description.
+  ///
+  /// In es, this message translates to:
+  /// **'Descripción'**
+  String get costs_description;
+
+  /// No description provided for @costs_description_hint.
+  ///
+  /// In es, this message translates to:
+  /// **'Ej: Mano de obra para recolección'**
+  String get costs_description_hint;
+
+  /// No description provided for @costs_description_required.
+  ///
+  /// In es, this message translates to:
+  /// **'Por favor ingresa una descripción'**
+  String get costs_description_required;
+
+  /// No description provided for @costs_value.
+  ///
+  /// In es, this message translates to:
+  /// **'Valor'**
+  String get costs_value;
+
+  /// No description provided for @costs_value_hint.
+  ///
+  /// In es, this message translates to:
+  /// **'Ej: 150000 o 150000,50'**
+  String get costs_value_hint;
+
+  /// No description provided for @costs_value_required.
+  ///
+  /// In es, this message translates to:
+  /// **'Por favor ingresa un valor'**
+  String get costs_value_required;
+
+  /// No description provided for @costs_value_invalid.
+  ///
+  /// In es, this message translates to:
+  /// **'Ingresa un importe numérico mayor que 0'**
+  String get costs_value_invalid;
+
+  /// No description provided for @costs_save.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardar costo'**
+  String get costs_save;
+
+  /// No description provided for @costs_update.
+  ///
+  /// In es, this message translates to:
+  /// **'Actualizar costo'**
+  String get costs_update;
+
+  /// No description provided for @costs_added.
+  ///
+  /// In es, this message translates to:
+  /// **'Costo agregado exitosamente'**
+  String get costs_added;
+
+  /// No description provided for @costs_updated.
+  ///
+  /// In es, this message translates to:
+  /// **'Costo actualizado exitosamente'**
+  String get costs_updated;
+
+  /// No description provided for @costs_save_error.
+  ///
+  /// In es, this message translates to:
+  /// **'Error al guardar: {error}'**
+  String costs_save_error(String error);
+
+  /// No description provided for @costs_delete_title.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Eliminar este costo?'**
+  String get costs_delete_title;
+
+  /// No description provided for @costs_delete_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta acción no se puede deshacer.'**
+  String get costs_delete_desc;
+
+  /// No description provided for @costs_deleted.
+  ///
+  /// In es, this message translates to:
+  /// **'Costo eliminado'**
+  String get costs_deleted;
+
+  /// No description provided for @costs_delete_error.
+  ///
+  /// In es, this message translates to:
+  /// **'Error al eliminar: {error}'**
+  String costs_delete_error(String error);
+
+  /// No description provided for @costs_estimated_per_kg.
+  ///
+  /// In es, this message translates to:
+  /// **'Costo estimado por kg'**
+  String get costs_estimated_per_kg;
+
+  /// No description provided for @costs_quantity_used.
+  ///
+  /// In es, this message translates to:
+  /// **'Cantidad usada: {quantity} ({source})'**
+  String costs_quantity_used(String quantity, String source);
+
+  /// No description provided for @costs_source_field.
+  ///
+  /// In es, this message translates to:
+  /// **'Campo: {field}'**
+  String costs_source_field(String field);
+
+  /// No description provided for @costs_profitability_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Margen y precio sugerido'**
+  String get costs_profitability_title;
+
+  /// No description provided for @costs_profitability_subtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Calcula ganancia, margen y compara con referencias simuladas.'**
+  String get costs_profitability_subtitle;
+
+  /// No description provided for @costs_empty_detail_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún no tienes costos registrados'**
+  String get costs_empty_detail_title;
+
+  /// No description provided for @costs_empty_detail_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Agrega los gastos relacionados con esta cosecha para llevar un mejor control.'**
+  String get costs_empty_detail_desc;
+
+  /// No description provided for @profitability_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Margen y precio sugerido'**
+  String get profitability_title;
+
+  /// No description provided for @profitability_cost_per_kg.
+  ///
+  /// In es, this message translates to:
+  /// **'Costo de producción por kg'**
+  String get profitability_cost_per_kg;
+
+  /// No description provided for @profitability_used_quantity.
+  ///
+  /// In es, this message translates to:
+  /// **'Cantidad usada: {quantity} ({source}) · {field}'**
+  String profitability_used_quantity(
+    String quantity,
+    String source,
+    String field,
+  );
+
+  /// No description provided for @profitability_current_price.
+  ///
+  /// In es, this message translates to:
+  /// **'Precio actual publicado'**
+  String get profitability_current_price;
+
+  /// No description provided for @profitability_invalid_current_price.
+  ///
+  /// In es, this message translates to:
+  /// **'El precio actual no es válido. Puedes introducir un precio temporal para la simulación.'**
+  String get profitability_invalid_current_price;
+
+  /// No description provided for @profitability_unavailable_title.
+  ///
+  /// In es, this message translates to:
+  /// **'No se puede calcular el margen ni el precio sugerido'**
+  String get profitability_unavailable_title;
+
+  /// No description provided for @profitability_unavailable_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Corrige los costos o los datos del cultivo para continuar. No se muestran valores estimados para evitar resultados engañosos.'**
+  String get profitability_unavailable_desc;
+
+  /// No description provided for @profitability_evaluate_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Evalúa tu precio de venta'**
+  String get profitability_evaluate_title;
+
+  /// No description provided for @profitability_selling_price.
+  ///
+  /// In es, this message translates to:
+  /// **'Precio de venta por kg'**
+  String get profitability_selling_price;
+
+  /// No description provided for @profitability_edit_note.
+  ///
+  /// In es, this message translates to:
+  /// **'Puedes editar este valor para la simulación; no se guarda ni modifica el precio publicado.'**
+  String get profitability_edit_note;
+
+  /// No description provided for @profitability_temporary_price.
+  ///
+  /// In es, this message translates to:
+  /// **'Precio temporal para simulación; no se ha guardado.'**
+  String get profitability_temporary_price;
+
+  /// No description provided for @profitability_invalid_price.
+  ///
+  /// In es, this message translates to:
+  /// **'Ingresa un precio de venta válido mayor que 0.'**
+  String get profitability_invalid_price;
+
+  /// No description provided for @profitability_loss_per_kg.
+  ///
+  /// In es, this message translates to:
+  /// **'Pérdida estimada por kg'**
+  String get profitability_loss_per_kg;
+
+  /// No description provided for @profitability_profit_per_kg.
+  ///
+  /// In es, this message translates to:
+  /// **'Ganancia estimada por kg'**
+  String get profitability_profit_per_kg;
+
+  /// No description provided for @profitability_margin_over_price.
+  ///
+  /// In es, this message translates to:
+  /// **'Margen sobre el precio de venta'**
+  String get profitability_margin_over_price;
+
+  /// No description provided for @profitability_loss_message.
+  ///
+  /// In es, this message translates to:
+  /// **'El precio evaluado está por debajo del costo de producción.'**
+  String get profitability_loss_message;
+
+  /// No description provided for @profitability_low_margin.
+  ///
+  /// In es, this message translates to:
+  /// **'El margen está por debajo del 15 % de referencia del prototipo.'**
+  String get profitability_low_margin;
+
+  /// No description provided for @profitability_margin_formula.
+  ///
+  /// In es, this message translates to:
+  /// **'Margen = (precio − costo) / precio × 100'**
+  String get profitability_margin_formula;
+
+  /// No description provided for @profitability_suggested_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Precio sugerido según margen objetivo'**
+  String get profitability_suggested_title;
+
+  /// No description provided for @profitability_target_margin.
+  ///
+  /// In es, this message translates to:
+  /// **'Margen objetivo (%)'**
+  String get profitability_target_margin;
+
+  /// No description provided for @profitability_margin_note.
+  ///
+  /// In es, this message translates to:
+  /// **'El margen se aplica sobre el precio de venta; no es un recargo sobre el costo.'**
+  String get profitability_margin_note;
+
+  /// No description provided for @profitability_invalid_margin.
+  ///
+  /// In es, this message translates to:
+  /// **'Ingresa un margen entre 0 % y menos de 100 %.'**
+  String get profitability_invalid_margin;
+
+  /// No description provided for @profitability_orientation.
+  ///
+  /// In es, this message translates to:
+  /// **'Precio orientativo. No modifica ni publica el precio del cultivo.'**
+  String get profitability_orientation;
+
+  /// No description provided for @profitability_regional_reference.
+  ///
+  /// In es, this message translates to:
+  /// **'Referencia regional simulada'**
+  String get profitability_regional_reference;
+
+  /// No description provided for @profitability_reference_missing.
+  ///
+  /// In es, this message translates to:
+  /// **'No hay una referencia simulada configurada para este cultivo.'**
+  String get profitability_reference_missing;
+
+  /// No description provided for @profitability_reference_crop.
+  ///
+  /// In es, this message translates to:
+  /// **'Cultivo de referencia'**
+  String get profitability_reference_crop;
+
+  /// No description provided for @profitability_reference_region.
+  ///
+  /// In es, this message translates to:
+  /// **'Región'**
+  String get profitability_reference_region;
+
+  /// No description provided for @profitability_reference_price.
+  ///
+  /// In es, this message translates to:
+  /// **'Precio de referencia simulado'**
+  String get profitability_reference_price;
+
+  /// No description provided for @profitability_reference_type.
+  ///
+  /// In es, this message translates to:
+  /// **'Tipo de dato'**
+  String get profitability_reference_type;
+
+  /// No description provided for @profitability_reference_simulated.
+  ///
+  /// In es, this message translates to:
+  /// **'Simulado para el prototipo'**
+  String get profitability_reference_simulated;
+
+  /// No description provided for @profitability_reference_difference.
+  ///
+  /// In es, this message translates to:
+  /// **'Diferencia frente a la referencia simulada'**
+  String get profitability_reference_difference;
+
+  /// No description provided for @profitability_reference_difference_note.
+  ///
+  /// In es, this message translates to:
+  /// **'La diferencia se calcula como precio evaluado − referencia.'**
+  String get profitability_reference_difference_note;
+
+  /// No description provided for @crop_detail_less_than_km.
+  ///
+  /// In es, this message translates to:
+  /// **'< 1 km'**
+  String get crop_detail_less_than_km;
+
+  /// No description provided for @crop_detail_km.
+  ///
+  /// In es, this message translates to:
+  /// **'{km} km'**
+  String crop_detail_km(String km);
+
+  /// No description provided for @crop_detail_owner_edit_denied.
+  ///
+  /// In es, this message translates to:
+  /// **'Acceso denegado: solo el productor dueño puede modificar esta publicación.'**
+  String get crop_detail_owner_edit_denied;
+
+  /// No description provided for @crop_detail_error.
+  ///
+  /// In es, this message translates to:
+  /// **'Error: {error}'**
+  String crop_detail_error(String error);
+
+  /// No description provided for @crop_detail_other_edit_denied.
+  ///
+  /// In es, this message translates to:
+  /// **'Acceso denegado: no puedes editar publicaciones de otros usuarios.'**
+  String get crop_detail_other_edit_denied;
+
+  /// No description provided for @crop_detail_other_delete_denied.
+  ///
+  /// In es, this message translates to:
+  /// **'Acceso denegado: no puedes borrar publicaciones de otros usuarios.'**
+  String get crop_detail_other_delete_denied;
+
+  /// No description provided for @crop_detail_delete_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Borrar Publicación'**
+  String get crop_detail_delete_title;
+
+  /// No description provided for @crop_detail_delete_confirm.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Estás seguro de que deseas borrar esta publicación? Esta acción no se puede deshacer.'**
+  String get crop_detail_delete_confirm;
+
+  /// No description provided for @crop_detail_deleted.
+  ///
+  /// In es, this message translates to:
+  /// **'Publicación borrada exitosamente'**
+  String get crop_detail_deleted;
+
+  /// No description provided for @crop_detail_own_offer_error.
+  ///
+  /// In es, this message translates to:
+  /// **'No puedes iniciar una oferta en tu propia cosecha.'**
+  String get crop_detail_own_offer_error;
+
+  /// No description provided for @crop_detail_out_of_stock.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta cosecha se encuentra agotada o sin stock disponible.'**
+  String get crop_detail_out_of_stock;
+
+  /// No description provided for @crop_detail_verification_required.
+  ///
+  /// In es, this message translates to:
+  /// **'Verificación requerida'**
+  String get crop_detail_verification_required;
+
+  /// No description provided for @crop_detail_verification_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Para realizar ofertas y negociar con los agricultores, tu perfil debe estar verificado y aprobado por un moderador.'**
+  String get crop_detail_verification_desc;
+
+  /// No description provided for @crop_detail_offer_sent.
+  ///
+  /// In es, this message translates to:
+  /// **'Oferta enviada exitosamente.'**
+  String get crop_detail_offer_sent;
+
+  /// No description provided for @crop_detail_view_deals.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver Tratos'**
+  String get crop_detail_view_deals;
+
+  /// No description provided for @crop_detail_total_available.
+  ///
+  /// In es, this message translates to:
+  /// **'Total Disponible'**
+  String get crop_detail_total_available;
+
+  /// No description provided for @crop_detail_price_matches_reference.
+  ///
+  /// In es, this message translates to:
+  /// **'Precio igual a la referencia regional ({price}/kg)'**
+  String crop_detail_price_matches_reference(String price);
+
+  /// No description provided for @crop_detail_price_vs_reference.
+  ///
+  /// In es, this message translates to:
+  /// **'{sign}{amount}/kg ({sign}{percent}%) vs referencia regional ({reference}/kg)'**
+  String crop_detail_price_vs_reference(
+    String sign,
+    String amount,
+    String percent,
+    String reference,
+  );
+
+  /// No description provided for @crop_detail_regional_reference_region.
+  ///
+  /// In es, this message translates to:
+  /// **'Referencia regional ({region})'**
+  String crop_detail_regional_reference_region(String region);
+
+  /// No description provided for @crop_detail_producer_with_location.
+  ///
+  /// In es, this message translates to:
+  /// **'{producer} ({location})'**
+  String crop_detail_producer_with_location(String producer, String location);
+
+  /// No description provided for @crop_status_draft.
+  ///
+  /// In es, this message translates to:
+  /// **'Borrador'**
+  String get crop_status_draft;
+
+  /// No description provided for @crop_status_active.
+  ///
+  /// In es, this message translates to:
+  /// **'Activa'**
+  String get crop_status_active;
+
+  /// No description provided for @crop_status_paused.
+  ///
+  /// In es, this message translates to:
+  /// **'Pausada'**
+  String get crop_status_paused;
+
+  /// No description provided for @crop_status_exhausted.
+  ///
+  /// In es, this message translates to:
+  /// **'Agotada'**
+  String get crop_status_exhausted;
+
+  /// No description provided for @offer_sheet_min_stock.
+  ///
+  /// In es, this message translates to:
+  /// **'Mín: {min} | Stock: {stock}'**
+  String offer_sheet_min_stock(String min, String stock);
+
+  /// No description provided for @units_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Equivalencias de Unidades'**
+  String get units_title;
+
+  /// No description provided for @units_close.
+  ///
+  /// In es, this message translates to:
+  /// **'Entendido'**
+  String get units_close;
+
+  /// No description provided for @units_reference_quantity.
+  ///
+  /// In es, this message translates to:
+  /// **'Cantidad de referencia (disponible)'**
+  String get units_reference_quantity;
+
+  /// No description provided for @units_calculate_quantity.
+  ///
+  /// In es, this message translates to:
+  /// **'Consultar otra cantidad (kg)'**
+  String get units_calculate_quantity;
+
+  /// No description provided for @units_input_hint.
+  ///
+  /// In es, this message translates to:
+  /// **'Ej. 500'**
+  String get units_input_hint;
+
+  /// No description provided for @units_approximate_equivalents.
+  ///
+  /// In es, this message translates to:
+  /// **'Equivalencias tradicionales aproximadas'**
+  String get units_approximate_equivalents;
+
+  /// No description provided for @units_equivalence_rate.
+  ///
+  /// In es, this message translates to:
+  /// **'1 {unit} = {value}'**
+  String units_equivalence_rate(String unit, String value);
+
+  /// No description provided for @units_disclaimer.
+  ///
+  /// In es, this message translates to:
+  /// **'Conversiones aproximadas de carácter exclusivamente informativo. No modifican el inventario, los precios ni los pedidos.'**
+  String get units_disclaimer;
+
+  /// No description provided for @units_empty.
+  ///
+  /// In es, this message translates to:
+  /// **'0 {unit}'**
+  String units_empty(String unit);
+
+  /// No description provided for @units_approx.
+  ///
+  /// In es, this message translates to:
+  /// **'≈ {value} {unit}'**
+  String units_approx(String value, String unit);
+
+  /// No description provided for @deals_error_prefix.
+  ///
+  /// In es, this message translates to:
+  /// **'Ocurrió un error: {error}'**
+  String deals_error_prefix(String error);
+
+  /// No description provided for @deals_producer.
+  ///
+  /// In es, this message translates to:
+  /// **'Productor'**
+  String get deals_producer;
+
+  /// No description provided for @deals_buyer.
+  ///
+  /// In es, this message translates to:
+  /// **'Comprador'**
+  String get deals_buyer;
+
+  /// No description provided for @deals_producer_with_location.
+  ///
+  /// In es, this message translates to:
+  /// **'Productor ({location})'**
+  String deals_producer_with_location(String location);
+
+  /// No description provided for @deals_counterpart_name.
+  ///
+  /// In es, this message translates to:
+  /// **'{label}: {name}'**
+  String deals_counterpart_name(String label, String name);
+
+  /// No description provided for @deal_detail_offer_history.
+  ///
+  /// In es, this message translates to:
+  /// **'Historial de ofertas'**
+  String get deal_detail_offer_history;
+
+  /// No description provided for @deal_detail_rating_sent.
+  ///
+  /// In es, this message translates to:
+  /// **'Calificación enviada correctamente'**
+  String get deal_detail_rating_sent;
+
+  /// No description provided for @deal_detail_generic_error.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo completar la operación. Inténtalo de nuevo.'**
+  String get deal_detail_generic_error;
+
+  /// No description provided for @deal_detail_the_farmer.
+  ///
+  /// In es, this message translates to:
+  /// **'El productor'**
+  String get deal_detail_the_farmer;
+
+  /// No description provided for @deal_detail_the_buyer.
+  ///
+  /// In es, this message translates to:
+  /// **'El comprador'**
+  String get deal_detail_the_buyer;
+
+  /// No description provided for @deal_detail_authorized.
+  ///
+  /// In es, this message translates to:
+  /// **'Autorizado'**
+  String get deal_detail_authorized;
+
+  /// No description provided for @deal_detail_private.
+  ///
+  /// In es, this message translates to:
+  /// **'Privado'**
+  String get deal_detail_private;
+
+  /// No description provided for @deal_detail_location_authorized_status.
+  ///
+  /// In es, this message translates to:
+  /// **'Autorizada'**
+  String get deal_detail_location_authorized_status;
+
+  /// No description provided for @deal_detail_location_private_status.
+  ///
+  /// In es, this message translates to:
+  /// **'Privada'**
+  String get deal_detail_location_private_status;
+
+  /// No description provided for @deal_detail_permissions_update_error.
+  ///
+  /// In es, this message translates to:
+  /// **'Error al actualizar permisos: {error}'**
+  String deal_detail_permissions_update_error(String error);
+
+  /// No description provided for @deal_detail_share_farm_location_permission.
+  ///
+  /// In es, this message translates to:
+  /// **'Compartir la ubicación de la finca'**
+  String get deal_detail_share_farm_location_permission;
+
+  /// No description provided for @deal_detail_contact_farmer.
+  ///
+  /// In es, this message translates to:
+  /// **'Datos de contacto del Productor'**
+  String get deal_detail_contact_farmer;
+
+  /// No description provided for @deal_detail_contact_buyer.
+  ///
+  /// In es, this message translates to:
+  /// **'Datos de contacto del Comprador'**
+  String get deal_detail_contact_buyer;
+
+  /// No description provided for @deal_detail_phone_whatsapp.
+  ///
+  /// In es, this message translates to:
+  /// **'Teléfono / WhatsApp autorizado:'**
+  String get deal_detail_phone_whatsapp;
+
+  /// No description provided for @deal_detail_call.
+  ///
+  /// In es, this message translates to:
+  /// **'Llamar'**
+  String get deal_detail_call;
+
+  /// No description provided for @deal_detail_whatsapp.
+  ///
+  /// In es, this message translates to:
+  /// **'WhatsApp'**
+  String get deal_detail_whatsapp;
+
+  /// No description provided for @deal_detail_copy.
+  ///
+  /// In es, this message translates to:
+  /// **'Copiar'**
+  String get deal_detail_copy;
+
+  /// No description provided for @deal_detail_phone.
+  ///
+  /// In es, this message translates to:
+  /// **'Teléfono'**
+  String get deal_detail_phone;
+
+  /// No description provided for @deal_detail_contact_not_shared.
+  ///
+  /// In es, this message translates to:
+  /// **'{role} no ha autorizado compartir su teléfono ni WhatsApp.'**
+  String deal_detail_contact_not_shared(String role);
+
+  /// No description provided for @deal_detail_location_authorized.
+  ///
+  /// In es, this message translates to:
+  /// **'Ubicación física autorizada:'**
+  String get deal_detail_location_authorized;
+
+  /// No description provided for @deal_detail_coordinates.
+  ///
+  /// In es, this message translates to:
+  /// **'Coordenadas: {lat}, {lon}'**
+  String deal_detail_coordinates(String lat, String lon);
+
+  /// No description provided for @deal_detail_view_location.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver detalles de ubicación'**
+  String get deal_detail_view_location;
+
+  /// No description provided for @deal_detail_location_not_shared.
+  ///
+  /// In es, this message translates to:
+  /// **'{role} no ha autorizado compartir su ubicación física.'**
+  String deal_detail_location_not_shared(String role);
+
+  /// No description provided for @deal_detail_my_permissions.
+  ///
+  /// In es, this message translates to:
+  /// **'Tus permisos para este trato:'**
+  String get deal_detail_my_permissions;
+
+  /// No description provided for @deal_detail_phone_permission.
+  ///
+  /// In es, this message translates to:
+  /// **'Teléfono: {status}'**
+  String deal_detail_phone_permission(String status);
+
+  /// No description provided for @deal_detail_location_permission.
+  ///
+  /// In es, this message translates to:
+  /// **'Ubicación: {status}'**
+  String deal_detail_location_permission(String status);
+
+  /// No description provided for @deal_detail_modify.
+  ///
+  /// In es, this message translates to:
+  /// **'Modificar'**
+  String get deal_detail_modify;
+
+  /// No description provided for @deal_detail_copied.
+  ///
+  /// In es, this message translates to:
+  /// **'{label} copiado al portapapeles: {text}'**
+  String deal_detail_copied(String label, String text);
+
+  /// No description provided for @deal_detail_phone_copied.
+  ///
+  /// In es, this message translates to:
+  /// **'Teléfono {phone} copiado. Listo para marcar desde tu teléfono.'**
+  String deal_detail_phone_copied(String phone);
+
+  /// No description provided for @deal_detail_whatsapp_copied.
+  ///
+  /// In es, this message translates to:
+  /// **'Contacto de WhatsApp {phone} copiado. Abre WhatsApp para iniciar conversación.'**
+  String deal_detail_whatsapp_copied(String phone);
+
+  /// No description provided for @deal_detail_municipality_department.
+  ///
+  /// In es, this message translates to:
+  /// **'Municipio / Departamento:'**
+  String get deal_detail_municipality_department;
+
+  /// No description provided for @deal_detail_geo_coordinates.
+  ///
+  /// In es, this message translates to:
+  /// **'Coordenadas geográficas:'**
+  String get deal_detail_geo_coordinates;
+
+  /// No description provided for @deal_detail_lat_lon.
+  ///
+  /// In es, this message translates to:
+  /// **'Lat: {lat}\nLon: {lon}'**
+  String deal_detail_lat_lon(String lat, String lon);
+
+  /// No description provided for @deal_detail_location_verified.
+  ///
+  /// In es, this message translates to:
+  /// **'Ubicación verificada para la entrega de este lote.'**
+  String get deal_detail_location_verified;
+
+  /// No description provided for @deal_detail_coordinates_label.
+  ///
+  /// In es, this message translates to:
+  /// **'Coordenadas'**
+  String get deal_detail_coordinates_label;
+
+  /// No description provided for @deal_detail_copy_coordinates.
+  ///
+  /// In es, this message translates to:
+  /// **'Copiar coordenadas'**
+  String get deal_detail_copy_coordinates;
+
+  /// No description provided for @deal_detail_you.
+  ///
+  /// In es, this message translates to:
+  /// **'Tú'**
+  String get deal_detail_you;
+
+  /// No description provided for @deal_detail_delivery.
+  ///
+  /// In es, this message translates to:
+  /// **'Entrega: {method}'**
+  String deal_detail_delivery(String method);
+
+  /// No description provided for @deal_detail_cancel_proposal.
+  ///
+  /// In es, this message translates to:
+  /// **'Cancelar propuesta'**
+  String get deal_detail_cancel_proposal;
+
+  /// No description provided for @deal_detail_consent_save_error.
+  ///
+  /// In es, this message translates to:
+  /// **'Aviso: no se pudo guardar consentimiento inicial: {error}'**
+  String deal_detail_consent_save_error(String error);
+
+  /// No description provided for @deal_detail_agreed_success.
+  ///
+  /// In es, this message translates to:
+  /// **'Trato acordado correctamente'**
+  String get deal_detail_agreed_success;
+
+  /// No description provided for @deal_detail_permissions_updated.
+  ///
+  /// In es, this message translates to:
+  /// **'Permisos de contacto actualizados correctamente'**
+  String get deal_detail_permissions_updated;
+
+  /// No description provided for @deal_detail_reject_confirm_desc_extended.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta acción no se puede deshacer y el trato se cerrará.'**
+  String get deal_detail_reject_confirm_desc_extended;
+
+  /// No description provided for @deal_detail_rejected.
+  ///
+  /// In es, this message translates to:
+  /// **'El trato ha sido rechazado'**
+  String get deal_detail_rejected;
+
+  /// No description provided for @deal_detail_cancel_confirm_title.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Cancelar este acuerdo?'**
+  String get deal_detail_cancel_confirm_title;
+
+  /// No description provided for @deal_detail_cancel_proposal_title.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Cancelar esta propuesta?'**
+  String get deal_detail_cancel_proposal_title;
+
+  /// No description provided for @deal_detail_cancel_confirm_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta acción cancelará el trato acordado, liberará el stock reservado y cerrará la negociación.'**
+  String get deal_detail_cancel_confirm_desc;
+
+  /// No description provided for @deal_detail_cancel_proposal_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta acción cancelará la propuesta enviada, liberará el stock reservado y cerrará la negociación.'**
+  String get deal_detail_cancel_proposal_desc;
+
+  /// No description provided for @deal_detail_cancel_agreed_btn.
+  ///
+  /// In es, this message translates to:
+  /// **'Cancelar acuerdo'**
+  String get deal_detail_cancel_agreed_btn;
+
+  /// No description provided for @deal_detail_cancel_proposal_btn.
+  ///
+  /// In es, this message translates to:
+  /// **'Cancelar propuesta'**
+  String get deal_detail_cancel_proposal_btn;
+
+  /// No description provided for @deal_detail_cancelled_success.
+  ///
+  /// In es, this message translates to:
+  /// **'Acuerdo cancelado correctamente'**
+  String get deal_detail_cancelled_success;
+
+  /// No description provided for @deal_detail_proposal_cancelled_success.
+  ///
+  /// In es, this message translates to:
+  /// **'Propuesta cancelada correctamente'**
+  String get deal_detail_proposal_cancelled_success;
+
+  /// No description provided for @deal_detail_complete_confirm_title.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Completar este trato?'**
+  String get deal_detail_complete_confirm_title;
+
+  /// No description provided for @deal_detail_complete_confirm_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta acción confirmará la entrega física del producto y registrará la venta final en el inventario.'**
+  String get deal_detail_complete_confirm_desc;
+
+  /// No description provided for @deal_detail_complete.
+  ///
+  /// In es, this message translates to:
+  /// **'Completar'**
+  String get deal_detail_complete;
+
+  /// No description provided for @deal_detail_completed.
+  ///
+  /// In es, this message translates to:
+  /// **'Trato completado exitosamente'**
+  String get deal_detail_completed;
+
+  /// No description provided for @deal_detail_rating_error.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo enviar la calificación. Inténtalo de nuevo.'**
+  String get deal_detail_rating_error;
+
+  /// No description provided for @deal_detail_stars_required.
+  ///
+  /// In es, this message translates to:
+  /// **'Selecciona de 1 a 5 estrellas'**
+  String get deal_detail_stars_required;
+
+  /// No description provided for @deal_detail_comment_optional.
+  ///
+  /// In es, this message translates to:
+  /// **'Comentario (opcional)'**
+  String get deal_detail_comment_optional;
+
+  /// No description provided for @deal_detail_comment_hint.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuéntanos cómo fue tu experiencia'**
+  String get deal_detail_comment_hint;
+
+  /// No description provided for @deal_detail_submit_rating.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviar calificación'**
+  String get deal_detail_submit_rating;
+
+  /// No description provided for @deal_detail_accept_terms_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Aceptar oferta y acordar trato'**
+  String get deal_detail_accept_terms_title;
+
+  /// No description provided for @deal_detail_accept_terms_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Al formalizar el acuerdo, el inventario pactado se reservará en el sistema. Selecciona qué datos de contacto autorizas compartir con la contraparte para coordinar la entrega física:'**
+  String get deal_detail_accept_terms_desc;
+
+  /// No description provided for @deal_detail_share_phone.
+  ///
+  /// In es, this message translates to:
+  /// **'Compartir mi teléfono y WhatsApp'**
+  String get deal_detail_share_phone;
+
+  /// No description provided for @deal_detail_share_phone_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Permite a la contraparte llamarte o escribirte por WhatsApp para coordinar.'**
+  String get deal_detail_share_phone_desc;
+
+  /// No description provided for @deal_detail_share_location.
+  ///
+  /// In es, this message translates to:
+  /// **'Compartir mi ubicación de entrega'**
+  String get deal_detail_share_location;
+
+  /// No description provided for @deal_detail_share_farm_location.
+  ///
+  /// In es, this message translates to:
+  /// **'Compartir la ubicación de la finca'**
+  String get deal_detail_share_farm_location;
+
+  /// No description provided for @deal_detail_share_location_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Permite ver el municipio y coordenadas para planificar la ruta de entrega.'**
+  String get deal_detail_share_location_desc;
+
+  /// No description provided for @deal_detail_confirm_agreement.
+  ///
+  /// In es, this message translates to:
+  /// **'Confirmar acuerdo'**
+  String get deal_detail_confirm_agreement;
+
+  /// No description provided for @deal_detail_my_permissions_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Mis permisos de contacto'**
+  String get deal_detail_my_permissions_title;
+
+  /// No description provided for @deal_detail_my_permissions_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Controla qué datos privados autorizas ver a la contraparte para coordinar este trato. Puedes revocar o conceder permisos en cualquier momento:'**
+  String get deal_detail_my_permissions_desc;
+
+  /// No description provided for @deal_detail_share_phone_desc_permission.
+  ///
+  /// In es, this message translates to:
+  /// **'La contraparte podrá ver tu número para llamadas o mensajes.'**
+  String get deal_detail_share_phone_desc_permission;
+
+  /// No description provided for @deal_detail_share_location_desc_permission.
+  ///
+  /// In es, this message translates to:
+  /// **'La contraparte podrá ver municipio y coordenadas para la logística.'**
+  String get deal_detail_share_location_desc_permission;
+
+  /// No description provided for @moderation_reject_sheet_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Rechazar Solicitud'**
+  String get moderation_reject_sheet_title;
+
+  /// No description provided for @moderation_reject_reason_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Indica el motivo del rechazo para que el usuario pueda corregirlo:'**
+  String get moderation_reject_reason_desc;
+
+  /// No description provided for @moderation_lbl_email.
+  ///
+  /// In es, this message translates to:
+  /// **'Email:'**
+  String get moderation_lbl_email;
+
+  /// No description provided for @moderation_lbl_user_id.
+  ///
+  /// In es, this message translates to:
+  /// **'User ID:'**
+  String get moderation_lbl_user_id;
+
+  /// No description provided for @moderation_queue_refresh.
+  ///
+  /// In es, this message translates to:
+  /// **'Actualizar'**
+  String get moderation_queue_refresh;
+
+  /// No description provided for @moderation_status_pending.
+  ///
+  /// In es, this message translates to:
+  /// **'Pendiente'**
+  String get moderation_status_pending;
+
+  /// No description provided for @moderation_status_approved.
+  ///
+  /// In es, this message translates to:
+  /// **'Aprobado'**
+  String get moderation_status_approved;
+
+  /// No description provided for @moderation_status_rejected.
+  ///
+  /// In es, this message translates to:
+  /// **'Rechazado'**
+  String get moderation_status_rejected;
+
+  /// No description provided for @moderation_status_suspended.
+  ///
+  /// In es, this message translates to:
+  /// **'Suspendido'**
+  String get moderation_status_suspended;
+
+  /// No description provided for @moderation_status_unknown.
+  ///
+  /// In es, this message translates to:
+  /// **'Desconocido'**
+  String get moderation_status_unknown;
+
+  /// No description provided for @profile_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Mi Perfil'**
+  String get profile_title;
+
+  /// No description provided for @profile_my_farm.
+  ///
+  /// In es, this message translates to:
+  /// **'Mi Finca'**
+  String get profile_my_farm;
+
+  /// No description provided for @profile_settings.
+  ///
+  /// In es, this message translates to:
+  /// **'Configuración'**
+  String get profile_settings;
+
+  /// No description provided for @profile_load_data_error.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudieron cargar los datos.'**
+  String get profile_load_data_error;
+
+  /// No description provided for @profile_location.
+  ///
+  /// In es, this message translates to:
+  /// **'Ubicación'**
+  String get profile_location;
+
+  /// No description provided for @profile_whatsapp.
+  ///
+  /// In es, this message translates to:
+  /// **'WhatsApp'**
+  String get profile_whatsapp;
+
+  /// No description provided for @profile_stats_heading.
+  ///
+  /// In es, this message translates to:
+  /// **'Estadísticas'**
+  String get profile_stats_heading;
+
+  /// No description provided for @profile_published.
+  ///
+  /// In es, this message translates to:
+  /// **'Publicados'**
+  String get profile_published;
+
+  /// No description provided for @profile_negotiating.
+  ///
+  /// In es, this message translates to:
+  /// **'Negociando'**
+  String get profile_negotiating;
+
+  /// No description provided for @profile_closed_female.
+  ///
+  /// In es, this message translates to:
+  /// **'Cerradas'**
+  String get profile_closed_female;
+
+  /// No description provided for @profile_closed_male.
+  ///
+  /// In es, this message translates to:
+  /// **'Cerrados'**
+  String get profile_closed_male;
+
+  /// No description provided for @profile_update_error.
+  ///
+  /// In es, this message translates to:
+  /// **'Error al actualizar dato: {error}'**
+  String profile_update_error(String error);
+
+  /// No description provided for @profile_photo_error.
+  ///
+  /// In es, this message translates to:
+  /// **'Error al subir imagen: {error}'**
+  String profile_photo_error(String error);
+
+  /// No description provided for @profile_reputation_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Reputación'**
+  String get profile_reputation_title;
+
+  /// No description provided for @profile_reputation_loading.
+  ///
+  /// In es, this message translates to:
+  /// **'Cargando reputación...'**
+  String get profile_reputation_loading;
+
+  /// No description provided for @profile_reputation_error.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo cargar la reputación.'**
+  String get profile_reputation_error;
+
+  /// No description provided for @purchases_error_prefix.
+  ///
+  /// In es, this message translates to:
+  /// **'Ocurrió un error: {error}'**
+  String purchases_error_prefix(String error);
+
+  /// No description provided for @purchases_merchant_role.
+  ///
+  /// In es, this message translates to:
+  /// **'Rol Comerciante'**
+  String get purchases_merchant_role;
+
+  /// No description provided for @purchase_card_producer_local.
+  ///
+  /// In es, this message translates to:
+  /// **'Productor local'**
+  String get purchase_card_producer_local;
+
+  /// No description provided for @purchase_card_producer_municipality.
+  ///
+  /// In es, this message translates to:
+  /// **'Productor ({municipality})'**
+  String purchase_card_producer_municipality(String municipality);
+
+  /// No description provided for @purchase_card_agreed_crop.
+  ///
+  /// In es, this message translates to:
+  /// **'Cosecha acordada'**
+  String get purchase_card_agreed_crop;
+
+  /// No description provided for @purchase_card_quantity.
+  ///
+  /// In es, this message translates to:
+  /// **'Cantidad'**
+  String get purchase_card_quantity;
+
+  /// No description provided for @purchase_card_price_per_kg.
+  ///
+  /// In es, this message translates to:
+  /// **'Precio / kg'**
+  String get purchase_card_price_per_kg;
+
+  /// No description provided for @purchase_card_total_agreed.
+  ///
+  /// In es, this message translates to:
+  /// **'Total pactado'**
+  String get purchase_card_total_agreed;
+
+  /// No description provided for @ai_close.
+  ///
+  /// In es, this message translates to:
+  /// **'Cerrar'**
+  String get ai_close;
+
+  /// No description provided for @ai_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Publicar por voz'**
+  String get ai_title;
+
+  /// No description provided for @ai_subtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuéntanos qué quieres vender. Revisarás todo antes de publicar.'**
+  String get ai_subtitle;
+
+  /// No description provided for @ai_examples_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Puedes mencionar:'**
+  String get ai_examples_title;
+
+  /// No description provided for @ai_examples_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre del cultivo, cantidad y unidad (kg, bulto, arroba, canastilla, caja o tonelada), y precio por kg o por unidad.'**
+  String get ai_examples_desc;
+
+  /// No description provided for @ai_example_text.
+  ///
+  /// In es, this message translates to:
+  /// **'Ejemplo: “Tengo 50 bultos de papa a 2.000 pesos el kilo”.'**
+  String get ai_example_text;
+
+  /// No description provided for @ai_unavailable_title.
+  ///
+  /// In es, this message translates to:
+  /// **'La interpretación automática no está disponible en este entorno porque falta AI_API_KEY.'**
+  String get ai_unavailable_title;
+
+  /// No description provided for @ai_unavailable_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Puedes dictar y revisar la transcripción, o continuar manualmente.'**
+  String get ai_unavailable_desc;
+
+  /// No description provided for @ai_preparing.
+  ///
+  /// In es, this message translates to:
+  /// **'Preparando el micrófono...'**
+  String get ai_preparing;
+
+  /// No description provided for @ai_permission_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Permiso de micrófono denegado'**
+  String get ai_permission_title;
+
+  /// No description provided for @ai_permission_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'No podemos acceder al micrófono. Habilita el permiso en los ajustes del sistema o continúa manualmente.'**
+  String get ai_permission_desc;
+
+  /// No description provided for @ai_voice_unavailable_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Reconocimiento de voz no disponible'**
+  String get ai_voice_unavailable_title;
+
+  /// No description provided for @ai_voice_unavailable_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Este dispositivo no ofrece el servicio de reconocimiento de voz que necesita la aplicación. Puedes publicar manualmente.'**
+  String get ai_voice_unavailable_desc;
+
+  /// No description provided for @ai_transcribing.
+  ///
+  /// In es, this message translates to:
+  /// **'Transcribiendo lo que dijiste...'**
+  String get ai_transcribing;
+
+  /// No description provided for @ai_interpreting.
+  ///
+  /// In es, this message translates to:
+  /// **'Interpretando los datos con IA...'**
+  String get ai_interpreting;
+
+  /// No description provided for @ai_intro.
+  ///
+  /// In es, this message translates to:
+  /// **'Pulsa el micrófono y describe tu cosecha con tus propias palabras. No se publicará nada automáticamente.'**
+  String get ai_intro;
+
+  /// No description provided for @ai_start.
+  ///
+  /// In es, this message translates to:
+  /// **'Comenzar a hablar'**
+  String get ai_start;
+
+  /// No description provided for @ai_manual.
+  ///
+  /// In es, this message translates to:
+  /// **'Prefiero llenar el formulario manualmente'**
+  String get ai_manual;
+
+  /// No description provided for @ai_retry_mic.
+  ///
+  /// In es, this message translates to:
+  /// **'Reintentar micrófono'**
+  String get ai_retry_mic;
+
+  /// No description provided for @ai_continue_manual.
+  ///
+  /// In es, this message translates to:
+  /// **'Continuar manualmente'**
+  String get ai_continue_manual;
+
+  /// No description provided for @ai_listening.
+  ///
+  /// In es, this message translates to:
+  /// **'Escuchando...'**
+  String get ai_listening;
+
+  /// No description provided for @ai_listening_hint.
+  ///
+  /// In es, this message translates to:
+  /// **'Habla ahora. Puedes detenerte cuando termines.'**
+  String get ai_listening_hint;
+
+  /// No description provided for @ai_stop_review.
+  ///
+  /// In es, this message translates to:
+  /// **'Detener y revisar'**
+  String get ai_stop_review;
+
+  /// No description provided for @ai_review_transcript_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Revisa la transcripción'**
+  String get ai_review_transcript_title;
+
+  /// No description provided for @ai_review_transcript_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Si el micrófono entendió mal alguna palabra, corrígela antes de interpretar los datos.'**
+  String get ai_review_transcript_desc;
+
+  /// No description provided for @ai_transcript_label.
+  ///
+  /// In es, this message translates to:
+  /// **'Transcripción'**
+  String get ai_transcript_label;
+
+  /// No description provided for @ai_interpret.
+  ///
+  /// In es, this message translates to:
+  /// **'Interpretar con IA'**
+  String get ai_interpret;
+
+  /// No description provided for @ai_record_again.
+  ///
+  /// In es, this message translates to:
+  /// **'Grabar de nuevo'**
+  String get ai_record_again;
+
+  /// No description provided for @ai_recognized_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Datos reconocidos'**
+  String get ai_recognized_title;
+
+  /// No description provided for @ai_recognized_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Estos datos se precargarán en el formulario. Todavía puedes corregirlos y debes completar lo que falte.'**
+  String get ai_recognized_desc;
+
+  /// No description provided for @ai_no_data_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'No se identificaron datos utilizables. Puedes reintentar la interpretación, grabar de nuevo o continuar manualmente.'**
+  String get ai_no_data_desc;
+
+  /// No description provided for @ai_warnings.
+  ///
+  /// In es, this message translates to:
+  /// **'Advertencias'**
+  String get ai_warnings;
+
+  /// No description provided for @ai_confirm_data.
+  ///
+  /// In es, this message translates to:
+  /// **'Confirma estos datos'**
+  String get ai_confirm_data;
+
+  /// No description provided for @ai_missing_data.
+  ///
+  /// In es, this message translates to:
+  /// **'Faltan datos por completar'**
+  String get ai_missing_data;
+
+  /// No description provided for @ai_review_continue.
+  ///
+  /// In es, this message translates to:
+  /// **'Revisar y continuar'**
+  String get ai_review_continue;
+
+  /// No description provided for @ai_retry_interpret.
+  ///
+  /// In es, this message translates to:
+  /// **'Reintentar interpretación'**
+  String get ai_retry_interpret;
+
+  /// No description provided for @ai_crop.
+  ///
+  /// In es, this message translates to:
+  /// **'Cultivo'**
+  String get ai_crop;
+
+  /// No description provided for @ai_quantity.
+  ///
+  /// In es, this message translates to:
+  /// **'Cantidad'**
+  String get ai_quantity;
+
+  /// No description provided for @ai_price.
+  ///
+  /// In es, this message translates to:
+  /// **'Precio'**
+  String get ai_price;
+
+  /// No description provided for @ai_note.
+  ///
+  /// In es, this message translates to:
+  /// **'Nota'**
+  String get ai_note;
+
+  /// No description provided for @ai_no_data.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin datos identificados.'**
+  String get ai_no_data;
+
+  /// No description provided for @ai_failed_title.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo completar'**
+  String get ai_failed_title;
+
+  /// No description provided for @ai_failed_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Ocurrió un problema. Intenta de nuevo o continúa manualmente.'**
+  String get ai_failed_desc;
+
+  /// No description provided for @ai_error_mic_start.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo iniciar el micrófono. Comprueba el permiso o continúa manualmente.'**
+  String get ai_error_mic_start;
+
+  /// No description provided for @ai_error_mic_stop.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo detener el reconocimiento de voz. Vuelve a intentarlo o continúa manualmente.'**
+  String get ai_error_mic_stop;
+
+  /// No description provided for @ai_error_no_speech.
+  ///
+  /// In es, this message translates to:
+  /// **'No se reconoció voz. Acércate al micrófono, intenta de nuevo o continúa manualmente.'**
+  String get ai_error_no_speech;
+
+  /// No description provided for @ai_error_no_speech_retry.
+  ///
+  /// In es, this message translates to:
+  /// **'No se reconoció voz. Intenta hablar más cerca del micrófono o continúa manualmente.'**
+  String get ai_error_no_speech_retry;
+
+  /// No description provided for @ai_error_empty_transcript.
+  ///
+  /// In es, this message translates to:
+  /// **'La transcripción está vacía. Graba de nuevo o escribe lo que deseas publicar.'**
+  String get ai_error_empty_transcript;
+
+  /// No description provided for @ai_error_not_configured.
+  ///
+  /// In es, this message translates to:
+  /// **'La interpretación con IA no está configurada. Falta AI_API_KEY. Puedes continuar manualmente.'**
+  String get ai_error_not_configured;
+
+  /// No description provided for @ai_error_interpret.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo interpretar la transcripción. Intenta de nuevo o continúa manualmente.'**
+  String get ai_error_interpret;
 }
 
 class _AppLocalizationsDelegate

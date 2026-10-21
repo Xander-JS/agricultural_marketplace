@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/crop_model.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/localization/app_localizations.dart';
 
 class CropStatusBadge extends StatelessWidget {
   final CropStatus status;
@@ -9,39 +10,31 @@ class CropStatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
     Color backgroundColor;
     Color textColor;
     String label;
 
     switch (status) {
       case CropStatus.borrador:
-        backgroundColor = isDark
-            ? AppColors.darkSurfaceVariant
-            : AppColors.lightSecondary.withValues(alpha: 0.5);
-        textColor = isDark ? AppColors.darkTextDisabled : AppColors.lightTextSecondary;
-        label = 'Borrador';
+        backgroundColor = context.appSurfaceVariant;
+        textColor = context.appTextDisabled;
+        label = l10n.crop_status_draft;
         break;
       case CropStatus.activa:
-        backgroundColor = isDark
-            ? AppColors.success.withValues(alpha: 0.2)
-            : AppColors.successLight;
-        textColor = isDark ? AppColors.darkTertiary : AppColors.success;
-        label = 'Activa';
+        backgroundColor = context.appSuccessContainer;
+        textColor = context.appSuccess;
+        label = l10n.crop_status_active;
         break;
       case CropStatus.pausada:
-        backgroundColor = isDark
-            ? AppColors.warning.withValues(alpha: 0.2)
-            : AppColors.warningLight;
-        textColor = isDark ? const Color(0xFFFFB74D) : AppColors.warning;
-        label = 'Pausada';
+        backgroundColor = context.appWarningContainer;
+        textColor = context.appWarning;
+        label = l10n.crop_status_paused;
         break;
       case CropStatus.agotada:
-        backgroundColor = isDark
-            ? AppColors.error.withValues(alpha: 0.2)
-            : AppColors.errorLight;
-        textColor = isDark ? const Color(0xFFEF9A9A) : AppColors.error;
-        label = 'Agotada';
+        backgroundColor = context.appErrorContainer;
+        textColor = context.appError;
+        label = l10n.crop_status_exhausted;
         break;
     }
 

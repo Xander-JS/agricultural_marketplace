@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../localization/app_localizations.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_dimensions.dart';
 import '../../theme/app_text_styles.dart';
 import 'loading_indicator.dart';
 
@@ -8,23 +10,25 @@ class LoadingContent extends StatelessWidget {
   final String message;
   final VoidCallback? onRetry;
   final VoidCallback? onBack;
-  final String retryText;
-  final String backText;
+  final String? retryText;
+  final String? backText;
   final bool isSpinning;
 
   const LoadingContent({
-    Key? key,
+    super.key,
     required this.message,
     this.isError = false,
     this.onRetry,
     this.onBack,
-    this.retryText = 'Reintentar',
-    this.backText = 'Volver atrás',
+    this.retryText,
+    this.backText,
     this.isSpinning = true,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -33,34 +37,38 @@ class LoadingContent extends StatelessWidget {
         else
           const Icon(
             Icons.error_outline,
-            color: AppColors.error,
-            size: 80,
+            color: AppColors.onBrand,
+            size: AppDimensions.space64 + AppDimensions.space16,
           ),
-        const SizedBox(height: 32),
+        const SizedBox(height: AppDimensions.space32),
         Text(
           message,
           textAlign: TextAlign.center,
-          style: AppTextStyles.titleMedium.copyWith(color: Colors.white),
+          style: AppTextStyles.titleMedium.copyWith(
+            color: AppColors.onBrand,
+          ),
         ),
         if (isError) ...[
-          const SizedBox(height: 32),
+          const SizedBox(height: AppDimensions.space32),
           if (onRetry != null)
             ElevatedButton(
               onPressed: onRetry,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
+                backgroundColor: AppColors.onBrand,
                 foregroundColor: AppColors.loadingBackground,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                padding: AppDimensions.paddingButtonLarge,
               ),
-              child: Text(retryText),
+              child: Text(retryText ?? l10n?.common_retry ?? ''),
             ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppDimensions.space16),
           if (onBack != null)
             TextButton(
               onPressed: onBack,
               child: Text(
-                backText,
-                style: const TextStyle(color: Colors.white),
+                backText ?? l10n?.common_back ?? '',
+                style: AppTextStyles.buttonMedium.copyWith(
+                  color: AppColors.onBrand,
+                ),
               ),
             ),
         ],

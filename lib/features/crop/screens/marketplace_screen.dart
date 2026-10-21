@@ -354,7 +354,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (context) => const VoiceCropAssistantSheet(),
     );
 
@@ -370,12 +370,11 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
   }
 
   void _showPublishOptions() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+      backgroundColor: context.appSurface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -387,46 +386,34 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Text(
-                  l10n?.market_publish_options_title ??
-                      '¿Cómo deseas publicar?',
+                  l10n.market_publish_options_title,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.lightTextPrimary,
+                    color: context.appTextPrimary,
                   ),
                 ),
               ),
               ListTile(
                 leading: CircleAvatar(
                   backgroundColor:
-                      (isDark
-                              ? AppColors.darkTertiary
-                              : AppColors.lightTertiary)
+                      (context.appPrimary)
                           .withValues(alpha: 0.15),
                   child: Icon(
                     Icons.edit_document,
-                    color: isDark
-                        ? AppColors.darkTertiary
-                        : AppColors.lightTertiary,
+                    color: context.appPrimary,
                   ),
                 ),
                 title: Text(
-                  l10n?.market_publish_manual ?? 'Publicación Manual',
+                  l10n.market_publish_manual,
                   style: TextStyle(
-                    color: isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.lightTextPrimary,
+                    color: context.appTextPrimary,
                   ),
                 ),
                 subtitle: Text(
-                  l10n?.market_publish_manual_desc ??
-                      'Llena el formulario paso a paso',
+                  l10n.market_publish_manual_desc,
                   style: TextStyle(
-                    color: isDark
-                        ? AppColors.darkTextSecondary
-                        : AppColors.lightTextSecondary,
+                    color: context.appTextSecondary,
                   ),
                 ),
                 onTap: () {
@@ -437,32 +424,23 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
               ListTile(
                 leading: CircleAvatar(
                   backgroundColor:
-                      (isDark
-                              ? AppColors.darkTertiary
-                              : AppColors.lightTertiary)
+                      (context.appPrimary)
                           .withValues(alpha: 0.15),
                   child: Icon(
                     Icons.mic,
-                    color: isDark
-                        ? AppColors.darkTertiary
-                        : AppColors.lightTertiary,
+                    color: context.appPrimary,
                   ),
                 ),
                 title: Text(
-                  l10n?.market_publish_voice ?? 'Publicación por Nota de Voz',
+                  l10n.market_publish_voice,
                   style: TextStyle(
-                    color: isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.lightTextPrimary,
+                    color: context.appTextPrimary,
                   ),
                 ),
                 subtitle: Text(
-                  l10n?.market_publish_voice_desc ??
-                      'Cuéntanos qué quieres publicar (Con IA)',
+                  l10n.market_publish_voice_desc,
                   style: TextStyle(
-                    color: isDark
-                        ? AppColors.darkTextSecondary
-                        : AppColors.lightTextSecondary,
+                    color: context.appTextSecondary,
                   ),
                 ),
                 onTap: () {
@@ -505,17 +483,14 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     final title = _isBuyer
-        ? (l10n?.market_title ?? 'Mercado')
-        : (l10n?.market_title_farmer ?? 'Mi Mercado');
+        ? (l10n.market_title)
+        : (l10n.market_title_farmer);
 
     return Scaffold(
-      backgroundColor: isDark
-          ? AppColors.darkBackground
-          : AppColors.lightBackground,
+      backgroundColor: context.appBackground,
       appBar: AppBar(
         title: Text(title),
         actions: [
@@ -539,7 +514,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                         widget.onProfileTap ??
                         () {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Este es tu perfil')),
+                            SnackBar(content: Text(l10n.market_own_profile)),
                           );
                         },
                   );
@@ -549,22 +524,20 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
           ),
         ],
       ),
-      body: _buildBody(isDark, l10n),
+      body: _buildBody(l10n),
       floatingActionButton: _isBuyer
           ? null
           : FloatingActionButton.extended(
               onPressed: _showPublishOptions,
               icon: const Icon(Icons.add),
-              label: Text(l10n?.market_publish_btn ?? 'Publicar'),
-              backgroundColor: isDark
-                  ? AppColors.darkTertiary
-                  : AppColors.lightTertiary,
-              foregroundColor: isDark ? AppColors.darkBackground : Colors.white,
+              label: Text(l10n.market_publish_btn),
+              backgroundColor: context.appPrimary,
+              foregroundColor: context.appOnPrimary,
             ),
     );
   }
 
-  Widget _buildBody(bool isDark, AppLocalizations? l10n) {
+  Widget _buildBody(AppLocalizations l10n) {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -576,29 +549,23 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 48, color: AppColors.error),
+              Icon(Icons.error_outline, size: 48, color: context.appError),
               const SizedBox(height: 16),
               Text(
-                'Ocurrió un error: $_errorMessage',
+                l10n.common_error_prefix(_errorMessage ?? ''),
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: isDark
-                      ? AppColors.darkTextPrimary
-                      : AppColors.lightTextPrimary,
+                  color: context.appTextPrimary,
                 ),
               ),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _loadCrops,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: isDark
-                      ? AppColors.darkTertiary
-                      : AppColors.lightTertiary,
-                  foregroundColor: isDark
-                      ? AppColors.darkBackground
-                      : Colors.white,
+                  backgroundColor: context.appPrimary,
+                  foregroundColor: context.appOnPrimary,
                 ),
-                child: Text(l10n?.market_retry ?? 'Reintentar'),
+                child: Text(l10n.market_retry),
               ),
             ],
           ),
@@ -607,17 +574,17 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
     }
 
     if (_crops.isEmpty) {
-      return _buildEmptyState(isDark, l10n);
+      return _buildEmptyState(l10n);
     }
 
     final visibleCrops = _visibleCrops;
 
     return Column(
       children: [
-        if (_isBuyer) _buildCatalogTools(isDark, l10n),
+        if (_isBuyer) _buildCatalogTools(l10n),
         Expanded(
           child: visibleCrops.isEmpty
-              ? _buildNoResultsState(isDark, l10n)
+              ? _buildNoResultsState(l10n)
               : RefreshIndicator(
                   onRefresh: _loadCrops,
                   child: ListView.builder(
@@ -644,15 +611,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
     );
   }
 
-  Widget _buildCatalogTools(bool isDark, AppLocalizations? l10n) {
-    final textColor = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
-    final secondaryTextColor = isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
-    final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
-
+  Widget _buildCatalogTools(AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
       child: Column(
@@ -667,50 +626,41 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
               });
             },
             textInputAction: TextInputAction.search,
-            style: TextStyle(color: textColor),
+            style: TextStyle(color: context.appTextPrimary),
             decoration: InputDecoration(
               hintText:
-                  l10n?.market_search_hint ??
-                  'Buscar por título o tipo de cultivo',
+                  l10n.market_search_hint,
               hintStyle: TextStyle(
-                color: isDark
-                    ? AppColors.darkTextDisabled
-                    : AppColors.lightTextDisabled,
+                color: context.appTextDisabled,
               ),
               prefixIcon: Icon(
                 Icons.search,
-                color: isDark
-                    ? AppColors.darkTextDisabled
-                    : AppColors.lightTextDisabled,
+                color: context.appTextDisabled,
               ),
               suffixIcon: _searchQuery.isEmpty
                   ? null
                   : IconButton(
                       key: const ValueKey('marketplace_search_clear'),
-                      tooltip: l10n?.market_search_clear ?? 'Borrar búsqueda',
+                      tooltip: l10n.market_search_clear,
                       icon: const Icon(Icons.close),
-                      color: secondaryTextColor,
+                      color: context.appTextSecondary,
                       onPressed: _clearSearch,
                     ),
               filled: true,
-              fillColor: isDark
-                  ? AppColors.darkSurface
-                  : AppColors.lightSurface,
+              fillColor: context.appSurface,
               contentPadding: const EdgeInsets.symmetric(vertical: 12),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide(color: borderColor),
+                borderSide: BorderSide(color: context.appBorder),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide(color: borderColor),
+                borderSide: BorderSide(color: context.appBorder),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
                 borderSide: BorderSide(
-                  color: isDark
-                      ? AppColors.darkTertiary
-                      : AppColors.lightTertiary,
+                  color: context.appPrimary,
                 ),
               ),
             ),
@@ -721,30 +671,25 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
             child: Row(
               children: [
                 _buildSortChip(
-                  isDark: isDark,
                   value: _MarketplaceSortOption.recent,
                   keyName: 'recent',
-                  label: l10n?.market_sort_recent ?? 'Most recent first',
+                  label: l10n.market_sort_recent,
                 ),
                 _buildSortChip(
-                  isDark: isDark,
                   value: _MarketplaceSortOption.priceAscending,
                   keyName: 'price_asc',
-                  label: l10n?.market_sort_price_asc ?? 'Lowest price first',
+                  label: l10n.market_sort_price_asc,
                 ),
                 _buildSortChip(
-                  isDark: isDark,
                   value: _MarketplaceSortOption.priceDescending,
                   keyName: 'price_desc',
-                  label: l10n?.market_sort_price_desc ?? 'Highest price first',
+                  label: l10n.market_sort_price_desc,
                 ),
                 _buildSortChip(
-                  isDark: isDark,
                   value: _MarketplaceSortOption.reputation,
                   keyName: 'reputation',
                   label:
-                      l10n?.market_sort_reputation ??
-                      'Highest reputation first',
+                      l10n.market_sort_reputation,
                 ),
               ],
             ),
@@ -755,7 +700,6 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
   }
 
   Widget _buildSortChip({
-    required bool isDark,
     required _MarketplaceSortOption value,
     required String keyName,
     required String label,
@@ -779,26 +723,20 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
           fontSize: 12,
           fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
           color: isSelected
-              ? (isDark ? AppColors.darkBackground : Colors.white)
-              : (isDark
-                    ? AppColors.darkTextSecondary
-                    : AppColors.lightTextSecondary),
+              ? (context.appOnPrimary)
+              : (context.appTextSecondary),
         ),
-        selectedColor: isDark
-            ? AppColors.darkTertiary
-            : AppColors.lightTertiary,
-        backgroundColor: isDark
-            ? AppColors.darkSurface
-            : AppColors.lightSurface,
+        selectedColor: context.appPrimary,
+        backgroundColor: context.appSurface,
         side: BorderSide(
-          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+          color: context.appBorder,
         ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
     );
   }
 
-  Widget _buildNoResultsState(bool isDark, AppLocalizations? l10n) {
+  Widget _buildNoResultsState(AppLocalizations l10n) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -808,20 +746,15 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
             Icon(
               Icons.search_off,
               size: 64,
-              color: isDark
-                  ? AppColors.darkTextDisabled
-                  : AppColors.lightTextDisabled,
+              color: context.appTextDisabled,
             ),
             const SizedBox(height: 16),
             Text(
-              l10n?.market_no_results ??
-                  'No crops were found matching these criteria',
+              l10n.market_no_results,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: isDark
-                    ? AppColors.darkTextPrimary
-                    : AppColors.lightTextPrimary,
+                color: context.appTextPrimary,
               ),
               textAlign: TextAlign.center,
             ),
@@ -830,13 +763,11 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
               key: const ValueKey('marketplace_clear_filters'),
               onPressed: _clearFilters,
               icon: const Icon(Icons.filter_alt_off_outlined),
-              label: Text(l10n?.market_clear_filters ?? 'Clear filters'),
+              label: Text(l10n.market_clear_filters),
               style: OutlinedButton.styleFrom(
-                foregroundColor: isDark
-                    ? AppColors.darkTertiary
-                    : AppColors.lightTertiary,
+                foregroundColor: context.appPrimary,
                 side: BorderSide(
-                  color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                  color: context.appBorder,
                 ),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 20,
@@ -853,7 +784,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
     );
   }
 
-  Widget _buildEmptyState(bool isDark, AppLocalizations? l10n) {
+  Widget _buildEmptyState(AppLocalizations l10n) {
     if (_isBuyer) {
       return Center(
         child: Padding(
@@ -864,30 +795,24 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
               Icon(
                 Icons.storefront_outlined,
                 size: 80,
-                color: isDark
-                    ? AppColors.darkTextDisabled
-                    : AppColors.lightTextDisabled,
+                color: context.appTextDisabled,
               ),
               const SizedBox(height: 24),
               Text(
-                l10n?.market_empty_buyer_title ?? 'No hay cosechas disponibles',
+                l10n.market_empty_buyer_title,
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: isDark
-                      ? AppColors.darkTextPrimary
-                      : AppColors.lightTextPrimary,
+                  color: context.appTextPrimary,
                 ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
               Text(
-                l10n?.market_empty_buyer_desc ?? 'En este momento no hay productos agrícolas disponibles para negociar. Intenta actualizar más tarde.',
+                l10n.market_empty_buyer_desc,
                 style: TextStyle(
                   fontSize: 15,
-                  color: isDark
-                      ? AppColors.darkTextSecondary
-                      : AppColors.lightTextSecondary,
+                  color: context.appTextSecondary,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -895,14 +820,10 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
               ElevatedButton.icon(
                 onPressed: _loadCrops,
                 icon: const Icon(Icons.refresh),
-                label: Text(l10n?.market_refresh ?? 'Actualizar'),
+                label: Text(l10n.market_refresh),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: isDark
-                      ? AppColors.darkTertiary
-                      : AppColors.lightTertiary,
-                  foregroundColor: isDark
-                      ? AppColors.darkBackground
-                      : Colors.white,
+                  backgroundColor: context.appPrimary,
+                  foregroundColor: context.appOnPrimary,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,
                     vertical: 12,
@@ -927,31 +848,24 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
             Icon(
               Icons.storefront_outlined,
               size: 80,
-              color: isDark
-                  ? AppColors.darkTextDisabled
-                  : AppColors.lightTextDisabled,
+              color: context.appTextDisabled,
             ),
             const SizedBox(height: 24),
             Text(
-              l10n?.market_empty_farmer_title ??
-                  'Aún no tienes cosechas publicadas',
+              l10n.market_empty_farmer_title,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: isDark
-                    ? AppColors.darkTextPrimary
-                    : AppColors.lightTextPrimary,
+                color: context.appTextPrimary,
               ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
             Text(
-              l10n?.market_empty_farmer_desc ?? 'Comienza a ofrecer tus productos en el mercado agrícola creando tu primera publicación.',
+              l10n.market_empty_farmer_desc,
               style: TextStyle(
                 fontSize: 15,
-                color: isDark
-                    ? AppColors.darkTextSecondary
-                    : AppColors.lightTextSecondary,
+                color: context.appTextSecondary,
               ),
               textAlign: TextAlign.center,
             ),
@@ -960,15 +874,11 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
               onPressed: _navigateToPublish,
               icon: const Icon(Icons.add),
               label: Text(
-                l10n?.market_publish_first ?? 'Publicar mi primera cosecha',
+                l10n.market_publish_first,
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: isDark
-                    ? AppColors.darkTertiary
-                    : AppColors.lightTertiary,
-                foregroundColor: isDark
-                    ? AppColors.darkBackground
-                    : Colors.white,
+                backgroundColor: context.appPrimary,
+                foregroundColor: context.appOnPrimary,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
                   vertical: 12,

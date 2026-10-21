@@ -18,9 +18,7 @@ class PurchaseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     // Obtener la última oferta acordada
     final latestOffer = (purchase.offers != null && purchase.offers!.isNotEmpty)
         ? purchase.offers!.reduce((a, b) => a.createdAt.isAfter(b.createdAt) ? a : b)
@@ -32,8 +30,10 @@ class PurchaseCard extends StatelessWidget {
 
     final producerName = purchase.farmerProfile?['full_name'] ??
         (purchase.crop?.municipality != null
-            ? 'Productor (${purchase.crop!.municipality})'
-            : 'Productor local');
+            ? l10n.purchase_card_producer_municipality(
+                purchase.crop!.municipality,
+              )
+            : l10n.purchase_card_producer_local);
 
     final location = purchase.crop != null && purchase.crop!.municipality.isNotEmpty
         ? '${purchase.crop!.municipality}, ${purchase.crop!.department}'
@@ -46,12 +46,10 @@ class PurchaseCard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 0,
-      color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+      color: context.appSurface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-        ),
+        side: BorderSide(color: context.appBorder),
       ),
       child: InkWell(
         onTap: () async {
@@ -84,11 +82,11 @@ class PurchaseCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          purchase.crop?.title ?? 'Cosecha acordada',
+                          purchase.crop?.title ?? l10n.purchase_card_agreed_crop,
                           style: TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.bold,
-                            color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                            color: context.appTextPrimary,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -99,7 +97,7 @@ class PurchaseCard extends StatelessWidget {
                             purchase.crop!.cropType,
                             style: TextStyle(
                               fontSize: 13,
-                              color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                              color: context.appTextSecondary,
                             ),
                           ),
                         ],
@@ -107,7 +105,7 @@ class PurchaseCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  _buildStatusBadge(isAgreed, isDark, l10n),
+                  _buildStatusBadge(context, isAgreed, l10n),
                 ],
               ),
 
@@ -118,13 +116,11 @@ class PurchaseCard extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 14,
-                    backgroundColor: isDark
-                        ? AppColors.darkTertiary.withValues(alpha: 0.2)
-                        : AppColors.lightSecondary,
+                    backgroundColor: context.appPrimaryContainer,
                     child: Icon(
                       Icons.person,
                       size: 16,
-                      color: isDark ? AppColors.darkTertiary : AppColors.lightTertiary,
+                      color: context.appPrimary,
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -134,7 +130,7 @@ class PurchaseCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                        color: context.appTextPrimary,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -145,13 +141,13 @@ class PurchaseCard extends StatelessWidget {
                     Icon(
                       Icons.location_on_outlined,
                       size: 14,
-                      color: isDark ? AppColors.darkTextDisabled : AppColors.lightTextDisabled,
+                      color: context.appTextDisabled,
                     ),
                     Text(
                       location,
                       style: TextStyle(
                         fontSize: 12,
-                        color: isDark ? AppColors.darkTextDisabled : AppColors.lightTextDisabled,
+                        color: context.appTextDisabled,
                       ),
                     ),
                   ],
@@ -164,29 +160,27 @@ class PurchaseCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? AppColors.darkSurfaceVariant
-                      : AppColors.lightSecondary.withValues(alpha: 0.35),
+                  color: context.appSurfaceVariant,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     _buildMetricColumn(
-                      label: 'Cantidad',
+                      context,
+                      label: l10n.purchase_card_quantity,
                       value: UnitFormatters.formatKg(quantity),
-                      isDark: isDark,
-                    ),
+                                          ),
                     _buildMetricColumn(
-                      label: 'Precio / kg',
+                      context,
+                      label: l10n.purchase_card_price_per_kg,
                       value: CurrencyFormatters.formatCop(price),
-                      isDark: isDark,
-                    ),
+                                          ),
                     _buildMetricColumn(
-                      label: l10n?.purchases_total_invested ?? 'Total pactado',
+                      context,
+                      label: l10n.purchase_card_total_agreed,
                       value: CurrencyFormatters.formatCop(total),
-                      isDark: isDark,
-                      isHighlighted: true,
+                                            isHighlighted: true,
                     ),
                   ],
                 ),
@@ -201,14 +195,14 @@ class PurchaseCard extends StatelessWidget {
                     Icon(
                       Icons.local_shipping_outlined,
                       size: 15,
-                      color: isDark ? AppColors.darkTertiary : AppColors.lightTertiary,
+                      color: context.appPrimary,
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '${l10n?.purchases_delivery_method ?? "Entrega"}: ${latestOffer.deliveryMethod}',
+                      '${l10n.purchases_delivery_method}: ${latestOffer.deliveryMethod}',
                       style: TextStyle(
                         fontSize: 12,
-                        color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                        color: context.appTextSecondary,
                       ),
                     ),
                   ],
@@ -216,14 +210,14 @@ class PurchaseCard extends StatelessWidget {
                   Icon(
                     Icons.calendar_today_outlined,
                     size: 13,
-                    color: isDark ? AppColors.darkTextDisabled : AppColors.lightTextDisabled,
+                    color: context.appTextDisabled,
                   ),
                   const SizedBox(width: 4),
                   Text(
                     formattedDate,
                     style: TextStyle(
                       fontSize: 12,
-                      color: isDark ? AppColors.darkTextDisabled : AppColors.lightTextDisabled,
+                      color: context.appTextDisabled,
                     ),
                   ),
                 ],
@@ -235,11 +229,11 @@ class PurchaseCard extends StatelessWidget {
               Align(
                 alignment: Alignment.centerRight,
                 child: Text(
-                  l10n?.purchases_view_detail ?? 'Ver detalle del acuerdo →',
+                  l10n.purchases_view_detail,
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? AppColors.darkTertiary : AppColors.lightTertiary,
+                    color: context.appPrimary,
                   ),
                 ),
               ),
@@ -250,19 +244,21 @@ class PurchaseCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusBadge(bool isAgreed, bool isDark, AppLocalizations? l10n) {
+  Widget _buildStatusBadge(
+    BuildContext context,
+    bool isAgreed,
+    AppLocalizations l10n,
+  ) {
     final label = isAgreed
-        ? (l10n?.purchases_status_agreed ?? 'Acordada')
-        : (l10n?.purchases_status_completed ?? 'Completada');
+        ? l10n.purchases_status_agreed
+        : l10n.purchases_status_completed;
 
-    final color = isAgreed
-        ? (isDark ? AppColors.darkTertiary : AppColors.success)
-        : (isDark ? const Color(0xFF80CBC4) : const Color(0xFF00897B));
+    final color = isAgreed ? context.appSuccess : context.appInfo;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: isDark ? 0.2 : 0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color.withValues(alpha: 0.35)),
       ),
@@ -277,10 +273,10 @@ class PurchaseCard extends StatelessWidget {
     );
   }
 
-  Widget _buildMetricColumn({
+  Widget _buildMetricColumn(
+    BuildContext context, {
     required String label,
     required String value,
-    required bool isDark,
     bool isHighlighted = false,
   }) {
     return Column(
@@ -290,7 +286,7 @@ class PurchaseCard extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 11,
-            color: isDark ? AppColors.darkTextDisabled : AppColors.lightTextSecondary,
+            color: context.appTextSecondary,
           ),
         ),
         const SizedBox(height: 2),
@@ -300,8 +296,8 @@ class PurchaseCard extends StatelessWidget {
             fontSize: isHighlighted ? 15 : 13,
             fontWeight: FontWeight.bold,
             color: isHighlighted
-                ? (isDark ? AppColors.darkTertiary : AppColors.lightTertiary)
-                : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+                ? context.appPrimary
+                : context.appTextPrimary,
           ),
         ),
       ],

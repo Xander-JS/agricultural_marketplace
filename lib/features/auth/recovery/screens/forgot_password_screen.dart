@@ -83,10 +83,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.appBackground,
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -101,7 +101,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   child: Padding(
                     padding: const EdgeInsets.only(left: 8.0, top: 8.0),
                     child: IconButton(
-                      icon: const Icon(Icons.arrow_back, color: AppColors.success),
+                      icon: Icon(Icons.arrow_back, color: context.appSuccess),
                       onPressed: () => Navigator.of(context).maybePop(),
                     ),
                   ),
@@ -116,38 +116,35 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      l10n?.recovery_title ?? 'Recuperar contraseña',
+                      l10n.recovery_title,
                       style: AppTextStyles.headlineMedium.copyWith(
-                        color: AppColors.lightTextPrimary,
+                        color: context.appTextPrimary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      l10n?.recovery_subtitle ??
-                          'Ingresa el correo electrónico asociado a tu cuenta para recibir las instrucciones de restablecimiento.',
+                      l10n.recovery_subtitle,
                       style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.lightTextSecondary,
+                        color: context.appTextSecondary,
                       ),
                     ),
                     const SizedBox(height: 32),
 
                     // Campo de correo
                     CustomTextField(
-                      label: l10n?.recovery_email_label ?? 'Correo electrónico',
-                      hint: l10n?.recovery_email_hint ?? 'ejemplo@correo.com',
+                      label: l10n.recovery_email_label,
+                      hint: l10n.recovery_email_hint,
                       icon: Icons.email_outlined,
                       controller: _contactController,
                       keyboardType: TextInputType.emailAddress,
                       validator: (value) {
                         final val = value?.trim() ?? '';
                         if (val.isEmpty) {
-                          return l10n?.recovery_email_required ??
-                              'Ingresa tu correo electrónico.';
+                          return l10n.recovery_email_required;
                         }
                         if (!val.contains('@')) {
-                          return l10n?.recovery_phone_not_supported ??
-                              'La recuperación por enlace requiere un correo electrónico válido.';
+                          return l10n.recovery_phone_not_supported;
                         }
                         return null;
                       },
@@ -160,13 +157,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: _isSuccess
-                              ? AppColors.success.withValues(alpha: 0.1)
-                              : AppColors.error.withValues(alpha: 0.1),
+                              ? context.appSuccess.withValues(alpha: 0.1)
+                              : context.appError.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: _isSuccess
-                                ? AppColors.success
-                                : AppColors.error,
+                                ? context.appSuccess
+                                : context.appError,
                             width: 1,
                           ),
                         ),
@@ -178,8 +175,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                   ? Icons.check_circle_outline
                                   : Icons.error_outline,
                               color: _isSuccess
-                                  ? AppColors.success
-                                  : AppColors.error,
+                                  ? context.appSuccess
+                                  : context.appError,
                               size: 24,
                             ),
                             const SizedBox(width: 12),
@@ -188,8 +185,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                 _statusMessage!,
                                 style: AppTextStyles.bodyMedium.copyWith(
                                   color: _isSuccess
-                                      ? AppColors.success
-                                      : AppColors.error,
+                                      ? context.appSuccess
+                                      : context.appError,
                                 ),
                               ),
                             ),
@@ -203,8 +200,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     PrimaryActionButton(
                       onPressed: _isLoading ? null : _handleRequestReset,
                       text: _isLoading
-                          ? (l10n?.recovery_sending ?? 'Enviando...')
-                          : (l10n?.recovery_send_button ?? 'Enviar instrucciones'),
+                          ? (l10n.recovery_sending)
+                          : (l10n.recovery_send_button),
                       isLoading: _isLoading,
                     ),
                     const SizedBox(height: 16),
@@ -217,9 +214,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               Navigator.of(context).maybePop();
                             },
                       child: Text(
-                        l10n?.recovery_back_to_login ?? 'Volver a Iniciar Sesión',
+                        l10n.recovery_back_to_login,
                         style: AppTextStyles.labelMedium.copyWith(
-                          color: AppColors.success,
+                          color: context.appSuccess,
                           fontWeight: FontWeight.w600,
                         ),
                       ),

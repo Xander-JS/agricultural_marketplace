@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../localization/app_localizations.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_dimensions.dart';
 import '../../theme/app_text_styles.dart';
 import '../badges/altitude_badge.dart';
 
@@ -18,7 +20,7 @@ class ProductCard extends StatelessWidget {
   final bool isExpanded;
 
   const ProductCard({
-    Key? key,
+    super.key,
     required this.imageUrl,
     required this.statusBadge,
     required this.altitude,
@@ -30,32 +32,37 @@ class ProductCard extends StatelessWidget {
     required this.onDetailsTap,
     this.sellerDetailsBox,
     this.isExpanded = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final colors = theme.colorScheme;
+
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.lightSurface,
-        borderRadius: BorderRadius.circular(16),
+        color: colors.surface,
+        borderRadius: AppDimensions.borderRadiusLG,
+        border: Border.all(color: colors.outlineVariant),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: context.appShadow,
+            blurRadius: AppDimensions.space12,
+            offset: const Offset(0, AppDimensions.space4),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Image and Badges
+          // Image and badges
           Stack(
             children: [
               ClipRRect(
                 borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  topRight: Radius.circular(16),
+                  topLeft: Radius.circular(AppDimensions.radiusLG),
+                  topRight: Radius.circular(AppDimensions.radiusLG),
                 ),
                 child: Image.network(
                   imageUrl,
@@ -64,27 +71,30 @@ class ProductCard extends StatelessWidget {
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) => Container(
                     height: 180,
-                    color: AppColors.lightDivider,
-                    child: const Icon(Icons.image_not_supported, color: AppColors.lightTextDisabled),
+                    color: colors.surfaceContainerHighest,
+                    child: Icon(
+                      Icons.image_not_supported,
+                      color: colors.onSurfaceVariant,
+                    ),
                   ),
                 ),
               ),
               Positioned(
-                top: 12,
-                left: 12,
+                top: AppDimensions.space12,
+                left: AppDimensions.space12,
                 child: statusBadge,
               ),
               Positioned(
-                bottom: 12,
-                right: 12,
+                bottom: AppDimensions.space12,
+                right: AppDimensions.space12,
                 child: AltitudeBadge(text: altitude),
               ),
             ],
           ),
-          
+
           // Content
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: AppDimensions.paddingCard,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -99,57 +109,56 @@ class ProductCard extends StatelessWidget {
                           Text(
                             title,
                             style: AppTextStyles.displaySmall.copyWith(
-                              color: AppColors.lightTextPrimary,
+                              color: colors.onSurface,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: AppDimensions.space4),
                           Text(
-                            'Variedad: $variety',
+                            l10n.product_card_variety(variety),
                             style: AppTextStyles.bodyMedium.copyWith(
-                              color: AppColors.lightTextSecondary,
+                              color: colors.onSurfaceVariant,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppDimensions.space12),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
                           price,
                           style: AppTextStyles.titleLarge.copyWith(
-                            color: AppColors.lightTertiary, // Green price
+                            color: colors.primary,
                             fontWeight: FontWeight.bold,
-                            fontSize: 20,
                           ),
                         ),
                         Text(
                           priceUnit,
                           style: AppTextStyles.caption.copyWith(
-                            color: AppColors.lightTextSecondary,
+                            color: colors.onSurfaceVariant,
                           ),
                         ),
                       ],
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppDimensions.space16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.verified_user_outlined,
-                          size: 16,
-                          color: AppColors.lightTextSecondary,
+                          size: AppDimensions.iconXS,
+                          color: colors.onSurfaceVariant,
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: AppDimensions.space4 + 2),
                         Text(
                           sellerType,
                           style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.lightTextSecondary,
+                            color: colors.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -159,16 +168,18 @@ class ProductCard extends StatelessWidget {
                       child: Row(
                         children: [
                           Text(
-                            'Ver detalles',
+                            l10n.product_card_view_details,
                             style: AppTextStyles.buttonMedium.copyWith(
-                              color: AppColors.lightTertiary,
+                              color: colors.primary,
                             ),
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: AppDimensions.space4),
                           Icon(
-                            isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                            color: AppColors.lightTertiary,
-                            size: 20,
+                            isExpanded
+                                ? Icons.keyboard_arrow_up
+                                : Icons.keyboard_arrow_down,
+                            color: colors.primary,
+                            size: AppDimensions.iconSM,
                           ),
                         ],
                       ),
@@ -176,7 +187,7 @@ class ProductCard extends StatelessWidget {
                   ],
                 ),
                 if (isExpanded && sellerDetailsBox != null) ...[
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppDimensions.space16),
                   sellerDetailsBox!,
                 ],
               ],

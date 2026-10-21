@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/utils/app_formatters.dart';
 import '../models/voice_crop_draft.dart';
 import '../services/voice_crop_assistant_service.dart';
@@ -66,6 +67,9 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
   bool _speechInitialized = false;
   bool _closing = false;
   bool _disposed = false;
+
+  AppLocalizations get _l10n =>
+      AppLocalizations.of(context) ?? lookupAppLocalizations(const Locale('es'));
 
   bool get _isCaptureActive =>
       _phase == _VoicePhase.listening ||
@@ -135,7 +139,7 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
       setState(() {
         _phase = _VoicePhase.error;
         _retryAction = _RetryAction.startListening;
-        _errorMessage = 'No se pudo iniciar el micrófono. Comprueba el permiso o continúa manualmente.';
+        _errorMessage = _l10n.ai_error_mic_start;
       });
     }
   }
@@ -152,7 +156,7 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
       setState(() {
         _phase = _VoicePhase.error;
         _retryAction = _RetryAction.startListening;
-        _errorMessage = 'No se pudo detener el reconocimiento de voz. Vuelve a intentarlo o continúa manualmente.';
+        _errorMessage = _l10n.ai_error_mic_stop;
       });
     }
   }
@@ -163,7 +167,7 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
       setState(() {
         _phase = _VoicePhase.error;
         _retryAction = _RetryAction.startListening;
-        _errorMessage = 'No se reconoció voz. Acércate al micrófono, intenta de nuevo o continúa manualmente.';
+        _errorMessage = _l10n.ai_error_no_speech;
       });
       return;
     }
@@ -193,7 +197,7 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
       setState(() {
         _phase = _VoicePhase.error;
         _retryAction = _RetryAction.startListening;
-        _errorMessage = 'No se reconoció voz. Intenta hablar más cerca del micrófono o continúa manualmente.';
+        _errorMessage = _l10n.ai_error_no_speech_retry;
       });
       return;
     }
@@ -220,7 +224,7 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
       setState(() {
         _phase = _VoicePhase.error;
         _retryAction = _RetryAction.startListening;
-        _errorMessage = 'La transcripción está vacía. Graba de nuevo o escribe lo que deseas publicar.';
+        _errorMessage = _l10n.ai_error_empty_transcript;
       });
       return;
     }
@@ -229,7 +233,7 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
       setState(() {
         _phase = _VoicePhase.error;
         _retryAction = _RetryAction.interpret;
-        _errorMessage = 'La interpretación con IA no está configurada. Falta AI_API_KEY. Puedes continuar manualmente.';
+        _errorMessage = _l10n.ai_error_not_configured;
       });
       return;
     }
@@ -260,7 +264,7 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
       setState(() {
         _phase = _VoicePhase.error;
         _retryAction = _RetryAction.interpret;
-        _errorMessage = 'No se pudo interpretar la transcripción. Intenta de nuevo o continúa manualmente.';
+        _errorMessage = _l10n.ai_error_interpret;
       });
     }
   }
@@ -319,6 +323,7 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = _l10n;
     return Material(
       color: theme.colorScheme.surface,
       child: SafeArea(
@@ -343,21 +348,21 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
                     const Spacer(),
                     IconButton(
                       key: const Key('voice_crop_close_button'),
-                      tooltip: 'Cerrar',
+                      tooltip: l10n.ai_close,
                       onPressed: _closing ? null : () => _close(),
                       icon: const Icon(Icons.close),
                     ),
                   ],
                 ),
                 Text(
-                  'Publicar por voz',
+                  l10n.ai_title,
                   style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Cuéntanos qué quieres vender. Revisarás todo antes de publicar.',
+                  l10n.ai_subtitle,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -374,7 +379,7 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
                 TextButton(
                   key: const Key('voice_crop_cancel_button'),
                   onPressed: _closing ? null : () => _close(),
-                  child: const Text('Cancelar'),
+                  child: Text(l10n.common_cancel),
                 ),
               ],
             ),
@@ -401,19 +406,19 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Puedes mencionar:',
+                  _l10n.ai_examples_title,
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
-                  'Nombre del cultivo, cantidad y unidad (kg, bulto, arroba, canastilla, caja o tonelada), y precio por kg o por unidad.',
+                Text(
+                  _l10n.ai_examples_desc,
                 ),
                 const SizedBox(height: 6),
-                const Text(
-                  'Ejemplo: “Tengo 50 bultos de papa a 2.000 pesos el kilo”.',
-                  style: TextStyle(fontStyle: FontStyle.italic),
+                Text(
+                  _l10n.ai_example_text,
+                  style: const TextStyle(fontStyle: FontStyle.italic),
                 ),
               ],
             ),
@@ -438,10 +443,10 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
             color: theme.colorScheme.onTertiaryContainer,
           ),
           const SizedBox(width: 10),
-          const Expanded(
+          Expanded(
             child: Text(
-              'La interpretación automática no está disponible en este entorno porque falta AI_API_KEY. '
-              'Puedes dictar y revisar la transcripción, o continuar manualmente.',
+              '${_l10n.ai_unavailable_title} '
+              '${_l10n.ai_unavailable_desc}',
             ),
           ),
         ],
@@ -454,27 +459,27 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
       case _VoicePhase.ready:
         return _buildReady(theme);
       case _VoicePhase.preparing:
-        return _buildSpinner('Preparando el micrófono...');
+        return _buildSpinner(_l10n.ai_preparing);
       case _VoicePhase.permissionDenied:
         return _buildAvailabilityError(
           theme,
-          title: 'Permiso de micrófono denegado',
-          message: 'No podemos acceder al micrófono. Habilita el permiso en los ajustes del sistema o continúa manualmente.',
+          title: _l10n.ai_permission_title,
+          message: _l10n.ai_permission_desc,
         );
       case _VoicePhase.unavailable:
         return _buildAvailabilityError(
           theme,
-          title: 'Reconocimiento de voz no disponible',
-          message: 'Este dispositivo no ofrece el servicio de reconocimiento de voz que necesita la aplicación. Puedes publicar manualmente.',
+          title: _l10n.ai_voice_unavailable_title,
+          message: _l10n.ai_voice_unavailable_desc,
         );
       case _VoicePhase.listening:
         return _buildListening(theme);
       case _VoicePhase.transcribing:
-        return _buildSpinner('Transcribiendo lo que dijiste...');
+        return _buildSpinner(_l10n.ai_transcribing);
       case _VoicePhase.reviewingTranscript:
         return _buildTranscriptReview(theme);
       case _VoicePhase.processing:
-        return _buildSpinner('Interpretando los datos con IA...');
+        return _buildSpinner(_l10n.ai_interpreting);
       case _VoicePhase.result:
         return _buildResult(theme);
       case _VoicePhase.error:
@@ -486,22 +491,22 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text(
-          'Pulsa el micrófono y describe tu cosecha con tus propias palabras. No se publicará nada automáticamente.',
+        Text(
+          _l10n.ai_intro,
         ),
         const SizedBox(height: 20),
         FilledButton.icon(
           key: const Key('voice_crop_start_button'),
           onPressed: _startListening,
           icon: const Icon(Icons.mic),
-          label: const Text('Comenzar a hablar'),
+          label: Text(_l10n.ai_start),
         ),
         const SizedBox(height: 8),
         OutlinedButton.icon(
           key: const Key('voice_crop_manual_button'),
           onPressed: _continueManually,
           icon: const Icon(Icons.edit_document),
-          label: const Text('Prefiero llenar el formulario manualmente'),
+          label: Text(_l10n.ai_manual),
         ),
       ],
     );
@@ -544,13 +549,13 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
           key: const Key('voice_crop_retry_microphone_button'),
           onPressed: _startListening,
           icon: const Icon(Icons.refresh),
-          label: const Text('Reintentar micrófono'),
+          label: Text(_l10n.ai_retry_mic),
         ),
         const SizedBox(height: 8),
         TextButton(
           key: const Key('voice_crop_manual_button'),
           onPressed: _continueManually,
-          child: const Text('Continuar manualmente'),
+          child: Text(_l10n.ai_continue_manual),
         ),
       ],
     );
@@ -573,7 +578,7 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
         ),
         const SizedBox(height: 12),
         Text(
-          'Escuchando...',
+          _l10n.ai_listening,
           textAlign: TextAlign.center,
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
@@ -589,7 +594,7 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
           ),
           child: Text(
             _partialTranscript.isEmpty
-                ? 'Habla ahora. Puedes detenerte cuando termines.'
+                ? _l10n.ai_listening_hint
                 : _partialTranscript,
             key: const Key('voice_crop_partial_transcript'),
             style: theme.textTheme.bodyLarge,
@@ -600,7 +605,7 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
           key: const Key('voice_crop_stop_button'),
           onPressed: _stopListening,
           icon: const Icon(Icons.stop),
-          label: const Text('Detener y revisar'),
+          label: Text(_l10n.ai_stop_review),
         ),
       ],
     );
@@ -611,14 +616,14 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Revisa la transcripción',
+          _l10n.ai_review_transcript_title,
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: 6),
-        const Text(
-          'Si el micrófono entendió mal alguna palabra, corrígela antes de interpretar los datos.',
+        Text(
+          _l10n.ai_review_transcript_desc,
         ),
         const SizedBox(height: 12),
         TextField(
@@ -626,9 +631,9 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
           controller: _transcriptController,
           maxLines: 5,
           textCapitalization: TextCapitalization.sentences,
-          decoration: const InputDecoration(
-            labelText: 'Transcripción',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: _l10n.ai_transcript_label,
+            border: const OutlineInputBorder(),
           ),
         ),
         const SizedBox(height: 16),
@@ -636,20 +641,20 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
           key: const Key('voice_crop_interpret_button'),
           onPressed: _interpretTranscript,
           icon: const Icon(Icons.auto_awesome),
-          label: const Text('Interpretar con IA'),
+          label: Text(_l10n.ai_interpret),
         ),
         const SizedBox(height: 8),
         OutlinedButton.icon(
           key: const Key('voice_crop_record_again_button'),
           onPressed: _startListening,
           icon: const Icon(Icons.mic),
-          label: const Text('Grabar de nuevo'),
+          label: Text(_l10n.ai_record_again),
         ),
         const SizedBox(height: 8),
         TextButton(
           key: const Key('voice_crop_manual_button'),
           onPressed: _continueManually,
-          child: const Text('Continuar manualmente'),
+          child: Text(_l10n.ai_continue_manual),
         ),
       ],
     );
@@ -665,14 +670,14 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Datos reconocidos',
+          _l10n.ai_recognized_title,
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: 6),
-        const Text(
-          'Estos datos se precargarán en el formulario. Todavía puedes corregirlos y debes completar lo que falte.',
+        Text(
+          _l10n.ai_recognized_desc,
         ),
         const SizedBox(height: 12),
         _buildDraftSummary(theme, draft),
@@ -684,8 +689,8 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
               color: theme.colorScheme.errorContainer,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Text(
-              'No se identificaron datos utilizables. Puedes reintentar la interpretación, grabar de nuevo o continuar manualmente.',
+            child: Text(
+              _l10n.ai_no_data_desc,
             ),
           ),
         ],
@@ -693,7 +698,7 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
           const SizedBox(height: 14),
           _buildListSection(
             theme,
-            title: 'Advertencias',
+            title: _l10n.ai_warnings,
             items: draft.warnings,
             color: theme.colorScheme.tertiary,
           ),
@@ -702,7 +707,7 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
           const SizedBox(height: 14),
           _buildFieldSection(
             theme,
-            title: 'Confirma estos datos',
+            title: _l10n.ai_confirm_data,
             fields: draft.reviewFields,
             color: theme.colorScheme.tertiary,
           ),
@@ -711,7 +716,7 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
           const SizedBox(height: 14),
           _buildFieldSection(
             theme,
-            title: 'Faltan datos por completar',
+            title: _l10n.ai_missing_data,
             fields: draft.missingFields,
             color: theme.colorScheme.error,
           ),
@@ -721,25 +726,25 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
           key: const Key('voice_crop_continue_button'),
           onPressed: draft.hasAnyUsableData ? _continueWithDraft : null,
           icon: const Icon(Icons.arrow_forward),
-          label: const Text('Revisar y continuar'),
+          label: Text(_l10n.ai_review_continue),
         ),
         const SizedBox(height: 8),
         OutlinedButton.icon(
           key: const Key('voice_crop_retry_button'),
           onPressed: _interpretTranscript,
           icon: const Icon(Icons.refresh),
-          label: const Text('Reintentar interpretación'),
+          label: Text(_l10n.ai_retry_interpret),
         ),
         const SizedBox(height: 8),
         TextButton(
           key: const Key('voice_crop_record_again_button'),
           onPressed: _startListening,
-          child: const Text('Grabar de nuevo'),
+          child: Text(_l10n.ai_record_again),
         ),
         TextButton(
           key: const Key('voice_crop_manual_button'),
           onPressed: _continueManually,
-          child: const Text('Continuar manualmente'),
+          child: Text(_l10n.ai_continue_manual),
         ),
       ],
     );
@@ -755,19 +760,19 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (draft.cropType != null) _summaryRow('Cultivo', draft.cropType!),
+          if (draft.cropType != null) _summaryRow(_l10n.ai_crop, draft.cropType!),
           if (draft.quantityDescription != null)
-            _summaryRow('Cantidad', draft.quantityDescription!),
+            _summaryRow(_l10n.ai_quantity, draft.quantityDescription!),
           if (draft.pricePerKg != null)
             _summaryRow(
-              'Precio',
+              _l10n.ai_price,
               CurrencyFormatters.formatPricePerKg(draft.pricePerKg),
             ),
-          if (draft.notes != null) _summaryRow('Nota', draft.notes!),
+          if (draft.notes != null) _summaryRow(_l10n.ai_note, draft.notes!),
           if (draft.cropType == null &&
               draft.quantityDescription == null &&
               draft.pricePerKg == null)
-            const Text('Sin datos identificados.'),
+            Text(_l10n.ai_no_data),
         ],
       ),
     );
@@ -867,7 +872,7 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
         Icon(Icons.error_outline, size: 44, color: theme.colorScheme.error),
         const SizedBox(height: 8),
         Text(
-          'No se pudo completar',
+          _l10n.ai_failed_title,
           textAlign: TextAlign.center,
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
@@ -875,8 +880,7 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
         ),
         const SizedBox(height: 8),
         Text(
-          _errorMessage ??
-              'Ocurrió un problema. Intenta de nuevo o continúa manualmente.',
+          _errorMessage ?? _l10n.ai_failed_desc,
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 16),
@@ -884,20 +888,20 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
           key: const Key('voice_crop_retry_button'),
           onPressed: _retry,
           icon: const Icon(Icons.refresh),
-          label: const Text('Reintentar'),
+          label: Text(_l10n.common_retry),
         ),
         const SizedBox(height: 8),
         OutlinedButton.icon(
           key: const Key('voice_crop_record_again_button'),
           onPressed: _resetToReady,
           icon: const Icon(Icons.mic),
-          label: const Text('Grabar de nuevo'),
+          label: Text(_l10n.ai_record_again),
         ),
         const SizedBox(height: 8),
         TextButton(
           key: const Key('voice_crop_manual_button'),
           onPressed: _continueManually,
-          child: const Text('Continuar manualmente'),
+          child: Text(_l10n.ai_continue_manual),
         ),
       ],
     );

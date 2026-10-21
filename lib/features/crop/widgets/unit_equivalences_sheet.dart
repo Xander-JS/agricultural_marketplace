@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/utils/app_formatters.dart';
 
 /// Modal informativo de equivalencias aproximadas de unidades agrícolas.
@@ -55,27 +56,30 @@ class _UnitEquivalencesSheetState extends State<UnitEquivalencesSheet> {
     });
   }
 
-  String _formatEquivalence(double qtyKg, TraditionalUnit unit) {
+  String _formatEquivalence(
+    AppLocalizations l10n,
+    double qtyKg,
+    TraditionalUnit unit,
+  ) {
     if (qtyKg <= 0 || unit.kgEquivalent <= 0) {
-      return '0 ${unit.pluralName}';
+      return l10n.units_empty(unit.pluralName);
     }
     final converted = qtyKg / unit.kgEquivalent;
     final formatted = UnitFormatters.formatCleanValue(converted, maxDecimals: 1);
     final label = (converted == 1.0) ? unit.displayName : unit.pluralName;
-    return '≈ $formatted $label';
+    return l10n.units_approx(formatted, label);
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final l10n = AppLocalizations.of(context)!;
 
     final initialKgFormatted = UnitFormatters.formatKg(widget.referenceKg);
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        color: context.appSurface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: EdgeInsets.only(
@@ -96,7 +100,7 @@ class _UnitEquivalencesSheetState extends State<UnitEquivalencesSheet> {
                   width: 44,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                    color: context.appBorder,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -109,13 +113,12 @@ class _UnitEquivalencesSheetState extends State<UnitEquivalencesSheet> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: (isDark ? AppColors.darkTertiary : AppColors.lightTertiary)
-                          .withValues(alpha: 0.15),
+                      color: context.appPrimary.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(
                       Icons.balance_outlined,
-                      color: isDark ? AppColors.darkTertiary : AppColors.lightTertiary,
+                      color: context.appPrimary,
                       size: 24,
                     ),
                   ),
@@ -125,10 +128,10 @@ class _UnitEquivalencesSheetState extends State<UnitEquivalencesSheet> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          isEn ? 'Unit Equivalences' : 'Equivalencias de Unidades',
+                          l10n.units_title,
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                            color: context.appTextPrimary,
                           ),
                         ),
                         if (widget.cropTitle.isNotEmpty)
@@ -137,9 +140,7 @@ class _UnitEquivalencesSheetState extends State<UnitEquivalencesSheet> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: isDark
-                                  ? AppColors.darkTextSecondary
-                                  : AppColors.lightTextSecondary,
+                              color: context.appTextSecondary,
                             ),
                           ),
                       ],
@@ -147,7 +148,7 @@ class _UnitEquivalencesSheetState extends State<UnitEquivalencesSheet> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.close),
-                    tooltip: isEn ? 'Close' : 'Cerrar',
+                    tooltip: l10n.common_close,
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
@@ -158,11 +159,9 @@ class _UnitEquivalencesSheetState extends State<UnitEquivalencesSheet> {
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightBackground,
+                  color: context.appSurfaceVariant,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-                  ),
+                  border: Border.all(color: context.appBorder),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -171,12 +170,10 @@ class _UnitEquivalencesSheetState extends State<UnitEquivalencesSheet> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          isEn ? 'Reference quantity (available)' : 'Cantidad de referencia (disponible)',
+                          l10n.units_reference_quantity,
                           style: TextStyle(
                             fontSize: 12,
-                            color: isDark
-                                ? AppColors.darkTextSecondary
-                                : AppColors.lightTextSecondary,
+                            color: context.appTextSecondary,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -185,14 +182,14 @@ class _UnitEquivalencesSheetState extends State<UnitEquivalencesSheet> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                            color: context.appTextPrimary,
                           ),
                         ),
                       ],
                     ),
                     Icon(
                       Icons.inventory_2_outlined,
-                      color: isDark ? AppColors.darkTertiary : AppColors.lightTertiary,
+                      color: context.appPrimary,
                     ),
                   ],
                 ),
@@ -206,8 +203,8 @@ class _UnitEquivalencesSheetState extends State<UnitEquivalencesSheet> {
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 onChanged: _onInputChanged,
                 decoration: InputDecoration(
-                  labelText: isEn ? 'Calculate quantity (kg)' : 'Consultar otra cantidad (kg)',
-                  hintText: 'Ej. 500',
+                  labelText: l10n.units_calculate_quantity,
+                  hintText: l10n.units_input_hint,
                   suffixText: 'kg',
                   prefixIcon: const Icon(Icons.calculate_outlined),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -218,29 +215,30 @@ class _UnitEquivalencesSheetState extends State<UnitEquivalencesSheet> {
 
               // Lista de unidades tradicionales
               Text(
-                isEn ? 'Approximate traditional equivalents' : 'Equivalencias tradicionales aproximadas',
+                l10n.units_approximate_equivalents,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                  color: context.appTextSecondary,
                 ),
               ),
               const SizedBox(height: 8),
 
               ...TraditionalUnit.values.map((unit) {
-                final equivalenceText = _formatEquivalence(_currentKg, unit);
-                final rateText = '1 ${unit.displayName} = ${UnitFormatters.formatKg(unit.kgEquivalent)}';
+                final equivalenceText = _formatEquivalence(l10n, _currentKg, unit);
+                final rateText = l10n.units_equivalence_rate(
+                  unit.displayName,
+                  UnitFormatters.formatKg(unit.kgEquivalent),
+                );
 
                 return Container(
                   key: Key('unit_equivalence_${unit.name}'),
                   margin: const EdgeInsets.only(bottom: 8),
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightBackground,
+                    color: context.appSurfaceVariant,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-                    ),
+                    border: Border.all(color: context.appBorder),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -253,16 +251,14 @@ class _UnitEquivalencesSheetState extends State<UnitEquivalencesSheet> {
                             style: TextStyle(
                               fontWeight: FontWeight.w600,
                               fontSize: 14,
-                              color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                              color: context.appTextPrimary,
                             ),
                           ),
                           Text(
                             rateText,
                             style: TextStyle(
                               fontSize: 11,
-                              color: isDark
-                                  ? AppColors.darkTextDisabled
-                                  : AppColors.lightTextSecondary,
+                              color: context.appTextSecondary,
                             ),
                           ),
                         ],
@@ -272,7 +268,7 @@ class _UnitEquivalencesSheetState extends State<UnitEquivalencesSheet> {
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? AppColors.darkTertiary : AppColors.lightTertiary,
+                          color: context.appPrimary,
                         ),
                       ),
                     ],
@@ -285,8 +281,7 @@ class _UnitEquivalencesSheetState extends State<UnitEquivalencesSheet> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: (isDark ? AppColors.darkTertiary : AppColors.lightTertiary)
-                      .withValues(alpha: 0.12),
+                  color: context.appPrimary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(
@@ -295,19 +290,15 @@ class _UnitEquivalencesSheetState extends State<UnitEquivalencesSheet> {
                     Icon(
                       Icons.info_outline,
                       size: 18,
-                      color: isDark ? AppColors.darkTertiary : AppColors.lightTertiary,
+                      color: context.appPrimary,
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        isEn
-                            ? 'Approximate conversions for informational purposes only. They do not modify inventory, prices, or orders.'
-                            : 'Conversiones aproximadas de carácter exclusivamente informativo. No modifican el inventario, los precios ni los pedidos.',
+                        l10n.units_disclaimer,
                         style: TextStyle(
                           fontSize: 11,
-                          color: isDark
-                              ? AppColors.darkTextSecondary
-                              : AppColors.lightTextSecondary,
+                          color: context.appTextSecondary,
                         ),
                       ),
                     ),
@@ -322,7 +313,7 @@ class _UnitEquivalencesSheetState extends State<UnitEquivalencesSheet> {
                 child: FilledButton(
                   key: const Key('crop_detail_equivalences_close_button'),
                   onPressed: () => Navigator.of(context).pop(),
-                  child: Text(isEn ? 'Close' : 'Entendido'),
+                  child: Text(l10n.units_close),
                 ),
               ),
             ],

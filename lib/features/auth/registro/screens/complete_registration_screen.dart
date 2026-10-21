@@ -201,16 +201,11 @@ class _CompleteRegistrationScreenState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textSecondary = isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
+    final textSecondary = context.appTextSecondary;
 
     return Scaffold(
       key: const ValueKey('complete_registration_screen'),
-      backgroundColor: isDark
-          ? AppColors.darkBackground
-          : AppColors.lightBackground,
+      backgroundColor: context.appBackground,
       appBar: CustomAppBar(title: l10n.complete_registration_title),
       body: SafeArea(
         child: Form(
@@ -267,9 +262,7 @@ class _CompleteRegistrationScreenState
                       Text(
                         l10n.complete_registration_role,
                         style: AppTextStyles.labelMedium.copyWith(
-                          color: isDark
-                              ? AppColors.darkTextPrimary
-                              : AppColors.lightTextPrimary,
+                          color: context.appTextPrimary,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -307,9 +300,7 @@ class _CompleteRegistrationScreenState
                       Text(
                         l10n.complete_registration_documents,
                         style: AppTextStyles.labelMedium.copyWith(
-                          color: isDark
-                              ? AppColors.darkTextPrimary
-                              : AppColors.lightTextPrimary,
+                          color: context.appTextPrimary,
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -375,18 +366,18 @@ class _CompleteRegistrationScreenState
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: AppColors.errorLight,
+                            color: context.appErrorContainer,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: AppColors.error.withValues(alpha: 0.5),
+                              color: context.appError.withValues(alpha: 0.5),
                             ),
                           ),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Icon(
+                              Icon(
                                 Icons.error_outline,
-                                color: AppColors.error,
+                                color: context.appError,
                                 size: 20,
                               ),
                               const SizedBox(width: 8),
@@ -394,7 +385,7 @@ class _CompleteRegistrationScreenState
                                 child: Text(
                                   _errorMessage!,
                                   style: AppTextStyles.bodySmall.copyWith(
-                                    color: AppColors.error,
+                                    color: context.appError,
                                   ),
                                 ),
                               ),

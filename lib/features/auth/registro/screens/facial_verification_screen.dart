@@ -54,7 +54,7 @@ class _FacialVerificationScreenState extends State<FacialVerificationScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: AppColors.lightSurface,
+      backgroundColor: context.appSurface,
       appBar: CustomAppBar(title: l10n.facial_verification_header_title),
       body: SafeArea(
         child: Column(
@@ -72,7 +72,7 @@ class _FacialVerificationScreenState extends State<FacialVerificationScreen> {
                   Text(
                     l10n.facial_verification_description,
                     style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.lightTextSecondary,
+                      color: context.appTextSecondary,
                     ),
                   ),
                 ],
@@ -91,7 +91,7 @@ class _FacialVerificationScreenState extends State<FacialVerificationScreen> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: AppColors.lightTextSecondary,
+                          color: context.appTextSecondary,
                           width: 4,
                         ),
                       ),

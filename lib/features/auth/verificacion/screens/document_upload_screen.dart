@@ -129,12 +129,9 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark
-          ? AppColors.darkBackground
-          : AppColors.lightBackground,
+      backgroundColor: context.appBackground,
       appBar: CustomAppBar(title: l10n.document_upload_title),
       body: SafeArea(
         child: _isSuccess
@@ -150,9 +147,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
                           Text(
                             l10n.document_upload_description,
                             style: AppTextStyles.bodyMedium.copyWith(
-                              color: isDark
-                                  ? AppColors.darkTextSecondary
-                                  : AppColors.lightTextSecondary,
+                              color: context.appTextSecondary,
                             ),
                           ),
                           const SizedBox(height: 16),
@@ -217,9 +212,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
                               l10n.document_upload_in_progress,
                               textAlign: TextAlign.center,
                               style: AppTextStyles.bodySmall.copyWith(
-                                color: isDark
-                                    ? AppColors.darkTextSecondary
-                                    : AppColors.lightTextSecondary,
+                                color: context.appTextSecondary,
                               ),
                             ),
                           ],
@@ -228,18 +221,18 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: AppColors.errorLight,
+                                color: context.appErrorContainer,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: AppColors.error.withValues(alpha: 0.5),
+                                  color: context.appError.withValues(alpha: 0.5),
                                 ),
                               ),
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Icon(
+                                  Icon(
                                     Icons.error_outline,
-                                    color: AppColors.error,
+                                    color: context.appError,
                                     size: 20,
                                   ),
                                   const SizedBox(width: 8),
@@ -247,7 +240,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
                                     child: Text(
                                       _errorMessage!,
                                       style: AppTextStyles.bodySmall.copyWith(
-                                        color: AppColors.error,
+                                        color: context.appError,
                                       ),
                                     ),
                                   ),
@@ -281,9 +274,9 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               Icons.check_circle_outline,
-              color: AppColors.success,
+              color: context.appSuccess,
               size: 80,
             ),
             const SizedBox(height: 20),
@@ -299,9 +292,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
               l10n.document_upload_success_desc,
               textAlign: TextAlign.center,
               style: AppTextStyles.bodyMedium.copyWith(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? AppColors.darkTextSecondary
-                    : AppColors.lightTextSecondary,
+                color: context.appTextSecondary,
               ),
             ),
             const SizedBox(height: 28),

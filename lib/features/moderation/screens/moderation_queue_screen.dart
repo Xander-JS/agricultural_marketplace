@@ -105,20 +105,20 @@ class _ModerationQueueScreenState extends State<ModerationQueueScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n?.moderation_queue_title ?? 'Cola de Moderación'),
+        title: Text(l10n.moderation_queue_title),
         actions: [
           IconButton(
-            tooltip: l10n?.verification_status_update_status ?? 'Actualizar',
+            tooltip: l10n.moderation_queue_refresh,
             icon: const Icon(Icons.refresh),
             onPressed: _isLoading ? null : () => _loadRequests(),
           ),
           if (widget.onSignOut != null)
             IconButton(
-              tooltip: l10n?.profile_logout ?? 'Cerrar sesión',
+              tooltip: l10n.profile_logout,
               icon: const Icon(Icons.logout),
               onPressed: widget.onSignOut,
             ),
@@ -129,7 +129,7 @@ class _ModerationQueueScreenState extends State<ModerationQueueScreen> {
   }
 
   Widget _buildBody(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     // 1. Caso de rol no autorizado
     if (!_isAuthorized) {
@@ -139,25 +139,24 @@ class _ModerationQueueScreenState extends State<ModerationQueueScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.gpp_bad_outlined, size: 72, color: AppColors.error),
+              Icon(Icons.gpp_bad_outlined, size: 72, color: context.appError),
               const SizedBox(height: 16),
               Text(
-                l10n?.moderation_unauthorized_title ?? 'Acceso No Autorizado',
+                l10n.moderation_unauthorized_title,
                 style: AppTextStyles.headlineMedium.copyWith(fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
               Text(
-                l10n?.moderation_unauthorized_desc ??
-                    'Tu cuenta no posee privilegios de moderación para acceder a esta consola.',
+                l10n.moderation_unauthorized_desc,
                 textAlign: TextAlign.center,
-                style: AppTextStyles.bodyMedium.copyWith(color: Colors.grey),
+                style: AppTextStyles.bodyMedium.copyWith(color: context.appTextSecondary),
               ),
               const SizedBox(height: 24),
               if (widget.onSignOut != null)
                 ElevatedButton(
                   onPressed: widget.onSignOut,
-                  child: Text(l10n?.profile_logout ?? 'Cerrar sesión'),
+                  child: Text(l10n.profile_logout),
                 ),
             ],
           ),
@@ -178,23 +177,23 @@ class _ModerationQueueScreenState extends State<ModerationQueueScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 64, color: AppColors.error),
+              Icon(Icons.error_outline, size: 64, color: context.appError),
               const SizedBox(height: 16),
               Text(
-                l10n?.verification_status_error_title ?? 'Error al cargar solicitudes',
-                style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold),
+                l10n.verification_status_error_title,
+                style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold, color: context.appTextPrimary),
               ),
               const SizedBox(height: 8),
               Text(
                 _errorMessage!,
                 textAlign: TextAlign.center,
-                style: AppTextStyles.bodySmall.copyWith(color: Colors.grey),
+                style: AppTextStyles.bodySmall.copyWith(color: context.appTextSecondary),
               ),
               const SizedBox(height: 24),
               ElevatedButton.icon(
                 onPressed: _checkAuthorizationAndLoad,
                 icon: const Icon(Icons.refresh),
-                label: Text(l10n?.verification_status_retry ?? 'Reintentar'),
+                label: Text(l10n.common_retry),
               ),
             ],
           ),
@@ -221,18 +220,17 @@ class _ModerationQueueScreenState extends State<ModerationQueueScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.inbox_outlined, size: 72, color: Colors.grey),
+                            Icon(Icons.inbox_outlined, size: 72, color: context.appTextDisabled),
                             const SizedBox(height: 16),
                             Text(
-                              l10n?.moderation_queue_empty_title ?? 'No hay solicitudes pendientes',
-                              style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold),
+                              l10n.moderation_queue_empty_title,
+                              style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold, color: context.appTextPrimary),
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              l10n?.moderation_queue_empty_desc ??
-                                  'Todas las solicitudes de verificación han sido resueltas o no hay envíos pendientes.',
+                              l10n.moderation_queue_empty_desc,
                               textAlign: TextAlign.center,
-                              style: AppTextStyles.bodyMedium.copyWith(color: Colors.grey),
+                              style: AppTextStyles.bodyMedium.copyWith(color: context.appTextSecondary),
                             ),
                           ],
                         ),
@@ -268,11 +266,13 @@ class _ModerationQueueScreenState extends State<ModerationQueueScreen> {
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     leading: CircleAvatar(
                       backgroundColor: req.userRole == UserRole.comprador
-                          ? Colors.blue.withValues(alpha: 0.2)
-                          : Colors.green.withValues(alpha: 0.2),
+                          ? context.appInfoContainer
+                          : context.appSuccessContainer,
                       child: Icon(
                         req.userRole == UserRole.comprador ? Icons.shopping_bag_outlined : Icons.spa_outlined,
-                        color: req.userRole == UserRole.comprador ? Colors.blue[800] : Colors.green[800],
+                        color: req.userRole == UserRole.comprador
+                            ? context.appInfo
+                            : context.appSuccess,
                       ),
                     ),
                     title: Row(
@@ -295,7 +295,7 @@ class _ModerationQueueScreenState extends State<ModerationQueueScreen> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                color: Colors.grey.withValues(alpha: 0.15),
+                                color: context.appSurfaceVariant,
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
@@ -304,13 +304,13 @@ class _ModerationQueueScreenState extends State<ModerationQueueScreen> {
                               ),
                             ),
                             const SizedBox(width: 8),
-                            Text(req.phone, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                            Text(req.phone, style: TextStyle(fontSize: 12, color: context.appTextSecondary)),
                           ],
                         ),
                         const SizedBox(height: 4),
                         Text(
                           req.createdAt.toLocal().toString().split('.')[0],
-                          style: const TextStyle(fontSize: 11, color: Colors.grey),
+                          style: TextStyle(fontSize: 11, color: context.appTextDisabled),
                         ),
                       ],
                     ),
@@ -339,7 +339,7 @@ class _ModerationQueueScreenState extends State<ModerationQueueScreen> {
     );
   }
 
-  Widget _buildFilterBar(BuildContext context, AppLocalizations? l10n) {
+  Widget _buildFilterBar(BuildContext context, AppLocalizations l10n) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: SingleChildScrollView(
@@ -348,7 +348,7 @@ class _ModerationQueueScreenState extends State<ModerationQueueScreen> {
           children: [
             FilterChip(
               key: const ValueKey('moderation_filter_all'),
-              label: Text(l10n?.moderation_filter_all ?? 'Todos'),
+              label: Text(l10n.moderation_filter_all),
               selected: _statusFilter == null,
               onSelected: (selected) {
                 if (selected && _statusFilter != null) {
@@ -360,7 +360,7 @@ class _ModerationQueueScreenState extends State<ModerationQueueScreen> {
             const SizedBox(width: 8),
             FilterChip(
               key: const ValueKey('moderation_filter_pending'),
-              label: Text(l10n?.moderation_filter_pending ?? 'Pendientes'),
+              label: Text(l10n.moderation_filter_pending),
               selected: _statusFilter == 'pendiente',
               onSelected: (selected) {
                 final newFilter = selected ? 'pendiente' : null;
@@ -371,7 +371,7 @@ class _ModerationQueueScreenState extends State<ModerationQueueScreen> {
             const SizedBox(width: 8),
             FilterChip(
               key: const ValueKey('moderation_filter_in_review'),
-              label: Text(l10n?.moderation_filter_in_review ?? 'En revisión'),
+              label: Text(l10n.moderation_filter_in_review),
               selected: _statusFilter == 'en_revision_ia',
               onSelected: (selected) {
                 final newFilter = selected ? 'en_revision_ia' : null;
@@ -390,28 +390,28 @@ class _ModerationQueueScreenState extends State<ModerationQueueScreen> {
     Color fg;
     switch (status) {
       case UserVerificationStatus.pendiente:
-        bg = Colors.orange.withValues(alpha: 0.2);
-        fg = Colors.orange[800]!;
+        bg = context.appWarningContainer;
+        fg = context.appWarning;
         break;
       case UserVerificationStatus.enRevisionIa:
-        bg = Colors.blue.withValues(alpha: 0.2);
-        fg = Colors.blue[800]!;
+        bg = context.appInfoContainer;
+        fg = context.appInfo;
         break;
       case UserVerificationStatus.aprobado:
-        bg = Colors.green.withValues(alpha: 0.2);
-        fg = Colors.green[800]!;
+        bg = context.appSuccessContainer;
+        fg = context.appSuccess;
         break;
       case UserVerificationStatus.rechazado:
-        bg = Colors.red.withValues(alpha: 0.2);
-        fg = Colors.red[800]!;
+        bg = context.appErrorContainer;
+        fg = context.appError;
         break;
       case UserVerificationStatus.suspendido:
-        bg = Colors.purple.withValues(alpha: 0.2);
-        fg = Colors.purple[800]!;
+        bg = context.appPrimaryContainer;
+        fg = context.appOnPrimaryContainer;
         break;
       case UserVerificationStatus.desconocido:
-        bg = Colors.grey.withValues(alpha: 0.2);
-        fg = Colors.grey[800]!;
+        bg = context.appSurfaceVariant;
+        fg = context.appTextSecondary;
         break;
     }
 

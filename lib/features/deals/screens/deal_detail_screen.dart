@@ -197,21 +197,18 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: isDark
-          ? AppColors.darkBackground
-          : AppColors.lightBackground,
+      backgroundColor: context.appBackground,
       appBar: AppBar(
-        title: Text(l10n?.deal_detail_title ?? 'Detalle del trato'),
+        title: Text(l10n.deal_detail_title),
       ),
-      body: _buildBody(isDark, l10n),
+      body: _buildBody(l10n),
     );
   }
 
-  Widget _buildBody(bool isDark, AppLocalizations? l10n) {
+  Widget _buildBody(AppLocalizations l10n) {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -223,29 +220,23 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 48, color: AppColors.error),
+              Icon(Icons.error_outline, size: 48, color: context.appError),
               const SizedBox(height: 16),
               Text(
-                'Ocurrió un error: $_errorMessage',
+                l10n.deals_error_prefix(_errorMessage!),
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: isDark
-                      ? AppColors.darkTextPrimary
-                      : AppColors.lightTextPrimary,
+                  color: context.appTextPrimary,
                 ),
               ),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () => _loadData(reload: true),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: isDark
-                      ? AppColors.darkTertiary
-                      : AppColors.lightTertiary,
-                  foregroundColor: isDark
-                      ? AppColors.darkBackground
-                      : Colors.white,
+                  backgroundColor: context.appPrimary,
+                  foregroundColor: context.appOnPrimary,
                 ),
-                child: Text(l10n?.market_retry ?? 'Reintentar'),
+                child: Text(l10n.common_retry),
               ),
             ],
           ),
@@ -259,25 +250,19 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'No se encontró el trato.',
+              l10n.deal_detail_not_found,
               style: TextStyle(
-                color: isDark
-                    ? AppColors.darkTextSecondary
-                    : AppColors.lightTextSecondary,
+                color: context.appTextSecondary,
               ),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () => _loadData(reload: true),
               style: ElevatedButton.styleFrom(
-                backgroundColor: isDark
-                    ? AppColors.darkTertiary
-                    : AppColors.lightTertiary,
-                foregroundColor: isDark
-                    ? AppColors.darkBackground
-                    : Colors.white,
+                backgroundColor: context.appPrimary,
+                foregroundColor: context.appOnPrimary,
               ),
-              child: Text(l10n?.market_retry ?? 'Reintentar'),
+              child: Text(l10n.common_retry),
             ),
           ],
         ),
@@ -293,13 +278,13 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
     final latestOffer = offers.isNotEmpty ? offers.last : null;
 
     final counterpartLabel = _isBuyer
-        ? (l10n?.deal_counterpart_farmer ?? 'Productor')
-        : (l10n?.deal_counterpart_buyer ?? 'Comprador');
+        ? l10n.deal_counterpart_farmer
+        : l10n.deal_counterpart_buyer;
 
     final counterpartName = _isBuyer
         ? (n.farmerProfile?['full_name'] ??
-              'Productor (${n.crop?.municipality ?? ""})')
-        : (n.buyerProfile?['full_name'] ?? 'Comprador');
+              l10n.deals_producer_with_location(n.crop?.municipality ?? ''))
+        : (n.buyerProfile?['full_name'] ?? l10n.deals_buyer);
 
     return RefreshIndicator(
       onRefresh: () => _loadData(reload: true),
@@ -310,22 +295,18 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              n.crop?.title ?? 'Cosecha desconocida',
+              n.crop?.title ?? l10n.deals_unknown_crop,
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: isDark
-                    ? AppColors.darkTextPrimary
-                    : AppColors.lightTextPrimary,
+                color: context.appTextPrimary,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               counterpartLabel,
               style: TextStyle(
-                color: isDark
-                    ? AppColors.darkTextDisabled
-                    : AppColors.lightTextSecondary,
+                color: context.appTextSecondary,
                 fontSize: 13,
               ),
             ),
@@ -334,45 +315,39 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: isDark
-                    ? AppColors.darkTextPrimary
-                    : AppColors.lightTextPrimary,
+                color: context.appTextPrimary,
               ),
             ),
 
             Divider(
               height: 32,
-              color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+              color: context.appDivider,
             ),
 
             if (latestOffer != null) ...[
               _buildInfoRow(
-                'Cantidad',
+                l10n.deal_detail_quantity,
                 UnitFormatters.formatKg(latestOffer.quantityKg),
-                isDark,
-              ),
+                ),
               const SizedBox(height: 10),
               _buildInfoRow(
-                'Precio por kg',
+                l10n.deal_detail_price_per_kg,
                 CurrencyFormatters.formatCop(latestOffer.proposedPricePerKg),
-                isDark,
-              ),
+                ),
               const SizedBox(height: 10),
               _buildInfoRow(
-                'Método de entrega',
+                l10n.deal_detail_delivery_method,
                 latestOffer.deliveryMethod,
-                isDark,
-              ),
+                ),
               Divider(
                 height: 32,
-                color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+                color: context.appDivider,
               ),
             ],
 
             _buildInfoRow(
-              'Estado',
+              l10n.deal_detail_status,
               n.status.toDisplayName(),
-              isDark,
               isStatus: true,
               status: n.status,
             ),
@@ -381,38 +356,36 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
             if (n.status == NegotiationStatus.acordada ||
                 n.status == NegotiationStatus.completada) ...[
               const SizedBox(height: 20),
-              _buildContactAndConsentSection(n, isDark, l10n),
+              _buildContactAndConsentSection(n, l10n),
             ],
 
             Divider(
               height: 32,
-              color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+              color: context.appDivider,
             ),
 
             Text(
-              l10n?.deal_history_title ?? 'Historial de ofertas',
+              l10n.deal_history_title,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: isDark
-                    ? AppColors.darkTextPrimary
-                    : AppColors.lightTextPrimary,
+                color: context.appTextPrimary,
               ),
             ),
             const SizedBox(height: 16),
-            ...offers.map((offer) => _buildOfferBubble(offer, n, isDark, l10n)),
+            ...offers.map((offer) => _buildOfferBubble(offer, n, l10n)),
 
             const SizedBox(height: 24),
 
-            _buildActionButtons(n, latestOffer, isDark, l10n),
+            _buildActionButtons(n, latestOffer, l10n),
 
             if (n.status == NegotiationStatus.completada) ...[
               const SizedBox(height: 16),
               Divider(
-                color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+                color: context.appDivider,
               ),
               const SizedBox(height: 16),
-              _buildRatingSection(n, isDark, l10n),
+              _buildRatingSection(n, l10n),
             ],
             const SizedBox(height: 32),
           ],
@@ -426,27 +399,22 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
   /// usuario autenticado.
   Widget _buildRatingSection(
     NegotiationModel n,
-    bool isDark,
-    AppLocalizations? l10n,
+    AppLocalizations l10n,
   ) {
     final rateLabel = _isBuyer
-        ? (l10n?.deal_detail_rate_farmer ?? 'Calificar productor')
-        : (l10n?.deal_detail_rate_buyer ?? 'Calificar comprador');
-    final textPrimary = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
-    final textSecondary = isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
+        ? l10n.deal_detail_rate_farmer
+        : l10n.deal_detail_rate_buyer;
+    final textPrimary = context.appTextPrimary;
+    final textSecondary = context.appTextSecondary;
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        color: context.appSurface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+          color: context.appBorder,
         ),
       ),
       child: Column(
@@ -458,13 +426,13 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                 _hasReviewed == true
                     ? Icons.star_rounded
                     : Icons.star_outline_rounded,
-                color: AppColors.warning,
+                color: context.appWarning,
                 size: 22,
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  l10n?.deal_detail_rate_title ?? 'Calificar trato',
+                  l10n.deal_detail_rate_title,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -485,8 +453,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                 ),
                 const SizedBox(width: 10),
                 Text(
-                  l10n?.deal_detail_rate_loading ??
-                      'Verificando calificación...',
+                  l10n.deal_detail_rate_loading,
                   style: TextStyle(fontSize: 13, color: textSecondary),
                 ),
               ],
@@ -494,9 +461,9 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
           else if (_hasReviewed == true)
             Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.verified_rounded,
-                  color: AppColors.success,
+                  color: context.appSuccess,
                   size: 20,
                 ),
                 const SizedBox(width: 8),
@@ -505,16 +472,15 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        l10n?.deal_detail_rated ?? 'Trato calificado',
+                        l10n.deal_detail_rated,
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: AppColors.success,
+                          color: context.appSuccess,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        l10n?.deal_detail_rated_desc ??
-                            'Ya enviaste tu calificación para este trato.',
+                        l10n.deal_detail_rated_desc,
                         style: TextStyle(fontSize: 13, color: textSecondary),
                       ),
                     ],
@@ -528,13 +494,13 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
               children: [
                 Text(
                   _reviewStatusError!,
-                  style: const TextStyle(fontSize: 13, color: AppColors.error),
+                  style: TextStyle(fontSize: 13, color: context.appError),
                 ),
                 const SizedBox(height: 8),
                 OutlinedButton.icon(
                   onPressed: () => _loadReviewStatus(force: true),
                   icon: const Icon(Icons.refresh, size: 18),
-                  label: Text(l10n?.market_retry ?? 'Reintentar'),
+                  label: Text(l10n.common_retry),
                 ),
               ],
             )
@@ -543,7 +509,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  l10n?.deal_detail_rate_subtitle ?? 'Tu calificación ayuda a construir confianza en la comunidad.',
+                  l10n.deal_detail_rate_subtitle,
                   style: TextStyle(fontSize: 13, color: textSecondary),
                 ),
                 const SizedBox(height: 12),
@@ -556,12 +522,8 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                     icon: const Icon(Icons.star_outline),
                     label: Text(rateLabel),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: isDark
-                          ? AppColors.darkTertiary
-                          : AppColors.lightTertiary,
-                      foregroundColor: isDark
-                          ? AppColors.darkBackground
-                          : Colors.white,
+                      backgroundColor: context.appPrimary,
+                      foregroundColor: context.appOnPrimary,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -582,13 +544,11 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
     final submitted = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (ctx) => _RatingSheet(
         counterpartLabel: _isBuyer
-            ? (AppLocalizations.of(context)?.deal_counterpart_farmer ??
-                  'Productor')
-            : (AppLocalizations.of(context)?.deal_counterpart_buyer ??
-                  'Comprador'),
+            ? AppLocalizations.of(context)!.deal_counterpart_farmer
+            : AppLocalizations.of(context)!.deal_counterpart_buyer,
         onSubmit: (rating, comment) async {
           _isSubmittingReview = true;
           try {
@@ -610,14 +570,13 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
       _hasReviewed = true;
       _reviewStatusError = null;
     });
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          l10n?.deal_detail_rate_success ??
-              'Calificación enviada correctamente',
+          l10n.deal_detail_rate_success,
         ),
-        backgroundColor: AppColors.success,
+        backgroundColor: context.appSuccess,
       ),
     );
   }
@@ -625,7 +584,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
   String _readableError(Object error) {
     final message = error.toString().replaceFirst('Exception: ', '').trim();
     return message.isEmpty
-        ? 'No se pudo completar la operación. Inténtalo de nuevo.'
+        ? AppLocalizations.of(context)!.deal_detail_generic_error
         : message;
   }
 
@@ -633,22 +592,21 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
   /// de permisos propios para el trato acordado.
   Widget _buildContactAndConsentSection(
     NegotiationModel n,
-    bool isDark,
-    AppLocalizations? l10n,
+    AppLocalizations l10n,
   ) {
     final contact = _contactInfo;
     final counterpartTitle = _isBuyer
-        ? 'Datos de contacto del Productor'
-        : 'Datos de contacto del Comprador';
+        ? l10n.deal_detail_contact_farmer
+        : l10n.deal_detail_contact_buyer;
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        color: context.appSurface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+          color: context.appBorder,
         ),
       ),
       child: Column(
@@ -658,7 +616,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
             children: [
               Icon(
                 Icons.verified_user_outlined,
-                color: AppColors.success,
+                color: context.appSuccess,
                 size: 22,
               ),
               const SizedBox(width: 8),
@@ -668,9 +626,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.lightTextPrimary,
+                    color: context.appTextPrimary,
                   ),
                 ),
               ),
@@ -683,12 +639,10 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: isDark
-                    ? AppColors.darkSurfaceVariant
-                    : AppColors.lightBackground,
+                color: context.appSurfaceVariant,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: AppColors.success.withValues(alpha: 0.3),
+                  color: context.appSuccess.withValues(alpha: 0.3),
                 ),
               ),
               child: Column(
@@ -696,20 +650,18 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                 children: [
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.phone,
-                        color: AppColors.success,
+                        color: context.appSuccess,
                         size: 20,
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'Teléfono / WhatsApp autorizado:',
+                        l10n.deal_detail_phone_whatsapp,
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: isDark
-                              ? AppColors.darkTextSecondary
-                              : AppColors.lightTextSecondary,
+                          color: context.appTextSecondary,
                         ),
                       ),
                     ],
@@ -720,9 +672,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                     style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.bold,
-                      color: isDark
-                          ? AppColors.darkTextPrimary
-                          : AppColors.lightTextPrimary,
+                      color: context.appTextPrimary,
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -731,30 +681,30 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                     runSpacing: 6,
                     children: [
                       ActionChip(
-                        avatar: const Icon(
+                        avatar: Icon(
                           Icons.call,
                           size: 16,
-                          color: Colors.white,
+                          color: context.appOverlayText,
                         ),
-                        label: const Text('Llamar'),
-                        backgroundColor: AppColors.success,
-                        labelStyle: const TextStyle(
-                          color: Colors.white,
+                        label: Text(l10n.deal_detail_call),
+                        backgroundColor: context.appSuccess,
+                        labelStyle: TextStyle(
+                          color: context.appOverlayText,
                           fontWeight: FontWeight.bold,
                           fontSize: 13,
                         ),
                         onPressed: () => _handleCall(contact.counterpartPhone!),
                       ),
                       ActionChip(
-                        avatar: const Icon(
+                        avatar: Icon(
                           Icons.chat_bubble_outline,
                           size: 16,
-                          color: Colors.white,
+                          color: context.appOverlayText,
                         ),
-                        label: const Text('WhatsApp'),
-                        backgroundColor: const Color(0xFF25D366),
-                        labelStyle: const TextStyle(
-                          color: Colors.white,
+                        label: Text(l10n.deal_detail_whatsapp),
+                        backgroundColor: AppColors.whatsapp,
+                        labelStyle: TextStyle(
+                          color: context.appOverlayText,
                           fontWeight: FontWeight.bold,
                           fontSize: 13,
                         ),
@@ -763,10 +713,10 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                       ),
                       ActionChip(
                         avatar: const Icon(Icons.copy, size: 16),
-                        label: const Text('Copiar'),
+                        label: Text(l10n.deal_detail_copy),
                         onPressed: () => _copyToClipboard(
                           contact.counterpartPhone!,
-                          'Teléfono',
+                          l10n.deal_detail_phone,
                         ),
                       ),
                     ],
@@ -778,27 +728,27 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
-                color: isDark
-                    ? AppColors.darkSurfaceVariant
-                    : AppColors.lightBackground,
+                color: context.appSurfaceVariant,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.phone_locked_outlined,
-                    color: Colors.orange,
+                    color: context.appWarning,
                     size: 20,
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      '${_isBuyer ? "El productor" : "El comprador"} no ha autorizado compartir su teléfono ni WhatsApp.',
+                      l10n.deal_detail_contact_not_shared(
+                        _isBuyer
+                            ? l10n.deal_detail_the_farmer
+                            : l10n.deal_detail_the_buyer,
+                      ),
                       style: TextStyle(
                         fontSize: 13,
-                        color: isDark
-                            ? AppColors.darkTextSecondary
-                            : AppColors.lightTextSecondary,
+                        color: context.appTextSecondary,
                       ),
                     ),
                   ),
@@ -814,12 +764,10 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: isDark
-                    ? AppColors.darkSurfaceVariant
-                    : AppColors.lightBackground,
+                color: context.appSurfaceVariant,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: AppColors.info.withValues(alpha: 0.3),
+                  color: context.appInfo.withValues(alpha: 0.3),
                 ),
               ),
               child: Column(
@@ -827,20 +775,18 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                 children: [
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.location_on,
-                        color: AppColors.info,
+                        color: context.appInfo,
                         size: 20,
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'Ubicación física autorizada:',
+                        l10n.deal_detail_location_authorized,
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: isDark
-                              ? AppColors.darkTextSecondary
-                              : AppColors.lightTextSecondary,
+                          color: context.appTextSecondary,
                         ),
                       ),
                     ],
@@ -851,29 +797,28 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
-                      color: isDark
-                          ? AppColors.darkTextPrimary
-                          : AppColors.lightTextPrimary,
+                      color: context.appTextPrimary,
                     ),
                   ),
                   if (contact.counterpartLatitude != null &&
                       contact.counterpartLongitude != null) ...[
                     const SizedBox(height: 4),
                     Text(
-                      'Coordenadas: ${contact.counterpartLatitude!.toStringAsFixed(6)}, ${contact.counterpartLongitude!.toStringAsFixed(6)}',
+                      l10n.deal_detail_coordinates(
+                        contact.counterpartLatitude!.toStringAsFixed(6),
+                        contact.counterpartLongitude!.toStringAsFixed(6),
+                      ),
                       style: TextStyle(
                         fontSize: 12,
                         fontFamily: 'monospace',
-                        color: isDark
-                            ? AppColors.darkTextSecondary
-                            : AppColors.lightTextSecondary,
+                        color: context.appTextSecondary,
                       ),
                     ),
                   ],
                   const SizedBox(height: 10),
                   ActionChip(
                     avatar: const Icon(Icons.map_outlined, size: 16),
-                    label: const Text('Ver detalles de ubicación'),
+                    label: Text(l10n.deal_detail_view_location),
                     onPressed: () => _showLocationDialog(contact),
                   ),
                 ],
@@ -883,27 +828,27 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
-                color: isDark
-                    ? AppColors.darkSurfaceVariant
-                    : AppColors.lightBackground,
+                color: context.appSurfaceVariant,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.location_off_outlined,
-                    color: Colors.orange,
+                    color: context.appWarning,
                     size: 20,
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      '${_isBuyer ? "El productor" : "El comprador"} no ha autorizado compartir su ubicación física.',
+                      l10n.deal_detail_location_not_shared(
+                        _isBuyer
+                            ? l10n.deal_detail_the_farmer
+                            : l10n.deal_detail_the_buyer,
+                      ),
                       style: TextStyle(
                         fontSize: 13,
-                        color: isDark
-                            ? AppColors.darkTextSecondary
-                            : AppColors.lightTextSecondary,
+                        color: context.appTextSecondary,
                       ),
                     ),
                   ),
@@ -914,7 +859,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
 
           Divider(
             height: 24,
-            color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+            color: context.appDivider,
           ),
 
           // 3. MIS PERMISOS CONFIGURADOS
@@ -926,13 +871,11 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Tus permisos para este trato:',
+                      l10n.deal_detail_my_permissions,
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 13,
-                        color: isDark
-                            ? AppColors.darkTextPrimary
-                            : AppColors.lightTextPrimary,
+                        color: context.appTextPrimary,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -940,31 +883,37 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                       spacing: 8,
                       children: [
                         Text(
-                          'Teléfono: ${contact?.mySharePhone == true ? "Autorizado" : "Privado"}',
+                          l10n.deal_detail_phone_permission(
+                            contact?.mySharePhone == true
+                                ? l10n.deal_detail_authorized
+                                : l10n.deal_detail_private,
+                          ),
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
                             color: contact?.mySharePhone == true
-                                ? AppColors.success
-                                : AppColors.error,
+                                ? context.appSuccess
+                                : context.appError,
                           ),
                         ),
                         Text(
                           '•',
                           style: TextStyle(
-                            color: isDark
-                                ? AppColors.darkTextDisabled
-                                : AppColors.lightTextDisabled,
+                            color: context.appTextDisabled,
                           ),
                         ),
                         Text(
-                          'Ubicación: ${contact?.myShareLocation == true ? "Autorizada" : "Privada"}',
+                          l10n.deal_detail_location_permission(
+                            contact?.myShareLocation == true
+                                ? l10n.deal_detail_location_authorized_status
+                                : l10n.deal_detail_location_private_status,
+                          ),
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
                             color: contact?.myShareLocation == true
-                                ? AppColors.success
-                                : AppColors.error,
+                                ? context.appSuccess
+                                : context.appError,
                           ),
                         ),
                       ],
@@ -975,7 +924,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
               OutlinedButton.icon(
                 onPressed: () => _showConsentBottomSheet(n),
                 icon: const Icon(Icons.security, size: 16),
-                label: const Text('Modificar'),
+                label: Text(l10n.deal_detail_modify),
                 style: OutlinedButton.styleFrom(
                   // El tema global define un ancho mínimo infinito para los
                   // botones; dentro de un Row eso produce constraints
@@ -1000,49 +949,48 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
     Clipboard.setData(ClipboardData(text: text));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('$label copiado al portapapeles: $text'),
-        backgroundColor: AppColors.success,
+        content: Text(AppLocalizations.of(context)!.deal_detail_copied(label, text)),
+        backgroundColor: context.appSuccess,
         duration: const Duration(seconds: 3),
       ),
     );
   }
 
   void _handleCall(String phone) {
-    _copyToClipboard(phone, 'Teléfono');
+    _copyToClipboard(phone, AppLocalizations.of(context)!.deal_detail_phone);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Teléfono $phone copiado. Listo para marcar desde tu teléfono.',
+          AppLocalizations.of(context)!.deal_detail_phone_copied(phone),
         ),
-        backgroundColor: AppColors.success,
+        backgroundColor: context.appSuccess,
         duration: const Duration(seconds: 4),
       ),
     );
   }
 
   void _handleWhatsApp(String phone) {
-    _copyToClipboard(phone, 'WhatsApp');
+    _copyToClipboard(phone, AppLocalizations.of(context)!.deal_detail_whatsapp);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Contacto de WhatsApp $phone copiado. Abre WhatsApp para iniciar conversación.',
+          AppLocalizations.of(context)!.deal_detail_whatsapp_copied(phone),
         ),
-        backgroundColor: AppColors.success,
+        backgroundColor: context.appSuccess,
         duration: const Duration(seconds: 4),
       ),
     );
   }
 
   void _showLocationDialog(NegotiationContactInfo contact) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Row(
           children: [
-            Icon(Icons.location_on, color: AppColors.success),
+            Icon(Icons.location_on, color: context.appSuccess),
             const SizedBox(width: 8),
-            const Text('Ubicación física autorizada'),
+            Text(AppLocalizations.of(ctx)!.deal_detail_location_authorized),
           ],
         ),
         content: Column(
@@ -1052,12 +1000,10 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
             if (contact.counterpartMunicipality != null ||
                 contact.counterpartDepartment != null) ...[
               Text(
-                'Municipio / Departamento:',
+                AppLocalizations.of(ctx)!.deal_detail_municipality_department,
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: isDark
-                      ? AppColors.darkTextSecondary
-                      : AppColors.lightTextSecondary,
+                  color: context.appTextSecondary,
                 ),
               ),
               const SizedBox(height: 4),
@@ -1070,28 +1016,27 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
             if (contact.counterpartLatitude != null &&
                 contact.counterpartLongitude != null) ...[
               Text(
-                'Coordenadas geográficas:',
+                AppLocalizations.of(ctx)!.deal_detail_geo_coordinates,
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: isDark
-                      ? AppColors.darkTextSecondary
-                      : AppColors.lightTextSecondary,
+                  color: context.appTextSecondary,
                 ),
               ),
               const SizedBox(height: 4),
               SelectableText(
-                'Lat: ${contact.counterpartLatitude!.toStringAsFixed(6)}\nLon: ${contact.counterpartLongitude!.toStringAsFixed(6)}',
+                AppLocalizations.of(ctx)!.deal_detail_lat_lon(
+                  contact.counterpartLatitude!.toStringAsFixed(6),
+                  contact.counterpartLongitude!.toStringAsFixed(6),
+                ),
                 style: const TextStyle(fontSize: 15, fontFamily: 'monospace'),
               ),
               const SizedBox(height: 8),
               Text(
-                'Ubicación verificada para la entrega de este lote.',
+                AppLocalizations.of(ctx)!.deal_detail_location_verified,
                 style: TextStyle(
                   fontSize: 12,
                   fontStyle: FontStyle.italic,
-                  color: isDark
-                      ? AppColors.darkTextDisabled
-                      : AppColors.lightTextDisabled,
+                  color: context.appTextDisabled,
                 ),
               ),
             ],
@@ -1104,15 +1049,15 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
               onPressed: () {
                 final coords =
                     '${contact.counterpartLatitude},${contact.counterpartLongitude}';
-                _copyToClipboard(coords, 'Coordenadas');
+                _copyToClipboard(coords, AppLocalizations.of(ctx)!.deal_detail_coordinates_label);
                 Navigator.pop(ctx);
               },
               icon: const Icon(Icons.copy),
-              label: const Text('Copiar coordenadas'),
+              label: Text(AppLocalizations.of(ctx)!.deal_detail_copy_coordinates),
             ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cerrar'),
+            child: Text(AppLocalizations.of(ctx)!.common_close),
           ),
         ],
       ),
@@ -1122,7 +1067,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
   Widget _buildInfoRow(
     String label,
     String value,
-    bool isDark, {
+    {
     bool isStatus = false,
     NegotiationStatus? status,
   }) {
@@ -1132,54 +1077,50 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
         Text(
           label,
           style: TextStyle(
-            color: isDark
-                ? AppColors.darkTextSecondary
-                : AppColors.lightTextSecondary,
+            color: context.appTextSecondary,
             fontSize: 15,
           ),
         ),
         if (isStatus && status != null)
-          _buildStatusBadge(status, isDark)
+          _buildStatusBadge(status)
         else
           Text(
             value,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: isDark
-                  ? AppColors.darkTextPrimary
-                  : AppColors.lightTextPrimary,
+              color: context.appTextPrimary,
             ),
           ),
       ],
     );
   }
 
-  Widget _buildStatusBadge(NegotiationStatus status, bool isDark) {
+  Widget _buildStatusBadge(NegotiationStatus status, ) {
     Color color;
     switch (status) {
       case NegotiationStatus.propuesta:
-        color = isDark ? const Color(0xFF64B5F6) : AppColors.info;
+        color = context.appInfo;
         break;
       case NegotiationStatus.contraofertada:
-        color = isDark ? const Color(0xFFFFB74D) : AppColors.warning;
+        color = context.appWarning;
         break;
       case NegotiationStatus.acordada:
-        color = isDark ? AppColors.darkTertiary : AppColors.success;
+        color = context.appSuccess;
         break;
       case NegotiationStatus.completada:
-        color = isDark ? const Color(0xFF80CBC4) : const Color(0xFF00897B);
+        color = context.appPrimary;
         break;
       case NegotiationStatus.rechazada:
       case NegotiationStatus.cancelada:
-        color = isDark ? const Color(0xFFEF9A9A) : AppColors.error;
+        color = context.appError;
         break;
     }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: isDark ? 0.2 : 0.12),
+        color: color.withValues(alpha: context.appIsDark ? 0.2 : 0.12),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
@@ -1197,21 +1138,18 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
   Widget _buildOfferBubble(
     NegotiationOfferModel offer,
     NegotiationModel negotiation,
-    bool isDark,
-    AppLocalizations? l10n,
+    AppLocalizations l10n,
   ) {
     final user = Supabase.instance.client.auth.currentUser;
     final isMe = offer.senderId == user?.id;
 
     final senderLabel = isMe
-        ? 'Tú'
+        ? l10n.deal_detail_you
         : (_isBuyer
-              ? (l10n?.deal_counterpart_farmer ?? 'Productor')
-              : (l10n?.deal_counterpart_buyer ?? 'Comprador'));
+              ? l10n.deal_counterpart_farmer
+              : l10n.deal_counterpart_buyer);
 
-    final primaryThemeColor = isDark
-        ? AppColors.darkTertiary
-        : AppColors.lightTertiary;
+    final primaryThemeColor = context.appPrimary;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -1220,10 +1158,8 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: isMe
-              ? (isDark
-                    ? AppColors.darkSurfaceVariant
-                    : AppColors.lightSecondary.withValues(alpha: 0.6))
-              : (isDark ? AppColors.darkSurface : AppColors.lightSurface),
+              ? (context.appSurfaceVariant)
+              : (context.appSurface),
           borderRadius: BorderRadius.circular(16).copyWith(
             bottomRight: isMe
                 ? const Radius.circular(2)
@@ -1235,7 +1171,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
           border: Border.all(
             color: isMe
                 ? primaryThemeColor.withValues(alpha: 0.3)
-                : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                : (context.appBorder),
           ),
         ),
         width: MediaQuery.of(context).size.width * 0.78,
@@ -1251,17 +1187,13 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                     fontWeight: FontWeight.bold,
                     color: isMe
                         ? primaryThemeColor
-                        : (isDark
-                              ? AppColors.darkTextPrimary
-                              : AppColors.lightTextPrimary),
+                        : (context.appTextPrimary),
                   ),
                 ),
                 Text(
                   DateFormatters.formatOfferDateTime(offer.createdAt),
                   style: TextStyle(
-                    color: isDark
-                        ? AppColors.darkTextDisabled
-                        : AppColors.lightTextDisabled,
+                    color: context.appTextDisabled,
                     fontSize: 11,
                   ),
                 ),
@@ -1273,25 +1205,19 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 15,
-                color: isDark
-                    ? AppColors.darkTextPrimary
-                    : AppColors.lightTextPrimary,
+                color: context.appTextPrimary,
               ),
             ),
             Text(
               UnitFormatters.formatKg(offer.quantityKg),
               style: TextStyle(
-                color: isDark
-                    ? AppColors.darkTextSecondary
-                    : AppColors.lightTextSecondary,
+                color: context.appTextSecondary,
               ),
             ),
             Text(
-              'Entrega: ${offer.deliveryMethod}',
+              l10n.deal_detail_delivery(offer.deliveryMethod),
               style: TextStyle(
-                color: isDark
-                    ? AppColors.darkTextSecondary
-                    : AppColors.lightTextSecondary,
+                color: context.appTextSecondary,
               ),
             ),
             if (offer.message != null && offer.message!.isNotEmpty) ...[
@@ -1302,9 +1228,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? AppColors.darkBackground
-                      : AppColors.lightBackground,
+                  color: context.appBackground,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -1312,9 +1236,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                   style: TextStyle(
                     fontStyle: FontStyle.italic,
                     fontSize: 13,
-                    color: isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.lightTextPrimary,
+                    color: context.appTextPrimary,
                   ),
                 ),
               ),
@@ -1328,8 +1250,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
   Widget _buildActionButtons(
     NegotiationModel n,
     NegotiationOfferModel? latestOffer,
-    bool isDark,
-    AppLocalizations? l10n,
+    AppLocalizations l10n,
   ) {
     if (n.status == NegotiationStatus.acordada) {
       return Column(
@@ -1338,27 +1259,21 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: isDark
-                  ? AppColors.darkSurfaceVariant
-                  : AppColors.successLight,
+              color: context.appSuccessContainer,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: isDark
-                    ? AppColors.darkBorder
-                    : AppColors.success.withValues(alpha: 0.3),
+                color: context.appSuccess.withValues(alpha: 0.3),
               ),
             ),
             child: Row(
               children: [
-                const Icon(Icons.handshake_outlined, color: AppColors.success),
+                Icon(Icons.handshake_outlined, color: context.appSuccess),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Text(
-                    l10n?.deal_agreed_desc ?? 'Trato acordado. Coordina la entrega física para completar la operación.',
+                    l10n.deal_agreed_desc,
                     style: TextStyle(
-                      color: isDark
-                          ? AppColors.darkTextPrimary
-                          : AppColors.success,
+                      color: context.appSuccess,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -1375,17 +1290,12 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                   : () => _completeNegotiation(n),
               icon: const Icon(Icons.check_circle_outline),
               label: Text(
-                l10n?.deal_complete_btn ??
-                    'Confirmar entrega y completar trato',
+                l10n.deal_complete_btn,
               ),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                backgroundColor: isDark
-                    ? AppColors.darkTertiary
-                    : AppColors.lightTertiary,
-                foregroundColor: isDark
-                    ? AppColors.darkBackground
-                    : Colors.white,
+                backgroundColor: context.appPrimary,
+                foregroundColor: context.appOnPrimary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -1398,10 +1308,10 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
             child: TextButton(
               onPressed: _isActionInProgress ? null : () => _cancelOffer(n),
               style: TextButton.styleFrom(
-                foregroundColor: AppColors.error,
+                foregroundColor: context.appError,
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
-              child: Text(l10n?.deal_cancel_agreed ?? 'Cancelar acuerdo'),
+              child: Text(l10n.deal_cancel_agreed),
             ),
           ),
         ],
@@ -1417,8 +1327,8 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
     // Si NO es mi turno, mostramos el aviso de espera
     if (!_isMyTurn) {
       final waitingMessage = _isBuyer
-          ? (l10n?.deal_waiting_farmer ?? 'Esperando respuesta del productor')
-          : (l10n?.deal_waiting_buyer ?? 'Esperando respuesta del comprador');
+          ? l10n.deal_waiting_farmer
+          : l10n.deal_waiting_buyer;
 
       return Column(
         children: [
@@ -1426,30 +1336,24 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: isDark
-                  ? AppColors.darkSurfaceVariant
-                  : AppColors.warningLight,
+              color: context.appWarningContainer,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: isDark
-                    ? AppColors.darkBorder
-                    : AppColors.warning.withValues(alpha: 0.3),
+                color: context.appWarning.withValues(alpha: 0.3),
               ),
             ),
             child: Row(
               children: [
                 Icon(
                   Icons.hourglass_empty,
-                  color: isDark ? const Color(0xFFFFB74D) : AppColors.warning,
+                  color: context.appWarning,
                 ),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Text(
                     waitingMessage,
                     style: TextStyle(
-                      color: isDark
-                          ? AppColors.darkTextPrimary
-                          : const Color(0xFFB25E00),
+                      color: context.appWarning,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -1463,14 +1367,14 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
             OutlinedButton(
               onPressed: _isActionInProgress ? null : () => _cancelOffer(n),
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.error,
-                side: const BorderSide(color: AppColors.error),
+                foregroundColor: context.appError,
+                side: BorderSide(color: context.appError),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: Text(l10n?.deal_cancel_deal ?? 'Cancelar propuesta'),
+              child: Text(l10n.deal_cancel_deal),
             ),
           ],
         ],
@@ -1488,16 +1392,14 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                 : () => _acceptOffer(n, latestOffer),
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: isDark
-                  ? AppColors.darkTertiary
-                  : AppColors.lightTertiary,
-              foregroundColor: isDark ? AppColors.darkBackground : Colors.white,
+              backgroundColor: context.appPrimary,
+              foregroundColor: context.appOnPrimary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
             child: Text(
-              l10n?.deal_accept_offer ?? 'Aceptar oferta',
+              l10n.deal_accept_offer,
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),
@@ -1516,7 +1418,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
               ),
             ),
             child: Text(
-              l10n?.deal_counter_offer ?? 'Contraofertar',
+              l10n.deal_counter_offer,
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),
@@ -1527,11 +1429,11 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
           child: TextButton(
             onPressed: _isActionInProgress ? null : () => _rejectOffer(n),
             style: TextButton.styleFrom(
-              foregroundColor: AppColors.error,
+              foregroundColor: context.appError,
               padding: const EdgeInsets.symmetric(vertical: 14),
             ),
             child: Text(
-              l10n?.deal_reject_deal ?? 'Rechazar trato',
+              l10n.deal_reject_deal,
               style: const TextStyle(fontSize: 16),
             ),
           ),
@@ -1567,7 +1469,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (ctx) => _AcceptOfferConsentSheet(
         negotiation: n,
         latestOffer: latestOffer,
@@ -1587,7 +1489,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
   ) async {
     if (_isActionInProgress) return;
     _isActionInProgress = true;
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     try {
       showDialog(
         context: context,
@@ -1616,9 +1518,9 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              l10n?.deal_accept_success ?? 'Trato acordado correctamente',
+              l10n.deal_accept_success,
             ),
-            backgroundColor: AppColors.success,
+            backgroundColor: context.appSuccess,
           ),
         );
         _loadData(reload: true);
@@ -1629,7 +1531,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString().replaceFirst('Exception: ', '')),
-            backgroundColor: AppColors.error,
+            backgroundColor: context.appError,
           ),
         );
       }
@@ -1645,13 +1547,14 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
   }
 
   void _showConsentBottomSheet(NegotiationModel n) {
+    final l10n = AppLocalizations.of(context)!;
     final currentPhone = _contactInfo?.mySharePhone ?? false;
     final currentLocation = _contactInfo?.myShareLocation ?? false;
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (ctx) => _EditConsentSheet(
         initialSharePhone: currentPhone,
         initialShareLocation: currentLocation,
@@ -1674,11 +1577,9 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
             if (mounted) {
               Navigator.pop(context); // pop loading
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text(
-                    'Permisos de contacto actualizados correctamente',
-                  ),
-                  backgroundColor: AppColors.success,
+                SnackBar(
+                  content: Text(l10n.deal_detail_permissions_updated),
+                  backgroundColor: context.appSuccess,
                 ),
               );
               _loadData(reload: true);
@@ -1689,9 +1590,11 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
-                    'Error al actualizar permisos: ${e.toString().replaceFirst("Exception: ", "")}',
+                    l10n.deal_detail_permissions_update_error(
+                      e.toString().replaceFirst('Exception: ', ''),
+                    ),
                   ),
-                  backgroundColor: AppColors.error,
+                  backgroundColor: context.appError,
                 ),
               );
             }
@@ -1703,27 +1606,26 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
 
   Future<void> _rejectOffer(NegotiationModel n) async {
     if (_isActionInProgress) return;
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(l10n?.deal_reject_confirm_title ?? '¿Rechazar este trato?'),
+        title: Text(l10n.deal_reject_confirm_title),
         content: Text(
-          l10n?.deal_reject_confirm_desc ??
-              'Esta acción no se puede deshacer y el trato se cerrará.',
+          l10n.deal_reject_confirm_desc,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n?.profile_cancel ?? 'Cancelar'),
+            child: Text(l10n.profile_cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              foregroundColor: Colors.white,
+              backgroundColor: context.appError,
+              foregroundColor: context.appOverlayText,
             ),
-            child: Text(l10n?.deal_reject_deal ?? 'Rechazar'),
+            child: Text(l10n.deal_reject_deal),
           ),
         ],
       ),
@@ -1749,9 +1651,9 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              l10n?.deal_reject_success ?? 'El trato ha sido rechazado',
+              l10n.deal_reject_success,
             ),
-            backgroundColor: AppColors.error,
+            backgroundColor: context.appError,
           ),
         );
         _loadData(reload: true);
@@ -1762,7 +1664,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString().replaceFirst('Exception: ', '')),
-            backgroundColor: AppColors.error,
+            backgroundColor: context.appError,
           ),
         );
       }
@@ -1779,36 +1681,36 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
 
   Future<void> _cancelOffer(NegotiationModel n) async {
     if (_isActionInProgress) return;
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final isAgreed = n.status == NegotiationStatus.acordada;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(
           isAgreed
-              ? '¿Cancelar este acuerdo?'
-              : (l10n?.deal_cancel_deal ?? '¿Cancelar esta propuesta?'),
+              ? l10n.deal_detail_cancel_confirm_title
+              : l10n.deal_detail_cancel_proposal_title,
         ),
         content: Text(
           isAgreed
-              ? 'Esta acción cancelará el trato acordado, liberará el stock reservado y cerrará la negociación.'
-              : 'Esta acción cancelará la propuesta enviada, liberará el stock reservado y cerrará la negociación.',
+              ? l10n.deal_detail_cancel_confirm_desc
+              : l10n.deal_detail_cancel_proposal_desc,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n?.profile_cancel ?? 'Volver'),
+            child: Text(l10n.profile_cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              foregroundColor: Colors.white,
+              backgroundColor: context.appError,
+              foregroundColor: context.appOverlayText,
             ),
             child: Text(
               isAgreed
-                  ? (l10n?.deal_cancel_agreed ?? 'Cancelar acuerdo')
-                  : (l10n?.deal_cancel_deal ?? 'Cancelar propuesta'),
+                  ? (l10n.deal_cancel_agreed)
+                  : (l10n.deal_cancel_deal),
             ),
           ),
         ],
@@ -1836,10 +1738,10 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
           SnackBar(
             content: Text(
               isAgreed
-                  ? 'Acuerdo cancelado correctamente'
-                  : 'Propuesta cancelada correctamente',
+                  ? l10n.deal_detail_cancelled_success
+                  : l10n.deal_detail_proposal_cancelled_success,
             ),
-            backgroundColor: AppColors.error,
+            backgroundColor: context.appError,
           ),
         );
         _loadData(reload: true);
@@ -1850,7 +1752,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString().replaceFirst('Exception: ', '')),
-            backgroundColor: AppColors.error,
+            backgroundColor: context.appError,
           ),
         );
       }
@@ -1867,28 +1769,28 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
 
   Future<void> _completeNegotiation(NegotiationModel n) async {
     if (_isActionInProgress) return;
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(
-          l10n?.deal_complete_confirm_title ?? '¿Completar este trato?',
+          l10n.deal_detail_complete_confirm_title,
         ),
         content: Text(
-          l10n?.deal_complete_confirm_desc ?? 'Esta acción confirmará la entrega física del producto y registrará la venta final en el inventario.',
+          l10n.deal_detail_complete_confirm_desc,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n?.profile_cancel ?? 'Cancelar'),
+            child: Text(l10n.profile_cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.success,
-              foregroundColor: Colors.white,
+              backgroundColor: context.appSuccess,
+              foregroundColor: context.appOverlayText,
             ),
-            child: Text(l10n?.deal_complete_confirm_btn ?? 'Completar'),
+            child: Text(l10n.deal_detail_complete),
           ),
         ],
       ),
@@ -1914,9 +1816,9 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              l10n?.deal_completed_success ?? 'Trato completado exitosamente',
+              l10n.deal_detail_completed,
             ),
-            backgroundColor: AppColors.success,
+            backgroundColor: context.appSuccess,
           ),
         );
         _loadData(reload: true);
@@ -1927,7 +1829,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString().replaceFirst('Exception: ', '')),
-            backgroundColor: AppColors.error,
+            backgroundColor: context.appError,
           ),
         );
       }
@@ -1983,33 +1885,27 @@ class _RatingSheetState extends State<_RatingSheet> {
       if (!mounted) return;
       final message = e.toString().replaceFirst('Exception: ', '').trim();
       final readable = message.isEmpty
-          ? (AppLocalizations.of(context)?.deal_detail_rate_error ??
-                'No se pudo enviar la calificación. Inténtalo de nuevo.')
+          ? AppLocalizations.of(context)!.deal_detail_rate_error
           : message;
       setState(() {
         _isSubmitting = false;
         _errorMessage = readable;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(readable), backgroundColor: AppColors.error),
+        SnackBar(content: Text(readable), backgroundColor: context.appError),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final l10n = AppLocalizations.of(context);
-    final textPrimary = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
-    final textSecondary = isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
+    final l10n = AppLocalizations.of(context)!;
+    final textPrimary = context.appTextPrimary;
+    final textSecondary = context.appTextSecondary;
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+        color: context.appBackground,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: EdgeInsets.only(
@@ -2028,7 +1924,7 @@ class _RatingSheetState extends State<_RatingSheet> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: isDark ? Colors.grey[700] : Colors.grey[300],
+                  color: context.appDivider,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -2036,15 +1932,15 @@ class _RatingSheetState extends State<_RatingSheet> {
             const SizedBox(height: 16),
             Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.star_rounded,
-                  color: AppColors.warning,
+                  color: context.appWarning,
                   size: 28,
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    l10n?.deal_detail_rate_title ?? 'Calificar trato',
+                    l10n.deal_detail_rate_title,
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -2056,13 +1952,13 @@ class _RatingSheetState extends State<_RatingSheet> {
             ),
             const SizedBox(height: 8),
             Text(
-              '${l10n?.deal_detail_rate_subtitle ?? 'Tu calificación ayuda a construir confianza en la comunidad.'}\n'
-              '${l10n?.deal_detail_rate_target ?? 'Calificas a'}: ${widget.counterpartLabel}',
+              '${l10n.deal_detail_rate_subtitle}\n'
+              '${l10n.deal_detail_rate_target}: ${widget.counterpartLabel}',
               style: TextStyle(fontSize: 14, color: textSecondary),
             ),
             const SizedBox(height: 16),
             Text(
-              l10n?.deal_detail_rate_stars_label ?? 'Tu calificación',
+              l10n.deal_detail_rate_stars_label,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -2081,7 +1977,7 @@ class _RatingSheetState extends State<_RatingSheet> {
                       ? null
                       : () => setState(() => _rating = value),
                   iconSize: 38,
-                  color: AppColors.warning,
+                  color: context.appWarning,
                   icon: Icon(
                     value <= _rating
                         ? Icons.star_rounded
@@ -2092,13 +1988,12 @@ class _RatingSheetState extends State<_RatingSheet> {
             ),
             if (_rating == 0)
               Text(
-                l10n?.deal_detail_rate_stars_required ??
-                    'Selecciona de 1 a 5 estrellas',
+                l10n.deal_detail_rate_stars_required,
                 style: TextStyle(fontSize: 12, color: textSecondary),
               ),
             const SizedBox(height: 16),
             Text(
-              l10n?.deal_detail_rate_comment_label ?? 'Comentario (opcional)',
+              l10n.deal_detail_rate_comment_label,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -2114,14 +2009,10 @@ class _RatingSheetState extends State<_RatingSheet> {
               maxLength: 500,
               textInputAction: TextInputAction.newline,
               decoration: InputDecoration(
-                hintText:
-                    l10n?.deal_detail_rate_comment_hint ??
-                    'Cuéntanos cómo fue tu experiencia',
+                hintText: l10n.deal_detail_rate_comment_hint,
                 hintStyle: TextStyle(fontSize: 14, color: textSecondary),
                 filled: true,
-                fillColor: isDark
-                    ? AppColors.darkSurface
-                    : AppColors.lightSurface,
+                fillColor: context.appSurface,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -2131,7 +2022,7 @@ class _RatingSheetState extends State<_RatingSheet> {
               const SizedBox(height: 4),
               Text(
                 _errorMessage!,
-                style: const TextStyle(fontSize: 13, color: AppColors.error),
+                style: TextStyle(fontSize: 13, color: context.appError),
               ),
             ],
             const SizedBox(height: 8),
@@ -2143,25 +2034,21 @@ class _RatingSheetState extends State<_RatingSheet> {
                     ? _submit
                     : null,
                 icon: _isSubmitting
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 18,
                         height: 18,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.white,
+                          color: context.appOverlayText,
                         ),
                       )
                     : const Icon(Icons.send),
                 label: Text(
-                  l10n?.deal_detail_rate_submit ?? 'Enviar calificación',
+                  l10n.deal_detail_rate_submit,
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: isDark
-                      ? AppColors.darkTertiary
-                      : AppColors.lightTertiary,
-                  foregroundColor: isDark
-                      ? AppColors.darkBackground
-                      : Colors.white,
+                  backgroundColor: context.appPrimary,
+                  foregroundColor: context.appOnPrimary,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -2201,11 +2088,11 @@ class _AcceptOfferConsentSheetState extends State<_AcceptOfferConsentSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+        color: context.appBackground,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: EdgeInsets.only(
@@ -2223,7 +2110,7 @@ class _AcceptOfferConsentSheetState extends State<_AcceptOfferConsentSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: isDark ? Colors.grey[700] : Colors.grey[300],
+                color: context.appDivider,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -2233,19 +2120,17 @@ class _AcceptOfferConsentSheetState extends State<_AcceptOfferConsentSheet> {
             children: [
               Icon(
                 Icons.handshake_outlined,
-                color: AppColors.success,
+                color: context.appSuccess,
                 size: 28,
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  'Aceptar oferta y acordar trato',
+                  l10n.deal_detail_accept_terms_title,
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.lightTextPrimary,
+                    color: context.appTextPrimary,
                   ),
                 ),
               ),
@@ -2253,21 +2138,19 @@ class _AcceptOfferConsentSheetState extends State<_AcceptOfferConsentSheet> {
           ),
           const SizedBox(height: 12),
           Text(
-            'Al formalizar el acuerdo, el inventario pactado se reservará en el sistema. Selecciona qué datos de contacto autorizas compartir con la contraparte para coordinar la entrega física:',
+            l10n.deal_detail_accept_terms_desc,
             style: TextStyle(
               fontSize: 14,
-              color: isDark
-                  ? AppColors.darkTextSecondary
-                  : AppColors.lightTextSecondary,
+              color: context.appTextSecondary,
             ),
           ),
           const SizedBox(height: 16),
           Container(
             decoration: BoxDecoration(
-              color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+              color: context.appSurface,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                color: context.appBorder,
               ),
             ),
             child: Column(
@@ -2275,34 +2158,32 @@ class _AcceptOfferConsentSheetState extends State<_AcceptOfferConsentSheet> {
                 SwitchListTile.adaptive(
                   value: _sharePhone,
                   onChanged: (val) => setState(() => _sharePhone = val),
-                  title: const Text(
-                    'Compartir mi teléfono y WhatsApp',
-                    style: TextStyle(fontWeight: FontWeight.w600),
+                  title: Text(
+                    l10n.deal_detail_share_phone,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
-                  subtitle: const Text(
-                    'Permite a la contraparte llamarte o escribirte por WhatsApp para coordinar.',
+                  subtitle: Text(
+                    l10n.deal_detail_share_phone_desc,
                   ),
-                  activeThumbColor: AppColors.success,
+                  activeThumbColor: context.appSuccess,
                 ),
                 Divider(
                   height: 1,
-                  color: isDark
-                      ? AppColors.darkDivider
-                      : AppColors.lightDivider,
+                  color: context.appDivider,
                 ),
                 SwitchListTile.adaptive(
                   value: _shareLocation,
                   onChanged: (val) => setState(() => _shareLocation = val),
                   title: Text(
                     widget.isBuyer
-                        ? 'Compartir mi ubicación de entrega'
-                        : 'Compartir la ubicación de la finca',
+                        ? l10n.deal_detail_share_location
+                        : l10n.deal_detail_share_farm_location,
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
-                  subtitle: const Text(
-                    'Permite ver el municipio y coordenadas para planificar la ruta de entrega.',
+                  subtitle: Text(
+                    l10n.deal_detail_share_location_desc,
                   ),
-                  activeThumbColor: AppColors.success,
+                  activeThumbColor: context.appSuccess,
                 ),
               ],
             ),
@@ -2319,7 +2200,7 @@ class _AcceptOfferConsentSheetState extends State<_AcceptOfferConsentSheet> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text('Cancelar'),
+                  child: Text(l10n.common_cancel),
                 ),
               ),
               const SizedBox(width: 12),
@@ -2329,19 +2210,15 @@ class _AcceptOfferConsentSheetState extends State<_AcceptOfferConsentSheet> {
                       widget.onConfirm(_sharePhone, _shareLocation),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    backgroundColor: isDark
-                        ? AppColors.darkTertiary
-                        : AppColors.lightTertiary,
-                    foregroundColor: isDark
-                        ? AppColors.darkBackground
-                        : Colors.white,
+                    backgroundColor: context.appPrimary,
+                    foregroundColor: context.appOnPrimary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
-                    'Confirmar acuerdo',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                  child: Text(
+                    l10n.deal_detail_confirm_agreement,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
@@ -2385,11 +2262,11 @@ class _EditConsentSheetState extends State<_EditConsentSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+        color: context.appBackground,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: EdgeInsets.only(
@@ -2407,7 +2284,7 @@ class _EditConsentSheetState extends State<_EditConsentSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: isDark ? Colors.grey[700] : Colors.grey[300],
+                color: context.appDivider,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -2415,17 +2292,15 @@ class _EditConsentSheetState extends State<_EditConsentSheet> {
           const SizedBox(height: 16),
           Row(
             children: [
-              Icon(Icons.security, color: AppColors.success, size: 28),
+              Icon(Icons.security, color: context.appSuccess, size: 28),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  'Mis permisos de contacto',
+                  l10n.deal_detail_my_permissions_title,
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.lightTextPrimary,
+                    color: context.appTextPrimary,
                   ),
                 ),
               ),
@@ -2433,21 +2308,19 @@ class _EditConsentSheetState extends State<_EditConsentSheet> {
           ),
           const SizedBox(height: 12),
           Text(
-            'Controla qué datos privados autorizas ver a la contraparte para coordinar este trato. Puedes revocar o conceder permisos en cualquier momento:',
+            l10n.deal_detail_my_permissions_desc,
             style: TextStyle(
               fontSize: 14,
-              color: isDark
-                  ? AppColors.darkTextSecondary
-                  : AppColors.lightTextSecondary,
+              color: context.appTextSecondary,
             ),
           ),
           const SizedBox(height: 16),
           Container(
             decoration: BoxDecoration(
-              color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+              color: context.appSurface,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                color: context.appBorder,
               ),
             ),
             child: Column(
@@ -2455,34 +2328,32 @@ class _EditConsentSheetState extends State<_EditConsentSheet> {
                 SwitchListTile.adaptive(
                   value: _sharePhone,
                   onChanged: (val) => setState(() => _sharePhone = val),
-                  title: const Text(
-                    'Compartir mi teléfono y WhatsApp',
-                    style: TextStyle(fontWeight: FontWeight.w600),
+                  title: Text(
+                    l10n.deal_detail_share_phone,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
-                  subtitle: const Text(
-                    'La contraparte podrá ver tu número para llamadas o mensajes.',
+                  subtitle: Text(
+                    l10n.deal_detail_share_phone_desc_permission,
                   ),
-                  activeThumbColor: AppColors.success,
+                  activeThumbColor: context.appSuccess,
                 ),
                 Divider(
                   height: 1,
-                  color: isDark
-                      ? AppColors.darkDivider
-                      : AppColors.lightDivider,
+                  color: context.appDivider,
                 ),
                 SwitchListTile.adaptive(
                   value: _shareLocation,
                   onChanged: (val) => setState(() => _shareLocation = val),
                   title: Text(
                     widget.isBuyer
-                        ? 'Compartir mi ubicación de entrega'
-                        : 'Compartir ubicación de la finca',
+                        ? l10n.deal_detail_share_location
+                        : l10n.deal_detail_share_farm_location,
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
-                  subtitle: const Text(
-                    'La contraparte podrá ver municipio y coordenadas para la logística.',
+                  subtitle: Text(
+                    l10n.deal_detail_share_location_desc_permission,
                   ),
-                  activeThumbColor: AppColors.success,
+                  activeThumbColor: context.appSuccess,
                 ),
               ],
             ),
@@ -2499,7 +2370,7 @@ class _EditConsentSheetState extends State<_EditConsentSheet> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text('Cancelar'),
+                  child: Text(l10n.common_cancel),
                 ),
               ),
               const SizedBox(width: 12),
@@ -2508,19 +2379,15 @@ class _EditConsentSheetState extends State<_EditConsentSheet> {
                   onPressed: () => widget.onSave(_sharePhone, _shareLocation),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    backgroundColor: isDark
-                        ? AppColors.darkTertiary
-                        : AppColors.lightTertiary,
-                    foregroundColor: isDark
-                        ? AppColors.darkBackground
-                        : Colors.white,
+                    backgroundColor: context.appPrimary,
+                    foregroundColor: context.appOnPrimary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
-                    'Guardar cambios',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                  child: Text(
+                    l10n.common_save_changes,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
               ),

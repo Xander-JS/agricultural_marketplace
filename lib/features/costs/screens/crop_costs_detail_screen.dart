@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/theme/app_colors.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/utils/currency_formatters.dart';
 import '../../../core/utils/unit_formatters.dart';
 import '../../crop/models/crop_model.dart';
@@ -96,20 +98,23 @@ class _CropCostsDetailScreenState extends State<CropCostsDetailScreen> {
   }
 
   Future<void> _deleteCost(CropCostModel cost) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('¿Eliminar este costo?'),
-        content: const Text('Esta acción no se puede deshacer.'),
+        title: Text(l10n.costs_delete_title),
+        content: Text(l10n.costs_delete_desc),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+            child: Text(l10n.common_cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Eliminar'),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: Text(l10n.common_delete),
           ),
         ],
       ),
@@ -121,13 +126,14 @@ class _CropCostsDetailScreenState extends State<CropCostsDetailScreen> {
       await _costService.deleteCost(cost.id);
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('Costo eliminado')));
+            .showSnackBar(SnackBar(content: Text(l10n.costs_deleted)));
         await _loadCosts();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Error al eliminar: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.costs_delete_error(e.toString()))),
+        );
       }
     }
   }
@@ -147,18 +153,20 @@ class _CropCostsDetailScreenState extends State<CropCostsDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
+      backgroundColor: context.appBackground,
       appBar: AppBar(title: Text(widget.crop.title)),
-      body: _buildBody(),
+      body: _buildBody(l10n),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _navigateToAddOrEditCost(),
         icon: const Icon(Icons.add),
-        label: const Text('Agregar costo'),
+        label: Text(l10n.costs_add),
       ),
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(AppLocalizations l10n) {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -168,16 +176,17 @@ class _CropCostsDetailScreenState extends State<CropCostsDetailScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            Icon(Icons.error_outline, size: 48, color: context.appError),
             const SizedBox(height: 16),
             Text(
-              'Ocurrió un error: $_errorMessage',
+              l10n.common_error_prefix(_errorMessage!),
               textAlign: TextAlign.center,
+              style: TextStyle(color: context.appTextPrimary),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _loadCosts,
-              child: const Text('Reintentar'),
+              child: Text(l10n.common_retry),
             ),
           ],
         ),
@@ -189,23 +198,23 @@ class _CropCostsDetailScreenState extends State<CropCostsDetailScreen> {
       child: ListView(
         padding: const EdgeInsets.all(16.0).copyWith(bottom: 80),
         children: [
-          _buildCropHeader(),
+          _buildCropHeader(l10n),
           const SizedBox(height: 16),
-          _buildProfitabilityEntryCard(),
+          _buildProfitabilityEntryCard(l10n),
           const SizedBox(height: 24),
           if (_costs.isEmpty)
-            _buildEmptyState()
+            _buildEmptyState(l10n)
           else
-            ..._costs.map((cost) => _buildCostCard(cost)),
+            ..._costs.map((cost) => _buildCostCard(cost, l10n)),
         ],
       ),
     );
   }
 
-  Widget _buildCropHeader() {
+  Widget _buildCropHeader(AppLocalizations l10n) {
     return Card(
       elevation: 0,
-      color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+      color: context.appPrimaryContainer,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -238,9 +247,10 @@ class _CropCostsDetailScreenState extends State<CropCostsDetailScreen> {
                       Text(
                         widget.crop.title,
                         key: const Key('crop_cost_crop_title'),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
+                          color: context.appTextPrimary,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -248,14 +258,14 @@ class _CropCostsDetailScreenState extends State<CropCostsDetailScreen> {
                         '${widget.crop.cropType} · ${widget.crop.municipality}, ${widget.crop.department}',
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey.shade700,
+                          color: context.appTextSecondary,
                         ),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Total de costos',
+                        l10n.costs_total,
                         style: TextStyle(
-                          color: Theme.of(context).primaryColor
+                          color: context.appOnPrimaryContainer
                               .withValues(alpha: 0.8),
                           fontWeight: FontWeight.bold,
                         ),
@@ -266,7 +276,7 @@ class _CropCostsDetailScreenState extends State<CropCostsDetailScreen> {
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: Theme.of(context).primaryColor,
+                          color: context.appPrimary,
                         ),
                       ),
                     ],
@@ -275,30 +285,30 @@ class _CropCostsDetailScreenState extends State<CropCostsDetailScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            _buildPerKgSection(),
+            _buildPerKgSection(l10n),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildPerKgSection() {
+  Widget _buildPerKgSection(AppLocalizations l10n) {
     final result = _perKgResult;
     if (result == null) return const SizedBox.shrink();
 
     final isCalculated = result.isCalculated;
     final denominatorText = result.denominator == null
-        ? 'No disponible'
+        ? l10n.common_not_available
         : UnitFormatters.formatKg(result.denominator);
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.7),
+        color: context.appSurface.withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: Theme.of(context).primaryColor.withValues(alpha: 0.2),
+          color: context.appPrimary.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
@@ -309,12 +319,15 @@ class _CropCostsDetailScreenState extends State<CropCostsDetailScreen> {
               Icon(
                 Icons.scale_outlined,
                 size: 18,
-                color: Theme.of(context).primaryColor,
+                color: context.appPrimary,
               ),
               const SizedBox(width: 6),
-              const Text(
-                'Costo estimado por kg',
-                style: TextStyle(fontWeight: FontWeight.bold),
+              Text(
+                l10n.costs_estimated_per_kg,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: context.appTextPrimary,
+                ),
               ),
             ],
           ),
@@ -326,49 +339,56 @@ class _CropCostsDetailScreenState extends State<CropCostsDetailScreen> {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Theme.of(context).primaryColor,
+                color: context.appPrimary,
               ),
             )
           else
             Text(
               result.message,
               key: const Key('crop_cost_per_kg_message'),
-              style: TextStyle(color: Colors.grey.shade800),
+              style: TextStyle(color: context.appTextSecondary),
             ),
           const SizedBox(height: 4),
           Text(
-            'Cantidad usada: $denominatorText (${result.denominatorSource.displayName})',
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+            l10n.costs_quantity_used(
+              denominatorText,
+              result.denominatorSource.displayName,
+            ),
+            style: TextStyle(fontSize: 12, color: context.appTextSecondary),
           ),
           Text(
-            'Campo: ${result.denominatorSource.fieldName}',
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+            l10n.costs_source_field(result.denominatorSource.fieldName),
+            style: TextStyle(fontSize: 12, color: context.appTextSecondary),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildProfitabilityEntryCard() {
+  Widget _buildProfitabilityEntryCard(AppLocalizations l10n) {
     return Card(
       key: const Key('crop_profitability_button'),
       margin: EdgeInsets.zero,
+      color: context.appSurface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         leading: CircleAvatar(
-          backgroundColor: Theme.of(context).primaryColor
-              .withValues(alpha: 0.1),
-          child: Icon(Icons.trending_up, color: Theme.of(context).primaryColor),
+          backgroundColor: context.appPrimary.withValues(alpha: 0.1),
+          child: Icon(Icons.trending_up, color: context.appPrimary),
         ),
-        title: const Text(
-          'Margen y precio sugerido',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          l10n.costs_profitability_title,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: context.appTextPrimary,
+          ),
         ),
-        subtitle: const Text(
-          'Calcula ganancia, margen y compara con referencias simuladas.',
+        subtitle: Text(
+          l10n.costs_profitability_subtitle,
+          style: TextStyle(color: context.appTextSecondary),
         ),
-        trailing: const Icon(Icons.chevron_right),
+        trailing: Icon(Icons.chevron_right, color: context.appTextSecondary),
         onTap: _openProfitability,
       ),
     );
@@ -379,14 +399,14 @@ class _CropCostsDetailScreenState extends State<CropCostsDetailScreen> {
       width: 60,
       height: 60,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appSurface,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Icon(Icons.grass, color: Theme.of(context).primaryColor),
+      child: Icon(Icons.grass, color: context.appPrimary),
     );
   }
 
-  Widget _buildCostCard(CropCostModel cost) {
+  Widget _buildCostCard(CropCostModel cost, AppLocalizations l10n) {
     IconData getCategoryIcon(CostCategory category) {
       switch (category) {
         case CostCategory.jornales:
@@ -402,6 +422,7 @@ class _CropCostsDetailScreenState extends State<CropCostsDetailScreen> {
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12.0),
+      color: context.appSurface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(
@@ -409,24 +430,33 @@ class _CropCostsDetailScreenState extends State<CropCostsDetailScreen> {
           vertical: 8.0,
         ),
         leading: CircleAvatar(
-          backgroundColor: Theme.of(context).primaryColor
-              .withValues(alpha: 0.1),
+          backgroundColor: context.appPrimary.withValues(alpha: 0.1),
           child: Icon(
             getCategoryIcon(cost.category),
-            color: Theme.of(context).primaryColor,
+            color: context.appPrimary,
           ),
         ),
         title: Text(
           cost.category.toDisplayName(),
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: context.appTextPrimary,
+          ),
         ),
-        subtitle: Text(cost.description),
+        subtitle: Text(
+          cost.description,
+          style: TextStyle(color: context.appTextSecondary),
+        ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               CurrencyFormatters.formatCop(cost.amount),
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: context.appTextPrimary,
+              ),
             ),
             PopupMenuButton<String>(
               onSelected: (value) {
@@ -437,23 +467,32 @@ class _CropCostsDetailScreenState extends State<CropCostsDetailScreen> {
                 }
               },
               itemBuilder: (context) => [
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'edit',
                   child: Row(
                     children: [
-                      Icon(Icons.edit, size: 20),
-                      SizedBox(width: 8),
-                      Text('Editar'),
+                      const Icon(Icons.edit, size: 20),
+                      const SizedBox(width: 8),
+                      Text(l10n.common_edit),
                     ],
                   ),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'delete',
                   child: Row(
                     children: [
-                      Icon(Icons.delete, size: 20, color: Colors.red),
-                      SizedBox(width: 8),
-                      Text('Eliminar', style: TextStyle(color: Colors.red)),
+                      Icon(
+                        Icons.delete,
+                        size: 20,
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        l10n.common_delete,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -465,7 +504,7 @@ class _CropCostsDetailScreenState extends State<CropCostsDetailScreen> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 40.0),
       child: Column(
@@ -474,20 +513,23 @@ class _CropCostsDetailScreenState extends State<CropCostsDetailScreen> {
           Icon(
             Icons.receipt_long_outlined,
             size: 64,
-            color: Colors.grey.shade400,
+            color: context.appTextDisabled,
           ),
           const SizedBox(height: 16),
           Text(
-            'Aún no tienes costos registrados',
-            style: Theme.of(context).textTheme.titleLarge
-                ?.copyWith(fontWeight: FontWeight.bold),
+            l10n.costs_empty_detail_title,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: context.appTextPrimary,
+                ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           Text(
-            'Agrega los gastos relacionados con esta cosecha para llevar un mejor control.',
-            style: Theme.of(context).textTheme.bodyMedium
-                ?.copyWith(color: Colors.grey.shade600),
+            l10n.costs_empty_detail_desc,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: context.appTextSecondary,
+                ),
             textAlign: TextAlign.center,
           ),
         ],

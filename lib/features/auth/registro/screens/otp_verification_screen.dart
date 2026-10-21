@@ -70,16 +70,18 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       );
     } else {
       // Error simulado
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor, ingresa los 6 dígitos completos')),
+        SnackBar(content: Text(l10n.otp_error_incomplete)),
       );
     }
   }
 
   Future<void> _resendOtp() async {
     // Simulación de reenvío
+    final l10n = AppLocalizations.of(context)!;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Código reenviado (Simulado)')),
+      SnackBar(content: Text(l10n.otp_resend_simulated)),
     );
   }
 
@@ -88,7 +90,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     final l10n = AppLocalizations.of(context)!;
     
     return Scaffold(
-      backgroundColor: AppColors.lightBackground,
+      backgroundColor: context.appBackground,
       appBar: CustomAppBar(title: l10n.otp_verification_appbar_title),
       body: SafeArea(
         child: Column(
@@ -102,7 +104,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppColors.lightTertiary,
+                        color: context.appPrimary,
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Image.asset(
@@ -116,7 +118,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     Text(
                       l10n.otp_verification_subtitle,
                       style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.lightTextSecondary,
+                        color: context.appTextSecondary,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -133,12 +135,12 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                           height: 54,
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
-                            color: AppColors.lightSurface,
+                            color: context.appSurface,
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
                               color: isFocused || hasText
-                                  ? AppColors.lightTertiary
-                                  : AppColors.lightBorder,
+                                  ? context.appPrimary
+                                  : context.appBorder,
                               width: isFocused || hasText ? 2.0 : 1.0,
                             ),
                           ),
@@ -149,9 +151,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                             textAlign: TextAlign.center,
                             textAlignVertical: TextAlignVertical.center,
                             maxLength: 1,
-                            cursorColor: AppColors.lightTertiary,
+                            cursorColor: context.appPrimary,
                             style: AppTextStyles.titleLarge.copyWith(
-                              color: AppColors.lightTextPrimary,
+                              color: context.appTextPrimary,
                               fontSize: 24,
                               height: 1.0,
                             ),
@@ -180,7 +182,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                         Text(
                           l10n.otp_verification_didnt_receive,
                           style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.lightTextSecondary,
+                            color: context.appTextSecondary,
                           ),
                         ),
                         GestureDetector(
@@ -188,7 +190,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                           child: Text(
                             l10n.otp_verification_resend,
                             style: AppTextStyles.bodyMedium.copyWith(
-                              color: AppColors.lightTertiary,
+                              color: context.appPrimary,
                               fontWeight: FontWeight.bold,
                             ),
                           ),

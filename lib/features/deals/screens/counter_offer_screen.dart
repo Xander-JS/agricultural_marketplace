@@ -102,7 +102,7 @@ class _CounterOfferScreenState extends State<CounterOfferScreen> {
 
   Future<void> _submit() async {
     if (_isLoading) return;
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
@@ -124,10 +124,8 @@ class _CounterOfferScreenState extends State<CounterOfferScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              l10n?.counter_offer_success ?? 'Contraoferta enviada exitosamente',
-            ),
-            backgroundColor: AppColors.success,
+            content: Text(l10n.counter_offer_success),
+            backgroundColor: context.appSuccess,
           ),
         );
         Navigator.pop(context, true);
@@ -137,7 +135,7 @@ class _CounterOfferScreenState extends State<CounterOfferScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString().replaceFirst('Exception: ', '')),
-            backgroundColor: AppColors.error,
+            backgroundColor: context.appError,
           ),
         );
       }
@@ -150,13 +148,12 @@ class _CounterOfferScreenState extends State<CounterOfferScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: context.appBackground,
       appBar: AppBar(
-        title: Text(l10n?.counter_offer_title ?? 'Contraoferta'),
+        title: Text(l10n.counter_offer_title),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -168,10 +165,13 @@ class _CounterOfferScreenState extends State<CounterOfferScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      'Modifica los términos de la oferta para ${widget.negotiation.crop?.title ?? 'la cosecha'}.',
+                      l10n.counter_offer_subtitle_crop(
+                        widget.negotiation.crop?.title ??
+                            l10n.deals_unknown_crop,
+                      ),
                       style: TextStyle(
                         fontSize: 16,
-                        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                        color: context.appTextPrimary,
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -179,7 +179,7 @@ class _CounterOfferScreenState extends State<CounterOfferScreen> {
                     TextFormField(
                       controller: _quantityController,
                       decoration: InputDecoration(
-                        labelText: l10n?.counter_offer_quantity_label ?? 'Cantidad (kg)',
+                        labelText: l10n.counter_offer_quantity_label,
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                         suffixText: 'kg',
                       ),
@@ -187,11 +187,11 @@ class _CounterOfferScreenState extends State<CounterOfferScreen> {
                       onChanged: (_) => setState(() {}),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
-                          return l10n?.offer_sheet_val_required ?? 'Campo requerido';
+                          return l10n.offer_sheet_val_required;
                         }
                         final parsed = double.tryParse(value.trim());
                         if (parsed == null || parsed <= 0) {
-                          return l10n?.offer_sheet_val_positive ?? 'Debe ser mayor a 0';
+                          return l10n.offer_sheet_val_positive;
                         }
                         return null;
                       },
@@ -201,7 +201,7 @@ class _CounterOfferScreenState extends State<CounterOfferScreen> {
                     TextFormField(
                       controller: _priceController,
                       decoration: InputDecoration(
-                        labelText: l10n?.counter_offer_price_label ?? 'Precio propuesto por kg',
+                        labelText: l10n.counter_offer_price_label,
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                         prefixText: '\$ ',
                       ),
@@ -209,11 +209,11 @@ class _CounterOfferScreenState extends State<CounterOfferScreen> {
                       onChanged: (_) => setState(() {}),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
-                          return l10n?.offer_sheet_val_required ?? 'Campo requerido';
+                          return l10n.offer_sheet_val_required;
                         }
                         final parsed = double.tryParse(value.trim());
                         if (parsed == null || parsed <= 0) {
-                          return l10n?.offer_sheet_val_positive ?? 'Debe ser mayor a 0';
+                          return l10n.offer_sheet_val_positive;
                         }
                         return null;
                       },
@@ -223,7 +223,7 @@ class _CounterOfferScreenState extends State<CounterOfferScreen> {
                     DropdownButtonFormField<String>(
                       initialValue: _deliveryMethod,
                       decoration: InputDecoration(
-                        labelText: l10n?.counter_offer_delivery_label ?? 'Método de entrega',
+                        labelText: l10n.counter_offer_delivery_label,
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                       items: _deliveryOptions.map((method) {
@@ -243,9 +243,9 @@ class _CounterOfferScreenState extends State<CounterOfferScreen> {
                     TextFormField(
                       controller: _messageController,
                       decoration: InputDecoration(
-                        labelText: l10n?.counter_offer_message_label ?? 'Mensaje (Opcional)',
+                        labelText: l10n.counter_offer_message_label,
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        hintText: l10n?.counter_offer_message_hint ?? 'Explica el motivo de tu contraoferta',
+                        hintText: l10n.counter_offer_message_hint,
                       ),
                       maxLines: 3,
                     ),
@@ -255,18 +255,18 @@ class _CounterOfferScreenState extends State<CounterOfferScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       decoration: BoxDecoration(
-                        color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSecondary.withValues(alpha: 0.5),
+                        color: context.appSurfaceVariant,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            l10n?.offer_sheet_estimated_total ?? 'Total estimado',
+                            l10n.offer_sheet_estimated_total,
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                              color: context.appTextPrimary,
                             ),
                           ),
                           Text(
@@ -274,7 +274,7 @@ class _CounterOfferScreenState extends State<CounterOfferScreen> {
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: isDark ? AppColors.darkTertiary : AppColors.lightTertiary,
+                              color: context.appPrimary,
                             ),
                           ),
                         ],
@@ -285,13 +285,13 @@ class _CounterOfferScreenState extends State<CounterOfferScreen> {
                     ElevatedButton(
                       onPressed: _submit,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: isDark ? AppColors.darkTertiary : AppColors.lightTertiary,
-                        foregroundColor: isDark ? AppColors.darkBackground : Colors.white,
+                        backgroundColor: context.appPrimary,
+                        foregroundColor: context.appOnPrimary,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                       child: Text(
-                        l10n?.counter_offer_send_btn ?? 'Enviar contraoferta',
+                        l10n.counter_offer_send_btn,
                         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                     ),

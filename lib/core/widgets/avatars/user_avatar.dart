@@ -27,17 +27,12 @@ class UserAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final diameter = radius * 2;
     final iconSize = radius * 1.1;
 
-    final effectiveBgColor = backgroundColor ??
-        (isDark ? AppColors.darkSurfaceVariant : AppColors.lightTertiary);
-    final effectiveBorderColor = borderColor ??
-        (isDark ? AppColors.darkBorder : AppColors.lightTertiary.withValues(alpha: 0.3));
-    final effectiveIconColor = iconColor ??
-        (isDark ? AppColors.darkTextDisabled : AppColors.lightSurface);
+    final effectiveBgColor = backgroundColor ?? context.appSurfaceVariant;
+    final effectiveBorderColor = borderColor ?? context.appBorder;
+    final effectiveIconColor = iconColor ?? context.appTextDisabled;
 
     String? resolvedUrl = imageUrl?.trim();
     if (resolvedUrl != null && resolvedUrl.isNotEmpty) {

@@ -190,6 +190,72 @@
   "market_sort_reputation": "Mejor reputación",
   "market_no_results": "No se encontraron cosechas que coincidan con estos criterios",
   "market_clear_filters": "Limpiar filtros",
+  "market_own_profile": "Mi perfil",
+  "publish_title_new": "Publicar Cosecha",
+  "publish_title_edit": "Editar Cosecha",
+  "publish_unauthorized_title": "Acceso No Autorizado",
+  "publish_unauthorized_desc": "Solo los agricultores registrados y verificados pueden publicar cosechas.",
+  "publish_validation_incomplete": "Por favor, completa los campos obligatorios correctamente.",
+  "publish_harvest_date_required": "Debes indicar la fecha estimada de cosecha para venta anticipada.",
+  "publish_not_authenticated": "No autenticado",
+  "publish_access_farmer_only": "Acceso denegado: solo los agricultores pueden publicar cosechas.",
+  "publish_access_other_crop": "Acceso denegado: no puedes editar una cosecha perteneciente a otro productor.",
+  "publish_success_active": "¡Cosecha publicada exitosamente!",
+  "publish_success_draft": "Borrador guardado.",
+  "publish_save_error": "Error al guardar: {error}",
+  "@publish_save_error": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "publish_section_general": "1. Información General",
+  "publish_section_prices": "2. Precios y Cantidades",
+  "publish_section_location": "3. Ubicación",
+  "publish_section_sale_mode": "4. Modalidad de Venta",
+  "publish_section_images": "5. Imágenes",
+  "publish_field_title": "Título de la publicación",
+  "publish_field_crop_type": "Tipo de Producto (Ej: Papa Capira, Café Castillo)",
+  "publish_field_description": "Descripción de la cosecha",
+  "publish_field_price": "Precio por kg ($)",
+  "publish_field_stock": "Total Disp. (kg)",
+  "publish_field_min_order": "Pedido mínimo (kg)",
+  "publish_field_department": "Departamento",
+  "publish_field_municipality": "Municipio",
+  "publish_early_sale_title": "¿Es Venta Anticipada?",
+  "publish_early_sale_desc": "Útil si la cosecha aún no está lista pero quieres asegurar ventas.",
+  "publish_field_estimated_yield": "Rendimiento est. (kg)",
+  "publish_field_harvest_date": "Fecha de Cosecha",
+  "publish_select_date": "Seleccionar...",
+  "publish_current_images": "Imágenes actuales de la publicación:",
+  "publish_add_images": "Añadir Imágenes",
+  "publish_save_draft": "Guardar Borrador",
+  "publish_submit": "Publicar",
+  "publish_validation_required": "Requerido",
+  "publish_validation_greater_zero": "Mayor a 0",
+  "publish_validation_non_negative": "Mayor o igual a 0",
+  "publish_voice_banner_title": "Borrador creado por voz",
+  "publish_voice_banner_desc": "Revisa los datos reconocidos. No se publicará nada hasta que confirmes el formulario.",
+  "publish_voice_confirm": "Confirma: {fields}",
+  "@publish_voice_confirm": {
+    "placeholders": {
+      "fields": {
+        "type": "String"
+      }
+    }
+  },
+  "publish_voice_missing": "Faltan o debes completar: {fields}.",
+  "@publish_voice_missing": {
+    "placeholders": {
+      "fields": {
+        "type": "String"
+      }
+    }
+  },
+  "publish_voice_label_title": "Título",
+  "publish_voice_label_description": "Descripción",
+  "publish_voice_label_location": "Ubicación",
   "crop_card_available": "Disponible",
   "crop_card_price_per_kg": "Precio / kg",
   "crop_detail_title": "Detalle de Cosecha",
@@ -205,6 +271,7 @@
   "crop_detail_view_equivalences": "Ver equivalencias",
   "crop_detail_min_order": "Pedido Mínimo",
   "crop_detail_location": "Ubicación",
+  "crop_detail_estimated_distance": "Distancia estimada",
   "crop_detail_publication_date": "Fecha de publicación",
   "crop_detail_early_sale": "Venta Anticipada",
   "crop_detail_estimated_harvest": "Fecha est. de cosecha",
@@ -269,6 +336,14 @@
   "deal_reject_confirm_desc": "Esta acción no se puede deshacer y el trato se cerrará.",
   "counter_offer_title": "Contraoferta",
   "counter_offer_subtitle": "Modifica los términos de la oferta para la cosecha seleccionada.",
+  "counter_offer_subtitle_crop": "Modifica los términos de la oferta para {crop}.",
+  "@counter_offer_subtitle_crop": {
+    "placeholders": {
+      "crop": {
+        "type": "String"
+      }
+    }
+  },
   "counter_offer_quantity_label": "Cantidad (kg)",
   "counter_offer_price_label": "Precio propuesto por kg",
   "counter_offer_delivery_label": "Método de entrega",
@@ -328,7 +403,7 @@
   "deals_status_completed": "Completado",
   "deals_status_rejected": "Rechazado",
   "deals_status_cancelled": "Cancelado",
-  "offer_sheet_base_price": "Base",
+  "offer_sheet_base_price": "Base: {price}",
   "offer_sheet_min_order": "Mín",
   "offer_sheet_available_stock": "Stock disp.",
   "offer_sheet_unapproved_error": "Tu cuenta debe estar verificada y aprobada para realizar ofertas comerciales.",
@@ -365,6 +440,10 @@
   "reset_password_cancel": "Cancelar",
   "verification_status_reupload_coming_soon": "Funcionalidad de re-carga en desarrollo.",
   "moderation_queue_title": "Cola de Moderación",
+  "moderation_error_title": "No se pudieron cargar las solicitudes",
+  "moderation_error_processing": "Error al procesar la solicitud",
+  "moderation_error_rejecting": "Error al rechazar la solicitud",
+  "moderation_error_updating": "Error al actualizar la solicitud",
   "moderation_queue_empty_title": "No hay solicitudes pendientes",
   "moderation_queue_empty_desc": "Todas las solicitudes de verificación han sido resueltas o no hay envíos pendientes.",
   "moderation_unauthorized_title": "Acceso No Autorizado",
@@ -453,5 +532,620 @@
   "moderation_in_review_success": "Solicitud marcada en revisión correctamente.",
   "moderation_filter_all": "Todos",
   "moderation_filter_pending": "Pendientes",
-  "moderation_filter_in_review": "En revisión"
+  "moderation_filter_in_review": "En revisión",
+  "common_retry": "Reintentar",
+  "common_cancel": "Cancelar",
+  "common_close": "Cerrar",
+  "common_delete": "Eliminar",
+  "common_edit": "Editar",
+  "common_save_changes": "Guardar cambios",
+  "common_back": "Volver",
+  "common_understood": "Entendido",
+  "common_accept": "Aceptar",
+  "common_not_available": "No disponible",
+  "common_simulated": "SIMULADA",
+  "common_field_required": "Campo requerido",
+  "common_greater_than_zero": "Debe ser mayor a 0",
+  "common_unexpected_error": "Error inesperado: {error}",
+  "@common_unexpected_error": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "common_operation_error": "No se pudo completar la operación. Inténtalo de nuevo.",
+  "common_error_prefix": "Ocurrió un error: {error}",
+  "@common_error_prefix": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "product_card_variety": "Variedad: {variety}",
+  "@product_card_variety": {
+    "placeholders": {
+      "variety": {
+        "type": "String"
+      }
+    }
+  },
+  "product_card_view_details": "Ver detalles",
+  "seller_details_reliability": "Confiabilidad",
+  "seller_details_volume": "Volumen Disponible",
+  "seller_details_min_order": "Pedido Mínimo",
+  "seller_details_condition": "Condición & Logística",
+  "otp_error_incomplete": "Por favor, ingresa los 6 dígitos completos",
+  "otp_resend_simulated": "Código reenviado (Simulado)",
+  "personal_info_phone_invalid": "Número telefónico inválido",
+  "personal_info_password_min": "Mínimo 6 caracteres",
+  "processing_confirmation_required": "Cuenta creada. Por favor confirma tu medio de contacto para continuar.",
+  "verification_status_simulated_review": "Diagnóstico simulado en revisión; tu cuenta está a la espera de aprobación por un moderador.",
+  "auth_gate_invalid_role": "El rol del perfil no es válido o no está definido.",
+  "auth_gate_checking": "Consultando estado...",
+  "auth_gate_generic_error_title": "Ha ocurrido un error",
+  "auth_gate_unknown_status": "No pudimos determinar el estado de verificación. Por favor, contacta a soporte.",
+  "costs_title": "Costos",
+  "costs_intro": "Lleva un registro de los gastos\nasociados a tus cosechas.",
+  "costs_per_kg_calculated": "Costo por kg: {amount}",
+  "@costs_per_kg_calculated": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "costs_per_kg_no_costs": "Costo por kg: sin costos registrados",
+  "costs_per_kg_invalid_total": "Costo por kg: total inválido",
+  "costs_per_kg_invalid_quantity": "Costo por kg: cantidad inválida",
+  "costs_per_kg_pending_yield": "Costo por kg: rendimiento estimado pendiente",
+  "costs_total": "Total de costos",
+  "costs_view": "Ver costos",
+  "costs_empty_title": "Primero debes crear una cosecha",
+  "costs_empty_desc": "Para llevar un registro de costos, necesitas tener al menos una cosecha registrada.",
+  "costs_create_crop": "Crear cosecha",
+  "costs_add": "Agregar costo",
+  "costs_add_title": "Agregar Costo",
+  "costs_edit_title": "Editar Costo",
+  "costs_category": "Categoría",
+  "costs_description": "Descripción",
+  "costs_description_hint": "Ej: Mano de obra para recolección",
+  "costs_description_required": "Por favor ingresa una descripción",
+  "costs_value": "Valor",
+  "costs_value_hint": "Ej: 150000 o 150000,50",
+  "costs_value_required": "Por favor ingresa un valor",
+  "costs_value_invalid": "Ingresa un importe numérico mayor que 0",
+  "costs_save": "Guardar costo",
+  "costs_update": "Actualizar costo",
+  "costs_added": "Costo agregado exitosamente",
+  "costs_updated": "Costo actualizado exitosamente",
+  "costs_save_error": "Error al guardar: {error}",
+  "@costs_save_error": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "costs_delete_title": "¿Eliminar este costo?",
+  "costs_delete_desc": "Esta acción no se puede deshacer.",
+  "costs_deleted": "Costo eliminado",
+  "costs_delete_error": "Error al eliminar: {error}",
+  "@costs_delete_error": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "costs_estimated_per_kg": "Costo estimado por kg",
+  "costs_quantity_used": "Cantidad usada: {quantity} ({source})",
+  "@costs_quantity_used": {
+    "placeholders": {
+      "quantity": {
+        "type": "String"
+      },
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "costs_source_field": "Campo: {field}",
+  "@costs_source_field": {
+    "placeholders": {
+      "field": {
+        "type": "String"
+      }
+    }
+  },
+  "costs_profitability_title": "Margen y precio sugerido",
+  "costs_profitability_subtitle": "Calcula ganancia, margen y compara con referencias simuladas.",
+  "costs_empty_detail_title": "Aún no tienes costos registrados",
+  "costs_empty_detail_desc": "Agrega los gastos relacionados con esta cosecha para llevar un mejor control.",
+  "profitability_title": "Margen y precio sugerido",
+  "profitability_cost_per_kg": "Costo de producción por kg",
+  "profitability_used_quantity": "Cantidad usada: {quantity} ({source}) · {field}",
+  "@profitability_used_quantity": {
+    "placeholders": {
+      "quantity": {
+        "type": "String"
+      },
+      "source": {
+        "type": "String"
+      },
+      "field": {
+        "type": "String"
+      }
+    }
+  },
+  "profitability_current_price": "Precio actual publicado",
+  "profitability_invalid_current_price": "El precio actual no es válido. Puedes introducir un precio temporal para la simulación.",
+  "profitability_unavailable_title": "No se puede calcular el margen ni el precio sugerido",
+  "profitability_unavailable_desc": "Corrige los costos o los datos del cultivo para continuar. No se muestran valores estimados para evitar resultados engañosos.",
+  "profitability_evaluate_title": "Evalúa tu precio de venta",
+  "profitability_selling_price": "Precio de venta por kg",
+  "profitability_edit_note": "Puedes editar este valor para la simulación; no se guarda ni modifica el precio publicado.",
+  "profitability_temporary_price": "Precio temporal para simulación; no se ha guardado.",
+  "profitability_invalid_price": "Ingresa un precio de venta válido mayor que 0.",
+  "profitability_loss_per_kg": "Pérdida estimada por kg",
+  "profitability_profit_per_kg": "Ganancia estimada por kg",
+  "profitability_margin_over_price": "Margen sobre el precio de venta",
+  "profitability_loss_message": "El precio evaluado está por debajo del costo de producción.",
+  "profitability_low_margin": "El margen está por debajo del 15 % de referencia del prototipo.",
+  "profitability_margin_formula": "Margen = (precio − costo) / precio × 100",
+  "profitability_suggested_title": "Precio sugerido según margen objetivo",
+  "profitability_target_margin": "Margen objetivo (%)",
+  "profitability_margin_note": "El margen se aplica sobre el precio de venta; no es un recargo sobre el costo.",
+  "profitability_invalid_margin": "Ingresa un margen entre 0 % y menos de 100 %.",
+  "profitability_orientation": "Precio orientativo. No modifica ni publica el precio del cultivo.",
+  "profitability_regional_reference": "Referencia regional simulada",
+  "profitability_reference_missing": "No hay una referencia simulada configurada para este cultivo.",
+  "profitability_reference_crop": "Cultivo de referencia",
+  "profitability_reference_region": "Región",
+  "profitability_reference_price": "Precio de referencia simulado",
+  "profitability_reference_type": "Tipo de dato",
+  "profitability_reference_simulated": "Simulado para el prototipo",
+  "profitability_reference_difference": "Diferencia frente a la referencia simulada",
+  "profitability_reference_difference_note": "La diferencia se calcula como precio evaluado − referencia.",
+  "crop_detail_less_than_km": "< 1 km",
+  "crop_detail_km": "{km} km",
+  "@crop_detail_km": {
+    "placeholders": {
+      "km": {
+        "type": "String"
+      }
+    }
+  },
+  "crop_detail_owner_edit_denied": "Acceso denegado: solo el productor dueño puede modificar esta publicación.",
+  "crop_detail_error": "Error: {error}",
+  "@crop_detail_error": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "crop_detail_other_edit_denied": "Acceso denegado: no puedes editar publicaciones de otros usuarios.",
+  "crop_detail_other_delete_denied": "Acceso denegado: no puedes borrar publicaciones de otros usuarios.",
+  "crop_detail_delete_title": "Borrar Publicación",
+  "crop_detail_delete_confirm": "¿Estás seguro de que deseas borrar esta publicación? Esta acción no se puede deshacer.",
+  "crop_detail_deleted": "Publicación borrada exitosamente",
+  "crop_detail_own_offer_error": "No puedes iniciar una oferta en tu propia cosecha.",
+  "crop_detail_out_of_stock": "Esta cosecha se encuentra agotada o sin stock disponible.",
+  "crop_detail_verification_required": "Verificación requerida",
+  "crop_detail_verification_desc": "Para realizar ofertas y negociar con los agricultores, tu perfil debe estar verificado y aprobado por un moderador.",
+  "crop_detail_offer_sent": "Oferta enviada exitosamente.",
+  "crop_detail_view_deals": "Ver Tratos",
+  "crop_detail_total_available": "Total Disponible",
+  "crop_detail_price_matches_reference": "Precio igual a la referencia regional ({price}/kg)",
+  "@crop_detail_price_matches_reference": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "crop_detail_price_vs_reference": "{sign}{amount}/kg ({sign}{percent}%) vs referencia regional ({reference}/kg)",
+  "@crop_detail_price_vs_reference": {
+    "placeholders": {
+      "sign": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "String"
+      },
+      "reference": {
+        "type": "String"
+      }
+    }
+  },
+  "crop_detail_regional_reference_region": "Referencia regional ({region})",
+  "@crop_detail_regional_reference_region": {
+    "placeholders": {
+      "region": {
+        "type": "String"
+      }
+    }
+  },
+  "crop_detail_producer_with_location": "{producer} ({location})",
+  "@crop_detail_producer_with_location": {
+    "placeholders": {
+      "producer": {
+        "type": "String"
+      },
+      "location": {
+        "type": "String"
+      }
+    }
+  },
+  "crop_status_draft": "Borrador",
+  "crop_status_active": "Activa",
+  "crop_status_paused": "Pausada",
+  "crop_status_exhausted": "Agotada",
+  "@offer_sheet_base_price": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "offer_sheet_min_stock": "Mín: {min} | Stock: {stock}",
+  "@offer_sheet_min_stock": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "stock": {
+        "type": "String"
+      }
+    }
+  },
+  "units_title": "Equivalencias de Unidades",
+  "units_close": "Entendido",
+  "units_reference_quantity": "Cantidad de referencia (disponible)",
+  "units_calculate_quantity": "Consultar otra cantidad (kg)",
+  "units_input_hint": "Ej. 500",
+  "units_approximate_equivalents": "Equivalencias tradicionales aproximadas",
+  "units_equivalence_rate": "1 {unit} = {value}",
+  "@units_equivalence_rate": {
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "units_disclaimer": "Conversiones aproximadas de carácter exclusivamente informativo. No modifican el inventario, los precios ni los pedidos.",
+  "units_empty": "0 {unit}",
+  "@units_empty": {
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "units_approx": "≈ {value} {unit}",
+  "@units_approx": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      },
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "deals_error_prefix": "Ocurrió un error: {error}",
+  "@deals_error_prefix": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "deals_producer": "Productor",
+  "deals_buyer": "Comprador",
+  "deals_producer_with_location": "Productor ({location})",
+  "@deals_producer_with_location": {
+    "placeholders": {
+      "location": {
+        "type": "String"
+      }
+    }
+  },
+  "deals_counterpart_name": "{label}: {name}",
+  "@deals_counterpart_name": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deal_detail_offer_history": "Historial de ofertas",
+  "deal_detail_rating_sent": "Calificación enviada correctamente",
+  "deal_detail_generic_error": "No se pudo completar la operación. Inténtalo de nuevo.",
+  "deal_detail_the_farmer": "El productor",
+  "deal_detail_the_buyer": "El comprador",
+  "deal_detail_authorized": "Autorizado",
+  "deal_detail_private": "Privado",
+  "deal_detail_location_authorized_status": "Autorizada",
+  "deal_detail_location_private_status": "Privada",
+  "deal_detail_permissions_update_error": "Error al actualizar permisos: {error}",
+  "@deal_detail_permissions_update_error": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "deal_detail_share_farm_location_permission": "Compartir la ubicación de la finca",
+  "deal_detail_contact_farmer": "Datos de contacto del Productor",
+  "deal_detail_contact_buyer": "Datos de contacto del Comprador",
+  "deal_detail_phone_whatsapp": "Teléfono / WhatsApp autorizado:",
+  "deal_detail_call": "Llamar",
+  "deal_detail_whatsapp": "WhatsApp",
+  "deal_detail_copy": "Copiar",
+  "deal_detail_phone": "Teléfono",
+  "deal_detail_contact_not_shared": "{role} no ha autorizado compartir su teléfono ni WhatsApp.",
+  "@deal_detail_contact_not_shared": {
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "deal_detail_location_authorized": "Ubicación física autorizada:",
+  "deal_detail_coordinates": "Coordenadas: {lat}, {lon}",
+  "@deal_detail_coordinates": {
+    "placeholders": {
+      "lat": {
+        "type": "String"
+      },
+      "lon": {
+        "type": "String"
+      }
+    }
+  },
+  "deal_detail_view_location": "Ver detalles de ubicación",
+  "deal_detail_location_not_shared": "{role} no ha autorizado compartir su ubicación física.",
+  "@deal_detail_location_not_shared": {
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "deal_detail_my_permissions": "Tus permisos para este trato:",
+  "deal_detail_phone_permission": "Teléfono: {status}",
+  "@deal_detail_phone_permission": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "deal_detail_location_permission": "Ubicación: {status}",
+  "@deal_detail_location_permission": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "deal_detail_modify": "Modificar",
+  "deal_detail_copied": "{label} copiado al portapapeles: {text}",
+  "@deal_detail_copied": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "deal_detail_phone_copied": "Teléfono {phone} copiado. Listo para marcar desde tu teléfono.",
+  "@deal_detail_phone_copied": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "deal_detail_whatsapp_copied": "Contacto de WhatsApp {phone} copiado. Abre WhatsApp para iniciar conversación.",
+  "@deal_detail_whatsapp_copied": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "deal_detail_municipality_department": "Municipio / Departamento:",
+  "deal_detail_geo_coordinates": "Coordenadas geográficas:",
+  "deal_detail_lat_lon": "Lat: {lat}\nLon: {lon}",
+  "@deal_detail_lat_lon": {
+    "placeholders": {
+      "lat": {
+        "type": "String"
+      },
+      "lon": {
+        "type": "String"
+      }
+    }
+  },
+  "deal_detail_location_verified": "Ubicación verificada para la entrega de este lote.",
+  "deal_detail_coordinates_label": "Coordenadas",
+  "deal_detail_copy_coordinates": "Copiar coordenadas",
+  "deal_detail_you": "Tú",
+  "deal_detail_delivery": "Entrega: {method}",
+  "@deal_detail_delivery": {
+    "placeholders": {
+      "method": {
+        "type": "String"
+      }
+    }
+  },
+  "deal_detail_cancel_proposal": "Cancelar propuesta",
+  "deal_detail_consent_save_error": "Aviso: no se pudo guardar consentimiento inicial: {error}",
+  "@deal_detail_consent_save_error": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "deal_detail_agreed_success": "Trato acordado correctamente",
+  "deal_detail_permissions_updated": "Permisos de contacto actualizados correctamente",
+  "deal_detail_reject_confirm_desc_extended": "Esta acción no se puede deshacer y el trato se cerrará.",
+  "deal_detail_rejected": "El trato ha sido rechazado",
+  "deal_detail_cancel_confirm_title": "¿Cancelar este acuerdo?",
+  "deal_detail_cancel_proposal_title": "¿Cancelar esta propuesta?",
+  "deal_detail_cancel_confirm_desc": "Esta acción cancelará el trato acordado, liberará el stock reservado y cerrará la negociación.",
+  "deal_detail_cancel_proposal_desc": "Esta acción cancelará la propuesta enviada, liberará el stock reservado y cerrará la negociación.",
+  "deal_detail_cancel_agreed_btn": "Cancelar acuerdo",
+  "deal_detail_cancel_proposal_btn": "Cancelar propuesta",
+  "deal_detail_cancelled_success": "Acuerdo cancelado correctamente",
+  "deal_detail_proposal_cancelled_success": "Propuesta cancelada correctamente",
+  "deal_detail_complete_confirm_title": "¿Completar este trato?",
+  "deal_detail_complete_confirm_desc": "Esta acción confirmará la entrega física del producto y registrará la venta final en el inventario.",
+  "deal_detail_complete": "Completar",
+  "deal_detail_completed": "Trato completado exitosamente",
+  "deal_detail_rating_error": "No se pudo enviar la calificación. Inténtalo de nuevo.",
+  "deal_detail_stars_required": "Selecciona de 1 a 5 estrellas",
+  "deal_detail_comment_optional": "Comentario (opcional)",
+  "deal_detail_comment_hint": "Cuéntanos cómo fue tu experiencia",
+  "deal_detail_submit_rating": "Enviar calificación",
+  "deal_detail_accept_terms_title": "Aceptar oferta y acordar trato",
+  "deal_detail_accept_terms_desc": "Al formalizar el acuerdo, el inventario pactado se reservará en el sistema. Selecciona qué datos de contacto autorizas compartir con la contraparte para coordinar la entrega física:",
+  "deal_detail_share_phone": "Compartir mi teléfono y WhatsApp",
+  "deal_detail_share_phone_desc": "Permite a la contraparte llamarte o escribirte por WhatsApp para coordinar.",
+  "deal_detail_share_location": "Compartir mi ubicación de entrega",
+  "deal_detail_share_farm_location": "Compartir la ubicación de la finca",
+  "deal_detail_share_location_desc": "Permite ver el municipio y coordenadas para planificar la ruta de entrega.",
+  "deal_detail_confirm_agreement": "Confirmar acuerdo",
+  "deal_detail_my_permissions_title": "Mis permisos de contacto",
+  "deal_detail_my_permissions_desc": "Controla qué datos privados autorizas ver a la contraparte para coordinar este trato. Puedes revocar o conceder permisos en cualquier momento:",
+  "deal_detail_share_phone_desc_permission": "La contraparte podrá ver tu número para llamadas o mensajes.",
+  "deal_detail_share_location_desc_permission": "La contraparte podrá ver municipio y coordenadas para la logística.",
+  "moderation_reject_sheet_title": "Rechazar Solicitud",
+  "moderation_reject_reason_desc": "Indica el motivo del rechazo para que el usuario pueda corregirlo:",
+  "moderation_lbl_email": "Email:",
+  "moderation_lbl_user_id": "User ID:",
+  "moderation_queue_refresh": "Actualizar",
+  "moderation_status_pending": "Pendiente",
+  "moderation_status_approved": "Aprobado",
+  "moderation_status_rejected": "Rechazado",
+  "moderation_status_suspended": "Suspendido",
+  "moderation_status_unknown": "Desconocido",
+  "profile_title": "Mi Perfil",
+  "profile_my_farm": "Mi Finca",
+  "profile_settings": "Configuración",
+  "profile_load_data_error": "No se pudieron cargar los datos.",
+  "profile_location": "Ubicación",
+  "profile_whatsapp": "WhatsApp",
+  "profile_stats_heading": "Estadísticas",
+  "profile_published": "Publicados",
+  "profile_negotiating": "Negociando",
+  "profile_closed_female": "Cerradas",
+  "profile_closed_male": "Cerrados",
+  "profile_update_error": "Error al actualizar dato: {error}",
+  "@profile_update_error": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "profile_photo_error": "Error al subir imagen: {error}",
+  "@profile_photo_error": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "profile_reputation_title": "Reputación",
+  "profile_reputation_loading": "Cargando reputación...",
+  "profile_reputation_error": "No se pudo cargar la reputación.",
+  "purchases_error_prefix": "Ocurrió un error: {error}",
+  "@purchases_error_prefix": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "purchases_merchant_role": "Rol Comerciante",
+  "purchase_card_producer_local": "Productor local",
+  "purchase_card_producer_municipality": "Productor ({municipality})",
+  "@purchase_card_producer_municipality": {
+    "placeholders": {
+      "municipality": {
+        "type": "String"
+      }
+    }
+  },
+  "purchase_card_agreed_crop": "Cosecha acordada",
+  "purchase_card_quantity": "Cantidad",
+  "purchase_card_price_per_kg": "Precio / kg",
+  "purchase_card_total_agreed": "Total pactado",
+  "ai_close": "Cerrar",
+  "ai_title": "Publicar por voz",
+  "ai_subtitle": "Cuéntanos qué quieres vender. Revisarás todo antes de publicar.",
+  "ai_examples_title": "Puedes mencionar:",
+  "ai_examples_desc": "Nombre del cultivo, cantidad y unidad (kg, bulto, arroba, canastilla, caja o tonelada), y precio por kg o por unidad.",
+  "ai_example_text": "Ejemplo: “Tengo 50 bultos de papa a 2.000 pesos el kilo”.",
+  "ai_unavailable_title": "La interpretación automática no está disponible en este entorno porque falta AI_API_KEY.",
+  "ai_unavailable_desc": "Puedes dictar y revisar la transcripción, o continuar manualmente.",
+  "ai_preparing": "Preparando el micrófono...",
+  "ai_permission_title": "Permiso de micrófono denegado",
+  "ai_permission_desc": "No podemos acceder al micrófono. Habilita el permiso en los ajustes del sistema o continúa manualmente.",
+  "ai_voice_unavailable_title": "Reconocimiento de voz no disponible",
+  "ai_voice_unavailable_desc": "Este dispositivo no ofrece el servicio de reconocimiento de voz que necesita la aplicación. Puedes publicar manualmente.",
+  "ai_transcribing": "Transcribiendo lo que dijiste...",
+  "ai_interpreting": "Interpretando los datos con IA...",
+  "ai_intro": "Pulsa el micrófono y describe tu cosecha con tus propias palabras. No se publicará nada automáticamente.",
+  "ai_start": "Comenzar a hablar",
+  "ai_manual": "Prefiero llenar el formulario manualmente",
+  "ai_retry_mic": "Reintentar micrófono",
+  "ai_continue_manual": "Continuar manualmente",
+  "ai_listening": "Escuchando...",
+  "ai_listening_hint": "Habla ahora. Puedes detenerte cuando termines.",
+  "ai_stop_review": "Detener y revisar",
+  "ai_review_transcript_title": "Revisa la transcripción",
+  "ai_review_transcript_desc": "Si el micrófono entendió mal alguna palabra, corrígela antes de interpretar los datos.",
+  "ai_transcript_label": "Transcripción",
+  "ai_interpret": "Interpretar con IA",
+  "ai_record_again": "Grabar de nuevo",
+  "ai_recognized_title": "Datos reconocidos",
+  "ai_recognized_desc": "Estos datos se precargarán en el formulario. Todavía puedes corregirlos y debes completar lo que falte.",
+  "ai_no_data_desc": "No se identificaron datos utilizables. Puedes reintentar la interpretación, grabar de nuevo o continuar manualmente.",
+  "ai_warnings": "Advertencias",
+  "ai_confirm_data": "Confirma estos datos",
+  "ai_missing_data": "Faltan datos por completar",
+  "ai_review_continue": "Revisar y continuar",
+  "ai_retry_interpret": "Reintentar interpretación",
+  "ai_crop": "Cultivo",
+  "ai_quantity": "Cantidad",
+  "ai_price": "Precio",
+  "ai_note": "Nota",
+  "ai_no_data": "Sin datos identificados.",
+  "ai_failed_title": "No se pudo completar",
+  "ai_failed_desc": "Ocurrió un problema. Intenta de nuevo o continúa manualmente.",
+  "ai_error_mic_start": "No se pudo iniciar el micrófono. Comprueba el permiso o continúa manualmente.",
+  "ai_error_mic_stop": "No se pudo detener el reconocimiento de voz. Vuelve a intentarlo o continúa manualmente.",
+  "ai_error_no_speech": "No se reconoció voz. Acércate al micrófono, intenta de nuevo o continúa manualmente.",
+  "ai_error_no_speech_retry": "No se reconoció voz. Intenta hablar más cerca del micrófono o continúa manualmente.",
+  "ai_error_empty_transcript": "La transcripción está vacía. Graba de nuevo o escribe lo que deseas publicar.",
+  "ai_error_not_configured": "La interpretación con IA no está configurada. Falta AI_API_KEY. Puedes continuar manualmente.",
+  "ai_error_interpret": "No se pudo interpretar la transcripción. Intenta de nuevo o continúa manualmente."
 }

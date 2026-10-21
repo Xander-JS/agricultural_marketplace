@@ -6,6 +6,8 @@ import '../models/crop_model.dart';
 import '../services/crop_service.dart';
 import '../../ai_assistant/models/voice_crop_draft.dart';
 import '../../geo/services/geo_simulation_service.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/utils/app_formatters.dart';
 import '../../../core/constants/user_roles.dart';
 
@@ -46,7 +48,7 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
   final _minOrderController = TextEditingController();
   final _departmentController = TextEditingController();
   final _municipalityController = TextEditingController();
-  
+
   // Venta anticipada
   final _estimatedYieldController = TextEditingController();
   DateTime? _estimatedHarvestDate;
@@ -60,7 +62,7 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
     super.initState();
     _minOrderController.text = '1';
     _existingImageUrls = List<String>.from(widget.cropToEdit?.imageUrls ?? const []);
-    
+
     if (widget.cropToEdit != null) {
       // La edición de un cultivo existente siempre tiene prioridad sobre un
       // borrador de voz, para no alterar el flujo de edición.
@@ -101,7 +103,7 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
     _minOrderController.text = UnitFormatters.formatCleanValue(crop.minOrderKg, useLocaleSeparators: false);
     _departmentController.text = crop.department;
     _municipalityController.text = crop.municipality;
-    
+
     _isEarlySale = crop.isEarlySale;
     if (crop.estimatedYieldKg != null) {
       _estimatedYieldController.text = UnitFormatters.formatCleanValue(crop.estimatedYieldKg, useLocaleSeparators: false);
@@ -147,16 +149,17 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
   }
 
   Future<void> _saveCrop(CropStatus targetStatus) async {
+    final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor, completa los campos obligatorios correctamente.')),
+        SnackBar(content: Text(l10n.publish_validation_incomplete)),
       );
       return;
     }
 
     if (_isEarlySale && _estimatedHarvestDate == null && targetStatus == CropStatus.activa) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Debes indicar la fecha estimada de cosecha para venta anticipada.')),
+        SnackBar(content: Text(l10n.publish_harvest_date_required)),
       );
       return;
     }
@@ -168,13 +171,13 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
     try {
       final user = Supabase.instance.client.auth.currentUser;
       final userId = widget.currentUserIdForTesting ?? user?.id;
-      if (userId == null) throw Exception('No autenticado');
+      if (userId == null) throw Exception(l10n.publish_not_authenticated);
 
       if (widget.role != null && !UserRole.isFarmerRole(widget.role)) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Acceso denegado: solo los agricultores pueden publicar cosechas.'),
-            backgroundColor: Colors.red,
+          SnackBar(
+            content: Text(l10n.publish_access_farmer_only),
+            backgroundColor: context.appError,
           ),
         );
         return;
@@ -184,9 +187,9 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
           widget.cropToEdit!.farmerId.isNotEmpty &&
           widget.cropToEdit!.farmerId != userId) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Acceso denegado: no puedes editar una cosecha perteneciente a otro productor.'),
-            backgroundColor: Colors.red,
+          SnackBar(
+            content: Text(l10n.publish_access_other_crop),
+            backgroundColor: context.appError,
           ),
         );
         return;
@@ -225,8 +228,8 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
         latitude: lat,
         longitude: lon,
         isEarlySale: _isEarlySale,
-        estimatedYieldKg: _isEarlySale && _estimatedYieldController.text.isNotEmpty 
-            ? double.tryParse(_estimatedYieldController.text.trim()) 
+        estimatedYieldKg: _isEarlySale && _estimatedYieldController.text.isNotEmpty
+            ? double.tryParse(_estimatedYieldController.text.trim())
             : null,
         estimatedHarvestDate: _isEarlySale ? _estimatedHarvestDate : null,
         status: targetStatus,
@@ -244,10 +247,12 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(targetStatus == CropStatus.activa 
-                ? '¡Cosecha publicada exitosamente!' 
-                : 'Borrador guardado.'),
-            backgroundColor: Colors.green,
+            content: Text(
+              targetStatus == CropStatus.activa
+                  ? l10n.publish_success_active
+                  : l10n.publish_success_draft,
+            ),
+            backgroundColor: context.appSuccess,
           ),
         );
         Navigator.pop(context, true);
@@ -255,7 +260,10 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al guardar: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text(l10n.publish_save_error(e.toString())),
+            backgroundColor: context.appError,
+          ),
         );
       }
     } finally {
@@ -269,27 +277,38 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     if (widget.role != null && !UserRole.isFarmerRole(widget.role)) {
       return Scaffold(
         appBar: AppBar(
-          title: Text(widget.cropToEdit == null ? 'Publicar Cosecha' : 'Editar Cosecha'),
+          title: Text(
+            widget.cropToEdit == null
+                ? l10n.publish_title_new
+                : l10n.publish_title_edit,
+          ),
         ),
-        body: const Center(
+        body: Center(
           child: Padding(
-            padding: EdgeInsets.all(24.0),
+            padding: const EdgeInsets.all(24.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.gpp_bad_outlined, size: 72, color: Colors.red),
-                SizedBox(height: 16),
+                Icon(Icons.gpp_bad_outlined, size: 72, color: context.appError),
+                const SizedBox(height: 16),
                 Text(
-                  'Acceso No Autorizado',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  l10n.publish_unauthorized_title,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: context.appTextPrimary,
+                  ),
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 Text(
-                  'Solo los agricultores registrados y verificados pueden publicar cosechas.',
+                  l10n.publish_unauthorized_desc,
                   textAlign: TextAlign.center,
+                  style: TextStyle(color: context.appTextSecondary),
                 ),
               ],
             ),
@@ -299,8 +318,13 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
     }
 
     return Scaffold(
+      backgroundColor: context.appBackground,
       appBar: AppBar(
-        title: Text(widget.cropToEdit == null ? 'Publicar Cosecha' : 'Editar Cosecha'),
+        title: Text(
+          widget.cropToEdit == null
+              ? l10n.publish_title_new
+              : l10n.publish_title_edit,
+        ),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -315,39 +339,49 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
                       _buildVoiceDraftBanner(_voiceDraft!),
                       const SizedBox(height: 24),
                     ],
-                    _buildSectionTitle('1. Información General'),
+                    _buildSectionTitle(l10n.publish_section_general),
                     _buildTextField(
                       controller: _titleController,
-                      label: 'Título de la publicación',
-                      validator: (val) => val == null || val.isEmpty ? 'Requerido' : null,
+                      label: l10n.publish_field_title,
+                      validator: (val) => val == null || val.isEmpty
+                          ? l10n.publish_validation_required
+                          : null,
                     ),
                     const SizedBox(height: 16),
                     _buildTextField(
                       controller: _cropTypeController,
-                      label: 'Tipo de Producto (Ej: Papa Capira, Café Castillo)',
-                      validator: (val) => val == null || val.isEmpty ? 'Requerido' : null,
+                      label: l10n.publish_field_crop_type,
+                      validator: (val) => val == null || val.isEmpty
+                          ? l10n.publish_validation_required
+                          : null,
                     ),
                     const SizedBox(height: 16),
                     _buildTextField(
                       controller: _descriptionController,
-                      label: 'Descripción de la cosecha',
+                      label: l10n.publish_field_description,
                       maxLines: 3,
-                      validator: (val) => val == null || val.isEmpty ? 'Requerido' : null,
+                      validator: (val) => val == null || val.isEmpty
+                          ? l10n.publish_validation_required
+                          : null,
                     ),
-                    
+
                     const SizedBox(height: 32),
-                    _buildSectionTitle('2. Precios y Cantidades'),
+                    _buildSectionTitle(l10n.publish_section_prices),
                     Row(
                       children: [
                         Expanded(
                           child: _buildTextField(
                             controller: _priceController,
-                            label: 'Precio por kg (\$)',
+                            label: l10n.publish_field_price,
                             keyboardType: TextInputType.number,
                             validator: (val) {
-                              if (val == null || val.isEmpty) return 'Requerido';
+                              if (val == null || val.isEmpty) {
+                                return l10n.publish_validation_required;
+                              }
                               final num = double.tryParse(val);
-                              if (num == null || num <= 0) return 'Mayor a 0';
+                              if (num == null || num <= 0) {
+                                return l10n.publish_validation_greater_zero;
+                              }
                               return null;
                             },
                           ),
@@ -356,12 +390,16 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
                         Expanded(
                           child: _buildTextField(
                             controller: _stockController,
-                            label: 'Total Disp. (kg)',
+                            label: l10n.publish_field_stock,
                             keyboardType: TextInputType.number,
                             validator: (val) {
-                              if (val == null || val.isEmpty) return 'Requerido';
+                              if (val == null || val.isEmpty) {
+                                return l10n.publish_validation_required;
+                              }
                               final num = double.tryParse(val);
-                              if (num == null || num < 0) return 'Mayor o igual a 0';
+                              if (num == null || num < 0) {
+                                return l10n.publish_validation_non_negative;
+                              }
                               return null;
                             },
                           ),
@@ -371,43 +409,51 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
                     const SizedBox(height: 16),
                     _buildTextField(
                       controller: _minOrderController,
-                      label: 'Pedido mínimo (kg)',
+                      label: l10n.publish_field_min_order,
                       keyboardType: TextInputType.number,
                       validator: (val) {
-                        if (val == null || val.isEmpty) return 'Requerido';
+                        if (val == null || val.isEmpty) {
+                          return l10n.publish_validation_required;
+                        }
                         final num = double.tryParse(val);
-                        if (num == null || num <= 0) return 'Mayor a 0';
+                        if (num == null || num <= 0) {
+                          return l10n.publish_validation_greater_zero;
+                        }
                         return null;
                       },
                     ),
 
                     const SizedBox(height: 32),
-                    _buildSectionTitle('3. Ubicación'),
+                    _buildSectionTitle(l10n.publish_section_location),
                     Row(
                       children: [
                         Expanded(
                           child: _buildTextField(
                             controller: _departmentController,
-                            label: 'Departamento',
-                            validator: (val) => val == null || val.isEmpty ? 'Requerido' : null,
+                            label: l10n.publish_field_department,
+                            validator: (val) => val == null || val.isEmpty
+                                ? l10n.publish_validation_required
+                                : null,
                           ),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
                           child: _buildTextField(
                             controller: _municipalityController,
-                            label: 'Municipio',
-                            validator: (val) => val == null || val.isEmpty ? 'Requerido' : null,
+                            label: l10n.publish_field_municipality,
+                            validator: (val) => val == null || val.isEmpty
+                                ? l10n.publish_validation_required
+                                : null,
                           ),
                         ),
                       ],
                     ),
 
                     const SizedBox(height: 32),
-                    _buildSectionTitle('4. Modalidad de Venta'),
+                    _buildSectionTitle(l10n.publish_section_sale_mode),
                     SwitchListTile(
-                      title: const Text('¿Es Venta Anticipada?'),
-                      subtitle: const Text('Útil si la cosecha aún no está lista pero quieres asegurar ventas.'),
+                      title: Text(l10n.publish_early_sale_title),
+                      subtitle: Text(l10n.publish_early_sale_desc),
                       value: _isEarlySale,
                       onChanged: (val) {
                         setState(() {
@@ -422,7 +468,7 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
                           Expanded(
                             child: _buildTextField(
                               controller: _estimatedYieldController,
-                              label: 'Rendimiento est. (kg)',
+                              label: l10n.publish_field_estimated_yield,
                               keyboardType: TextInputType.number,
                             ),
                           ),
@@ -431,14 +477,14 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
                             child: InkWell(
                               onTap: () => _selectDate(context),
                               child: InputDecorator(
-                                decoration: const InputDecoration(
-                                  labelText: 'Fecha de Cosecha',
-                                  border: OutlineInputBorder(),
+                                decoration: InputDecoration(
+                                  labelText: l10n.publish_field_harvest_date,
+                                  border: const OutlineInputBorder(),
                                 ),
                                 child: Text(
                                   _estimatedHarvestDate != null
                                       ? DateFormatters.formatHarvestDate(_estimatedHarvestDate)
-                                      : 'Seleccionar...',
+                                      : l10n.publish_select_date,
                                 ),
                               ),
                             ),
@@ -448,11 +494,11 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
                     ],
 
                     const SizedBox(height: 32),
-                    _buildSectionTitle('5. Imágenes'),
+                    _buildSectionTitle(l10n.publish_section_images),
                     if (_existingImageUrls.isNotEmpty) ...[
-                      const Text(
-                        'Imágenes actuales de la publicación:',
-                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                      Text(
+                        l10n.publish_current_images,
+                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                       ),
                       const SizedBox(height: 8),
                       SizedBox(
@@ -478,8 +524,12 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
                                     errorBuilder: (_, _, _) => Container(
                                       width: 80,
                                       height: 80,
-                                      color: Colors.grey.shade200,
-                                      child: const Icon(Icons.image_not_supported_outlined, size: 24),
+                                      color: context.appSurfaceVariant,
+                                      child: Icon(
+                                        Icons.image_not_supported_outlined,
+                                        size: 24,
+                                        color: context.appTextDisabled,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -495,13 +545,13 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
                                     },
                                     child: Container(
                                       padding: const EdgeInsets.all(2),
-                                      decoration: const BoxDecoration(
-                                        color: Colors.red,
+                                      decoration: BoxDecoration(
+                                        color: context.appError,
                                         shape: BoxShape.circle,
                                       ),
-                                      child: const Icon(
+                                      child: Icon(
                                         Icons.close,
-                                        color: Colors.white,
+                                        color: context.appOnPrimary,
                                         size: 16,
                                       ),
                                     ),
@@ -517,7 +567,7 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
                     ElevatedButton.icon(
                       onPressed: _pickImages,
                       icon: const Icon(Icons.add_a_photo),
-                      label: const Text('Añadir Imágenes'),
+                      label: Text(l10n.publish_add_images),
                     ),
                     if (_selectedImages.isNotEmpty) ...[
                       const SizedBox(height: 16),
@@ -537,7 +587,10 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
                                   right: 0,
                                   top: 0,
                                   child: IconButton(
-                                    icon: const Icon(Icons.remove_circle, color: Colors.red),
+                                    icon: Icon(
+                                      Icons.remove_circle,
+                                      color: context.appError,
+                                    ),
                                     onPressed: () {
                                       setState(() {
                                         _selectedImages.removeAt(index);
@@ -559,7 +612,7 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
                         Expanded(
                           child: OutlinedButton(
                             onPressed: _isLoading ? null : () => _saveCrop(CropStatus.borrador),
-                            child: const Text('Guardar Borrador'),
+                            child: Text(l10n.publish_save_draft),
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -567,10 +620,10 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
                           child: ElevatedButton(
                             onPressed: _isLoading ? null : () => _saveCrop(CropStatus.activa),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Theme.of(context).primaryColor,
-                              foregroundColor: Colors.white,
+                              backgroundColor: context.appPrimary,
+                              foregroundColor: context.appOnPrimary,
                             ),
-                            child: const Text('Publicar'),
+                            child: Text(l10n.publish_submit),
                           ),
                         ),
                       ],
@@ -585,11 +638,12 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
 
   Widget _buildVoiceDraftBanner(VoiceCropDraft draft) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final missing = <String>[
       ...draft.missingFields.map((field) => field.label),
-      'Título',
-      'Descripción',
-      'Ubicación',
+      l10n.publish_voice_label_title,
+      l10n.publish_voice_label_description,
+      l10n.publish_voice_label_location,
     ];
 
     return Container(
@@ -607,39 +661,39 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
             children: [
               Icon(Icons.auto_awesome, color: theme.colorScheme.primary),
               const SizedBox(width: 8),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Borrador creado por voz',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  l10n.publish_voice_banner_title,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 6),
-          const Text(
-            'Revisa los datos reconocidos. No se publicará nada hasta que confirmes el formulario.',
-          ),
+          Text(l10n.publish_voice_banner_desc),
           const SizedBox(height: 10),
           if (draft.cropType != null)
-            _buildVoiceDraftLine('Cultivo', draft.cropType!),
+            _buildVoiceDraftLine(l10n.ai_crop, draft.cropType!),
           if (draft.quantityDescription != null)
-            _buildVoiceDraftLine('Cantidad', draft.quantityDescription!),
+            _buildVoiceDraftLine(l10n.ai_quantity, draft.quantityDescription!),
           if (draft.pricePerKg != null)
             _buildVoiceDraftLine(
-              'Precio',
+              l10n.ai_price,
               CurrencyFormatters.formatPricePerKg(draft.pricePerKg),
             ),
           if (draft.reviewFields.isNotEmpty) ...[
             const SizedBox(height: 6),
             Text(
-              'Confirma: ${draft.reviewFields.map((field) => field.label).join(', ')}',
+              l10n.publish_voice_confirm(
+                draft.reviewFields.map((field) => field.label).join(', '),
+              ),
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ],
           if (missing.isNotEmpty) ...[
             const SizedBox(height: 6),
             Text(
-              'Faltan o debes completar: ${missing.join(', ')}.',
+              l10n.publish_voice_missing(missing.join(', ')),
               style: TextStyle(color: theme.colorScheme.error),
             ),
           ],
@@ -701,7 +755,7 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
         labelText: label,
         border: const OutlineInputBorder(),
         filled: true,
-        fillColor: Colors.grey.shade50,
+        fillColor: context.appSurfaceVariant,
       ),
       maxLines: maxLines,
       keyboardType: keyboardType,

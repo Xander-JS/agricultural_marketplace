@@ -61,7 +61,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString().replaceAll('Exception: ', '')),
-            backgroundColor: AppColors.error,
+            backgroundColor: context.appError,
           ),
         );
       } finally {
@@ -79,7 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: AppColors.lightBackground,
+      backgroundColor: context.appBackground,
       body: SafeArea(
         top: false,
         child: Column(
@@ -101,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       Text(
                         l10n.login_title,
                         style: AppTextStyles.displayLarge.copyWith(
-                          color: AppColors.lightTextPrimary,
+                          color: context.appTextPrimary,
                         ),
                       ),
                       Container(
@@ -109,7 +109,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         width: 40,
                         height: 4,
                         decoration: BoxDecoration(
-                          color: AppColors.success,
+                          color: context.appSuccess,
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -139,7 +139,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             _isPasswordVisible
                                 ? Icons.visibility_outlined
                                 : Icons.visibility_off_outlined,
-                            color: AppColors.lightTextDisabled,
+                            color: context.appTextSecondary,
                           ),
                           onPressed: () {
                             setState(() {
@@ -161,7 +161,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 height: 24,
                                 child: Checkbox(
                                   value: _rememberMe,
-                                  activeColor: AppColors.success,
+                                  activeColor: context.appSuccess,
                                   onChanged: (value) {
                                     setState(() {
                                       _rememberMe = value ?? true;
@@ -173,7 +173,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               Text(
                                 l10n.login_remember_me,
                                 style: AppTextStyles.bodyMedium.copyWith(
-                                  color: AppColors.lightTextSecondary,
+                                  color: context.appTextSecondary,
                                 ),
                               ),
                             ],
@@ -191,7 +191,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: Text(
                               l10n.login_forgot_password,
                               style: AppTextStyles.labelMedium.copyWith(
-                                color: AppColors.success,
+                                color: context.appSuccess,
                               ),
                             ),
                           ),
@@ -210,7 +210,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           Text(
                             l10n.login_no_account,
                             style: AppTextStyles.bodyMedium.copyWith(
-                              color: AppColors.lightTextSecondary,
+                              color: context.appTextSecondary,
                             ),
                           ),
                           GestureDetector(
@@ -224,7 +224,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: Text(
                               l10n.login_register,
                               style: AppTextStyles.labelMedium.copyWith(
-                                color: AppColors.success,
+                                color: context.appSuccess,
                               ),
                             ),
                           ),

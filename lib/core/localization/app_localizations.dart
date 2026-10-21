@@ -617,7 +617,7 @@ abstract class AppLocalizations {
   /// No description provided for @verification_status_review_desc.
   ///
   /// In es, this message translates to:
-  /// **'Tus documentos fueron enviados y están siendo validados por nuestro sistema y equipo de moderación. No puedes modificar los documentos mientras estén en revisión.'**
+  /// **'Diagnóstico simulado en revisión; tu cuenta está a la espera de aprobación por un moderador.'**
   String get verification_status_review_desc;
 
   /// No description provided for @verification_status_approved_title.
@@ -2069,7 +2069,7 @@ abstract class AppLocalizations {
   /// No description provided for @moderation_storage_notice.
   ///
   /// In es, this message translates to:
-  /// **'Archivos locales/simulados. La integración con Supabase Storage se completará en la Fase 2.'**
+  /// **'Los documentos se consultan mediante enlaces firmados temporales del almacenamiento privado. No se comparten públicamente.'**
   String get moderation_storage_notice;
 
   /// No description provided for @moderation_doc_front.
@@ -2161,6 +2161,396 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Solicitud rechazada correctamente.'**
   String get moderation_rejected_success;
+
+  /// No description provided for @document_front_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Frente del documento'**
+  String get document_front_title;
+
+  /// No description provided for @document_back_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Reverso del documento'**
+  String get document_back_title;
+
+  /// No description provided for @document_selfie_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Selfie del usuario'**
+  String get document_selfie_title;
+
+  /// No description provided for @document_pick_sheet_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Selecciona el origen de la imagen'**
+  String get document_pick_sheet_title;
+
+  /// No description provided for @document_pick_camera.
+  ///
+  /// In es, this message translates to:
+  /// **'Tomar foto'**
+  String get document_pick_camera;
+
+  /// No description provided for @document_pick_gallery.
+  ///
+  /// In es, this message translates to:
+  /// **'Elegir de galería'**
+  String get document_pick_gallery;
+
+  /// No description provided for @document_pick_cancel.
+  ///
+  /// In es, this message translates to:
+  /// **'Cancelar'**
+  String get document_pick_cancel;
+
+  /// No description provided for @document_pick_error.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo abrir el selector de imágenes. Inténtalo de nuevo.'**
+  String get document_pick_error;
+
+  /// No description provided for @document_pick_label.
+  ///
+  /// In es, this message translates to:
+  /// **'Seleccionar imagen'**
+  String get document_pick_label;
+
+  /// No description provided for @document_replace_label.
+  ///
+  /// In es, this message translates to:
+  /// **'Reemplazar'**
+  String get document_replace_label;
+
+  /// No description provided for @document_remove_label.
+  ///
+  /// In es, this message translates to:
+  /// **'Quitar'**
+  String get document_remove_label;
+
+  /// No description provided for @document_selected_label.
+  ///
+  /// In es, this message translates to:
+  /// **'Seleccionada'**
+  String get document_selected_label;
+
+  /// No description provided for @document_pending_label.
+  ///
+  /// In es, this message translates to:
+  /// **'Pendiente'**
+  String get document_pending_label;
+
+  /// No description provided for @document_preview_unavailable.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo previsualizar este archivo.'**
+  String get document_preview_unavailable;
+
+  /// No description provided for @document_preview_pending.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún no has seleccionado esta imagen.'**
+  String get document_preview_pending;
+
+  /// No description provided for @document_review_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Revisa tus documentos'**
+  String get document_review_title;
+
+  /// No description provided for @document_review_description.
+  ///
+  /// In es, this message translates to:
+  /// **'Verifica que el frente, el reverso y la selfie sean legibles. Puedes reemplazar cualquiera antes de enviar.'**
+  String get document_review_description;
+
+  /// No description provided for @document_review_missing.
+  ///
+  /// In es, this message translates to:
+  /// **'Debes adjuntar el frente, el reverso y la selfie antes de enviar.'**
+  String get document_review_missing;
+
+  /// No description provided for @document_review_ready.
+  ///
+  /// In es, this message translates to:
+  /// **'Las tres imágenes están listas para enviar.'**
+  String get document_review_ready;
+
+  /// No description provided for @document_review_submit.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviar documentos'**
+  String get document_review_submit;
+
+  /// No description provided for @document_review_submit_error.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo continuar con el envío. Inténtalo de nuevo.'**
+  String get document_review_submit_error;
+
+  /// No description provided for @document_upload_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Cargar documentos'**
+  String get document_upload_title;
+
+  /// No description provided for @document_upload_description.
+  ///
+  /// In es, this message translates to:
+  /// **'Adjunta nuevamente el frente, el reverso y la selfie para enviar tu solicitud de verificación.'**
+  String get document_upload_description;
+
+  /// No description provided for @document_upload_submit.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviar solicitud'**
+  String get document_upload_submit;
+
+  /// No description provided for @document_upload_missing.
+  ///
+  /// In es, this message translates to:
+  /// **'Debes adjuntar el frente, el reverso y la selfie antes de enviar.'**
+  String get document_upload_missing;
+
+  /// No description provided for @document_upload_in_progress.
+  ///
+  /// In es, this message translates to:
+  /// **'Cargando documentos...'**
+  String get document_upload_in_progress;
+
+  /// No description provided for @document_upload_success_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Documentos enviados'**
+  String get document_upload_success_title;
+
+  /// No description provided for @document_upload_success_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu solicitud quedó registrada y está pendiente de revisión manual.'**
+  String get document_upload_success_desc;
+
+  /// No description provided for @document_upload_success_back.
+  ///
+  /// In es, this message translates to:
+  /// **'Volver al estado'**
+  String get document_upload_success_back;
+
+  /// No description provided for @document_upload_error.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudieron cargar los documentos. Revisa tu conexión e inténtalo de nuevo.'**
+  String get document_upload_error;
+
+  /// No description provided for @document_upload_storage_error.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudieron cargar las imágenes al almacenamiento privado. Revisa tu conexión e inténtalo de nuevo.'**
+  String get document_upload_storage_error;
+
+  /// No description provided for @document_upload_attempt_error.
+  ///
+  /// In es, this message translates to:
+  /// **'Las imágenes se cargaron, pero no se pudo registrar la solicitud. Inténtalo de nuevo.'**
+  String get document_upload_attempt_error;
+
+  /// No description provided for @document_upload_duplicate.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya existe una solicitud pendiente de revisión.'**
+  String get document_upload_duplicate;
+
+  /// No description provided for @document_upload_file_missing.
+  ///
+  /// In es, this message translates to:
+  /// **'Uno de los archivos seleccionados ya no está disponible. Vuelve a seleccionarlo.'**
+  String get document_upload_file_missing;
+
+  /// No description provided for @document_upload_unauthorized.
+  ///
+  /// In es, this message translates to:
+  /// **'Debes iniciar sesión para enviar documentos de verificación.'**
+  String get document_upload_unauthorized;
+
+  /// No description provided for @document_image_available.
+  ///
+  /// In es, this message translates to:
+  /// **'Documento disponible para revisión'**
+  String get document_image_available;
+
+  /// No description provided for @document_image_missing.
+  ///
+  /// In es, this message translates to:
+  /// **'Documento no proporcionado'**
+  String get document_image_missing;
+
+  /// No description provided for @document_image_invalid.
+  ///
+  /// In es, this message translates to:
+  /// **'Ruta de documento no válida o no disponible'**
+  String get document_image_invalid;
+
+  /// No description provided for @document_image_loading.
+  ///
+  /// In es, this message translates to:
+  /// **'Obteniendo enlace seguro...'**
+  String get document_image_loading;
+
+  /// No description provided for @document_image_error.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo obtener el enlace seguro del documento.'**
+  String get document_image_error;
+
+  /// No description provided for @document_image_display_error.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo mostrar la imagen.'**
+  String get document_image_display_error;
+
+  /// No description provided for @document_image_retry.
+  ///
+  /// In es, this message translates to:
+  /// **'Reintentar'**
+  String get document_image_retry;
+
+  /// No description provided for @moderation_diagnosis_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Diagnóstico documental'**
+  String get moderation_diagnosis_title;
+
+  /// No description provided for @moderation_diagnosis_simulated.
+  ///
+  /// In es, this message translates to:
+  /// **'SIMULADO'**
+  String get moderation_diagnosis_simulated;
+
+  /// No description provided for @moderation_diagnosis_disclaimer.
+  ///
+  /// In es, this message translates to:
+  /// **'Informe demostrativo basado únicamente en la presencia y validez básica de las rutas de documentos. No verifica la autenticidad ni la identidad.'**
+  String get moderation_diagnosis_disclaimer;
+
+  /// No description provided for @moderation_diagnosis_present.
+  ///
+  /// In es, this message translates to:
+  /// **'Presente'**
+  String get moderation_diagnosis_present;
+
+  /// No description provided for @moderation_diagnosis_missing.
+  ///
+  /// In es, this message translates to:
+  /// **'Faltante'**
+  String get moderation_diagnosis_missing;
+
+  /// No description provided for @moderation_diagnosis_available_label.
+  ///
+  /// In es, this message translates to:
+  /// **'Imágenes disponibles para revisión:'**
+  String get moderation_diagnosis_available_label;
+
+  /// No description provided for @moderation_diagnosis_pending.
+  ///
+  /// In es, this message translates to:
+  /// **'Resultado general: pendiente de revisión humana.'**
+  String get moderation_diagnosis_pending;
+
+  /// No description provided for @moderation_diagnosis_observations_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Observaciones para revisión manual'**
+  String get moderation_diagnosis_observations_title;
+
+  /// No description provided for @moderation_diagnosis_obs_profile.
+  ///
+  /// In es, this message translates to:
+  /// **'Comprueba manualmente el nombre, teléfono y rol del perfil.'**
+  String get moderation_diagnosis_obs_profile;
+
+  /// No description provided for @moderation_diagnosis_obs_missing_docs.
+  ///
+  /// In es, this message translates to:
+  /// **'Faltan documentos obligatorios; no se deben inferir datos ausentes.'**
+  String get moderation_diagnosis_obs_missing_docs;
+
+  /// No description provided for @moderation_diagnosis_obs_shared_paths.
+  ///
+  /// In es, this message translates to:
+  /// **'Las rutas de documentos no son independientes; verifícalas antes de decidir.'**
+  String get moderation_diagnosis_obs_shared_paths;
+
+  /// No description provided for @moderation_diagnosis_obs_email.
+  ///
+  /// In es, this message translates to:
+  /// **'El perfil no tiene correo registrado; la comprobación de contacto es manual.'**
+  String get moderation_diagnosis_obs_email;
+
+  /// No description provided for @moderation_diagnosis_limitations_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Limitaciones del diagnóstico'**
+  String get moderation_diagnosis_limitations_title;
+
+  /// No description provided for @moderation_diagnosis_limit_authenticity.
+  ///
+  /// In es, this message translates to:
+  /// **'No verifica la autenticidad del documento.'**
+  String get moderation_diagnosis_limit_authenticity;
+
+  /// No description provided for @moderation_diagnosis_limit_biometrics.
+  ///
+  /// In es, this message translates to:
+  /// **'No realiza coincidencia biométrica ni prueba de vida.'**
+  String get moderation_diagnosis_limit_biometrics;
+
+  /// No description provided for @moderation_diagnosis_limit_external.
+  ///
+  /// In es, this message translates to:
+  /// **'No consulta bases gubernamentales ni servicios externos de IA.'**
+  String get moderation_diagnosis_limit_external;
+
+  /// No description provided for @moderation_diagnosis_limit_auto.
+  ///
+  /// In es, this message translates to:
+  /// **'No aprueba ni rechaza automáticamente la solicitud.'**
+  String get moderation_diagnosis_limit_auto;
+
+  /// No description provided for @moderation_diagnosis_no_auto.
+  ///
+  /// In es, this message translates to:
+  /// **'La decisión final es exclusivamente manual del moderador.'**
+  String get moderation_diagnosis_no_auto;
+
+  /// No description provided for @moderation_btn_mark_in_review.
+  ///
+  /// In es, this message translates to:
+  /// **'Poner en revisión'**
+  String get moderation_btn_mark_in_review;
+
+  /// No description provided for @moderation_in_review_success.
+  ///
+  /// In es, this message translates to:
+  /// **'Solicitud marcada en revisión correctamente.'**
+  String get moderation_in_review_success;
+
+  /// No description provided for @moderation_filter_all.
+  ///
+  /// In es, this message translates to:
+  /// **'Todos'**
+  String get moderation_filter_all;
+
+  /// No description provided for @moderation_filter_pending.
+  ///
+  /// In es, this message translates to:
+  /// **'Pendientes'**
+  String get moderation_filter_pending;
+
+  /// No description provided for @moderation_filter_in_review.
+  ///
+  /// In es, this message translates to:
+  /// **'En revisión'**
+  String get moderation_filter_in_review;
 }
 
 class _AppLocalizationsDelegate

@@ -1054,7 +1054,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get moderation_storage_notice =>
-      'Local/mock files. Supabase Storage integration will be completed in Phase 2.';
+      'Documents are retrieved through temporary signed links from private storage. They are not shared publicly.';
 
   @override
   String get moderation_doc_front => 'ID Card (Front)';
@@ -1105,4 +1105,230 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get moderation_rejected_success => 'Request rejected successfully.';
+
+  @override
+  String get document_front_title => 'Document front';
+
+  @override
+  String get document_back_title => 'Document back';
+
+  @override
+  String get document_selfie_title => 'User selfie';
+
+  @override
+  String get document_pick_sheet_title => 'Select the image source';
+
+  @override
+  String get document_pick_camera => 'Take photo';
+
+  @override
+  String get document_pick_gallery => 'Choose from gallery';
+
+  @override
+  String get document_pick_cancel => 'Cancel';
+
+  @override
+  String get document_pick_error =>
+      'The image picker could not be opened. Please try again.';
+
+  @override
+  String get document_pick_label => 'Select image';
+
+  @override
+  String get document_replace_label => 'Replace';
+
+  @override
+  String get document_remove_label => 'Remove';
+
+  @override
+  String get document_selected_label => 'Selected';
+
+  @override
+  String get document_pending_label => 'Pending';
+
+  @override
+  String get document_preview_unavailable =>
+      'This file could not be previewed.';
+
+  @override
+  String get document_preview_pending =>
+      'You have not selected this image yet.';
+
+  @override
+  String get document_review_title => 'Review your documents';
+
+  @override
+  String get document_review_description =>
+      'Make sure the front, back, and selfie are legible. You can replace any of them before submitting.';
+
+  @override
+  String get document_review_missing =>
+      'You must attach the front, back, and selfie before submitting.';
+
+  @override
+  String get document_review_ready => 'All three images are ready to submit.';
+
+  @override
+  String get document_review_submit => 'Submit documents';
+
+  @override
+  String get document_review_submit_error =>
+      'The submission could not continue. Please try again.';
+
+  @override
+  String get document_upload_title => 'Upload documents';
+
+  @override
+  String get document_upload_description =>
+      'Attach the front, back, and selfie again to submit your verification request.';
+
+  @override
+  String get document_upload_submit => 'Submit request';
+
+  @override
+  String get document_upload_missing =>
+      'You must attach the front, back, and selfie before submitting.';
+
+  @override
+  String get document_upload_in_progress => 'Uploading documents...';
+
+  @override
+  String get document_upload_success_title => 'Documents submitted';
+
+  @override
+  String get document_upload_success_desc =>
+      'Your request was registered and is pending manual review.';
+
+  @override
+  String get document_upload_success_back => 'Back to status';
+
+  @override
+  String get document_upload_error =>
+      'The documents could not be uploaded. Check your connection and try again.';
+
+  @override
+  String get document_upload_storage_error =>
+      'The images could not be uploaded to private storage. Check your connection and try again.';
+
+  @override
+  String get document_upload_attempt_error =>
+      'The images were uploaded, but the request could not be registered. Please try again.';
+
+  @override
+  String get document_upload_duplicate =>
+      'A pending review request already exists.';
+
+  @override
+  String get document_upload_file_missing =>
+      'One of the selected files is no longer available. Please select it again.';
+
+  @override
+  String get document_upload_unauthorized =>
+      'You must sign in to submit verification documents.';
+
+  @override
+  String get document_image_available => 'Document available for review';
+
+  @override
+  String get document_image_missing => 'Document not provided';
+
+  @override
+  String get document_image_invalid => 'Invalid or unavailable document path';
+
+  @override
+  String get document_image_loading => 'Requesting secure link...';
+
+  @override
+  String get document_image_error =>
+      'The document\'s secure link could not be obtained.';
+
+  @override
+  String get document_image_display_error =>
+      'The image could not be displayed.';
+
+  @override
+  String get document_image_retry => 'Retry';
+
+  @override
+  String get moderation_diagnosis_title => 'Document diagnosis';
+
+  @override
+  String get moderation_diagnosis_simulated => 'SIMULATED';
+
+  @override
+  String get moderation_diagnosis_disclaimer =>
+      'Demonstrative report based only on the presence and basic validity of document paths. It does not verify authenticity or identity.';
+
+  @override
+  String get moderation_diagnosis_present => 'Present';
+
+  @override
+  String get moderation_diagnosis_missing => 'Missing';
+
+  @override
+  String get moderation_diagnosis_available_label =>
+      'Images available for review:';
+
+  @override
+  String get moderation_diagnosis_pending =>
+      'Overall result: pending human review.';
+
+  @override
+  String get moderation_diagnosis_observations_title =>
+      'Observations for manual review';
+
+  @override
+  String get moderation_diagnosis_obs_profile =>
+      'Manually check the profile name, phone, and role.';
+
+  @override
+  String get moderation_diagnosis_obs_missing_docs =>
+      'Required documents are missing; do not infer absent data.';
+
+  @override
+  String get moderation_diagnosis_obs_shared_paths =>
+      'Document paths are not independent; verify them before deciding.';
+
+  @override
+  String get moderation_diagnosis_obs_email =>
+      'The profile has no registered email; contact verification is manual.';
+
+  @override
+  String get moderation_diagnosis_limitations_title => 'Diagnosis limitations';
+
+  @override
+  String get moderation_diagnosis_limit_authenticity =>
+      'It does not verify document authenticity.';
+
+  @override
+  String get moderation_diagnosis_limit_biometrics =>
+      'It does not perform biometric matching or liveness checks.';
+
+  @override
+  String get moderation_diagnosis_limit_external =>
+      'It does not query government databases or external AI services.';
+
+  @override
+  String get moderation_diagnosis_limit_auto =>
+      'It does not automatically approve or reject the request.';
+
+  @override
+  String get moderation_diagnosis_no_auto =>
+      'The final decision is made exclusively by the moderator.';
+
+  @override
+  String get moderation_btn_mark_in_review => 'Put in review';
+
+  @override
+  String get moderation_in_review_success =>
+      'Request marked as in review successfully.';
+
+  @override
+  String get moderation_filter_all => 'All';
+
+  @override
+  String get moderation_filter_pending => 'Pending';
+
+  @override
+  String get moderation_filter_in_review => 'In review';
 }

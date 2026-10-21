@@ -289,7 +289,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get verification_status_review_desc =>
-      'Tus documentos fueron enviados y están siendo validados por nuestro sistema y equipo de moderación. No puedes modificar los documentos mientras estén en revisión.';
+      'Diagnóstico simulado en revisión; tu cuenta está a la espera de aprobación por un moderador.';
 
   @override
   String get verification_status_approved_title => 'Verificación Aprobada';
@@ -1061,7 +1061,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get moderation_storage_notice =>
-      'Archivos locales/simulados. La integración con Supabase Storage se completará en la Fase 2.';
+      'Los documentos se consultan mediante enlaces firmados temporales del almacenamiento privado. No se comparten públicamente.';
 
   @override
   String get moderation_doc_front => 'Cédula (Frente)';
@@ -1113,4 +1113,231 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get moderation_rejected_success =>
       'Solicitud rechazada correctamente.';
+
+  @override
+  String get document_front_title => 'Frente del documento';
+
+  @override
+  String get document_back_title => 'Reverso del documento';
+
+  @override
+  String get document_selfie_title => 'Selfie del usuario';
+
+  @override
+  String get document_pick_sheet_title => 'Selecciona el origen de la imagen';
+
+  @override
+  String get document_pick_camera => 'Tomar foto';
+
+  @override
+  String get document_pick_gallery => 'Elegir de galería';
+
+  @override
+  String get document_pick_cancel => 'Cancelar';
+
+  @override
+  String get document_pick_error =>
+      'No se pudo abrir el selector de imágenes. Inténtalo de nuevo.';
+
+  @override
+  String get document_pick_label => 'Seleccionar imagen';
+
+  @override
+  String get document_replace_label => 'Reemplazar';
+
+  @override
+  String get document_remove_label => 'Quitar';
+
+  @override
+  String get document_selected_label => 'Seleccionada';
+
+  @override
+  String get document_pending_label => 'Pendiente';
+
+  @override
+  String get document_preview_unavailable =>
+      'No se pudo previsualizar este archivo.';
+
+  @override
+  String get document_preview_pending => 'Aún no has seleccionado esta imagen.';
+
+  @override
+  String get document_review_title => 'Revisa tus documentos';
+
+  @override
+  String get document_review_description =>
+      'Verifica que el frente, el reverso y la selfie sean legibles. Puedes reemplazar cualquiera antes de enviar.';
+
+  @override
+  String get document_review_missing =>
+      'Debes adjuntar el frente, el reverso y la selfie antes de enviar.';
+
+  @override
+  String get document_review_ready =>
+      'Las tres imágenes están listas para enviar.';
+
+  @override
+  String get document_review_submit => 'Enviar documentos';
+
+  @override
+  String get document_review_submit_error =>
+      'No se pudo continuar con el envío. Inténtalo de nuevo.';
+
+  @override
+  String get document_upload_title => 'Cargar documentos';
+
+  @override
+  String get document_upload_description =>
+      'Adjunta nuevamente el frente, el reverso y la selfie para enviar tu solicitud de verificación.';
+
+  @override
+  String get document_upload_submit => 'Enviar solicitud';
+
+  @override
+  String get document_upload_missing =>
+      'Debes adjuntar el frente, el reverso y la selfie antes de enviar.';
+
+  @override
+  String get document_upload_in_progress => 'Cargando documentos...';
+
+  @override
+  String get document_upload_success_title => 'Documentos enviados';
+
+  @override
+  String get document_upload_success_desc =>
+      'Tu solicitud quedó registrada y está pendiente de revisión manual.';
+
+  @override
+  String get document_upload_success_back => 'Volver al estado';
+
+  @override
+  String get document_upload_error =>
+      'No se pudieron cargar los documentos. Revisa tu conexión e inténtalo de nuevo.';
+
+  @override
+  String get document_upload_storage_error =>
+      'No se pudieron cargar las imágenes al almacenamiento privado. Revisa tu conexión e inténtalo de nuevo.';
+
+  @override
+  String get document_upload_attempt_error =>
+      'Las imágenes se cargaron, pero no se pudo registrar la solicitud. Inténtalo de nuevo.';
+
+  @override
+  String get document_upload_duplicate =>
+      'Ya existe una solicitud pendiente de revisión.';
+
+  @override
+  String get document_upload_file_missing =>
+      'Uno de los archivos seleccionados ya no está disponible. Vuelve a seleccionarlo.';
+
+  @override
+  String get document_upload_unauthorized =>
+      'Debes iniciar sesión para enviar documentos de verificación.';
+
+  @override
+  String get document_image_available => 'Documento disponible para revisión';
+
+  @override
+  String get document_image_missing => 'Documento no proporcionado';
+
+  @override
+  String get document_image_invalid =>
+      'Ruta de documento no válida o no disponible';
+
+  @override
+  String get document_image_loading => 'Obteniendo enlace seguro...';
+
+  @override
+  String get document_image_error =>
+      'No se pudo obtener el enlace seguro del documento.';
+
+  @override
+  String get document_image_display_error => 'No se pudo mostrar la imagen.';
+
+  @override
+  String get document_image_retry => 'Reintentar';
+
+  @override
+  String get moderation_diagnosis_title => 'Diagnóstico documental';
+
+  @override
+  String get moderation_diagnosis_simulated => 'SIMULADO';
+
+  @override
+  String get moderation_diagnosis_disclaimer =>
+      'Informe demostrativo basado únicamente en la presencia y validez básica de las rutas de documentos. No verifica la autenticidad ni la identidad.';
+
+  @override
+  String get moderation_diagnosis_present => 'Presente';
+
+  @override
+  String get moderation_diagnosis_missing => 'Faltante';
+
+  @override
+  String get moderation_diagnosis_available_label =>
+      'Imágenes disponibles para revisión:';
+
+  @override
+  String get moderation_diagnosis_pending =>
+      'Resultado general: pendiente de revisión humana.';
+
+  @override
+  String get moderation_diagnosis_observations_title =>
+      'Observaciones para revisión manual';
+
+  @override
+  String get moderation_diagnosis_obs_profile =>
+      'Comprueba manualmente el nombre, teléfono y rol del perfil.';
+
+  @override
+  String get moderation_diagnosis_obs_missing_docs =>
+      'Faltan documentos obligatorios; no se deben inferir datos ausentes.';
+
+  @override
+  String get moderation_diagnosis_obs_shared_paths =>
+      'Las rutas de documentos no son independientes; verifícalas antes de decidir.';
+
+  @override
+  String get moderation_diagnosis_obs_email =>
+      'El perfil no tiene correo registrado; la comprobación de contacto es manual.';
+
+  @override
+  String get moderation_diagnosis_limitations_title =>
+      'Limitaciones del diagnóstico';
+
+  @override
+  String get moderation_diagnosis_limit_authenticity =>
+      'No verifica la autenticidad del documento.';
+
+  @override
+  String get moderation_diagnosis_limit_biometrics =>
+      'No realiza coincidencia biométrica ni prueba de vida.';
+
+  @override
+  String get moderation_diagnosis_limit_external =>
+      'No consulta bases gubernamentales ni servicios externos de IA.';
+
+  @override
+  String get moderation_diagnosis_limit_auto =>
+      'No aprueba ni rechaza automáticamente la solicitud.';
+
+  @override
+  String get moderation_diagnosis_no_auto =>
+      'La decisión final es exclusivamente manual del moderador.';
+
+  @override
+  String get moderation_btn_mark_in_review => 'Poner en revisión';
+
+  @override
+  String get moderation_in_review_success =>
+      'Solicitud marcada en revisión correctamente.';
+
+  @override
+  String get moderation_filter_all => 'Todos';
+
+  @override
+  String get moderation_filter_pending => 'Pendientes';
+
+  @override
+  String get moderation_filter_in_review => 'En revisión';
 }

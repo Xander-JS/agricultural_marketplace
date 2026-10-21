@@ -62,6 +62,7 @@ captures/
 # Sensitive & Environment files
 *.env
 *.env.*
+!.env.example
 
 # Flutter engine / generated plugins
 .flutter-plugins

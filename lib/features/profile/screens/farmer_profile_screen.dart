@@ -9,6 +9,8 @@ import '../../../core/services/app_preferences_service.dart';
 import '../../../core/widgets/avatars/user_avatar.dart';
 import '../models/farmer_profile_data.dart';
 import '../services/profile_service.dart';
+import '../../review/models/review_model.dart';
+import '../../review/services/review_service.dart';
 
 /// Pantalla de Perfil compartida entre los roles Agricultor y Comerciante/Comprador.
 ///
@@ -19,6 +21,7 @@ class FarmerProfileScreen extends StatefulWidget {
   final FarmerProfileData? initialProfileData;
   final Future<void> Function()? onSignOut;
   final ProfileService? profileService;
+  final ReviewService? reviewService;
   final ImagePicker? imagePicker;
 
   const FarmerProfileScreen({
@@ -26,6 +29,7 @@ class FarmerProfileScreen extends StatefulWidget {
     this.initialProfileData,
     this.onSignOut,
     this.profileService,
+    this.reviewService,
     this.imagePicker,
   });
 
@@ -35,11 +39,17 @@ class FarmerProfileScreen extends StatefulWidget {
 
 class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
   late final ProfileService _profileService = widget.profileService ?? ProfileService();
+  late final ReviewService _reviewService = widget.reviewService ?? ReviewService();
   late final ImagePicker _imagePicker = widget.imagePicker ?? ImagePicker();
 
   bool _isLoading = true;
   bool _isSaving = false;
   FarmerProfileData? _profileData;
+
+  // Reputación calculada por ReviewService para el usuario autenticado.
+  ReviewSummary? _reputation;
+  bool _isLoadingReputation = false;
+  bool _reputationLoadFailed = false;
 
   // Preferencias de Accesibilidad (conectadas globalmente a AppPreferencesService)
   late bool _isDarkMode;
@@ -95,6 +105,11 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
       _emailController.text = _profileData!.email;
       _phoneController.text = _profileData!.phone;
       _isLoading = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _loadReputation(_profileData!.id);
+        }
+      });
     } else {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
@@ -131,6 +146,7 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
           _phoneController.text = data.phone;
           _isLoading = false;
         });
+        await _loadReputation(userId);
       }
     } catch (e) {
       if (mounted) {
@@ -143,6 +159,34 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
           ),
         );
       }
+    }
+  }
+
+  /// Carga la reputación del usuario desde `ReviewService`. Un fallo de esta
+  /// consulta no afecta los datos del perfil y se muestra un estado de error
+  /// con reintento, sin inventar un promedio.
+  Future<void> _loadReputation(String userId) async {
+    if (userId.trim().isEmpty || !mounted) return;
+
+    setState(() {
+      _isLoadingReputation = true;
+      _reputationLoadFailed = false;
+    });
+
+    try {
+      final summary = await _reviewService.getReputation(userId);
+      if (!mounted) return;
+      setState(() {
+        _reputation = summary;
+        _isLoadingReputation = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _reputation = null;
+        _isLoadingReputation = false;
+        _reputationLoadFailed = true;
+      });
     }
   }
 
@@ -405,6 +449,8 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
                           _buildProfileHeader(isDark, textPrimary, tertiaryColor),
                           const SizedBox(height: 32),
                           _buildStatisticsSection(isDark, textPrimary),
+                          const SizedBox(height: 32),
+                          _buildReputationSection(isDark, textPrimary),
                           const SizedBox(height: 40),
                         ],
                       ),
@@ -885,6 +931,191 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
             ],
           ),
         ],
+      ],
+    );
+  }
+
+  Widget _buildReputationSection(bool isDark, Color textPrimary) {
+    final l10n = AppLocalizations.of(context);
+    final summary = _reputation;
+    final isLoading =
+        _isLoadingReputation || (summary == null && !_reputationLoadFailed);
+
+    final cardBg = isDark ? AppColors.darkSurface : AppColors.lightSurface;
+    final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
+    final textSecondary = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
+    final textDisabled = isDark
+        ? AppColors.darkTextDisabled
+        : AppColors.lightTextDisabled;
+    final tertiaryColor = isDark
+        ? AppColors.darkTertiary
+        : AppColors.lightTertiary;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n?.reputation_title ?? 'Reputación',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: textPrimary,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: cardBg,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: borderColor),
+            boxShadow: [
+              BoxShadow(
+                color: isDark
+                    ? Colors.black.withValues(alpha: 0.15)
+                    : Colors.black.withValues(alpha: 0.02),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: isLoading
+              ? Row(
+                  children: [
+                    SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: tertiaryColor,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      l10n?.reputation_loading ?? 'Cargando reputación...',
+                      style: TextStyle(fontSize: 13, color: textSecondary),
+                    ),
+                  ],
+                )
+              : _reputationLoadFailed
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.error_outline,
+                          color: AppColors.error,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            l10n?.reputation_load_error ??
+                                'No se pudo cargar la reputación.',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: AppColors.error,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      key: const ValueKey('profile_reputation_retry'),
+                      onPressed: () => _loadReputation(_profileData!.id),
+                      icon: const Icon(Icons.refresh, size: 18),
+                      label: Text(l10n?.market_retry ?? 'Reintentar'),
+                    ),
+                  ],
+                )
+              : summary == null || summary.isNew
+              ? Row(
+                  children: [
+                    Icon(
+                      Icons.star_outline_rounded,
+                      color: textDisabled,
+                      size: 24,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        l10n?.reputation_no_ratings ?? 'Sin calificaciones aún',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: textSecondary,
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              : Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        children: [
+                          Text(
+                            '★ ${summary.averageRating.toStringAsFixed(1)}',
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.warning,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            l10n?.reputation_average_label ??
+                                'Calificación promedio',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: 1,
+                      height: 52,
+                      color: isDark
+                          ? AppColors.darkDivider
+                          : AppColors.lightDivider,
+                    ),
+                    Expanded(
+                      child: Column(
+                        children: [
+                          Text(
+                            '${summary.totalReviews}',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            l10n?.reputation_reviews_received ??
+                                'Calificaciones recibidas',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+        ),
       ],
     );
   }

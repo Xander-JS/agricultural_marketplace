@@ -1,37 +1,42 @@
 import 'package:flutter/material.dart';
-import '../../theme/app_colors.dart';
+import '../../theme/app_dimensions.dart';
 import '../../theme/app_text_styles.dart';
 
-/// A reusable badge to display altitude over images
+/// A reusable badge to display altitude over images.
 class AltitudeBadge extends StatelessWidget {
   final String text;
 
   const AltitudeBadge({
-    Key? key,
+    super.key,
     required this.text,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.space12,
+        vertical: AppDimensions.space4,
+      ),
       decoration: BoxDecoration(
-        color: AppColors.lightSurface.withOpacity(0.9),
-        borderRadius: BorderRadius.circular(8),
+        color: theme.colorScheme.surface.withValues(alpha: 0.9),
+        borderRadius: AppDimensions.borderRadiusSM,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
+          Icon(
             Icons.landscape_outlined,
-            size: 14,
-            color: AppColors.lightTextSecondary,
+            size: AppDimensions.iconSM - 6,
+            color: theme.colorScheme.onSurfaceVariant,
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: AppDimensions.space4),
           Text(
             text,
             style: AppTextStyles.labelMedium.copyWith(
-              color: AppColors.lightTextPrimary,
+              color: theme.colorScheme.onSurface,
             ),
           ),
         ],

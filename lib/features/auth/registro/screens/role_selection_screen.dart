@@ -47,7 +47,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: AppColors.lightBackground,
+      backgroundColor: context.appBackground,
       appBar: CustomAppBar(title: l10n.role_selection_header_title),
       body: SafeArea(
         child: Column(
@@ -60,12 +60,13 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                   Text(
                     l10n.role_selection_title,
                     style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.lightTextSecondary,
+                      color: context.appTextSecondary,
                     ),
                   ),
                   const SizedBox(height: 32),
 
                   _buildRoleCard(
+                    context: context,
                     role: 'agricultor',
                     title: l10n.role_selection_producer,
                     subtitle: l10n.role_selection_producer_subtitle,
@@ -74,6 +75,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                   ),
                   const SizedBox(height: 16),
                   _buildRoleCard(
+                    context: context,
                     role: 'comprador',
                     title: l10n.role_selection_buyer,
                     subtitle: l10n.role_selection_buyer_subtitle,
@@ -85,16 +87,16 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.lock_outline,
                         size: 16,
-                        color: AppColors.lightTextSecondary,
+                        color: context.appTextSecondary,
                       ),
                       const SizedBox(width: 8),
                       Text(
                         l10n.role_selection_kyc_notice,
                         style: AppTextStyles.caption.copyWith(
-                          color: AppColors.lightTextSecondary,
+                          color: context.appTextSecondary,
                         ),
                       ),
                     ],
@@ -116,6 +118,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   }
 
   Widget _buildRoleCard({
+    required BuildContext context,
     required String role,
     required String title,
     required String subtitle,
@@ -124,11 +127,11 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   }) {
     final isSelected = _selectedRole == role;
     final bgColor = isSelected
-        ? AppColors.lightSecondary
-        : AppColors.infoLight.withOpacity(0.3);
-    final borderColor = isSelected ? AppColors.success : Colors.transparent;
-    final iconBgColor = isSelected ? AppColors.success : Colors.transparent;
-    final iconColor = isSelected ? Colors.white : AppColors.lightTextPrimary;
+        ? context.appPrimaryContainer
+        : context.appInfoContainer.withValues(alpha: 0.5);
+    final borderColor = isSelected ? context.appSuccess : AppColors.transparent;
+    final iconBgColor = isSelected ? context.appSuccess : AppColors.transparent;
+    final iconColor = isSelected ? AppColors.onBrand : context.appTextPrimary;
 
     return GestureDetector(
       onTap: () {
@@ -154,7 +157,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                     borderRadius: BorderRadius.circular(12),
                     border: isSelected
                         ? null
-                        : Border.all(color: AppColors.lightTextPrimary),
+                        : Border.all(color: context.appTextPrimary),
                   ),
                   child: Icon(icon, color: iconColor),
                 ),
@@ -170,16 +173,16 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                         ),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? AppColors.successLight
-                              : AppColors.lightBorder.withOpacity(0.5),
+                              ? context.appSuccessContainer
+                              : context.appBorder.withValues(alpha: 0.5),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
                           subtitle,
                           style: AppTextStyles.labelSmall.copyWith(
                             color: isSelected
-                                ? AppColors.success
-                                : AppColors.lightTextSecondary,
+                                ? context.appSuccess
+                                : context.appTextSecondary,
                           ),
                         ),
                       ),
@@ -187,7 +190,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                       Text(
                         title,
                         style: AppTextStyles.titleLarge.copyWith(
-                          color: AppColors.lightTextPrimary,
+                          color: context.appTextPrimary,
                         ),
                       ),
                     ],
@@ -199,11 +202,11 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: isSelected
-                        ? AppColors.success
-                        : AppColors.lightBorder.withOpacity(0.5),
+                        ? context.appSuccess
+                        : context.appBorder.withValues(alpha: 0.5),
                   ),
                   child: isSelected
-                      ? const Icon(Icons.check, color: Colors.white, size: 16)
+                      ? const Icon(Icons.check, color: AppColors.onBrand, size: 16)
                       : null,
                 ),
               ],
@@ -212,7 +215,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.lightSurface,
+                color: context.appSurface,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -222,14 +225,14 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                         ? Icons.verified_user_outlined
                         : Icons.local_shipping_outlined,
                     size: 16,
-                    color: AppColors.lightTextSecondary,
+                    color: context.appTextSecondary,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       description,
                       style: AppTextStyles.caption.copyWith(
-                        color: AppColors.lightTextSecondary,
+                        color: context.appTextSecondary,
                       ),
                     ),
                   ),

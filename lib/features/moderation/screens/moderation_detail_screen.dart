@@ -55,31 +55,29 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
   Future<void> _handleApprove() async {
     if (_isSubmitting) return;
 
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(
-          l10n?.moderation_confirm_approve_title ?? 'Confirmar Aprobación',
+          l10n.moderation_confirm_approve_title,
         ),
         content: Text(
-          l10n?.moderation_confirm_approve_desc ?? '¿Estás seguro de que deseas aprobar esta solicitud? El usuario obtendrá acceso a las funcionalidades comerciales.',
+          l10n.moderation_confirm_approve_desc,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
             child: Text(
-              l10n?.verification_status_retry == 'Reintentar'
-                  ? 'Cancelar'
-                  : 'Cancel',
+              l10n.common_cancel,
             ),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.success),
+            style: ElevatedButton.styleFrom(backgroundColor: context.appSuccess),
             onPressed: () => Navigator.of(ctx).pop(true),
             child: Text(
-              l10n?.moderation_btn_approve ?? 'Aprobar',
-              style: const TextStyle(color: Colors.white),
+              l10n.moderation_btn_approve,
+              style: TextStyle(color: context.appOnPrimary),
             ),
           ),
         ],
@@ -112,10 +110,9 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              l10n?.moderation_approved_success ??
-                  'Solicitud aprobada con éxito.',
+              l10n.moderation_approved_success,
             ),
-            backgroundColor: AppColors.success,
+            backgroundColor: context.appSuccess,
           ),
         );
         Navigator.of(context).pop(updated);
@@ -123,11 +120,9 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              result.errorMessage ??
-                  (l10n?.verification_status_error_title ??
-                      'Error al procesar la solicitud'),
+              result.errorMessage ?? l10n.moderation_error_processing,
             ),
-            backgroundColor: AppColors.error,
+            backgroundColor: context.appError,
           ),
         );
       }
@@ -135,8 +130,8 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error inesperado: $e'),
-          backgroundColor: AppColors.error,
+          content: Text(l10n.common_unexpected_error(e.toString())),
+          backgroundColor: context.appError,
         ),
       );
     } finally {
@@ -147,7 +142,7 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
   Future<void> _handleReject() async {
     if (_isSubmitting) return;
 
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final reasonController = TextEditingController();
     final formKey = GlobalKey<FormState>();
 
@@ -155,7 +150,7 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(
-          l10n?.moderation_confirm_reject_title ?? 'Rechazar Solicitud',
+          l10n.moderation_confirm_reject_title,
         ),
         content: Form(
           key: formKey,
@@ -164,22 +159,19 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                l10n?.moderation_reject_reason_prompt ?? 'Indica el motivo del rechazo para que el usuario pueda corregirlo:',
+                l10n.moderation_reject_reason_prompt,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: reasonController,
                 maxLines: 3,
                 decoration: InputDecoration(
-                  hintText:
-                      l10n?.moderation_reject_reason_hint ??
-                      'Ej. Documento borroso o fecha de vencimiento ilegible',
+                  hintText: l10n.moderation_reject_reason_hint,
                   border: const OutlineInputBorder(),
                 ),
                 validator: (val) {
                   if (val == null || val.trim().isEmpty) {
-                    return l10n?.moderation_reject_reason_required ??
-                        'El motivo de rechazo es obligatorio.';
+                    return l10n.moderation_reject_reason_required;
                   }
                   return null;
                 },
@@ -191,21 +183,19 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
             child: Text(
-              l10n?.verification_status_retry == 'Reintentar'
-                  ? 'Cancelar'
-                  : 'Cancel',
+              l10n.common_cancel,
             ),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            style: ElevatedButton.styleFrom(backgroundColor: context.appError),
             onPressed: () {
               if (formKey.currentState?.validate() == true) {
                 Navigator.of(ctx).pop(true);
               }
             },
             child: Text(
-              l10n?.moderation_btn_reject ?? 'Rechazar',
-              style: const TextStyle(color: Colors.white),
+              l10n.moderation_btn_reject,
+              style: TextStyle(color: context.appOnPrimary),
             ),
           ),
         ],
@@ -241,10 +231,9 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              l10n?.moderation_rejected_success ??
-                  'Solicitud rechazada correctamente.',
+              l10n.moderation_rejected_success,
             ),
-            backgroundColor: AppColors.error,
+            backgroundColor: context.appError,
           ),
         );
         Navigator.of(context).pop(updated);
@@ -252,11 +241,9 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              result.errorMessage ??
-                  (l10n?.verification_status_error_title ??
-                      'Error al rechazar solicitud'),
+              result.errorMessage ?? l10n.moderation_error_rejecting,
             ),
-            backgroundColor: AppColors.error,
+            backgroundColor: context.appError,
           ),
         );
       }
@@ -264,8 +251,8 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error inesperado: $e'),
-          backgroundColor: AppColors.error,
+          content: Text(l10n.common_unexpected_error(e.toString())),
+          backgroundColor: context.appError,
         ),
       );
     } finally {
@@ -276,7 +263,7 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
   Future<void> _handleMarkInReview() async {
     if (_isSubmitting) return;
 
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _isSubmitting = true);
 
     try {
@@ -300,21 +287,18 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              l10n?.moderation_in_review_success ??
-                  'Solicitud marcada en revisión correctamente.',
+              l10n.moderation_in_review_success,
             ),
-            backgroundColor: AppColors.info,
+            backgroundColor: context.appInfo,
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              result.errorMessage ??
-                  (l10n?.verification_status_error_title ??
-                      'Error al actualizar solicitud'),
+              result.errorMessage ?? l10n.moderation_error_updating,
             ),
-            backgroundColor: AppColors.error,
+            backgroundColor: context.appError,
           ),
         );
       }
@@ -322,8 +306,8 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error inesperado: $e'),
-          backgroundColor: AppColors.error,
+          content: Text(l10n.common_unexpected_error(e.toString())),
+          backgroundColor: context.appError,
         ),
       );
     } finally {
@@ -333,12 +317,12 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
+    
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n?.moderation_detail_title ?? 'Detalle de Solicitud'),
+        title: Text(l10n.moderation_detail_title),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -359,15 +343,13 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
                     Row(
                       children: [
                         CircleAvatar(
-                          backgroundColor: isDark
-                              ? AppColors.darkPrimary
-                              : AppColors.lightPrimary,
+                          backgroundColor: context.appPrimary,
                           child: Text(
                             _currentRequest.fullName.isNotEmpty
                                 ? _currentRequest.fullName[0].toUpperCase()
                                 : '?',
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: context.appOnPrimary,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -381,12 +363,13 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
                                 _currentRequest.fullName,
                                 style: AppTextStyles.titleMedium.copyWith(
                                   fontWeight: FontWeight.bold,
+                                  color: context.appTextPrimary,
                                 ),
                               ),
                               Text(
                                 _currentRequest.phone,
                                 style: AppTextStyles.bodyMedium.copyWith(
-                                  color: Colors.grey,
+                                  color: context.appTextSecondary,
                                 ),
                               ),
                             ],
@@ -397,15 +380,15 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
                     ),
                     const Divider(height: 24),
                     _buildInfoRow(
-                      l10n?.moderation_lbl_role ?? 'Rol:',
+                      l10n.moderation_lbl_role,
                       _currentRequest.userRole.displayName,
                     ),
                     if (_currentRequest.email != null &&
                         _currentRequest.email!.isNotEmpty)
-                      _buildInfoRow('Email:', _currentRequest.email!),
-                    _buildInfoRow('User ID:', _currentRequest.userId),
+                      _buildInfoRow(l10n.moderation_lbl_email, _currentRequest.email!),
+                    _buildInfoRow(l10n.moderation_lbl_user_id, _currentRequest.userId),
                     _buildInfoRow(
-                      l10n?.moderation_lbl_submitted ?? 'Enviado:',
+                      l10n.moderation_lbl_submitted,
                       _currentRequest.createdAt.toLocal().toString().split(
                         '.',
                       )[0],
@@ -429,14 +412,13 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
                   children: [
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.description_outlined,
-                          color: AppColors.lightPrimary,
+                          color: context.appPrimary,
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          l10n?.moderation_documents_title ??
-                              'Documentos Presentados',
+                          l10n.moderation_documents_title,
                           style: AppTextStyles.titleMedium.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
@@ -447,27 +429,25 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.amber.withValues(alpha: 0.15),
+                        color: context.appWarningContainer,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: Colors.amber.withValues(alpha: 0.5),
+                          color: context.appWarning,
                         ),
                       ),
                       child: Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.lock_outline,
                             size: 20,
-                            color: Colors.amber,
+                            color: context.appWarning,
                           ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              l10n?.moderation_storage_notice ?? 'Los documentos se consultan mediante enlaces firmados temporales del almacenamiento privado.',
+                              l10n.moderation_storage_notice,
                               style: AppTextStyles.bodySmall.copyWith(
-                                color: isDark
-                                    ? Colors.amber[200]
-                                    : Colors.amber[900],
+                                color: context.appWarning,
                               ),
                             ),
                           ),
@@ -477,7 +457,7 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
                     const SizedBox(height: 12),
                     DocumentImagePreview(
                       key: const ValueKey('moderation_document_front'),
-                      title: l10n?.moderation_doc_front ?? 'Cédula (Frente)',
+                      title: l10n.moderation_doc_front,
                       path: _currentRequest.documentFrontPath,
                       imageUrlService: _documentImageService,
                       imageBuilder: widget.documentImageBuilder,
@@ -485,7 +465,7 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
                     const SizedBox(height: 10),
                     DocumentImagePreview(
                       key: const ValueKey('moderation_document_back'),
-                      title: l10n?.moderation_doc_back ?? 'Cédula (Dorso)',
+                      title: l10n.moderation_doc_back,
                       path: _currentRequest.documentBackPath,
                       imageUrlService: _documentImageService,
                       imageBuilder: widget.documentImageBuilder,
@@ -493,7 +473,7 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
                     const SizedBox(height: 10),
                     DocumentImagePreview(
                       key: const ValueKey('moderation_document_selfie'),
-                      title: l10n?.moderation_doc_selfie ?? 'Selfie Facial',
+                      title: l10n.moderation_doc_selfie,
                       path: _currentRequest.selfiePath,
                       imageUrlService: _documentImageService,
                       imageBuilder: widget.documentImageBuilder,
@@ -513,11 +493,11 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
             if (_currentRequest.rejectionReason != null &&
                 _currentRequest.rejectionReason!.isNotEmpty)
               Card(
-                color: AppColors.error.withValues(alpha: 0.1),
+                color: context.appErrorContainer,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
-                  side: const BorderSide(color: AppColors.error),
+                  side: BorderSide(color: context.appError),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -526,16 +506,15 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
                     children: [
                       Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.warning_amber_rounded,
-                            color: AppColors.error,
+                            color: context.appError,
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            l10n?.moderation_previous_rejection ??
-                                'Motivo de Rechazo Registrado',
+                            l10n.moderation_previous_rejection,
                             style: AppTextStyles.titleSmall.copyWith(
-                              color: AppColors.error,
+                              color: context.appError,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -559,14 +538,14 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
                 OutlinedButton.icon(
                   key: const ValueKey('moderation_btn_mark_in_review'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.info,
-                    side: const BorderSide(color: AppColors.info),
+                    foregroundColor: context.appInfo,
+                    side: BorderSide(color: context.appInfo),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                   onPressed: _isSubmitting ? null : _handleMarkInReview,
                   icon: const Icon(Icons.analytics_outlined),
                   label: Text(
-                    l10n?.moderation_btn_mark_in_review ?? 'Poner en revisión',
+                    l10n.moderation_btn_mark_in_review,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -577,13 +556,13 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
                     child: OutlinedButton.icon(
                       key: const ValueKey('moderation_btn_reject'),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.error,
-                        side: const BorderSide(color: AppColors.error),
+                        foregroundColor: context.appError,
+                        side: BorderSide(color: context.appError),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
                       onPressed: _isSubmitting ? null : _handleReject,
                       icon: const Icon(Icons.close),
-                      label: Text(l10n?.moderation_btn_reject ?? 'Rechazar'),
+                      label: Text(l10n.moderation_btn_reject),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -591,14 +570,14 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
                     child: ElevatedButton.icon(
                       key: const ValueKey('moderation_btn_approve'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.success,
+                        backgroundColor: context.appSuccess,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
                       onPressed: _isSubmitting ? null : _handleApprove,
-                      icon: const Icon(Icons.check, color: Colors.white),
+                      icon: Icon(Icons.check, color: context.appOnPrimary),
                       label: Text(
-                        l10n?.moderation_btn_approve ?? 'Aprobar',
-                        style: const TextStyle(color: Colors.white),
+                        l10n.moderation_btn_approve,
+                        style: TextStyle(color: context.appOnPrimary),
                       ),
                     ),
                   ),
@@ -607,10 +586,11 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
             ] else ...[
               Center(
                 child: Text(
-                  l10n?.moderation_already_resolved ??
-                      'Esta solicitud ya fue resuelta y no admite nuevas modificaciones inmediatas.',
+                  l10n.moderation_already_resolved,
                   textAlign: TextAlign.center,
-                  style: AppTextStyles.bodyMedium.copyWith(color: Colors.grey),
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: context.appTextSecondary,
+                  ),
                 ),
               ),
             ],
@@ -630,16 +610,19 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
             width: 100,
             child: Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.bold,
-                color: Colors.grey,
+                color: context.appTextSecondary,
               ),
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(fontWeight: FontWeight.w500),
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
+                color: context.appTextPrimary,
+              ),
             ),
           ),
         ],
@@ -652,36 +635,37 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
     Color fg;
     String label;
 
+    final l10n = AppLocalizations.of(context)!;
     switch (status) {
       case UserVerificationStatus.pendiente:
-        bg = Colors.orange.withValues(alpha: 0.2);
-        fg = Colors.orange[800]!;
-        label = 'Pendiente';
+        bg = context.appWarningContainer;
+        fg = context.appWarning;
+        label = l10n.moderation_status_pending;
         break;
       case UserVerificationStatus.enRevisionIa:
-        bg = Colors.blue.withValues(alpha: 0.2);
-        fg = Colors.blue[800]!;
+        bg = context.appInfoContainer;
+        fg = context.appInfo;
         label = status.displayName;
         break;
       case UserVerificationStatus.aprobado:
-        bg = Colors.green.withValues(alpha: 0.2);
-        fg = Colors.green[800]!;
-        label = 'Aprobado';
+        bg = context.appSuccessContainer;
+        fg = context.appSuccess;
+        label = l10n.moderation_status_approved;
         break;
       case UserVerificationStatus.rechazado:
-        bg = Colors.red.withValues(alpha: 0.2);
-        fg = Colors.red[800]!;
-        label = 'Rechazado';
+        bg = context.appErrorContainer;
+        fg = context.appError;
+        label = l10n.moderation_status_rejected;
         break;
       case UserVerificationStatus.suspendido:
-        bg = Colors.purple.withValues(alpha: 0.2);
-        fg = Colors.purple[800]!;
-        label = 'Suspendido';
+        bg = context.appPrimaryContainer;
+        fg = context.appOnPrimaryContainer;
+        label = l10n.moderation_status_suspended;
         break;
       case UserVerificationStatus.desconocido:
-        bg = Colors.grey.withValues(alpha: 0.2);
-        fg = Colors.grey[800]!;
-        label = 'Desconocido';
+        bg = context.appSurfaceVariant;
+        fg = context.appTextSecondary;
+        label = l10n.moderation_status_unknown;
         break;
     }
 

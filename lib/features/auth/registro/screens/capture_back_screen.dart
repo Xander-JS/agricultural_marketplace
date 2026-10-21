@@ -50,7 +50,7 @@ class _CaptureBackScreenState extends State<CaptureBackScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: AppColors.lightSurface,
+      backgroundColor: context.appSurface,
       appBar: CustomAppBar(title: l10n.capture_back_header_title),
       body: SafeArea(
         child: Column(
@@ -65,7 +65,7 @@ class _CaptureBackScreenState extends State<CaptureBackScreen> {
                   Text(
                     l10n.capture_back_description,
                     style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.lightTextSecondary,
+                      color: context.appTextSecondary,
                     ),
                   ),
                 ],
@@ -81,7 +81,7 @@ class _CaptureBackScreenState extends State<CaptureBackScreen> {
               
               CustomPaint(
                 foregroundPainter: ViewfinderPainter(
-                  color: AppColors.lightTextSecondary,
+                  color: context.appTextSecondary,
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(12.0),
@@ -126,7 +126,7 @@ class _CaptureBackScreenState extends State<CaptureBackScreen> {
               Text(
                 l10n.capture_back_tap_to_capture,
                 style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.lightTextSecondary,
+                  color: context.appTextSecondary,
                 ),
               ),
               const SizedBox(height: 16),

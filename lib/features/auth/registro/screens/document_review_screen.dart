@@ -101,12 +101,9 @@ class _DocumentReviewScreenState extends State<DocumentReviewScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark
-          ? AppColors.darkBackground
-          : AppColors.lightBackground,
+      backgroundColor: context.appBackground,
       appBar: CustomAppBar(title: l10n.document_review_title),
       body: SafeArea(
         child: Column(
@@ -120,9 +117,7 @@ class _DocumentReviewScreenState extends State<DocumentReviewScreen> {
                     Text(
                       l10n.document_review_description,
                       style: AppTextStyles.bodyMedium.copyWith(
-                        color: isDark
-                            ? AppColors.darkTextSecondary
-                            : AppColors.lightTextSecondary,
+                        color: context.appTextSecondary,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -190,9 +185,9 @@ class _DocumentReviewScreenState extends State<DocumentReviewScreen> {
                       const SizedBox(height: 14),
                       Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.check_circle_outline,
-                            color: AppColors.success,
+                            color: context.appSuccess,
                             size: 20,
                           ),
                           const SizedBox(width: 8),
@@ -200,7 +195,7 @@ class _DocumentReviewScreenState extends State<DocumentReviewScreen> {
                             child: Text(
                               l10n.document_review_ready,
                               style: AppTextStyles.bodySmall.copyWith(
-                                color: AppColors.success,
+                                color: context.appSuccess,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -237,19 +232,19 @@ class _ErrorBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.errorLight,
+        color: context.appErrorContainer,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.error.withValues(alpha: 0.5)),
+        border: Border.all(color: context.appError.withValues(alpha: 0.5)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.error_outline, color: AppColors.error, size: 20),
+          Icon(Icons.error_outline, color: context.appError, size: 20),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               message,
-              style: AppTextStyles.bodySmall.copyWith(color: AppColors.error),
+              style: AppTextStyles.bodySmall.copyWith(color: context.appError),
             ),
           ),
         ],

@@ -33,7 +33,6 @@ class DocumentSelectionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Card(
       elevation: 1.5,
@@ -59,7 +58,7 @@ class DocumentSelectionCard extends StatelessWidget {
                     vertical: 3,
                   ),
                   decoration: BoxDecoration(
-                    color: (_hasFile ? AppColors.success : AppColors.warning)
+                    color: (_hasFile ? context.appSuccess : context.appWarning)
                         .withValues(alpha: 0.14),
                     borderRadius: BorderRadius.circular(20),
                   ),
@@ -68,7 +67,7 @@ class DocumentSelectionCard extends StatelessWidget {
                         ? l10n.document_selected_label
                         : l10n.document_pending_label,
                     style: AppTextStyles.labelSmall.copyWith(
-                      color: _hasFile ? AppColors.success : AppColors.warning,
+                      color: _hasFile ? context.appSuccess : context.appWarning,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -80,9 +79,7 @@ class DocumentSelectionCard extends StatelessWidget {
               Text(
                 helperText!,
                 style: AppTextStyles.bodySmall.copyWith(
-                  color: isDark
-                      ? AppColors.darkTextSecondary
-                      : AppColors.lightTextSecondary,
+                  color: context.appTextSecondary,
                 ),
               ),
             ],
@@ -92,9 +89,7 @@ class DocumentSelectionCard extends StatelessWidget {
               child: Container(
                 height: 170,
                 width: double.infinity,
-                color: isDark
-                    ? AppColors.darkSurfaceVariant
-                    : AppColors.lightBackground,
+                color: context.appSurfaceVariant,
                 child: _hasFile
                     ? Image.file(
                         file!,
@@ -148,7 +143,6 @@ class DocumentSelectionCard extends StatelessWidget {
   }
 
   Widget _placeholder(BuildContext context, IconData icon, String label) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -156,18 +150,14 @@ class DocumentSelectionCard extends StatelessWidget {
           Icon(
             icon,
             size: 42,
-            color: isDark
-                ? AppColors.darkTextSecondary
-                : AppColors.lightTextSecondary,
+            color: context.appTextSecondary,
           ),
           const SizedBox(height: 8),
           Text(
             label,
             textAlign: TextAlign.center,
             style: AppTextStyles.bodySmall.copyWith(
-              color: isDark
-                  ? AppColors.darkTextSecondary
-                  : AppColors.lightTextSecondary,
+              color: context.appTextSecondary,
             ),
           ),
         ],

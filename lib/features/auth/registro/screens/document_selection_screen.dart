@@ -51,7 +51,7 @@ class _DocumentSelectionScreenState extends State<DocumentSelectionScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: AppColors.lightBackground,
+      backgroundColor: context.appBackground,
       appBar: CustomAppBar(title: l10n.document_selection_header_title),
       body: SafeArea(
         child: Column(
@@ -65,7 +65,7 @@ class _DocumentSelectionScreenState extends State<DocumentSelectionScreen> {
                   Text(
                     l10n.document_selection_description,
                     style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.lightTextSecondary,
+                      color: context.appTextSecondary,
                     ),
                   ),
                   const SizedBox(height: 32),
@@ -73,12 +73,13 @@ class _DocumentSelectionScreenState extends State<DocumentSelectionScreen> {
                   Text(
                     l10n.document_selection_select_id,
                     style: AppTextStyles.labelMedium.copyWith(
-                      color: AppColors.lightTextSecondary,
+                      color: context.appTextSecondary,
                     ),
                   ),
                   const SizedBox(height: 16),
 
                   _buildDocCard(
+                    context: context,
                     type: 'CC',
                     title: l10n.document_selection_cc,
                     subtitle: l10n.document_selection_cc_desc,
@@ -86,6 +87,7 @@ class _DocumentSelectionScreenState extends State<DocumentSelectionScreen> {
                   ),
                   const SizedBox(height: 16),
                   _buildDocCard(
+                    context: context,
                     type: 'Driver License',
                     title: l10n.document_selection_driver_license,
                     subtitle: l10n.document_selection_driver_license_desc,
@@ -96,16 +98,16 @@ class _DocumentSelectionScreenState extends State<DocumentSelectionScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.lock_outline,
                         size: 16,
-                        color: AppColors.lightTextSecondary,
+                        color: context.appTextSecondary,
                       ),
                       const SizedBox(width: 8),
                       Text(
                         l10n.document_selection_encryption_notice,
                         style: AppTextStyles.caption.copyWith(
-                          color: AppColors.lightTextSecondary,
+                          color: context.appTextSecondary,
                         ),
                       ),
                     ],
@@ -127,6 +129,7 @@ class _DocumentSelectionScreenState extends State<DocumentSelectionScreen> {
   }
 
   Widget _buildDocCard({
+    required BuildContext context,
     required String type,
     required String title,
     required String subtitle,
@@ -134,11 +137,11 @@ class _DocumentSelectionScreenState extends State<DocumentSelectionScreen> {
   }) {
     final isSelected = _selectedDocument == type;
     final bgColor = isSelected
-        ? AppColors.lightSecondary
-        : AppColors.infoLight.withOpacity(0.3);
-    final borderColor = isSelected ? AppColors.success : Colors.transparent;
-    final iconBgColor = isSelected ? AppColors.success : Colors.transparent;
-    final iconColor = isSelected ? Colors.white : AppColors.lightTextPrimary;
+        ? context.appPrimaryContainer
+        : context.appInfoContainer.withValues(alpha: 0.5);
+    final borderColor = isSelected ? context.appSuccess : AppColors.transparent;
+    final iconBgColor = isSelected ? context.appSuccess : AppColors.transparent;
+    final iconColor = isSelected ? AppColors.onBrand : context.appTextPrimary;
 
     return GestureDetector(
       onTap: () {
@@ -162,7 +165,7 @@ class _DocumentSelectionScreenState extends State<DocumentSelectionScreen> {
                 borderRadius: BorderRadius.circular(12),
                 border: isSelected
                     ? null
-                    : Border.all(color: AppColors.lightTextPrimary),
+                    : Border.all(color: context.appTextPrimary),
               ),
               child: Icon(icon, color: iconColor),
             ),
@@ -175,15 +178,15 @@ class _DocumentSelectionScreenState extends State<DocumentSelectionScreen> {
                     title,
                     style: AppTextStyles.titleMedium.copyWith(
                       color: isSelected
-                          ? AppColors.success
-                          : AppColors.lightTextPrimary,
+                          ? context.appSuccess
+                          : context.appTextPrimary,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
                     style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.lightTextSecondary,
+                      color: context.appTextSecondary,
                     ),
                   ),
                 ],
@@ -195,11 +198,11 @@ class _DocumentSelectionScreenState extends State<DocumentSelectionScreen> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: isSelected
-                    ? AppColors.success
-                    : AppColors.lightBorder.withOpacity(0.5),
+                    ? context.appSuccess
+                    : context.appBorder.withValues(alpha: 0.5),
               ),
               child: isSelected
-                  ? const Icon(Icons.check, color: Colors.white, size: 16)
+                  ? const Icon(Icons.check, color: AppColors.onBrand, size: 16)
                   : null,
             ),
           ],

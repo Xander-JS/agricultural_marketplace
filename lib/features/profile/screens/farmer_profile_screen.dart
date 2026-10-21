@@ -150,12 +150,12 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
       }
     } catch (e) {
       if (mounted) {
-        final l10n = AppLocalizations.of(context);
+        final l10n = AppLocalizations.of(context)!;
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${l10n?.profile_load_error ?? "Error al cargar el perfil"}: $e'),
-            backgroundColor: AppColors.error,
+            content: Text('${l10n.profile_load_error}: $e'),
+            backgroundColor: context.appError,
           ),
         );
       }
@@ -236,10 +236,11 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
       if (mounted) {
         setState(() => _isSaving = false);
         _modalSetState?.call(() {});
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al actualizar dato: $e'),
-            backgroundColor: AppColors.error,
+            content: Text(l10n.profile_update_error(e.toString())),
+            backgroundColor: context.appError,
           ),
         );
       }
@@ -267,11 +268,11 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
     } catch (e) {
       await _loadProfileData();
       if (mounted) {
-        final l10n = AppLocalizations.of(context);
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${l10n?.profile_save_settings_error ?? "Error al guardar configuración"}: $e'),
-            backgroundColor: AppColors.error,
+            content: Text('${l10n.profile_save_settings_error}: $e'),
+            backgroundColor: context.appError,
           ),
         );
       }
@@ -303,20 +304,21 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
         setState(() {
           _profileData = _profileData!.copyWith(profilePath: newPath);
         });
-        final l10n = AppLocalizations.of(context);
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(l10n?.profile_updated_photo ?? 'Foto de perfil actualizada'),
-            backgroundColor: AppColors.success,
+            content: Text(l10n.profile_updated_photo),
+            backgroundColor: context.appSuccess,
           ),
         );
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al subir imagen: $e'),
-            backgroundColor: AppColors.error,
+            content: Text(l10n.profile_photo_error(e.toString())),
+            backgroundColor: context.appError,
           ),
         );
       }
@@ -328,42 +330,41 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
   }
 
   Future<void> _handleLogout() async {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
-        final isDark = Theme.of(dialogContext).brightness == Brightness.dark;
         return AlertDialog(
-          backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+          backgroundColor: Theme.of(dialogContext).colorScheme.surface,
           title: Text(
-            l10n?.profile_logout_confirm_title ?? '¿Cerrar sesión?',
+            l10n.profile_logout_confirm_title,
             style: TextStyle(
-              color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+              color: Theme.of(dialogContext).colorScheme.onSurface,
             ),
           ),
           content: Text(
-            l10n?.profile_logout_confirm_desc ?? '¿Estás seguro de que deseas salir de tu cuenta?',
+            l10n.profile_logout_confirm_desc,
             style: TextStyle(
-              color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+              color: Theme.of(dialogContext).colorScheme.onSurfaceVariant,
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
               child: Text(
-                l10n?.profile_cancel ?? 'Cancelar',
+                l10n.profile_cancel,
                 style: TextStyle(
-                  color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                  color: Theme.of(dialogContext).colorScheme.onSurfaceVariant,
                 ),
               ),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(dialogContext, true),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.error,
-                foregroundColor: Colors.white,
+                backgroundColor: context.appError,
+                foregroundColor: context.appOnPrimary,
               ),
-              child: Text(l10n?.profile_logout ?? 'Cerrar sesión'),
+              child: Text(l10n.profile_logout),
             ),
           ],
         );
@@ -389,53 +390,46 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    final backgroundColor = isDark ? AppColors.darkBackground : AppColors.lightBackground;
-    final surfaceColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
-    final textPrimary = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final textSecondary = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
-    final tertiaryColor = isDark ? AppColors.darkTertiary : AppColors.lightTertiary;
+    final l10n = AppLocalizations.of(context)!;
 
     final screenTitle = _isBuyer
-        ? (l10n?.profile_title_buyer ?? 'Mi Perfil')
-        : (l10n?.profile_title_farmer ?? 'Mi Finca');
+        ? (l10n.profile_title_buyer)
+        : (l10n.profile_title_farmer);
 
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: context.appBackground,
       appBar: AppBar(
         title: Text(
           screenTitle,
           style: AppTextStyles.displaySmall.copyWith(
-            color: textPrimary,
+            color: context.appTextPrimary,
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: surfaceColor,
+        backgroundColor: context.appSurface,
         elevation: 0,
-        iconTheme: IconThemeData(color: textPrimary),
+        iconTheme: IconThemeData(color: context.appTextPrimary),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),
             onPressed: _isSaving || _profileData == null ? null : _showSettingsBottomSheet,
-            tooltip: l10n?.profile_settings_title ?? 'Configuración',
+            tooltip: l10n.profile_settings_title,
           ),
         ],
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator(color: tertiaryColor))
+          ? Center(child: CircularProgressIndicator(color: context.appPrimary))
           : RefreshIndicator(
               onRefresh: _loadProfileData,
-              color: tertiaryColor,
+              color: context.appPrimary,
               child: _profileData == null
                   ? ListView(
                       children: [
                         const SizedBox(height: 100),
                         Center(
                           child: Text(
-                            l10n?.profile_no_data ?? 'No se pudieron cargar los datos.',
-                            style: TextStyle(color: textSecondary),
+                            l10n.profile_no_data,
+                            style: TextStyle(color: context.appTextSecondary),
                           ),
                         ),
                       ],
@@ -446,11 +440,11 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          _buildProfileHeader(isDark, textPrimary, tertiaryColor),
+                          _buildProfileHeader(),
                           const SizedBox(height: 32),
-                          _buildStatisticsSection(isDark, textPrimary),
+                          _buildStatisticsSection(),
                           const SizedBox(height: 32),
-                          _buildReputationSection(isDark, textPrimary),
+                          _buildReputationSection(),
                           const SizedBox(height: 40),
                         ],
                       ),
@@ -466,22 +460,16 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) {
           _modalSetState = setModalState;
-          final l10n = AppLocalizations.of(context);
-          final isDark = Theme.of(context).brightness == Brightness.dark;
-
-          final sheetBackground = isDark ? AppColors.darkBackground : AppColors.lightBackground;
-          final sheetSurface = isDark ? AppColors.darkSurface : AppColors.lightSurface;
-          final textPrimary = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-          final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
+          final l10n = AppLocalizations.of(context)!;
           final settings = _profileData!.settings;
 
           return Container(
             decoration: BoxDecoration(
-              color: sheetBackground,
+              color: context.appBackground,
               borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             ),
             padding: EdgeInsets.only(
@@ -501,60 +489,57 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
                       height: 4,
                       margin: const EdgeInsets.only(bottom: 24),
                       decoration: BoxDecoration(
-                        color: borderColor,
+                        color: context.appDivider,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
                   ),
                   Text(
-                    l10n?.profile_contact_info ?? 'Información de contacto',
+                    l10n.profile_contact_info,
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: textPrimary,
+                      color: context.appTextPrimary,
                     ),
                   ),
                   const SizedBox(height: 16),
                   _buildTextField(
-                    label: l10n?.profile_email ?? 'Correo electrónico',
+                    label: l10n.profile_email,
                     controller: _emailController,
                     originalValue: _profileData!.email,
                     icon: Icons.email_outlined,
                     focusNode: _emailFocusNode,
                     isSaved: _emailSaved,
                     keyboardType: TextInputType.emailAddress,
-                    isDark: isDark,
-                  ),
+                                      ),
                   const SizedBox(height: 16),
                   _buildTextField(
-                    label: l10n?.profile_phone ?? 'Número de teléfono',
+                    label: l10n.profile_phone,
                     controller: _phoneController,
                     originalValue: _profileData!.phone,
                     icon: Icons.phone_outlined,
                     focusNode: _phoneFocusNode,
                     isSaved: _phoneSaved,
                     keyboardType: TextInputType.phone,
-                    isDark: isDark,
-                  ),
+                                      ),
                   const SizedBox(height: 24),
 
                   // Opciones de negociación: EXCLUSIVAS DEL AGRICULTOR
                   if (!_isBuyer) ...[
                     Text(
-                      l10n?.profile_negotiation_options ?? 'Opciones de negociación',
+                      l10n.profile_negotiation_options,
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: textPrimary,
+                        color: context.appTextPrimary,
                       ),
                     ),
                     const SizedBox(height: 16),
                     _buildSwitchTile(
-                      title: l10n?.profile_enable_early_sale ?? 'Habilitar precompra',
+                      title: l10n.profile_enable_early_sale,
                       value: settings.enableEarlySale,
                       icon: Icons.calendar_month_outlined,
-                      isDark: isDark,
-                      onChanged: (val) {
+                                            onChanged: (val) {
                         setModalState(() {
                           _updateSettings(FarmerSettingsData(
                             enableEarlySale: val,
@@ -567,27 +552,26 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
                     ),
                     const SizedBox(height: 24),
                     Text(
-                      l10n?.profile_visibility_negotiation ?? 'Visibilidad durante una negociación',
+                      l10n.profile_visibility_negotiation,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: textPrimary,
+                        color: context.appTextPrimary,
                       ),
                     ),
                     const SizedBox(height: 12),
                     Material(
-                      color: sheetSurface,
+                      color: context.appSurface,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
-                        side: BorderSide(color: borderColor),
+                        side: BorderSide(color: context.appBorder),
                       ),
                       child: Column(
                         children: [
                           _buildSwitchListTileInside(
-                            title: l10n?.profile_visibility_phone ?? 'Teléfono',
+                            title: l10n.profile_visibility_phone,
                             value: settings.sharePhone,
-                            isDark: isDark,
-                            onChanged: (val) {
+                                                        onChanged: (val) {
                               setModalState(() {
                                 _updateSettings(FarmerSettingsData(
                                   enableEarlySale: settings.enableEarlySale,
@@ -598,12 +582,11 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
                               });
                             },
                           ),
-                          Divider(height: 1, color: borderColor),
+                          Divider(height: 1, color: context.appDivider),
                           _buildSwitchListTileInside(
-                            title: l10n?.profile_visibility_location ?? 'Ubicación',
+                            title: l10n.profile_visibility_location,
                             value: settings.shareLocation,
-                            isDark: isDark,
-                            onChanged: (val) {
+                                                        onChanged: (val) {
                               setModalState(() {
                                 _updateSettings(FarmerSettingsData(
                                   enableEarlySale: settings.enableEarlySale,
@@ -614,12 +597,11 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
                               });
                             },
                           ),
-                          Divider(height: 1, color: borderColor),
+                          Divider(height: 1, color: context.appDivider),
                           _buildSwitchListTileInside(
-                            title: l10n?.profile_visibility_whatsapp ?? 'WhatsApp',
+                            title: l10n.profile_visibility_whatsapp,
                             value: settings.shareWhatsapp,
-                            isDark: isDark,
-                            onChanged: (val) {
+                                                        onChanged: (val) {
                               setModalState(() {
                                 _updateSettings(FarmerSettingsData(
                                   enableEarlySale: settings.enableEarlySale,
@@ -638,27 +620,26 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
 
                   // Accesibilidad: Común para ambos roles
                   Text(
-                    l10n?.profile_accessibility ?? 'Accesibilidad',
+                    l10n.profile_accessibility,
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: textPrimary,
+                      color: context.appTextPrimary,
                     ),
                   ),
                   const SizedBox(height: 16),
                   Material(
-                    color: sheetSurface,
+                    color: context.appSurface,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
-                      side: BorderSide(color: borderColor),
+                      side: BorderSide(color: context.appBorder),
                     ),
                     child: Column(
                       children: [
                         _buildSwitchListTileInside(
-                          title: l10n?.profile_dark_mode ?? 'Modo oscuro',
+                          title: l10n.profile_dark_mode,
                           value: _isDarkMode,
-                          isDark: isDark,
-                          onChanged: (val) async {
+                                                    onChanged: (val) async {
                             setModalState(() {
                               _isDarkMode = val;
                             });
@@ -668,12 +649,11 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
                             await AppPreferencesService.instance.toggleDarkMode(val);
                           },
                         ),
-                        Divider(height: 1, color: borderColor),
+                        Divider(height: 1, color: context.appDivider),
                         _buildSwitchListTileInside(
-                          title: l10n?.profile_english_language ?? 'Idioma inglés',
+                          title: l10n.profile_english_language,
                           value: _isEnglish,
-                          isDark: isDark,
-                          onChanged: (val) async {
+                                                    onChanged: (val) async {
                             setModalState(() {
                               _isEnglish = val;
                             });
@@ -696,16 +676,16 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
                         Navigator.pop(context);
                         _handleLogout();
                       },
-                      icon: const Icon(Icons.logout, color: AppColors.error),
+                      icon: Icon(Icons.logout, color: context.appError),
                       label: Text(
-                        l10n?.profile_logout ?? 'Cerrar sesión',
-                        style: const TextStyle(
-                          color: AppColors.error,
+                        l10n.profile_logout,
+                        style: TextStyle(
+                          color: context.appError,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: AppColors.error),
+                        side: BorderSide(color: context.appError),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -723,16 +703,12 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
     );
   }
 
-  Widget _buildProfileHeader(bool isDark, Color textPrimary, Color tertiaryColor) {
+  Widget _buildProfileHeader() {
     String? imageUrl;
     if (_profileData!.profilePath != null && _profileData!.profilePath!.isNotEmpty) {
       imageUrl = _profileService.getPublicProfileImageUrl(_profileData!.profilePath!);
     }
 
-    final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
-    final badgeBgColor = isDark
-        ? AppColors.darkSecondary
-        : AppColors.lightSecondary;
 
     return Column(
       children: [
@@ -749,9 +725,9 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
                 return UserAvatar(
                   imageUrl: resolvedImageUrl,
                   radius: 50,
-                  backgroundColor: isDark ? AppColors.darkSurfaceVariant : borderColor,
-                  borderColor: borderColor,
-                  iconColor: isDark ? AppColors.darkTextDisabled : AppColors.lightTextDisabled,
+                  backgroundColor: context.appSurfaceVariant,
+                  borderColor: context.appBorder,
+                  iconColor: context.appTextDisabled,
                 );
               },
             ),
@@ -761,10 +737,10 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: tertiaryColor,
+                  color: context.appPrimary,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                child: Icon(Icons.camera_alt, color: context.appOverlayText, size: 20),
               ),
             ),
           ],
@@ -773,13 +749,13 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
-            color: badgeBgColor,
+            color: context.appPrimaryContainer,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Text(
             (_profileData!.role).toUpperCase(),
             style: TextStyle(
-              color: tertiaryColor,
+              color: context.appOnPrimaryContainer,
               fontWeight: FontWeight.bold,
               fontSize: 12,
             ),
@@ -792,7 +768,7 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
           style: AppTextStyles.displaySmall.copyWith(
             fontSize: 22,
             fontWeight: FontWeight.bold,
-            color: textPrimary,
+            color: context.appTextPrimary,
           ),
         ),
       ],
@@ -806,14 +782,8 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
     required IconData icon,
     required FocusNode focusNode,
     required bool isSaved,
-    required bool isDark,
     TextInputType? keyboardType,
   }) {
-    final textSecondary = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
-    final textPrimary = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
-    final fieldBg = isDark ? AppColors.darkSurface : AppColors.lightBackground;
-    final tertiaryColor = isDark ? AppColors.darkTertiary : AppColors.lightTertiary;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -823,7 +793,7 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: textSecondary,
+            color: context.appTextSecondary,
           ),
         ),
         const SizedBox(height: 8),
@@ -831,22 +801,22 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
           controller: controller,
           keyboardType: keyboardType,
           focusNode: focusNode,
-          style: TextStyle(color: textPrimary),
+          style: TextStyle(color: context.appTextPrimary),
           decoration: InputDecoration(
-            prefixIcon: Icon(icon, color: AppColors.lightTextDisabled),
+            prefixIcon: Icon(icon, color: context.appTextDisabled),
             suffixIcon: isSaved
-                ? const Icon(Icons.check_circle, color: AppColors.success)
+                ? Icon(Icons.check_circle, color: context.appSuccess)
                 : null,
             filled: true,
-            fillColor: fieldBg,
+            fillColor: context.appSurface,
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: borderColor),
+              borderSide: BorderSide(color: context.appBorder),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: tertiaryColor),
+              borderSide: BorderSide(color: context.appPrimary),
             ),
           ),
         ),
@@ -854,19 +824,19 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
     );
   }
 
-  Widget _buildStatisticsSection(bool isDark, Color textPrimary) {
-    final l10n = AppLocalizations.of(context);
+  Widget _buildStatisticsSection() {
+    final l10n = AppLocalizations.of(context)!;
     final stats = _profileData!.stats;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          l10n?.profile_stats_title ?? 'Estadísticas',
+          l10n.profile_stats_title,
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: textPrimary,
+            color: context.appTextPrimary,
           ),
         ),
         const SizedBox(height: 16),
@@ -876,31 +846,28 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
             children: [
               Expanded(
                 child: _buildStatCard(
-                  l10n?.profile_stat_published ?? 'Publicados',
+                  l10n.profile_stat_published,
                   stats.published.toString(),
                   Icons.grass_outlined,
-                  AppColors.info,
-                  isDark,
+                  context.appInfo,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: _buildStatCard(
-                  l10n?.profile_stat_negotiating ?? 'Negociando',
+                  l10n.profile_stat_negotiating,
                   stats.negotiating.toString(),
                   Icons.handshake_outlined,
-                  AppColors.warning,
-                  isDark,
+                  context.appWarning,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: _buildStatCard(
-                  l10n?.profile_stat_closed_farmer ?? 'Cerradas',
+                  l10n.profile_stat_closed_farmer,
                   stats.closed.toString(),
                   Icons.check_circle_outline,
-                  AppColors.success,
-                  isDark,
+                  context.appSuccess,
                 ),
               ),
             ],
@@ -911,21 +878,19 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
             children: [
               Expanded(
                 child: _buildStatCard(
-                  l10n?.profile_stat_negotiating ?? 'Negociando',
+                  l10n.profile_stat_negotiating,
                   stats.negotiating.toString(),
                   Icons.handshake_outlined,
-                  AppColors.warning,
-                  isDark,
+                  context.appWarning,
                 ),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: _buildStatCard(
-                  l10n?.profile_stat_closed_buyer ?? 'Cerrados',
+                  l10n.profile_stat_closed_buyer,
                   stats.closed.toString(),
                   Icons.check_circle_outline,
-                  AppColors.success,
-                  isDark,
+                  context.appSuccess,
                 ),
               ),
             ],
@@ -935,33 +900,22 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
     );
   }
 
-  Widget _buildReputationSection(bool isDark, Color textPrimary) {
-    final l10n = AppLocalizations.of(context);
+  Widget _buildReputationSection() {
+    final l10n = AppLocalizations.of(context)!;
     final summary = _reputation;
     final isLoading =
         _isLoadingReputation || (summary == null && !_reputationLoadFailed);
 
-    final cardBg = isDark ? AppColors.darkSurface : AppColors.lightSurface;
-    final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
-    final textSecondary = isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
-    final textDisabled = isDark
-        ? AppColors.darkTextDisabled
-        : AppColors.lightTextDisabled;
-    final tertiaryColor = isDark
-        ? AppColors.darkTertiary
-        : AppColors.lightTertiary;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          l10n?.reputation_title ?? 'Reputación',
+          l10n.reputation_title,
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: textPrimary,
+            color: context.appTextPrimary,
           ),
         ),
         const SizedBox(height: 16),
@@ -969,14 +923,12 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: cardBg,
+            color: context.appSurface,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: borderColor),
+            border: Border.all(color: context.appBorder),
             boxShadow: [
               BoxShadow(
-                color: isDark
-                    ? Colors.black.withValues(alpha: 0.15)
-                    : Colors.black.withValues(alpha: 0.02),
+                color: context.appShadow,
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -990,13 +942,13 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
                       height: 18,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: tertiaryColor,
+                        color: context.appPrimary,
                       ),
                     ),
                     const SizedBox(width: 10),
                     Text(
-                      l10n?.reputation_loading ?? 'Cargando reputación...',
-                      style: TextStyle(fontSize: 13, color: textSecondary),
+                      l10n.reputation_loading,
+                      style: TextStyle(fontSize: 13, color: context.appTextSecondary),
                     ),
                   ],
                 )
@@ -1006,19 +958,18 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
                   children: [
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.error_outline,
-                          color: AppColors.error,
+                          color: context.appError,
                           size: 20,
                         ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            l10n?.reputation_load_error ??
-                                'No se pudo cargar la reputación.',
-                            style: const TextStyle(
+                            l10n.reputation_load_error,
+                            style: TextStyle(
                               fontSize: 13,
-                              color: AppColors.error,
+                              color: context.appError,
                             ),
                           ),
                         ),
@@ -1029,7 +980,7 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
                       key: const ValueKey('profile_reputation_retry'),
                       onPressed: () => _loadReputation(_profileData!.id),
                       icon: const Icon(Icons.refresh, size: 18),
-                      label: Text(l10n?.market_retry ?? 'Reintentar'),
+                      label: Text(l10n.market_retry),
                     ),
                   ],
                 )
@@ -1038,17 +989,17 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
                   children: [
                     Icon(
                       Icons.star_outline_rounded,
-                      color: textDisabled,
+                      color: context.appTextDisabled,
                       size: 24,
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        l10n?.reputation_no_ratings ?? 'Sin calificaciones aún',
+                        l10n.reputation_no_ratings,
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: textSecondary,
+                          color: context.appTextSecondary,
                         ),
                       ),
                     ),
@@ -1061,21 +1012,20 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
                         children: [
                           Text(
                             '★ ${summary.averageRating.toStringAsFixed(1)}',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.warning,
+                              color: context.appWarning,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            l10n?.reputation_average_label ??
-                                'Calificación promedio',
+                            l10n.reputation_average_label,
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
-                              color: textSecondary,
+                              color: context.appTextSecondary,
                             ),
                           ),
                         ],
@@ -1084,9 +1034,7 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
                     Container(
                       width: 1,
                       height: 52,
-                      color: isDark
-                          ? AppColors.darkDivider
-                          : AppColors.lightDivider,
+                      color: context.appDivider,
                     ),
                     Expanded(
                       child: Column(
@@ -1096,18 +1044,17 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
-                              color: textPrimary,
+                              color: context.appTextPrimary,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            l10n?.reputation_reviews_received ??
-                                'Calificaciones recibidas',
+                            l10n.reputation_reviews_received,
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
-                              color: textSecondary,
+                              color: context.appTextSecondary,
                             ),
                           ),
                         ],
@@ -1120,22 +1067,22 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color, bool isDark) {
-    final cardBg = isDark ? AppColors.darkSurface : AppColors.lightSurface;
-    final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
-    final textSecondary = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+  Widget _buildStatCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
       decoration: BoxDecoration(
-        color: cardBg,
+        color: context.appSurface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor),
+        border: Border.all(color: context.appBorder),
         boxShadow: [
           BoxShadow(
-            color: isDark
-                ? Colors.black.withValues(alpha: 0.15)
-                : Colors.black.withValues(alpha: 0.02),
+            color: context.appShadow,
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -1162,7 +1109,7 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w500,
-              color: textSecondary,
+              color: context.appTextSecondary,
             ),
           ),
         ],
@@ -1175,39 +1122,33 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
     required bool value,
     required ValueChanged<bool> onChanged,
     required IconData icon,
-    required bool isDark,
   }) {
-    final surfaceColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
-    final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
-    final textPrimary = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final secondaryBg = isDark ? AppColors.darkSecondary : AppColors.lightSecondary;
-    final tertiaryColor = isDark ? AppColors.darkTertiary : AppColors.lightTertiary;
 
     return Material(
-      color: surfaceColor,
+      color: context.appSurface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: borderColor),
+        side: BorderSide(color: context.appBorder),
       ),
       child: SwitchListTile(
         title: Text(
           title,
-          style: TextStyle(fontWeight: FontWeight.w600, color: textPrimary),
+          style: TextStyle(fontWeight: FontWeight.w600, color: context.appTextPrimary),
         ),
         secondary: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: secondaryBg,
+            color: context.appPrimaryContainer,
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(icon, color: tertiaryColor),
+          child: Icon(icon, color: context.appOnPrimaryContainer),
         ),
         value: value,
         onChanged: _isSaving ? null : onChanged,
-        activeThumbColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-        activeTrackColor: tertiaryColor,
-        inactiveThumbColor: AppColors.lightTextDisabled,
-        inactiveTrackColor: borderColor,
+        activeThumbColor: context.appSurface,
+        activeTrackColor: context.appPrimary,
+        inactiveThumbColor: context.appTextDisabled,
+        inactiveTrackColor: context.appBorder,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       ),
     );
@@ -1217,23 +1158,19 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
     required String title,
     required bool value,
     required ValueChanged<bool> onChanged,
-    required bool isDark,
   }) {
-    final textPrimary = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final tertiaryColor = isDark ? AppColors.darkTertiary : AppColors.lightTertiary;
-    final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
 
     return SwitchListTile(
       title: Text(
         title,
-        style: TextStyle(fontWeight: FontWeight.w500, color: textPrimary),
+        style: TextStyle(fontWeight: FontWeight.w500, color: context.appTextPrimary),
       ),
       value: value,
       onChanged: _isSaving ? null : onChanged,
-      activeThumbColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-      activeTrackColor: tertiaryColor,
-      inactiveThumbColor: AppColors.lightTextDisabled,
-      inactiveTrackColor: borderColor,
+      activeThumbColor: context.appSurface,
+      activeTrackColor: context.appPrimary,
+      inactiveThumbColor: context.appTextDisabled,
+      inactiveTrackColor: context.appBorder,
     );
   }
 }

@@ -1,12 +1,22 @@
 import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../models/crop_model.dart';
 import '../services/crop_service.dart';
 import '../../ai_assistant/models/voice_crop_draft.dart';
 import '../../geo/services/geo_simulation_service.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimensions.dart';
+import '../../../core/theme/app_motion.dart';
+import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/cards/inset_group_card.dart';
+import '../../../core/widgets/feedback/app_empty_state.dart';
+import '../../../core/widgets/misc/icon_squircle.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/utils/app_formatters.dart';
 import '../../../core/constants/user_roles.dart';
@@ -61,7 +71,9 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
   void initState() {
     super.initState();
     _minOrderController.text = '1';
-    _existingImageUrls = List<String>.from(widget.cropToEdit?.imageUrls ?? const []);
+    _existingImageUrls = List<String>.from(
+      widget.cropToEdit?.imageUrls ?? const [],
+    );
 
     if (widget.cropToEdit != null) {
       // La edición de un cultivo existente siempre tiene prioridad sobre un
@@ -98,15 +110,27 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
     _titleController.text = crop.title;
     _descriptionController.text = crop.description;
     _cropTypeController.text = crop.cropType;
-    _priceController.text = UnitFormatters.formatCleanValue(crop.pricePerKg, useLocaleSeparators: false);
-    _stockController.text = UnitFormatters.formatCleanValue(crop.stockTotal, useLocaleSeparators: false);
-    _minOrderController.text = UnitFormatters.formatCleanValue(crop.minOrderKg, useLocaleSeparators: false);
+    _priceController.text = UnitFormatters.formatCleanValue(
+      crop.pricePerKg,
+      useLocaleSeparators: false,
+    );
+    _stockController.text = UnitFormatters.formatCleanValue(
+      crop.stockTotal,
+      useLocaleSeparators: false,
+    );
+    _minOrderController.text = UnitFormatters.formatCleanValue(
+      crop.minOrderKg,
+      useLocaleSeparators: false,
+    );
     _departmentController.text = crop.department;
     _municipalityController.text = crop.municipality;
 
     _isEarlySale = crop.isEarlySale;
     if (crop.estimatedYieldKg != null) {
-      _estimatedYieldController.text = UnitFormatters.formatCleanValue(crop.estimatedYieldKg, useLocaleSeparators: false);
+      _estimatedYieldController.text = UnitFormatters.formatCleanValue(
+        crop.estimatedYieldKg,
+        useLocaleSeparators: false,
+      );
     }
     _estimatedHarvestDate = crop.estimatedHarvestDate;
   }
@@ -137,7 +161,8 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
   Future<void> _selectDate(BuildContext context) async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: _estimatedHarvestDate ?? DateTime.now().add(const Duration(days: 30)),
+      initialDate:
+          _estimatedHarvestDate ?? DateTime.now().add(const Duration(days: 30)),
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
@@ -157,7 +182,9 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
       return;
     }
 
-    if (_isEarlySale && _estimatedHarvestDate == null && targetStatus == CropStatus.activa) {
+    if (_isEarlySale &&
+        _estimatedHarvestDate == null &&
+        targetStatus == CropStatus.activa) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.publish_harvest_date_required)),
       );
@@ -228,7 +255,8 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
         latitude: lat,
         longitude: lon,
         isEarlySale: _isEarlySale,
-        estimatedYieldKg: _isEarlySale && _estimatedYieldController.text.isNotEmpty
+        estimatedYieldKg:
+            _isEarlySale && _estimatedYieldController.text.isNotEmpty
             ? double.tryParse(_estimatedYieldController.text.trim())
             : null,
         estimatedHarvestDate: _isEarlySale ? _estimatedHarvestDate : null,
@@ -278,58 +306,30 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final title = widget.cropToEdit == null
+        ? l10n.publish_title_new
+        : l10n.publish_title_edit;
 
     if (widget.role != null && !UserRole.isFarmerRole(widget.role)) {
       return Scaffold(
-        appBar: AppBar(
-          title: Text(
-            widget.cropToEdit == null
-                ? l10n.publish_title_new
-                : l10n.publish_title_edit,
-          ),
-        ),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.gpp_bad_outlined, size: 72, color: context.appError),
-                const SizedBox(height: 16),
-                Text(
-                  l10n.publish_unauthorized_title,
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: context.appTextPrimary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.publish_unauthorized_desc,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: context.appTextSecondary),
-                ),
-              ],
-            ),
-          ),
+        backgroundColor: context.appBackground,
+        appBar: AppBar(title: Text(title)),
+        body: AppEmptyState(
+          icon: Icons.gpp_bad_outlined,
+          title: l10n.publish_unauthorized_title,
+          message: l10n.publish_unauthorized_desc,
         ),
       );
     }
 
     return Scaffold(
       backgroundColor: context.appBackground,
-      appBar: AppBar(
-        title: Text(
-          widget.cropToEdit == null
-              ? l10n.publish_title_new
-              : l10n.publish_title_edit,
-        ),
-      ),
+      appBar: AppBar(title: Text(title)),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CupertinoActivityIndicator(radius: 12))
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
+              physics: AppMotion.scrollPhysics,
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -337,298 +337,201 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
                   children: [
                     if (_voiceDraft != null && widget.cropToEdit == null) ...[
                       _buildVoiceDraftBanner(_voiceDraft!),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: AppDimensions.space24),
                     ],
-                    _buildSectionTitle(l10n.publish_section_general),
-                    _buildTextField(
-                      controller: _titleController,
-                      label: l10n.publish_field_title,
-                      validator: (val) => val == null || val.isEmpty
-                          ? l10n.publish_validation_required
-                          : null,
-                    ),
-                    const SizedBox(height: 16),
-                    _buildTextField(
-                      controller: _cropTypeController,
-                      label: l10n.publish_field_crop_type,
-                      validator: (val) => val == null || val.isEmpty
-                          ? l10n.publish_validation_required
-                          : null,
-                    ),
-                    const SizedBox(height: 16),
-                    _buildTextField(
-                      controller: _descriptionController,
-                      label: l10n.publish_field_description,
-                      maxLines: 3,
-                      validator: (val) => val == null || val.isEmpty
-                          ? l10n.publish_validation_required
-                          : null,
-                    ),
-
-                    const SizedBox(height: 32),
-                    _buildSectionTitle(l10n.publish_section_prices),
-                    Row(
+                    _buildSection(
+                      icon: LucideIcons.fileText,
+                      title: l10n.publish_section_general,
                       children: [
-                        Expanded(
-                          child: _buildTextField(
-                            controller: _priceController,
-                            label: l10n.publish_field_price,
-                            keyboardType: TextInputType.number,
-                            validator: (val) {
-                              if (val == null || val.isEmpty) {
-                                return l10n.publish_validation_required;
-                              }
-                              final num = double.tryParse(val);
-                              if (num == null || num <= 0) {
-                                return l10n.publish_validation_greater_zero;
-                              }
-                              return null;
-                            },
-                          ),
+                        _buildTextField(
+                          controller: _titleController,
+                          label: l10n.publish_field_title,
+                          validator: (val) => val == null || val.isEmpty
+                              ? l10n.publish_validation_required
+                              : null,
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _buildTextField(
-                            controller: _stockController,
-                            label: l10n.publish_field_stock,
-                            keyboardType: TextInputType.number,
-                            validator: (val) {
-                              if (val == null || val.isEmpty) {
-                                return l10n.publish_validation_required;
-                              }
-                              final num = double.tryParse(val);
-                              if (num == null || num < 0) {
-                                return l10n.publish_validation_non_negative;
-                              }
-                              return null;
-                            },
-                          ),
+                        _buildTextField(
+                          controller: _cropTypeController,
+                          label: l10n.publish_field_crop_type,
+                          validator: (val) => val == null || val.isEmpty
+                              ? l10n.publish_validation_required
+                              : null,
+                        ),
+                        _buildTextField(
+                          controller: _descriptionController,
+                          label: l10n.publish_field_description,
+                          maxLines: 3,
+                          validator: (val) => val == null || val.isEmpty
+                              ? l10n.publish_validation_required
+                              : null,
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
-                    _buildTextField(
-                      controller: _minOrderController,
-                      label: l10n.publish_field_min_order,
-                      keyboardType: TextInputType.number,
-                      validator: (val) {
-                        if (val == null || val.isEmpty) {
-                          return l10n.publish_validation_required;
-                        }
-                        final num = double.tryParse(val);
-                        if (num == null || num <= 0) {
-                          return l10n.publish_validation_greater_zero;
-                        }
-                        return null;
-                      },
-                    ),
-
-                    const SizedBox(height: 32),
-                    _buildSectionTitle(l10n.publish_section_location),
-                    Row(
+                    _buildSection(
+                      icon: LucideIcons.coins,
+                      title: l10n.publish_section_prices,
                       children: [
-                        Expanded(
-                          child: _buildTextField(
-                            controller: _departmentController,
-                            label: l10n.publish_field_department,
-                            validator: (val) => val == null || val.isEmpty
-                                ? l10n.publish_validation_required
-                                : null,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _buildTextField(
-                            controller: _municipalityController,
-                            label: l10n.publish_field_municipality,
-                            validator: (val) => val == null || val.isEmpty
-                                ? l10n.publish_validation_required
-                                : null,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 32),
-                    _buildSectionTitle(l10n.publish_section_sale_mode),
-                    SwitchListTile(
-                      title: Text(l10n.publish_early_sale_title),
-                      subtitle: Text(l10n.publish_early_sale_desc),
-                      value: _isEarlySale,
-                      onChanged: (val) {
-                        setState(() {
-                          _isEarlySale = val;
-                        });
-                      },
-                    ),
-                    if (_isEarlySale) ...[
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildTextField(
-                              controller: _estimatedYieldController,
-                              label: l10n.publish_field_estimated_yield,
-                              keyboardType: TextInputType.number,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: InkWell(
-                              onTap: () => _selectDate(context),
-                              child: InputDecorator(
-                                decoration: InputDecoration(
-                                  labelText: l10n.publish_field_harvest_date,
-                                  border: const OutlineInputBorder(),
-                                ),
-                                child: Text(
-                                  _estimatedHarvestDate != null
-                                      ? DateFormatters.formatHarvestDate(_estimatedHarvestDate)
-                                      : l10n.publish_select_date,
-                                ),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: _buildTextField(
+                                controller: _priceController,
+                                label: l10n.publish_field_price,
+                                keyboardType: TextInputType.number,
+                                figures: true,
+                                validator: (val) {
+                                  if (val == null || val.isEmpty) {
+                                    return l10n.publish_validation_required;
+                                  }
+                                  final num = double.tryParse(val);
+                                  if (num == null || num <= 0) {
+                                    return l10n.publish_validation_greater_zero;
+                                  }
+                                  return null;
+                                },
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
-
-                    const SizedBox(height: 32),
-                    _buildSectionTitle(l10n.publish_section_images),
-                    if (_existingImageUrls.isNotEmpty) ...[
-                      Text(
-                        l10n.publish_current_images,
-                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-                      ),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        height: 90,
-                        child: ListView.separated(
-                          key: const Key('existing_images_list'),
-                          scrollDirection: Axis.horizontal,
-                          itemCount: _existingImageUrls.length,
-                          separatorBuilder: (_, _) => const SizedBox(width: 8),
-                          itemBuilder: (context, index) {
-                            final path = _existingImageUrls[index];
-                            final url = _cropService.getPublicImageUrl(path);
-                            return Stack(
-                              clipBehavior: Clip.none,
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Image.network(
-                                    url,
-                                    width: 80,
-                                    height: 80,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (_, _, _) => Container(
-                                      width: 80,
-                                      height: 80,
-                                      color: context.appSurfaceVariant,
-                                      child: Icon(
-                                        Icons.image_not_supported_outlined,
-                                        size: 24,
-                                        color: context.appTextDisabled,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                Positioned(
-                                  top: -4,
-                                  right: -4,
-                                  child: GestureDetector(
-                                    key: Key('remove_existing_image_$index'),
-                                    onTap: () {
-                                      setState(() {
-                                        _existingImageUrls.removeAt(index);
-                                      });
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.all(2),
-                                      decoration: BoxDecoration(
-                                        color: context.appError,
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Icon(
-                                        Icons.close,
-                                        color: context.appOnPrimary,
-                                        size: 16,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            );
+                            const SizedBox(width: AppDimensions.space12),
+                            Expanded(
+                              child: _buildTextField(
+                                controller: _stockController,
+                                label: l10n.publish_field_stock,
+                                keyboardType: TextInputType.number,
+                                figures: true,
+                                validator: (val) {
+                                  if (val == null || val.isEmpty) {
+                                    return l10n.publish_validation_required;
+                                  }
+                                  final num = double.tryParse(val);
+                                  if (num == null || num < 0) {
+                                    return l10n.publish_validation_non_negative;
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                        _buildTextField(
+                          controller: _minOrderController,
+                          label: l10n.publish_field_min_order,
+                          keyboardType: TextInputType.number,
+                          figures: true,
+                          validator: (val) {
+                            if (val == null || val.isEmpty) {
+                              return l10n.publish_validation_required;
+                            }
+                            final num = double.tryParse(val);
+                            if (num == null || num <= 0) {
+                              return l10n.publish_validation_greater_zero;
+                            }
+                            return null;
                           },
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-                    ElevatedButton.icon(
-                      onPressed: _pickImages,
-                      icon: const Icon(Icons.add_a_photo),
-                      label: Text(l10n.publish_add_images),
+                      ],
                     ),
-                    if (_selectedImages.isNotEmpty) ...[
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        height: 100,
-                        child: ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: _selectedImages.length,
-                          itemBuilder: (context, index) {
-                            return Stack(
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.only(right: 8.0),
-                                  child: Image.file(_selectedImages[index], width: 100, height: 100, fit: BoxFit.cover),
-                                ),
-                                Positioned(
-                                  right: 0,
-                                  top: 0,
-                                  child: IconButton(
-                                    icon: Icon(
-                                      Icons.remove_circle,
-                                      color: context.appError,
-                                    ),
-                                    onPressed: () {
-                                      setState(() {
-                                        _selectedImages.removeAt(index);
-                                      });
-                                    },
-                                  ),
-                                )
-                              ],
-                            );
-                          },
+                    _buildSection(
+                      icon: LucideIcons.mapPin,
+                      title: l10n.publish_section_location,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: _buildTextField(
+                                controller: _departmentController,
+                                label: l10n.publish_field_department,
+                                validator: (val) => val == null || val.isEmpty
+                                    ? l10n.publish_validation_required
+                                    : null,
+                              ),
+                            ),
+                            const SizedBox(width: AppDimensions.space12),
+                            Expanded(
+                              child: _buildTextField(
+                                controller: _municipalityController,
+                                label: l10n.publish_field_municipality,
+                                validator: (val) => val == null || val.isEmpty
+                                    ? l10n.publish_validation_required
+                                    : null,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
-
-                    const SizedBox(height: 48),
-                    // Botones de acción
+                      ],
+                    ),
+                    _buildSection(
+                      icon: LucideIcons.calendarClock,
+                      title: l10n.publish_section_sale_mode,
+                      children: [
+                        _buildEarlySaleSwitch(l10n),
+                        if (_isEarlySale)
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: _buildTextField(
+                                  controller: _estimatedYieldController,
+                                  label: l10n.publish_field_estimated_yield,
+                                  keyboardType: TextInputType.number,
+                                  figures: true,
+                                ),
+                              ),
+                              const SizedBox(width: AppDimensions.space12),
+                              Expanded(child: _buildHarvestDateField(l10n)),
+                            ],
+                          ),
+                      ],
+                    ),
+                    _buildSection(
+                      icon: LucideIcons.imagePlus,
+                      title: l10n.publish_section_images,
+                      children: [
+                        if (_existingImageUrls.isNotEmpty) ...[
+                          Text(
+                            l10n.publish_current_images,
+                            style: AppTextStyles.titleSmall.copyWith(
+                              color: context.appTextSecondary,
+                            ),
+                          ),
+                          _buildExistingImages(),
+                        ],
+                        OutlinedButton.icon(
+                          onPressed: _pickImages,
+                          icon: const Icon(LucideIcons.camera, size: 18),
+                          label: Text(l10n.publish_add_images),
+                        ),
+                        if (_selectedImages.isNotEmpty) _buildSelectedImages(),
+                      ],
+                    ),
+                    const SizedBox(height: AppDimensions.space8),
                     Row(
                       children: [
                         Expanded(
                           child: OutlinedButton(
-                            onPressed: _isLoading ? null : () => _saveCrop(CropStatus.borrador),
+                            onPressed: _isLoading
+                                ? null
+                                : () => _saveCrop(CropStatus.borrador),
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size.fromHeight(
+                                AppDimensions.buttonHeightPrimary,
+                              ),
+                            ),
                             child: Text(l10n.publish_save_draft),
                           ),
                         ),
-                        const SizedBox(width: 16),
+                        const SizedBox(width: AppDimensions.space12),
                         Expanded(
                           child: ElevatedButton(
-                            onPressed: _isLoading ? null : () => _saveCrop(CropStatus.activa),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: context.appPrimary,
-                              foregroundColor: context.appOnPrimary,
-                            ),
+                            onPressed: _isLoading
+                                ? null
+                                : () => _saveCrop(CropStatus.activa),
                             child: Text(l10n.publish_submit),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 32),
                   ],
                 ),
               ),
@@ -636,9 +539,187 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
     );
   }
 
+  /// One form group: an icon-led heading above an inset card whose fields
+  /// are spaced evenly.
+  Widget _buildSection({
+    required IconData icon,
+    required String title,
+    required List<Widget> children,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppDimensions.space24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(
+              left: 4,
+              bottom: AppDimensions.space8,
+            ),
+            child: Row(
+              children: [
+                Icon(icon, size: 16, color: context.appPrimary),
+                const SizedBox(width: AppDimensions.space8),
+                Text(
+                  title,
+                  style: AppTextStyles.titleMedium.copyWith(
+                    color: context.appTextPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          InsetGroupCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (var i = 0; i < children.length; i++) ...[
+                  if (i > 0) const SizedBox(height: AppDimensions.space12),
+                  children[i],
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEarlySaleSwitch(AppLocalizations l10n) {
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.publish_early_sale_title,
+                style: AppTextStyles.titleMedium.copyWith(
+                  color: context.appTextPrimary,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                l10n.publish_early_sale_desc,
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: context.appTextSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: AppDimensions.space12),
+        Switch.adaptive(
+          value: _isEarlySale,
+          activeTrackColor: context.appPrimary,
+          onChanged: (val) {
+            setState(() {
+              _isEarlySale = val;
+            });
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHarvestDateField(AppLocalizations l10n) {
+    final hasDate = _estimatedHarvestDate != null;
+    return InkWell(
+      onTap: () => _selectDate(context),
+      borderRadius: AppDimensions.borderRadiusControl,
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: l10n.publish_field_harvest_date,
+          suffixIcon: const Icon(LucideIcons.calendar, size: 18),
+        ),
+        child: Text(
+          hasDate
+              ? DateFormatters.formatHarvestDate(_estimatedHarvestDate)
+              : l10n.publish_select_date,
+          style: AppTextStyles.bodyMedium.copyWith(
+            color: hasDate ? context.appTextPrimary : context.appTextSecondary,
+            fontFeatures: AppTextStyles.tabularFigures,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExistingImages() {
+    return SizedBox(
+      height: 92,
+      child: ListView.separated(
+        key: const Key('existing_images_list'),
+        scrollDirection: Axis.horizontal,
+        clipBehavior: Clip.none,
+        padding: const EdgeInsets.only(top: 6, right: 6),
+        itemCount: _existingImageUrls.length,
+        separatorBuilder: (_, _) =>
+            const SizedBox(width: AppDimensions.space12),
+        itemBuilder: (context, index) {
+          final path = _existingImageUrls[index];
+          final url = _cropService.getPublicImageUrl(path);
+          return _ImageThumb(
+            image: Image.network(
+              url,
+              width: 80,
+              height: 80,
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => Container(
+                width: 80,
+                height: 80,
+                color: context.appSurfaceVariant,
+                child: Icon(
+                  LucideIcons.imageOff,
+                  size: 22,
+                  color: context.appTextMuted,
+                ),
+              ),
+            ),
+            removeKey: Key('remove_existing_image_$index'),
+            onRemove: () {
+              setState(() {
+                _existingImageUrls.removeAt(index);
+              });
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildSelectedImages() {
+    return SizedBox(
+      height: 92,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        clipBehavior: Clip.none,
+        padding: const EdgeInsets.only(top: 6, right: 6),
+        itemCount: _selectedImages.length,
+        separatorBuilder: (_, _) =>
+            const SizedBox(width: AppDimensions.space12),
+        itemBuilder: (context, index) {
+          return _ImageThumb(
+            image: Image.file(
+              _selectedImages[index],
+              width: 80,
+              height: 80,
+              fit: BoxFit.cover,
+            ),
+            onRemove: () {
+              setState(() {
+                _selectedImages.removeAt(index);
+              });
+            },
+          );
+        },
+      ),
+    );
+  }
+
   Widget _buildVoiceDraftBanner(VoiceCropDraft draft) {
-    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
+    final info = context.appInfoTriad;
     final missing = <String>[
       ...draft.missingFields.map((field) => field.label),
       l10n.publish_voice_label_title,
@@ -648,30 +729,45 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
 
     return Container(
       key: const Key('voice_draft_banner'),
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(AppDimensions.space16),
       decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.45),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.35)),
+        color: info.background,
+        borderRadius: BorderRadius.circular(InsetGroupCard.radius),
+        border: Border.all(color: info.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.auto_awesome, color: theme.colorScheme.primary),
-              const SizedBox(width: 8),
+              IconSquircle(
+                icon: LucideIcons.sparkles,
+                triad: AppSemanticTriad(
+                  background: context.appSurface,
+                  border: info.border,
+                  foreground: info.foreground,
+                ),
+                size: 32,
+              ),
+              const SizedBox(width: AppDimensions.space12),
               Expanded(
                 child: Text(
                   l10n.publish_voice_banner_title,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  style: AppTextStyles.titleMedium.copyWith(
+                    color: context.appTextPrimary,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 6),
-          Text(l10n.publish_voice_banner_desc),
-          const SizedBox(height: 10),
+          const SizedBox(height: AppDimensions.space8),
+          Text(
+            l10n.publish_voice_banner_desc,
+            style: AppTextStyles.bodySmall.copyWith(
+              color: context.appTextSecondary,
+            ),
+          ),
+          const SizedBox(height: AppDimensions.space12),
           if (draft.cropType != null)
             _buildVoiceDraftLine(l10n.ai_crop, draft.cropType!),
           if (draft.quantityDescription != null)
@@ -682,36 +778,52 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
               CurrencyFormatters.formatPricePerKg(draft.pricePerKg),
             ),
           if (draft.reviewFields.isNotEmpty) ...[
-            const SizedBox(height: 6),
+            const SizedBox(height: AppDimensions.space8),
             Text(
               l10n.publish_voice_confirm(
                 draft.reviewFields.map((field) => field.label).join(', '),
               ),
-              style: const TextStyle(fontWeight: FontWeight.w600),
+              style: AppTextStyles.bodySmall.copyWith(
+                fontWeight: FontWeight.w700,
+                color: context.appWarningText,
+              ),
             ),
           ],
           if (missing.isNotEmpty) ...[
-            const SizedBox(height: 6),
+            const SizedBox(height: AppDimensions.space4),
             Text(
               l10n.publish_voice_missing(missing.join(', ')),
-              style: TextStyle(color: theme.colorScheme.error),
+              style: AppTextStyles.bodySmall.copyWith(
+                fontWeight: FontWeight.w600,
+                color: context.appErrorText,
+              ),
             ),
           ],
           if (draft.warnings.isNotEmpty) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: AppDimensions.space8),
             ...draft.warnings.map(
               (warning) => Padding(
                 padding: const EdgeInsets.only(bottom: 4),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      Icons.info_outline,
-                      size: 16,
-                      color: theme.colorScheme.tertiary,
+                    Padding(
+                      padding: const EdgeInsets.only(top: 1),
+                      child: Icon(
+                        LucideIcons.info,
+                        size: 14,
+                        color: info.foreground,
+                      ),
                     ),
                     const SizedBox(width: 6),
-                    Expanded(child: Text(warning)),
+                    Expanded(
+                      child: Text(
+                        warning,
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: context.appTextPrimary,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -725,19 +837,12 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
   Widget _buildVoiceDraftLine(String label, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
-      child: Text('$label: $value'),
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
       child: Text(
-        title,
-        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).primaryColor,
-            ),
+        '$label: $value',
+        style: AppTextStyles.bodyMedium.copyWith(
+          color: context.appTextPrimary,
+          fontFeatures: AppTextStyles.tabularFigures,
+        ),
       ),
     );
   }
@@ -748,18 +853,60 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
     int maxLines = 1,
     TextInputType? keyboardType,
     String? Function(String?)? validator,
+    bool figures = false,
   }) {
     return TextFormField(
       controller: controller,
-      decoration: InputDecoration(
-        labelText: label,
-        border: const OutlineInputBorder(),
-        filled: true,
-        fillColor: context.appSurfaceVariant,
-      ),
+      decoration: InputDecoration(labelText: label),
+      style: (figures ? AppTextStyles.figureSmall : AppTextStyles.bodyLarge)
+          .copyWith(color: context.appTextPrimary),
       maxLines: maxLines,
       keyboardType: keyboardType,
       validator: validator,
+    );
+  }
+}
+
+/// Rounded photo thumbnail with a remove control on its corner.
+class _ImageThumb extends StatelessWidget {
+  final Widget image;
+  final VoidCallback onRemove;
+  final Key? removeKey;
+
+  const _ImageThumb({
+    required this.image,
+    required this.onRemove,
+    this.removeKey,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        ClipRRect(borderRadius: BorderRadius.circular(14), child: image),
+        Positioned(
+          top: -6,
+          right: -6,
+          child: GestureDetector(
+            key: removeKey,
+            onTap: onRemove,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: context.appError,
+                shape: BoxShape.circle,
+                border: Border.all(color: context.appSurface, width: 2),
+              ),
+              child: Icon(
+                LucideIcons.x,
+                size: 12,
+                color: context.appColorScheme.onError,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

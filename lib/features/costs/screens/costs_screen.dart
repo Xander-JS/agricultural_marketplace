@@ -1,6 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimensions.dart';
+import '../../../core/theme/app_motion.dart';
+import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/brand/kus_brand_logo.dart';
+import '../../../core/widgets/cards/inset_group_card.dart';
+import '../../../core/widgets/feedback/app_empty_state.dart';
+import '../../../core/widgets/loading/section_skeletons.dart';
+import '../../../core/widgets/misc/icon_squircle.dart';
+import '../../../core/widgets/misc/staggered_entrance.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/utils/currency_formatters.dart';
 import '../../../core/utils/unit_formatters.dart';
@@ -35,6 +46,9 @@ class _CostsScreenState extends State<CostsScreen> {
   Map<String, double> _cropTotals = {};
   bool _isLoading = true;
   String? _errorMessage;
+
+  /// Crop cards stagger in on the first load only.
+  bool _entrancePlayed = false;
 
   @override
   void initState() {
@@ -114,66 +128,122 @@ class _CostsScreenState extends State<CostsScreen> {
     return Scaffold(
       backgroundColor: context.appBackground,
       appBar: AppBar(
-        title: Text(l10n.costs_title),
+        centerTitle: false,
+        titleSpacing: AppDimensions.space16,
+        title: const KusBrandLogo.compact(),
       ),
-      body: _buildBody(l10n),
+      body: RefreshIndicator(
+        onRefresh: _loadData,
+        color: context.appPrimary,
+        backgroundColor: context.appSurface,
+        strokeWidth: 2.5,
+        child: CustomScrollView(
+          physics: AppMotion.scrollPhysics,
+          slivers: [
+            SliverToBoxAdapter(child: _buildHeader(l10n)),
+            ..._buildContentSlivers(l10n),
+          ],
+        ),
+      ),
     );
   }
 
-  Widget _buildBody(AppLocalizations l10n) {
+  Widget _buildHeader(AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.costs_title,
+            style: AppTextStyles.displayMedium.copyWith(
+              fontSize: 30,
+              color: context.appTextPrimary,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            l10n.costs_intro.replaceAll('\n', ' '),
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: context.appTextSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildContentSlivers(AppLocalizations l10n) {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const [
+        SliverToBoxAdapter(
+          child: SectionSkeleton(
+            kind: SectionSkeletonKind.rowCards,
+            padding: EdgeInsets.fromLTRB(16, 4, 16, 24),
+          ),
+        ),
+      ];
     }
 
     if (_errorMessage != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 48, color: context.appError),
-            const SizedBox(height: 16),
-            Text(
-              l10n.common_error_prefix(_errorMessage!),
-              textAlign: TextAlign.center,
-              style: TextStyle(color: context.appTextPrimary),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
+      return [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: AppEmptyState(
+            icon: LucideIcons.cloudOff,
+            title: l10n.common_error_prefix(_errorMessage!),
+            action: ElevatedButton.icon(
               onPressed: _loadData,
-              child: Text(l10n.common_retry),
+              icon: const Icon(LucideIcons.refreshCw, size: 18),
+              label: Text(l10n.common_retry),
             ),
-          ],
+          ),
         ),
-      );
+      ];
     }
 
     if (_crops.isEmpty) {
-      return _buildEmptyState(l10n);
+      return [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: AppEmptyState(
+            icon: LucideIcons.sprout,
+            tone: AppEmptyStateTone.brand,
+            title: l10n.costs_empty_title,
+            message: l10n.costs_empty_desc,
+            action: ElevatedButton.icon(
+              onPressed: _navigateToCreateCrop,
+              icon: const Icon(LucideIcons.plus, size: 18),
+              label: Text(l10n.costs_create_crop),
+            ),
+          ),
+        ),
+      ];
     }
 
-    return RefreshIndicator(
-      onRefresh: _loadData,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(16.0),
-        itemCount: _crops.length + 1,
-        itemBuilder: (context, index) {
-          if (index == 0) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 16.0),
-              child: Text(
-                l10n.costs_intro,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: context.appTextSecondary,
-                    ),
-              ),
+    final animateEntrance = !_entrancePlayed;
+    if (animateEntrance) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _entrancePlayed = true;
+      });
+    }
+
+    return [
+      SliverPadding(
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+        sliver: SliverList.builder(
+          itemCount: _crops.length,
+          itemBuilder: (context, index) {
+            final crop = _crops[index];
+            return StaggeredEntrance(
+              index: index,
+              enabled: animateEntrance,
+              child: _buildCropCard(crop, _cropTotals[crop.id] ?? 0.0, l10n),
             );
-          }
-          final crop = _crops[index - 1];
-          final totalCost = _cropTotals[crop.id] ?? 0.0;
-          return _buildCropCard(crop, totalCost, l10n);
-        },
+          },
+        ),
       ),
-    );
+    ];
   }
 
   String _perKgSummary(AppLocalizations l10n, CropCostPerKgResult result) {
@@ -193,6 +263,8 @@ class _CostsScreenState extends State<CostsScreen> {
     }
   }
 
+  /// Ledger card for one crop: what it has cost so far, what that means
+  /// per kilogram and which quantity the division used.
   Widget _buildCropCard(
     CropModel crop,
     double totalCost,
@@ -203,97 +275,127 @@ class _CostsScreenState extends State<CostsScreen> {
       totalCost: totalCost,
     );
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16.0),
-      color: context.appSurface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: context.appBorder),
-      ),
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppDimensions.space12),
+      child: InsetGroupCard(
+        padding: EdgeInsets.zero,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (crop.imageUrls.isNotEmpty)
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.network(
-                      _cropService.getPublicImageUrl(crop.imageUrls.first),
-                      width: 60,
-                      height: 60,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          _buildPlaceholderImage(),
-                    ),
-                  )
-                else
-                  _buildPlaceholderImage(),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     children: [
-                      Text(
-                        crop.title,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: context.appTextPrimary,
+                      _CropThumb(
+                        imageUrl: crop.imageUrls.isNotEmpty
+                            ? _cropService.getPublicImageUrl(
+                                crop.imageUrls.first,
+                              )
+                            : null,
+                      ),
+                      const SizedBox(width: AppDimensions.space12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              crop.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTextStyles.titleLarge.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: context.appTextPrimary,
+                              ),
+                            ),
+                            Text(
+                              crop.cropType,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: context.appTextSecondary,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        l10n.costs_total,
-                        style: TextStyle(color: context.appTextSecondary),
+                    ],
+                  ),
+                  const SizedBox(height: AppDimensions.space16),
+                  Text(
+                    l10n.costs_total,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: context.appTextSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    CurrencyFormatters.formatCop(totalCost),
+                    style: AppTextStyles.figureLarge.copyWith(
+                      fontSize: 26,
+                      color: context.appTextPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: AppDimensions.space8),
+                  Text(
+                    _perKgSummary(l10n, perKg),
+                    style: AppTextStyles.titleSmall.copyWith(
+                      color: perKg.isCalculated
+                          ? context.appPrimary
+                          : context.appTextSecondary,
+                      fontFeatures: AppTextStyles.tabularFigures,
+                    ),
+                  ),
+                  if (perKg.denominator != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        '${UnitFormatters.formatKg(perKg.denominator)} · ${perKg.denominatorSource.displayName}',
+                        style: AppTextStyles.caption.copyWith(
+                          color: context.appTextSecondary,
+                          fontFeatures: AppTextStyles.tabularFigures,
+                        ),
                       ),
-                      Text(
-                        CurrencyFormatters.formatCop(totalCost),
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                    ),
+                ],
+              ),
+            ),
+            Divider(height: 1, color: context.appDivider),
+            InkWell(
+              onTap: () => _navigateToDetail(crop),
+              borderRadius: const BorderRadius.vertical(
+                bottom: Radius.circular(InsetGroupCard.radius),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppDimensions.space16,
+                  vertical: 14,
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      LucideIcons.receiptText,
+                      size: 18,
+                      color: context.appPrimary,
+                    ),
+                    const SizedBox(width: AppDimensions.space8),
+                    Expanded(
+                      child: Text(
+                        l10n.costs_view,
+                        style: AppTextStyles.buttonMedium.copyWith(
                           color: context.appPrimary,
                         ),
                       ),
-                      const SizedBox(height: 6),
-                      Text(
-                        _perKgSummary(l10n, perKg),
-                        style: TextStyle(
-                          color: context.appTextSecondary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      if (perKg.denominator != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 2),
-                          child: Text(
-                            '${UnitFormatters.formatKg(perKg.denominator)} · ${perKg.denominatorSource.displayName}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: context.appTextSecondary,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
+                    ),
+                    Icon(
+                      LucideIcons.chevronRight,
+                      size: 18,
+                      color: context.appTextMuted,
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton(
-                onPressed: () => _navigateToDetail(crop),
-                style: OutlinedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: Text(l10n.costs_view),
               ),
             ),
           ],
@@ -301,62 +403,32 @@ class _CostsScreenState extends State<CostsScreen> {
       ),
     );
   }
+}
 
-  Widget _buildPlaceholderImage() {
-    return Container(
-      width: 60,
-      height: 60,
-      decoration: BoxDecoration(
-        color: context.appSurfaceVariant,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Icon(
-        Icons.image_not_supported,
-        color: context.appTextDisabled,
-      ),
+/// 52px crop thumbnail; a sprout on the brand soft tone when the crop has
+/// no photo yet.
+class _CropThumb extends StatelessWidget {
+  final String? imageUrl;
+
+  const _CropThumb({required this.imageUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    final placeholder = IconSquircle(
+      icon: LucideIcons.sprout,
+      triad: context.appBrandTriad,
+      size: 52,
     );
-  }
+    if (imageUrl == null) return placeholder;
 
-  Widget _buildEmptyState(AppLocalizations l10n) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.agriculture_outlined,
-              size: 80,
-              color: context.appTextDisabled,
-            ),
-            const SizedBox(height: 24),
-            Text(
-              l10n.costs_empty_title,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: context.appTextPrimary,
-                  ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              l10n.costs_empty_desc,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: context.appTextSecondary,
-                  ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 32),
-            ElevatedButton.icon(
-              onPressed: _navigateToCreateCrop,
-              icon: const Icon(Icons.add),
-              label: Text(l10n.costs_create_crop),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
-            ),
-          ],
-        ),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(14),
+      child: Image.network(
+        imageUrl!,
+        width: 52,
+        height: 52,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => placeholder,
       ),
     );
   }

@@ -1,5 +1,6 @@
 // ignore_for_file: prefer_initializing_formals
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../models/negotiation_model.dart';
 import '../models/negotiation_status.dart';
 import '../models/negotiation_consent_model.dart';
@@ -15,7 +16,9 @@ typedef RpcInvoker = Future<dynamic> Function(
   Map<String, dynamic>? params,
 });
 
-typedef GetNegotiationByIdInvoker = Future<NegotiationModel> Function(String id);
+typedef GetNegotiationByIdInvoker = Future<NegotiationModel> Function(
+  String id,
+);
 
 class NegotiationService {
   final SupabaseClient _supabase;
@@ -28,10 +31,10 @@ class NegotiationService {
     RpcInvoker? rpcInvoker,
     GetNegotiationByIdInvoker? getNegotiationByIdInvoker,
     String? currentUserIdForTesting,
-  })  : _supabase = client ?? Supabase.instance.client,
-        _rpcInvoker = rpcInvoker,
-        _getNegotiationByIdInvoker = getNegotiationByIdInvoker,
-        _currentUserIdForTesting = currentUserIdForTesting;
+  }) : _supabase = client ?? Supabase.instance.client,
+       _rpcInvoker = rpcInvoker,
+       _getNegotiationByIdInvoker = getNegotiationByIdInvoker,
+       _currentUserIdForTesting = currentUserIdForTesting;
 
   String? get _activeUserId =>
       _currentUserIdForTesting ?? _supabase.auth.currentUser?.id;
@@ -42,14 +45,16 @@ class NegotiationService {
           .from('negotiations')
           .select('''
             *,
-            crops!inner(*),
+            crops!inner(*, crop_images(image_path, is_primary)),
             profiles:buyer_id(id, full_name, role, profile_path, verification_status, department, municipality),
             negotiation_offers(*)
           ''')
           .eq('crops.farmer_id', farmerId)
           .order('updated_at', ascending: false);
 
-      return (response as List).map((n) => NegotiationModel.fromJson(n)).toList();
+      return (response as List)
+          .map((n) => NegotiationModel.fromJson(n))
+          .toList();
     } catch (e) {
       throw Exception('Error al cargar tratos: $e');
     }
@@ -62,14 +67,16 @@ class NegotiationService {
           .from('negotiations')
           .select('''
             *,
-            crops(*, profiles:farmer_id(id, full_name, role, profile_path, verification_status, department, municipality)),
+            crops(*, crop_images(image_path, is_primary), profiles:farmer_id(id, full_name, role, profile_path, verification_status, department, municipality)),
             profiles:buyer_id(id, full_name, role, profile_path, verification_status, department, municipality),
             negotiation_offers(*)
           ''')
           .eq('buyer_id', buyerId)
           .order('updated_at', ascending: false);
 
-      return (response as List).map((n) => NegotiationModel.fromJson(n)).toList();
+      return (response as List)
+          .map((n) => NegotiationModel.fromJson(n))
+          .toList();
     } catch (e) {
       throw Exception('Error al cargar tratos del comprador: $e');
     }
@@ -85,7 +92,7 @@ class NegotiationService {
           .from('negotiations')
           .select('''
             *,
-            crops(*, profiles:farmer_id(id, full_name, role, profile_path, verification_status, department, municipality)),
+            crops(*, crop_images(image_path, is_primary), profiles:farmer_id(id, full_name, role, profile_path, verification_status, department, municipality)),
             profiles:buyer_id(id, full_name, role, profile_path, verification_status, department, municipality),
             negotiation_offers(*)
           ''')
@@ -162,9 +169,7 @@ class NegotiationService {
       );
     }
 
-    final Map<String, dynamic> rpcParams = {
-      'p_negotiation_id': negotiationId,
-    };
+    final Map<String, dynamic> rpcParams = {'p_negotiation_id': negotiationId};
 
     try {
       final invoker = _rpcInvoker;
@@ -197,9 +202,7 @@ class NegotiationService {
       );
     }
 
-    final Map<String, dynamic> rpcParams = {
-      'p_negotiation_id': negotiationId,
-    };
+    final Map<String, dynamic> rpcParams = {'p_negotiation_id': negotiationId};
 
     try {
       final invoker = _rpcInvoker;
@@ -301,7 +304,6 @@ class NegotiationService {
     }
   }
 
-
   /// Consulta si el comprador ya tiene una negociación activa para este cultivo
   Future<NegotiationModel?> getActiveNegotiationForCrop({
     required String cropId,
@@ -368,7 +370,8 @@ class NegotiationService {
       'quantity_kg': quantityKg,
       'proposed_price_per_kg': proposedPricePerKg,
       'delivery_method': deliveryDb,
-      if (message != null && message.trim().isNotEmpty) 'message': message.trim(),
+      if (message != null && message.trim().isNotEmpty)
+        'message': message.trim(),
       'created_at': timestamp,
     };
   }
@@ -480,7 +483,8 @@ class NegotiationService {
     }
 
     // 4. Negociación activa duplicada (23505 - Unique Violation)
-    if (code == '23505' || message.toLowerCase().contains('ya tienes una negociación activa')) {
+    if (code == '23505' ||
+        message.toLowerCase().contains('ya tienes una negociación activa')) {
       return DuplicateNegotiationException(
         'Ya tienes una negociación activa para este cultivo.',
         code: code,
@@ -625,7 +629,9 @@ class NegotiationService {
 
   /// Obtiene los datos de contacto autorizados por la contraparte y el estado
   /// de los consentimientos mutuos mediante la RPC segura `get_negotiation_counterpart_contact`.
-  Future<NegotiationContactInfo> getCounterpartContact(String negotiationId) async {
+  Future<NegotiationContactInfo> getCounterpartContact(
+    String negotiationId,
+  ) async {
     final userId = _activeUserId;
     if (userId == null) {
       throw const CommercialAuthException(
@@ -634,17 +640,21 @@ class NegotiationService {
       );
     }
 
-    final Map<String, dynamic> rpcParams = {
-      'p_negotiation_id': negotiationId,
-    };
+    final Map<String, dynamic> rpcParams = {'p_negotiation_id': negotiationId};
 
     try {
       final dynamic response;
       final invoker = _rpcInvoker;
       if (invoker != null) {
-        response = await invoker('get_negotiation_counterpart_contact', params: rpcParams);
+        response = await invoker(
+          'get_negotiation_counterpart_contact',
+          params: rpcParams,
+        );
       } else {
-        response = await _supabase.rpc('get_negotiation_counterpart_contact', params: rpcParams);
+        response = await _supabase.rpc(
+          'get_negotiation_counterpart_contact',
+          params: rpcParams,
+        );
       }
 
       final Map<String, dynamic> data = response is Map<String, dynamic>

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+
+import '../../../core/theme/app_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
@@ -9,7 +10,8 @@ import '../../../core/widgets/sheets/app_sheet_frame.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/utils/app_formatters.dart';
 
-/// Modal informativo de equivalencias aproximadas de unidades agrícolas.
+/// Modal informativo de equivalencias aproximadas de unidades agrícolas,
+/// en una cuadrícula compacta de tarjetas.
 ///
 /// Diseñado para compradores en el detalle de cultivo.
 /// Es estrictamente informativo: no modifica inventario, precios, pedidos ni la base de datos.
@@ -98,8 +100,8 @@ class _UnitEquivalencesSheetState extends State<UnitEquivalencesSheet> {
     // Field units first, in a 2x2 grid; the ton is a bulk-buyer figure and
     // gets its own full-width row below.
     const gridUnits = [
-      TraditionalUnit.canastilla,
       TraditionalUnit.bulto,
+      TraditionalUnit.canastilla,
       TraditionalUnit.caja,
       TraditionalUnit.arroba,
     ];
@@ -110,21 +112,15 @@ class _UnitEquivalencesSheetState extends State<UnitEquivalencesSheet> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              IconSquircle(
-                icon: LucideIcons.scale,
-                triad: context.appBrandTriad,
-                size: 40,
-              ),
-              const SizedBox(width: AppDimensions.space12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       l10n.units_title,
-                      style: AppTextStyles.headlineMedium.copyWith(
+                      style: AppTextStyles.titleLarge.copyWith(
+                        fontWeight: FontWeight.w700,
                         color: context.appTextPrimary,
                       ),
                     ),
@@ -145,51 +141,13 @@ class _UnitEquivalencesSheetState extends State<UnitEquivalencesSheet> {
                 tooltip: l10n.common_close,
                 color: context.appTextSecondary,
                 style: IconButton.styleFrom(
-                  backgroundColor: context.appSurfaceVariant,
+                  backgroundColor: context.appIconTriad.background,
                 ),
                 onPressed: () => Navigator.of(context).pop(),
               ),
             ],
           ),
           const SizedBox(height: AppDimensions.space16),
-          Container(
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-            decoration: BoxDecoration(
-              color: context.appPrimarySoft,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: context.appBrandTriad.border),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l10n.units_reference_quantity,
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: context.appOnPrimarySoft,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        initialKgFormatted,
-                        style: AppTextStyles.figureMedium.copyWith(
-                          color: context.appTextPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  LucideIcons.warehouse,
-                  size: 22,
-                  color: context.appOnPrimarySoft,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppDimensions.space12),
           TextFormField(
             key: const Key('unit_equivalences_input'),
             controller: _calculatorController,
@@ -203,20 +161,38 @@ class _UnitEquivalencesSheetState extends State<UnitEquivalencesSheet> {
               labelText: l10n.units_calculate_quantity,
               hintText: l10n.units_input_hint,
               suffixText: 'kg',
-              prefixIcon: const Icon(LucideIcons.calculator, size: 18),
-            ),
-          ),
-          const SizedBox(height: AppDimensions.space20),
-          Padding(
-            padding: const EdgeInsets.only(left: 4),
-            child: Text(
-              l10n.units_approximate_equivalents,
-              style: AppTextStyles.titleSmall.copyWith(
+              prefixIcon: Icon(
+                LucideIcons.calculator,
+                size: 18,
                 color: context.appTextSecondary,
               ),
             ),
           ),
           const SizedBox(height: AppDimensions.space8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    l10n.units_reference_quantity,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: context.appTextSecondary,
+                    ),
+                  ),
+                ),
+                Text(
+                  initialKgFormatted,
+                  style: AppTextStyles.titleSmall.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: context.appTextPrimary,
+                    fontFeatures: AppTextStyles.tabularFigures,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppDimensions.space16),
           LayoutBuilder(
             builder: (context, constraints) {
               const gap = AppDimensions.space8;
@@ -235,47 +211,16 @@ class _UnitEquivalencesSheetState extends State<UnitEquivalencesSheet> {
             },
           ),
           const SizedBox(height: AppDimensions.space8),
-          _buildUnitTile(
-            context,
-            l10n,
-            TraditionalUnit.tonelada,
-            horizontal: true,
-          ),
-          const SizedBox(height: AppDimensions.space16),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 1),
-                child: Icon(
-                  LucideIcons.info,
-                  size: 15,
-                  color: context.appTextSecondary,
-                ),
+          _buildUnitTile(context, l10n, TraditionalUnit.tonelada, wide: true),
+          const SizedBox(height: AppDimensions.space12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Text(
+              l10n.units_disclaimer,
+              style: AppTextStyles.caption.copyWith(
+                color: context.appTextSecondary,
               ),
-              const SizedBox(width: AppDimensions.space8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.units_kg_baseline_note,
-                      style: AppTextStyles.caption.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: context.appTextPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      l10n.units_disclaimer,
-                      style: AppTextStyles.caption.copyWith(
-                        color: context.appTextSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+            ),
           ),
         ],
       ),
@@ -287,81 +232,95 @@ class _UnitEquivalencesSheetState extends State<UnitEquivalencesSheet> {
     );
   }
 
-  /// One grouped iOS tile: icon, unit name, the large approximate value and
-  /// the conversion rate it rests on.
+  /// One compact card: a neutral icon on the left, the unit name above and
+  /// the approximate figure below it in large tabular numerals. The figure
+  /// stays one string (e.g. "≈ 16 bultos"); only the number is enlarged.
   Widget _buildUnitTile(
     BuildContext context,
     AppLocalizations l10n,
     TraditionalUnit unit, {
-    bool horizontal = false,
+    bool wide = false,
   }) {
     final equivalenceText = _formatEquivalence(l10n, _currentKg, unit);
-    final rateText = l10n.units_equivalence_rate(
-      unit.displayName,
-      UnitFormatters.formatKg(unit.kgEquivalent),
-    );
     final name =
-        unit.displayName[0].toUpperCase() + unit.displayName.substring(1);
+        unit.pluralName[0].toUpperCase() + unit.pluralName.substring(1);
 
-    final value = Text(
-      equivalenceText,
-      style: AppTextStyles.figureMedium.copyWith(
-        fontSize: horizontal ? 17 : 19,
-        fontWeight: FontWeight.w800,
-        color: context.appTextPrimary,
+    final figure = _figureSpans(context, equivalenceText);
+    final value = FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: wide ? Alignment.centerRight : Alignment.centerLeft,
+      child: Text.rich(figure, maxLines: 1),
+    );
+    final label = Text(
+      name,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: AppTextStyles.caption.copyWith(
+        color: context.appTextSecondary,
+        fontWeight: FontWeight.w600,
       ),
     );
-    final labels = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          name,
-          style: AppTextStyles.titleSmall.copyWith(
-            color: context.appTextPrimary,
-          ),
-        ),
-        Text(
-          rateText,
-          style: AppTextStyles.caption.copyWith(
-            color: context.appTextSecondary,
-            fontFeatures: AppTextStyles.tabularFigures,
-          ),
-        ),
-      ],
-    );
-    final icon = Icon(_iconFor(unit), size: 18, color: context.appPrimary);
 
     return Container(
       key: Key('unit_equivalence_${unit.name}'),
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.fromLTRB(12, 12, 14, 12),
       decoration: BoxDecoration(
         color: context.appSurfaceVariant,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
       ),
-      child: horizontal
-          ? Row(
-              children: [
-                icon,
-                const SizedBox(width: AppDimensions.space12),
-                Expanded(child: labels),
-                const SizedBox(width: AppDimensions.space8),
-                value,
-              ],
-            )
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                icon,
-                const SizedBox(height: AppDimensions.space12),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: value,
-                ),
-                const SizedBox(height: AppDimensions.space4),
-                labels,
-              ],
+      child: Row(
+        children: [
+          IconSquircle(
+            icon: _iconFor(unit),
+            size: 34,
+            iconSize: 17,
+            triad: AppSemanticTriad(
+              background: context.appSurface,
+              border: AppColors.transparent,
+              foreground: context.appTextSecondary,
             ),
+          ),
+          const SizedBox(width: AppDimensions.space12 - 2),
+          Expanded(
+            child: wide
+                ? Row(
+                    children: [
+                      Expanded(child: label),
+                      const SizedBox(width: AppDimensions.space8),
+                      Expanded(flex: 2, child: value),
+                    ],
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [label, const SizedBox(height: 2), value],
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Splits a localized equivalence ("≈ 16 bultos") around its number so
+  /// the number carries the weight and the words stay quiet.
+  TextSpan _figureSpans(BuildContext context, String text) {
+    final number = RegExp(r'\d[\d.,]*').firstMatch(text);
+    final quiet = AppTextStyles.bodySmall.copyWith(
+      color: context.appTextSecondary,
+      fontWeight: FontWeight.w500,
+    );
+    final loud = AppTextStyles.figureMedium.copyWith(
+      fontSize: 22,
+      fontWeight: FontWeight.w800,
+      color: context.appTextPrimary,
+      fontFeatures: AppTextStyles.tabularFigures,
+    );
+    if (number == null) return TextSpan(text: text, style: loud);
+    return TextSpan(
+      children: [
+        TextSpan(text: text.substring(0, number.start), style: quiet),
+        TextSpan(text: number.group(0), style: loud),
+        TextSpan(text: text.substring(number.end), style: quiet),
+      ],
     );
   }
 }

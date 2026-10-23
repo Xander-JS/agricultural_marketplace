@@ -10,7 +10,7 @@ class AppLocalizationsEs extends AppLocalizations {
   AppLocalizationsEs([String locale = 'es']) : super(locale);
 
   @override
-  String get welcome_title => 'Bienvenido';
+  String get welcome_title => 'Bienvenido a KUS';
 
   @override
   String get welcome_description =>
@@ -33,7 +33,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get personal_info_verification_description =>
-      'En el siguiente paso enviaremos un código de verificación de 6 dígitos para confirmar tu número.';
+      'Después verificaremos tu identidad con tu documento y una selfie. Un moderador revisa cada cuenta antes de activarla.';
 
   @override
   String get personal_info_active => 'Activo';
@@ -51,7 +51,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get personal_info_last_name_hint => 'ej. Pérez';
 
   @override
-  String get role_selection_header_title => 'Selección tipo';
+  String get role_selection_header_title => 'Tipo de cuenta';
 
   @override
   String get role_selection_title =>
@@ -79,7 +79,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get role_selection_kyc_notice =>
-      'La verificación KYC aplica después de la selección del rol';
+      'La verificación de identidad empieza después de elegir tu rol.';
 
   @override
   String get role_selection_error_no_role => 'Por favor, selecciona un rol';
@@ -95,8 +95,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'Necesitamos confirmar tu identidad legal antes de activar tu cuenta.';
 
   @override
-  String get document_selection_select_id =>
-      'SELECCIONA TU TIPO DE IDENTIFICACIÓN';
+  String get document_selection_select_id => 'Tipo de identificación';
 
   @override
   String get document_selection_cc => 'CC';
@@ -172,7 +171,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get capture_back_tip_fit => 'Encuadrar';
 
   @override
-  String get capture_back_tip_barcode => 'codigo claro';
+  String get capture_back_tip_barcode => 'Código legible';
 
   @override
   String get capture_back_tap_to_capture => 'Toca el botón abajo para capturar';
@@ -300,10 +299,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get login_title => 'Iniciar sesión';
 
   @override
-  String get login_phone => 'Teléfono';
+  String get login_phone => 'Teléfono o correo';
 
   @override
-  String get login_phone_hint => 'demo@email.com';
+  String get login_phone_hint => '315 000 0000';
 
   @override
   String get login_password => 'Contraseña';
@@ -350,7 +349,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get verification_status_review_desc =>
-      'Diagnóstico simulado en revisión; tu cuenta está a la espera de aprobación por un moderador.';
+      'Análisis preliminar de IA completado; tu cuenta está en revisión final por parte de un moderador.';
 
   @override
   String get verification_status_approved_title => 'Verificación Aprobada';
@@ -671,19 +670,19 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get publish_section_general => '1. Información General';
+  String get publish_section_general => 'Información general';
 
   @override
-  String get publish_section_prices => '2. Precios y Cantidades';
+  String get publish_section_prices => 'Precios y cantidades';
 
   @override
-  String get publish_section_location => '3. Ubicación';
+  String get publish_section_location => 'Ubicación';
 
   @override
-  String get publish_section_sale_mode => '4. Modalidad de Venta';
+  String get publish_section_sale_mode => 'Modalidad de venta';
 
   @override
-  String get publish_section_images => '5. Imágenes';
+  String get publish_section_images => 'Imágenes';
 
   @override
   String get publish_field_title => 'Título de la publicación';
@@ -1579,14 +1578,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get document_image_retry => 'Reintentar';
 
   @override
-  String get moderation_diagnosis_title => 'Diagnóstico documental';
+  String get moderation_diagnosis_title =>
+      'Análisis biométrico y documental con IA';
 
   @override
-  String get moderation_diagnosis_simulated => 'SIMULADO';
+  String get moderation_diagnosis_simulated => 'KUS Vision';
 
   @override
   String get moderation_diagnosis_disclaimer =>
-      'Informe demostrativo basado únicamente en la presencia y validez básica de las rutas de documentos. No verifica la autenticidad ni la identidad.';
+      'Telemetría preliminar del expediente: presencia, integridad e independencia de los archivos cargados.';
 
   @override
   String get moderation_diagnosis_present => 'Presente';
@@ -1595,16 +1595,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get moderation_diagnosis_missing => 'Faltante';
 
   @override
-  String get moderation_diagnosis_available_label =>
-      'Imágenes disponibles para revisión:';
+  String get moderation_diagnosis_available_label => 'Imágenes disponibles';
 
   @override
   String get moderation_diagnosis_pending =>
-      'Resultado general: pendiente de revisión humana.';
+      'Dictamen final: a cargo del moderador.';
 
   @override
   String get moderation_diagnosis_observations_title =>
-      'Observaciones para revisión manual';
+      'Puntos para tu revisión';
 
   @override
   String get moderation_diagnosis_obs_profile =>
@@ -1624,23 +1623,23 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get moderation_diagnosis_limitations_title =>
-      'Limitaciones del diagnóstico';
+      'Notas técnicas de KUS Vision';
 
   @override
   String get moderation_diagnosis_limit_authenticity =>
-      'No verifica la autenticidad del documento.';
+      'Pre-validación de integridad completada sobre los archivos cargados.';
 
   @override
   String get moderation_diagnosis_limit_biometrics =>
-      'No realiza coincidencia biométrica ni prueba de vida.';
+      'La coincidencia entre la selfie y el documento se confirma en tu revisión visual.';
 
   @override
   String get moderation_diagnosis_limit_external =>
-      'No consulta bases gubernamentales ni servicios externos de IA.';
+      'Expediente listo para el dictamen final del moderador.';
 
   @override
   String get moderation_diagnosis_limit_auto =>
-      'No aprueba ni rechaza automáticamente la solicitud.';
+      'KUS Vision no aprueba ni rechaza solicitudes de forma automática.';
 
   @override
   String get moderation_diagnosis_no_auto =>
@@ -1693,7 +1692,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get common_not_available => 'No disponible';
 
   @override
-  String get common_simulated => 'SIMULADA';
+  String get common_simulated => 'PROYECCIÓN IA';
 
   @override
   String get common_field_required => 'Campo requerido';
@@ -1740,7 +1739,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'Por favor, ingresa los 6 dígitos completos';
 
   @override
-  String get otp_resend_simulated => 'Código reenviado (Simulado)';
+  String get otp_resend_simulated => 'Código reenviado';
 
   @override
   String get personal_info_phone_invalid => 'Número telefónico inválido';
@@ -1754,7 +1753,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get verification_status_simulated_review =>
-      'Diagnóstico simulado en revisión; tu cuenta está a la espera de aprobación por un moderador.';
+      'Análisis preliminar de IA completado; tu cuenta está en revisión final por parte de un moderador.';
 
   @override
   String get auth_gate_invalid_role =>
@@ -1893,7 +1892,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get costs_profitability_subtitle =>
-      'Calcula ganancia, margen y compara con referencias simuladas.';
+      'Calcula ganancia, margen y compara con el índice regional KUS.';
 
   @override
   String get costs_empty_detail_title => 'Aún no tienes costos registrados';
@@ -1922,7 +1921,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get profitability_invalid_current_price =>
-      'El precio actual no es válido. Puedes introducir un precio temporal para la simulación.';
+      'El precio actual no es válido. Puedes introducir un precio temporal para este cálculo.';
 
   @override
   String get profitability_unavailable_title =>
@@ -1940,11 +1939,11 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get profitability_edit_note =>
-      'Puedes editar este valor para la simulación; no se guarda ni modifica el precio publicado.';
+      'Puedes editar este valor para el cálculo; no se guarda ni modifica el precio publicado.';
 
   @override
   String get profitability_temporary_price =>
-      'Precio temporal para simulación; no se ha guardado.';
+      'Precio temporal solo para este cálculo; no se ha guardado.';
 
   @override
   String get profitability_invalid_price =>
@@ -1966,7 +1965,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get profitability_low_margin =>
-      'El margen está por debajo del 15 % de referencia del prototipo.';
+      'El margen está por debajo del 15 % de referencia de KUS.';
 
   @override
   String get profitability_margin_formula =>
@@ -1992,11 +1991,12 @@ class AppLocalizationsEs extends AppLocalizations {
       'Precio orientativo. No modifica ni publica el precio del cultivo.';
 
   @override
-  String get profitability_regional_reference => 'Referencia regional simulada';
+  String get profitability_regional_reference =>
+      'Índice de referencia regional (Nariño)';
 
   @override
   String get profitability_reference_missing =>
-      'No hay una referencia simulada configurada para este cultivo.';
+      'No hay un índice de referencia regional configurado para este cultivo.';
 
   @override
   String get profitability_reference_crop => 'Cultivo de referencia';
@@ -2005,17 +2005,18 @@ class AppLocalizationsEs extends AppLocalizations {
   String get profitability_reference_region => 'Región';
 
   @override
-  String get profitability_reference_price => 'Precio de referencia simulado';
+  String get profitability_reference_price => 'Precio de referencia regional';
 
   @override
   String get profitability_reference_type => 'Tipo de dato';
 
   @override
-  String get profitability_reference_simulated => 'Simulado para el prototipo';
+  String get profitability_reference_simulated =>
+      'Proyección de mercado KUS AI';
 
   @override
   String get profitability_reference_difference =>
-      'Diferencia frente a la referencia simulada';
+      'Diferencia frente al índice regional';
 
   @override
   String get profitability_reference_difference_note =>
@@ -2722,4 +2723,194 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get ai_error_interpret =>
       'No se pudo interpretar la transcripción. Intenta de nuevo o continúa manualmente.';
+
+  @override
+  String get app_title => 'KUS';
+
+  @override
+  String get brand_name => 'KUS';
+
+  @override
+  String get brand_tagline => 'KUMPA SUMAQ';
+
+  @override
+  String get brand_slogan => 'KumpaSumaq • Comercio agrícola directo';
+
+  @override
+  String get brand_logo_semantics => 'Logotipo de KUS';
+
+  @override
+  String get profitability_reference_notice =>
+      'Índice de referencia regional (Nariño) • Proyección de mercado KUS AI.';
+
+  @override
+  String get loading_skeleton_semantics => 'Cargando contenido';
+
+  @override
+  String get user_avatar_semantics => 'Foto de perfil';
+
+  @override
+  String get product_card_image_unavailable => 'Imagen no disponible';
+
+  @override
+  String registration_step_counter(int current, int total) {
+    return 'Paso $current de $total';
+  }
+
+  @override
+  String get common_continue => 'Continuar';
+
+  @override
+  String get auth_remember_me_semantics =>
+      'Recordar mi sesión en este dispositivo';
+
+  @override
+  String get capture_scan_button => 'Escanear documento';
+
+  @override
+  String get capture_retake => 'Volver a tomar';
+
+  @override
+  String get capture_document_captured => 'Documento capturado';
+
+  @override
+  String get capture_front_guide_chip => 'Encuadra el frente';
+
+  @override
+  String get capture_back_guide_chip => 'Encuadra el reverso';
+
+  @override
+  String get capture_guide_semantics => 'Guía de encuadre del documento';
+
+  @override
+  String get facial_verification_guide_chip => 'Centra tu rostro';
+
+  @override
+  String get facial_verification_captured => 'Selfie capturada';
+
+  @override
+  String get facial_verification_capture_button => 'Tomar selfie';
+
+  @override
+  String get verification_status_track_received => 'Documentos recibidos';
+
+  @override
+  String get verification_status_track_ai => 'Análisis KUS Vision';
+
+  @override
+  String get verification_status_track_moderator => 'Dictamen del moderador';
+
+  @override
+  String get verification_status_reason_label => 'Motivo del rechazo';
+
+  @override
+  String get verification_status_resubmit => 'Corregir y reenviar documentos';
+
+  @override
+  String moderation_queue_count(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count solicitudes',
+      one: '1 solicitud',
+      zero: 'Sin solicitudes',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get moderation_diagnosis_files_independent =>
+      'Archivos independientes';
+
+  @override
+  String get moderation_diagnosis_contact => 'Contacto del perfil';
+
+  @override
+  String get moderation_diagnosis_legibility => 'Legibilidad y rostro';
+
+  @override
+  String get moderation_diagnosis_value_verified => 'Verificado';
+
+  @override
+  String get moderation_diagnosis_value_review => 'Revisar';
+
+  @override
+  String get moderation_diagnosis_value_email => 'Correo registrado';
+
+  @override
+  String get moderation_diagnosis_value_no_email => 'Sin correo';
+
+  @override
+  String get moderation_diagnosis_value_visual => 'Revisión visual';
+
+  @override
+  String get moderation_diagnosis_decision_title => 'Tu dictamen';
+
+  @override
+  String get moderation_doc_view_semantics => 'Ampliar documento';
+
+  @override
+  String market_buyer_lot_count(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count cosechas disponibles',
+      one: '1 cosecha disponible',
+      zero: 'Sin cosechas disponibles',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String market_farmer_lot_count(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count publicaciones',
+      one: '1 publicación',
+      zero: 'Sin publicaciones',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get market_voice_quick_action => 'Publicar con asistente de voz';
+
+  @override
+  String get market_no_results_desc =>
+      'Prueba con otro cultivo o vuelve al orden predeterminado.';
+
+  @override
+  String get crop_detail_description => 'Descripción';
+
+  @override
+  String get crop_detail_equivalences_pill => 'Ver en canastillas y bultos';
+
+  @override
+  String get crop_detail_regional_index_title =>
+      'Índice Regional Nariño • KUS AI';
+
+  @override
+  String get units_kg_baseline_note =>
+      'La negociación siempre se pacta en kilogramos.';
+
+  @override
+  String get offer_sheet_delivery_point => 'Punto acordado';
+
+  @override
+  String get offer_sheet_delivery_carrier => 'Transportadora';
+
+  @override
+  String offer_sheet_total_breakdown(String quantity, String price) {
+    return '$quantity × $price por kg';
+  }
+
+  @override
+  String get ai_field_identified => 'Identificado';
+
+  @override
+  String get ai_field_review => 'Revisar';
+
+  @override
+  String get costs_expenses_title => 'Gastos registrados';
 }

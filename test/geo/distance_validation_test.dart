@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:agricultural_marketplace/core/theme/app_icons.dart';
 import 'package:agricultural_marketplace/core/localization/localization_config.dart';
 import 'package:agricultural_marketplace/core/theme/app_theme.dart';
 import 'package:agricultural_marketplace/core/utils/geo_utils.dart';
@@ -535,7 +536,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('A 12 km'), findsOneWidget);
-      expect(find.byIcon(Icons.near_me_outlined), findsOneWidget);
+      expect(find.byIcon(LucideIcons.navigation), findsOneWidget);
     });
 
     testWidgets('11. CropDetailScreen despliega distancia formateada en fila de ubicación si está disponible',
@@ -619,7 +620,7 @@ void main() {
       expect(find.text('Pasto'), findsOneWidget);
       expect(find.text(' · '), findsOneWidget);
       expect(find.text('A 12 km'), findsOneWidget);
-      expect(find.byIcon(Icons.near_me_outlined), findsOneWidget);
+      expect(find.byIcon(LucideIcons.navigation), findsOneWidget);
     });
 
     testWidgets('13. CropCard cuando no hay coordenadas válidas muestra solo ubicación textual sin kilómetros',
@@ -655,12 +656,12 @@ void main() {
 
       // Debe mostrar la ubicación textual
       expect(find.text('Túquerres'), findsOneWidget);
-      expect(find.byIcon(Icons.place_outlined), findsOneWidget);
+      expect(find.byIcon(LucideIcons.mapPin), findsOneWidget);
 
       // NO debe inventar distancias ni mostrar separadores de distancia
       expect(find.text(' · '), findsNothing);
       expect(find.textContaining('km'), findsNothing);
-      expect(find.byIcon(Icons.near_me_outlined), findsNothing);
+      expect(find.byIcon(LucideIcons.navigation), findsNothing);
     });
 
     testWidgets('14. CropCard cuando no hay municipio ni coordenadas omite sección de ubicación',
@@ -694,8 +695,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.place_outlined), findsNothing);
-      expect(find.byIcon(Icons.near_me_outlined), findsNothing);
+      expect(find.byIcon(LucideIcons.mapPin), findsNothing);
+      expect(find.byIcon(LucideIcons.navigation), findsNothing);
       expect(find.textContaining('km'), findsNothing);
     });
 

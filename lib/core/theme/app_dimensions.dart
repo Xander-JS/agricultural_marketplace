@@ -60,13 +60,17 @@ abstract final class AppDimensions {
   static const double radiusXS = 4.0;
   static const double radiusSM = 8.0;
   static const double radiusMD = 12.0;
+  static const double radiusControl = 14.0; // iOS squircle controls
   static const double radiusLG = 16.0;
   static const double radiusXL = 24.0;
+  static const double radiusSheet = 28.0;
   static const double radiusFull = 999.0;
 
   // BorderRadius Helpers
   static final BorderRadius borderRadiusSM = BorderRadius.circular(radiusSM);
   static final BorderRadius borderRadiusMD = BorderRadius.circular(radiusMD);
+  static final BorderRadius borderRadiusControl =
+      BorderRadius.circular(radiusControl);
   static final BorderRadius borderRadiusLG = BorderRadius.circular(radiusLG);
   static final BorderRadius borderRadiusXL = BorderRadius.circular(radiusXL);
   static final BorderRadius borderRadiusFull = BorderRadius.circular(radiusFull);
@@ -77,11 +81,13 @@ abstract final class AppDimensions {
   static const double buttonHeightSmall = 36.0;
   static const double buttonHeightMedium = 48.0;
   static const double buttonHeightLarge = 56.0;
+  static const double buttonHeightPrimary = 52.0;
+  static const double minTouchTarget = 44.0;
 
   static const double inputHeight = 52.0;
   static const double appBarHeight = 56.0;
   static const double bottomNavBarHeight = 64.0;
-  static const double cardElevation = 1.0;
+  static const double cardElevation = 0.0;
   static const double dialogElevation = 6.0;
 
   // ---------------------------------------------------------

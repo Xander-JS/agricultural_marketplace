@@ -447,7 +447,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get profile_title_buyer => 'Mi Perfil';
 
   @override
-  String get profile_stats_title => 'Estadísticas';
+  String get profile_stats_title => 'Actividad comercial';
 
   @override
   String get profile_stat_published => 'Publicados';
@@ -2913,4 +2913,126 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get costs_expenses_title => 'Gastos registrados';
+
+  @override
+  String get deals_tab_in_progress => 'En curso';
+
+  @override
+  String deals_awaiting_you(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tratos esperan tu respuesta',
+      one: '1 trato espera tu respuesta',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String deals_total_count(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tratos',
+      one: '1 trato',
+      zero: 'Sin tratos',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get deals_filter_empty => 'No hay tratos en esta vista';
+
+  @override
+  String get deals_filter_empty_desc =>
+      'Cambia de sección para ver el resto de tus negociaciones.';
+
+  @override
+  String get deal_detail_total => 'Total';
+
+  @override
+  String deal_detail_vs_previous(String amount) {
+    return '$amount vs. oferta anterior';
+  }
+
+  @override
+  String get deal_detail_same_price => 'Mismo precio que la oferta anterior';
+
+  @override
+  String get deal_detail_your_turn_bar => 'Es tu turno de responder';
+
+  @override
+  String get deal_detail_contact_released => 'Contacto comercial liberado';
+
+  @override
+  String get deal_detail_privacy_note =>
+      'Tú decides qué datos ve la contraparte. Puedes cambiarlo en cualquier momento.';
+
+  @override
+  String get deal_rating_label_1 => 'Muy mala';
+
+  @override
+  String get deal_rating_label_2 => 'Mala';
+
+  @override
+  String get deal_rating_label_3 => 'Regular';
+
+  @override
+  String get deal_rating_label_4 => 'Buena';
+
+  @override
+  String get deal_rating_label_5 => 'Excelente';
+
+  @override
+  String get counter_offer_current_offer => 'Oferta vigente';
+
+  @override
+  String counter_offer_vs_current(String amount) {
+    return '$amount vs. oferta vigente';
+  }
+
+  @override
+  String get purchases_subtitle => 'Acuerdos con productores verificados';
+
+  @override
+  String purchases_total_caption(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'En $count compras',
+      one: 'En 1 compra',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get purchases_filter_empty => 'No hay compras en esta vista';
+
+  @override
+  String get profile_verified_badge => 'Identidad verificada';
+
+  @override
+  String get profile_contact_autosave =>
+      'Los cambios se guardan al salir del campo.';
+
+  @override
+  String get profile_appearance => 'Apariencia';
+
+  @override
+  String get profile_theme_light => 'Claro';
+
+  @override
+  String get profile_theme_dark => 'Oscuro';
+
+  @override
+  String get profile_language => 'Idioma';
+
+  @override
+  String get profile_language_es => 'Español';
+
+  @override
+  String get profile_language_en => 'English';
+
+  @override
+  String get profile_change_photo => 'Cambiar foto de perfil';
 }

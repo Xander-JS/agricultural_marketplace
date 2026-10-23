@@ -899,7 +899,7 @@ abstract class AppLocalizations {
   /// No description provided for @profile_stats_title.
   ///
   /// In es, this message translates to:
-  /// **'Estadísticas'**
+  /// **'Actividad comercial'**
   String get profile_stats_title;
 
   /// No description provided for @profile_stat_published.
@@ -5242,6 +5242,186 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Gastos registrados'**
   String get costs_expenses_title;
+
+  /// No description provided for @deals_tab_in_progress.
+  ///
+  /// In es, this message translates to:
+  /// **'En curso'**
+  String get deals_tab_in_progress;
+
+  /// No description provided for @deals_awaiting_you.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{1 trato espera tu respuesta} other{{count} tratos esperan tu respuesta}}'**
+  String deals_awaiting_you(int count);
+
+  /// No description provided for @deals_total_count.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =0{Sin tratos} =1{1 trato} other{{count} tratos}}'**
+  String deals_total_count(int count);
+
+  /// No description provided for @deals_filter_empty.
+  ///
+  /// In es, this message translates to:
+  /// **'No hay tratos en esta vista'**
+  String get deals_filter_empty;
+
+  /// No description provided for @deals_filter_empty_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Cambia de sección para ver el resto de tus negociaciones.'**
+  String get deals_filter_empty_desc;
+
+  /// No description provided for @deal_detail_total.
+  ///
+  /// In es, this message translates to:
+  /// **'Total'**
+  String get deal_detail_total;
+
+  /// No description provided for @deal_detail_vs_previous.
+  ///
+  /// In es, this message translates to:
+  /// **'{amount} vs. oferta anterior'**
+  String deal_detail_vs_previous(String amount);
+
+  /// No description provided for @deal_detail_same_price.
+  ///
+  /// In es, this message translates to:
+  /// **'Mismo precio que la oferta anterior'**
+  String get deal_detail_same_price;
+
+  /// No description provided for @deal_detail_your_turn_bar.
+  ///
+  /// In es, this message translates to:
+  /// **'Es tu turno de responder'**
+  String get deal_detail_your_turn_bar;
+
+  /// No description provided for @deal_detail_contact_released.
+  ///
+  /// In es, this message translates to:
+  /// **'Contacto comercial liberado'**
+  String get deal_detail_contact_released;
+
+  /// No description provided for @deal_detail_privacy_note.
+  ///
+  /// In es, this message translates to:
+  /// **'Tú decides qué datos ve la contraparte. Puedes cambiarlo en cualquier momento.'**
+  String get deal_detail_privacy_note;
+
+  /// No description provided for @deal_rating_label_1.
+  ///
+  /// In es, this message translates to:
+  /// **'Muy mala'**
+  String get deal_rating_label_1;
+
+  /// No description provided for @deal_rating_label_2.
+  ///
+  /// In es, this message translates to:
+  /// **'Mala'**
+  String get deal_rating_label_2;
+
+  /// No description provided for @deal_rating_label_3.
+  ///
+  /// In es, this message translates to:
+  /// **'Regular'**
+  String get deal_rating_label_3;
+
+  /// No description provided for @deal_rating_label_4.
+  ///
+  /// In es, this message translates to:
+  /// **'Buena'**
+  String get deal_rating_label_4;
+
+  /// No description provided for @deal_rating_label_5.
+  ///
+  /// In es, this message translates to:
+  /// **'Excelente'**
+  String get deal_rating_label_5;
+
+  /// No description provided for @counter_offer_current_offer.
+  ///
+  /// In es, this message translates to:
+  /// **'Oferta vigente'**
+  String get counter_offer_current_offer;
+
+  /// No description provided for @counter_offer_vs_current.
+  ///
+  /// In es, this message translates to:
+  /// **'{amount} vs. oferta vigente'**
+  String counter_offer_vs_current(String amount);
+
+  /// No description provided for @purchases_subtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Acuerdos con productores verificados'**
+  String get purchases_subtitle;
+
+  /// No description provided for @purchases_total_caption.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{En 1 compra} other{En {count} compras}}'**
+  String purchases_total_caption(int count);
+
+  /// No description provided for @purchases_filter_empty.
+  ///
+  /// In es, this message translates to:
+  /// **'No hay compras en esta vista'**
+  String get purchases_filter_empty;
+
+  /// No description provided for @profile_verified_badge.
+  ///
+  /// In es, this message translates to:
+  /// **'Identidad verificada'**
+  String get profile_verified_badge;
+
+  /// No description provided for @profile_contact_autosave.
+  ///
+  /// In es, this message translates to:
+  /// **'Los cambios se guardan al salir del campo.'**
+  String get profile_contact_autosave;
+
+  /// No description provided for @profile_appearance.
+  ///
+  /// In es, this message translates to:
+  /// **'Apariencia'**
+  String get profile_appearance;
+
+  /// No description provided for @profile_theme_light.
+  ///
+  /// In es, this message translates to:
+  /// **'Claro'**
+  String get profile_theme_light;
+
+  /// No description provided for @profile_theme_dark.
+  ///
+  /// In es, this message translates to:
+  /// **'Oscuro'**
+  String get profile_theme_dark;
+
+  /// No description provided for @profile_language.
+  ///
+  /// In es, this message translates to:
+  /// **'Idioma'**
+  String get profile_language;
+
+  /// No description provided for @profile_language_es.
+  ///
+  /// In es, this message translates to:
+  /// **'Español'**
+  String get profile_language_es;
+
+  /// No description provided for @profile_language_en.
+  ///
+  /// In es, this message translates to:
+  /// **'English'**
+  String get profile_language_en;
+
+  /// No description provided for @profile_change_photo.
+  ///
+  /// In es, this message translates to:
+  /// **'Cambiar foto de perfil'**
+  String get profile_change_photo;
 }
 
 class _AppLocalizationsDelegate

@@ -133,7 +133,7 @@
   "purchases_placeholder_desc": "Here you can check your agreed purchases and completed transaction history.",
   "profile_title_farmer": "My Farm",
   "profile_title_buyer": "My Profile",
-  "profile_stats_title": "Statistics",
+  "profile_stats_title": "Commercial activity",
   "profile_stat_published": "Published",
   "profile_stat_negotiating": "Negotiating",
   "profile_stat_closed_farmer": "Closed",
@@ -1204,5 +1204,70 @@
   },
   "ai_field_identified": "Identified",
   "ai_field_review": "Review",
-  "costs_expenses_title": "Recorded expenses"
+  "costs_expenses_title": "Recorded expenses",
+  "deals_tab_in_progress": "In progress",
+  "deals_awaiting_you": "{count, plural, =1{1 deal is waiting on you} other{{count} deals are waiting on you}}",
+  "@deals_awaiting_you": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deals_total_count": "{count, plural, =0{No deals} =1{1 deal} other{{count} deals}}",
+  "@deals_total_count": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deals_filter_empty": "No deals in this view",
+  "deals_filter_empty_desc": "Switch sections to see the rest of your negotiations.",
+  "deal_detail_total": "Total",
+  "deal_detail_vs_previous": "{amount} vs. previous offer",
+  "@deal_detail_vs_previous": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "deal_detail_same_price": "Same price as the previous offer",
+  "deal_detail_your_turn_bar": "It's your turn to respond",
+  "deal_detail_contact_released": "Commercial contact released",
+  "deal_detail_privacy_note": "You decide what the other party can see. You can change it at any time.",
+  "deal_rating_label_1": "Very poor",
+  "deal_rating_label_2": "Poor",
+  "deal_rating_label_3": "Fair",
+  "deal_rating_label_4": "Good",
+  "deal_rating_label_5": "Excellent",
+  "counter_offer_current_offer": "Current offer",
+  "counter_offer_vs_current": "{amount} vs. current offer",
+  "@counter_offer_vs_current": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "purchases_subtitle": "Agreements with verified farmers",
+  "purchases_total_caption": "{count, plural, =1{Across 1 purchase} other{Across {count} purchases}}",
+  "@purchases_total_caption": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "purchases_filter_empty": "No purchases in this view",
+  "profile_verified_badge": "Verified identity",
+  "profile_contact_autosave": "Changes are saved when you leave the field.",
+  "profile_appearance": "Appearance",
+  "profile_theme_light": "Light",
+  "profile_theme_dark": "Dark",
+  "profile_language": "Language",
+  "profile_language_es": "Español",
+  "profile_language_en": "English",
+  "profile_change_photo": "Change profile photo"
 }

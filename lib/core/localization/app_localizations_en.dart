@@ -444,7 +444,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profile_title_buyer => 'My Profile';
 
   @override
-  String get profile_stats_title => 'Statistics';
+  String get profile_stats_title => 'Commercial activity';
 
   @override
   String get profile_stat_published => 'Published';
@@ -2897,4 +2897,126 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get costs_expenses_title => 'Recorded expenses';
+
+  @override
+  String get deals_tab_in_progress => 'In progress';
+
+  @override
+  String deals_awaiting_you(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count deals are waiting on you',
+      one: '1 deal is waiting on you',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String deals_total_count(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count deals',
+      one: '1 deal',
+      zero: 'No deals',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get deals_filter_empty => 'No deals in this view';
+
+  @override
+  String get deals_filter_empty_desc =>
+      'Switch sections to see the rest of your negotiations.';
+
+  @override
+  String get deal_detail_total => 'Total';
+
+  @override
+  String deal_detail_vs_previous(String amount) {
+    return '$amount vs. previous offer';
+  }
+
+  @override
+  String get deal_detail_same_price => 'Same price as the previous offer';
+
+  @override
+  String get deal_detail_your_turn_bar => 'It\'s your turn to respond';
+
+  @override
+  String get deal_detail_contact_released => 'Commercial contact released';
+
+  @override
+  String get deal_detail_privacy_note =>
+      'You decide what the other party can see. You can change it at any time.';
+
+  @override
+  String get deal_rating_label_1 => 'Very poor';
+
+  @override
+  String get deal_rating_label_2 => 'Poor';
+
+  @override
+  String get deal_rating_label_3 => 'Fair';
+
+  @override
+  String get deal_rating_label_4 => 'Good';
+
+  @override
+  String get deal_rating_label_5 => 'Excellent';
+
+  @override
+  String get counter_offer_current_offer => 'Current offer';
+
+  @override
+  String counter_offer_vs_current(String amount) {
+    return '$amount vs. current offer';
+  }
+
+  @override
+  String get purchases_subtitle => 'Agreements with verified farmers';
+
+  @override
+  String purchases_total_caption(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Across $count purchases',
+      one: 'Across 1 purchase',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get purchases_filter_empty => 'No purchases in this view';
+
+  @override
+  String get profile_verified_badge => 'Verified identity';
+
+  @override
+  String get profile_contact_autosave =>
+      'Changes are saved when you leave the field.';
+
+  @override
+  String get profile_appearance => 'Appearance';
+
+  @override
+  String get profile_theme_light => 'Light';
+
+  @override
+  String get profile_theme_dark => 'Dark';
+
+  @override
+  String get profile_language => 'Language';
+
+  @override
+  String get profile_language_es => 'Español';
+
+  @override
+  String get profile_language_en => 'English';
+
+  @override
+  String get profile_change_photo => 'Change profile photo';
 }

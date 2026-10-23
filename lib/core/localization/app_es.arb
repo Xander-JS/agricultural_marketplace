@@ -133,7 +133,7 @@
   "purchases_placeholder_desc": "Aquí podrás consultar tus compras acordadas y el historial de operaciones completadas.",
   "profile_title_farmer": "Mi Finca",
   "profile_title_buyer": "Mi Perfil",
-  "profile_stats_title": "Estadísticas",
+  "profile_stats_title": "Actividad comercial",
   "profile_stat_published": "Publicados",
   "profile_stat_negotiating": "Negociando",
   "profile_stat_closed_farmer": "Cerradas",
@@ -1239,5 +1239,70 @@
   },
   "ai_field_identified": "Identificado",
   "ai_field_review": "Revisar",
-  "costs_expenses_title": "Gastos registrados"
+  "costs_expenses_title": "Gastos registrados",
+  "deals_tab_in_progress": "En curso",
+  "deals_awaiting_you": "{count, plural, =1{1 trato espera tu respuesta} other{{count} tratos esperan tu respuesta}}",
+  "@deals_awaiting_you": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deals_total_count": "{count, plural, =0{Sin tratos} =1{1 trato} other{{count} tratos}}",
+  "@deals_total_count": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deals_filter_empty": "No hay tratos en esta vista",
+  "deals_filter_empty_desc": "Cambia de sección para ver el resto de tus negociaciones.",
+  "deal_detail_total": "Total",
+  "deal_detail_vs_previous": "{amount} vs. oferta anterior",
+  "@deal_detail_vs_previous": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "deal_detail_same_price": "Mismo precio que la oferta anterior",
+  "deal_detail_your_turn_bar": "Es tu turno de responder",
+  "deal_detail_contact_released": "Contacto comercial liberado",
+  "deal_detail_privacy_note": "Tú decides qué datos ve la contraparte. Puedes cambiarlo en cualquier momento.",
+  "deal_rating_label_1": "Muy mala",
+  "deal_rating_label_2": "Mala",
+  "deal_rating_label_3": "Regular",
+  "deal_rating_label_4": "Buena",
+  "deal_rating_label_5": "Excelente",
+  "counter_offer_current_offer": "Oferta vigente",
+  "counter_offer_vs_current": "{amount} vs. oferta vigente",
+  "@counter_offer_vs_current": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "purchases_subtitle": "Acuerdos con productores verificados",
+  "purchases_total_caption": "{count, plural, =1{En 1 compra} other{En {count} compras}}",
+  "@purchases_total_caption": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "purchases_filter_empty": "No hay compras en esta vista",
+  "profile_verified_badge": "Identidad verificada",
+  "profile_contact_autosave": "Los cambios se guardan al salir del campo.",
+  "profile_appearance": "Apariencia",
+  "profile_theme_light": "Claro",
+  "profile_theme_dark": "Oscuro",
+  "profile_language": "Idioma",
+  "profile_language_es": "Español",
+  "profile_language_en": "English",
+  "profile_change_photo": "Cambiar foto de perfil"
 }

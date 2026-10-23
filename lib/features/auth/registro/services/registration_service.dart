@@ -1,6 +1,7 @@
 // ignore_for_file: prefer_initializing_formals, use_null_aware_elements
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -85,6 +86,7 @@ class RegistrationService {
   final StorageUploader? _storageUploader;
   final PendingAttemptFetcher? _pendingAttemptFetcher;
   final AuthSessionProvider? _sessionProvider;
+  final UploadRetryPolicy _uploadRetryPolicy;
 
   RegistrationService({
     SupabaseClient? client,
@@ -95,6 +97,7 @@ class RegistrationService {
     StorageUploader? storageUploader,
     PendingAttemptFetcher? pendingAttemptFetcher,
     AuthSessionProvider? sessionProvider,
+    UploadRetryPolicy uploadRetryPolicy = UploadRetryPolicy.standard,
   }) : _clientOverride = client,
        _signUpInvoker = signUpInvoker,
        _signInInvoker = signInInvoker,
@@ -102,7 +105,8 @@ class RegistrationService {
        _verificationAttemptSaver = verificationAttemptSaver,
        _storageUploader = storageUploader,
        _pendingAttemptFetcher = pendingAttemptFetcher,
-       _sessionProvider = sessionProvider;
+       _sessionProvider = sessionProvider,
+       _uploadRetryPolicy = uploadRetryPolicy;
 
   SupabaseClient get _client {
     final override = _clientOverride;
@@ -392,41 +396,48 @@ class RegistrationService {
       String? selfiePath;
       final timestamp = DateTime.now().millisecondsSinceEpoch;
 
-      if (documentFront != null) {
-        final path =
-            '$authenticatedUserId/front_$timestamp.${documentFileExtension(documentFront.path)}';
-        await _uploadFile(
-          'user_documents',
-          path,
-          documentFront,
-          stage: 'upload_front',
-          userId: authenticatedUserId,
-        );
-        frontPath = path;
-      }
-      if (documentBack != null) {
-        final path =
-            '$authenticatedUserId/back_$timestamp.${documentFileExtension(documentBack.path)}';
-        await _uploadFile(
-          'user_documents',
-          path,
-          documentBack,
-          stage: 'upload_back',
-          userId: authenticatedUserId,
-        );
-        backPath = path;
-      }
-      if (selfie != null) {
-        final path =
-            '$authenticatedUserId/selfie_$timestamp.${documentFileExtension(selfie.path)}';
-        await _uploadFile(
-          'user_documents',
-          path,
-          selfie,
-          stage: 'upload_selfie',
-          userId: authenticatedUserId,
-        );
-        selfiePath = path;
+      try {
+        if (documentFront != null) {
+          final path =
+              '$authenticatedUserId/front_$timestamp.${documentFileExtension(documentFront.path)}';
+          await _uploadFile(
+            'user_documents',
+            path,
+            documentFront,
+            stage: 'upload_front',
+            userId: authenticatedUserId,
+          );
+          frontPath = path;
+        }
+        if (documentBack != null) {
+          final path =
+              '$authenticatedUserId/back_$timestamp.${documentFileExtension(documentBack.path)}';
+          await _uploadFile(
+            'user_documents',
+            path,
+            documentBack,
+            stage: 'upload_back',
+            userId: authenticatedUserId,
+          );
+          backPath = path;
+        }
+        if (selfie != null) {
+          final path =
+              '$authenticatedUserId/selfie_$timestamp.${documentFileExtension(selfie.path)}';
+          await _uploadFile(
+            'user_documents',
+            path,
+            selfie,
+            stage: 'upload_selfie',
+            userId: authenticatedUserId,
+          );
+          selfiePath = path;
+        }
+      } on RegistrationException {
+        // Un reintento sube archivos nuevos: no se dejan cargas parciales de
+        // documentos de identidad huérfanas en el bucket.
+        await _removeUploaded('user_documents', [?frontPath, ?backPath]);
+        rethrow;
       }
 
       // 9. Inserción en verification_attempts con estado 'pendiente'.
@@ -653,6 +664,15 @@ class RegistrationService {
     }
   }
 
+  /// Limpieza de mejor esfuerzo; con un uploader inyectado (pruebas) no se
+  /// toca el almacenamiento real.
+  Future<void> _removeUploaded(String bucket, List<String> paths) async {
+    if (paths.isEmpty || _storageUploader != null) return;
+    try {
+      await _client.storage.from(bucket).remove(paths);
+    } catch (_) {}
+  }
+
   Future<void> _uploadFile(
     String bucket,
     String path,
@@ -662,8 +682,10 @@ class RegistrationService {
   }) async {
     final uploader = _storageUploader;
 
-    // Con el almacenamiento real se valida que el archivo siga disponible. Con
-    // un uploader inyectado (pruebas) se respeta el doble sin tocar el disco.
+    // Con el almacenamiento real se leen los bytes antes de subir: se valida
+    // que el archivo siga disponible y la carga ya no depende de él. Con un
+    // uploader inyectado (pruebas) se respeta el doble sin tocar el disco.
+    Uint8List? bytes;
     if (uploader == null) {
       try {
         if (!file.existsSync() || file.lengthSync() <= 0) {
@@ -673,6 +695,7 @@ class RegistrationService {
             debugReason: 'stage=$stage; reason=file_missing_or_empty',
           );
         }
+        bytes = await file.readAsBytes();
       } on RegistrationException {
         rethrow;
       } on FileSystemException catch (error) {
@@ -685,17 +708,19 @@ class RegistrationService {
     }
 
     try {
-      if (uploader != null) {
-        await uploader(bucket, path, file);
-      } else {
-        await _client.storage
-            .from(bucket)
-            .upload(
-              path,
-              file,
-              fileOptions: documentUploadFileOptions(file.path),
-            );
-      }
+      await uploadWithRetry(() async {
+        if (uploader != null) {
+          await uploader(bucket, path, file);
+        } else {
+          await _client.storage
+              .from(bucket)
+              .uploadBinary(
+                path,
+                bytes!,
+                fileOptions: documentUploadFileOptions(file.path),
+              );
+        }
+      }, policy: _uploadRetryPolicy);
     } on RegistrationException {
       rethrow;
     } catch (error) {

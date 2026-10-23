@@ -44,6 +44,10 @@ dependencies:
   shared_preferences: ^2.5.5
   speech_to_text: ^7.5.0
   http: ^1.6.0
+  lucide_icons_flutter: ^4.0.1
+  google_fonts: ^9.0.0
+  flutter_animate: ^4.5.2
+  shimmer: ^4.0.0
 
 dev_dependencies:
   flutter_test:
@@ -70,6 +74,23 @@ flutter:
   assets:
     - .env
     - assets/images/
+    - assets/google_fonts/
+
+  # Plus Jakarta Sans is bundled (SIL OFL 1.1) so typography never depends on
+  # runtime downloads. google_fonts resolves the same files from assets.
+  fonts:
+    - family: Plus Jakarta Sans
+      fonts:
+        - asset: assets/google_fonts/PlusJakartaSans-Regular.ttf
+          weight: 400
+        - asset: assets/google_fonts/PlusJakartaSans-Medium.ttf
+          weight: 500
+        - asset: assets/google_fonts/PlusJakartaSans-SemiBold.ttf
+          weight: 600
+        - asset: assets/google_fonts/PlusJakartaSans-Bold.ttf
+          weight: 700
+        - asset: assets/google_fonts/PlusJakartaSans-ExtraBold.ttf
+          weight: 800
 
 
   # To add assets to your application, add an assets section, like this:

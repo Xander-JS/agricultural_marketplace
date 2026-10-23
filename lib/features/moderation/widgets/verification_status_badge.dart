@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+
+import '../../../core/theme/app_icons.dart';
 
 import '../../../core/constants/user_roles.dart';
 import '../../../core/theme/app_colors.dart';
@@ -8,6 +9,9 @@ import '../../../core/utils/date_formatters.dart';
 import '../../../core/widgets/badges/status_badge.dart';
 
 /// Badge for a verification status, shared by the queue and the detail.
+///
+/// Open states (pending, in review) stay graphite; only outcomes carry
+/// hue: emerald for approved, the error ink for rejected or suspended.
 StatusBadge verificationStatusBadge(
   BuildContext context,
   UserVerificationStatus status, {
@@ -15,16 +19,10 @@ StatusBadge verificationStatusBadge(
   String? label,
 }) {
   final (StatusBadgeTone? tone, IconData icon) = switch (status) {
-    UserVerificationStatus.pendiente => (
-      StatusBadgeTone.warning,
-      LucideIcons.clock,
-    ),
-    UserVerificationStatus.enRevisionIa => (
-      StatusBadgeTone.info,
-      LucideIcons.cpu,
-    ),
+    UserVerificationStatus.pendiente => (null, LucideIcons.clock),
+    UserVerificationStatus.enRevisionIa => (null, LucideIcons.scanEye),
     UserVerificationStatus.aprobado => (
-      StatusBadgeTone.success,
+      StatusBadgeTone.brand,
       LucideIcons.badgeCheck,
     ),
     UserVerificationStatus.rechazado => (

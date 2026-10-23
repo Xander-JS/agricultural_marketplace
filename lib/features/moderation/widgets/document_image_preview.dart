@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+
+import '../../../core/theme/app_icons.dart';
 
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
@@ -72,9 +73,10 @@ class _DocumentImagePreviewState extends State<DocumentImagePreview> {
     final path = widget.path;
     final hasPath = path != null && path.trim().isNotEmpty;
     final isValidPath = DocumentPathValidator.isValid(path);
-    final triad = isValidPath
-        ? context.appSuccessTriad
-        : context.appWarningTriad;
+    // A valid file stays graphite; only a broken path is marked.
+    final markColor = isValidPath
+        ? context.appTextSecondary
+        : context.appWarning;
 
     return Container(
       padding: const EdgeInsets.all(AppDimensions.space12),
@@ -95,7 +97,7 @@ class _DocumentImagePreviewState extends State<DocumentImagePreview> {
                       ? LucideIcons.shieldCheck
                       : LucideIcons.shieldAlert,
                   size: 18,
-                  color: triad.foreground,
+                  color: markColor,
                 ),
                 const SizedBox(width: AppDimensions.space8),
                 Expanded(
@@ -136,8 +138,8 @@ class _DocumentImagePreviewState extends State<DocumentImagePreview> {
                   ? l10n.document_image_invalid
                   : l10n.document_image_missing,
               style: AppTextStyles.bodySmall.copyWith(
-                color: isValidPath ? triad.text : context.appTextSecondary,
-                fontWeight: FontWeight.w600,
+                color: context.appTextSecondary,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
@@ -307,7 +309,7 @@ class _DocumentImagePreviewState extends State<DocumentImagePreview> {
                 Icon(
                   LucideIcons.lockKeyhole,
                   size: 13,
-                  color: context.appInfoText,
+                  color: context.appTextSecondary,
                 ),
                 const SizedBox(width: 6),
                 Text(

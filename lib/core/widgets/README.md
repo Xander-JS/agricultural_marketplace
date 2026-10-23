@@ -80,3 +80,13 @@ Movimiento: duraciones y curvas en `lib/core/theme/app_motion.dart` (UI < 300ms,
 | `scanner/` | `BiometricFrame`, `CornerBracketsPainter` | Dial tipo Face ID para la selfie y esquinas redondeadas reutilizables. |
 
 `StepProgressBar` ahora muestra "Paso n de N" y rellena el segmento recién alcanzado; `TipPill` se ajusta a su contenido para usarse en `Wrap`; `CustomTextField` siempre muestra su icono al inicio del campo.
+
+## 8. Componentes añadidos en la Fase 7B, parte 4
+
+| Carpeta | Componente | Notas |
+| :--- | :--- | :--- |
+| `inputs/` | `AppSegmentedControl`, `AppSegment` | Control segmentado deslizante iOS sobre `surfaceVariant`; el segmento elegido gana peso y tinta. `showDot` marca un filtro con trabajo pendiente; `compact` para filas de ajustes. |
+| `inputs/` | `ChoiceTile` | Opción de un selector exclusivo pequeño (método de entrega): icono sobre etiqueta, tono suave de marca al elegirse. |
+| `cards/` | `InsetGroupSection`, `InsetGroupRow` | Lista agrupada iOS: encabezado, filas sobre una tarjeta plana con separadores indentados y nota al pie. `destructive` centra la fila en tono de error ("Cerrar sesión"). |
+
+`CustomTextField` acepta ahora `maxLines`, `maxLength`, `enabled` y `textCapitalization`; en campos de varias líneas el icono se mantiene en la primera línea. El color `appSegmentThumb` eleva el segmento elegido en modo oscuro.

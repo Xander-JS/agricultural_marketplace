@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+
+import '../../../core/theme/app_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../models/crop_cost_model.dart';
@@ -20,4 +21,16 @@ extension CostCategoryStyle on CostCategory {
     CostCategory.transporte => context.appWarningTriad,
     CostCategory.otros => context.appNeutralTriad,
   };
+
+  /// Outlined variant for the registered-expense rows: the category hue
+  /// lives in the hairline and the glyph, over a neutral glass wash, so a
+  /// long list never turns into stacked colour blocks.
+  AppSemanticTriad outlineTriad(BuildContext context) {
+    final hue = triad(context).foreground;
+    return AppSemanticTriad(
+      background: context.appSurfaceVariant.withValues(alpha: 0.55),
+      border: hue.withValues(alpha: context.appIsDark ? 0.5 : 0.4),
+      foreground: hue,
+    );
+  }
 }

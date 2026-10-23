@@ -5,11 +5,11 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../models/crop_model.dart';
 import '../../deals/services/negotiation_service.dart';
+import '../../deals/widgets/delivery_presentation.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
-import '../../../core/theme/app_motion.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../core/widgets/misc/pressable_scale.dart';
+import '../../../core/widgets/inputs/choice_tile.dart';
 import '../../../core/widgets/sheets/app_sheet_frame.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/constants/delivery_methods.dart';
@@ -122,24 +122,18 @@ class _MakeOfferSheetState extends State<MakeOfferSheet> {
     }
   }
 
-  ({IconData icon, String label}) _deliveryPresentation(
-    AppLocalizations l10n,
-    String method,
-  ) {
-    return switch (DeliveryMethod.fromString(method)) {
-      DeliveryMethod.enFinca => (
-        icon: LucideIcons.tractor,
-        label: l10n.offer_sheet_delivery_farm,
-      ),
-      DeliveryMethod.puntoAcordado => (
-        icon: LucideIcons.mapPinned,
-        label: l10n.offer_sheet_delivery_point,
-      ),
-      DeliveryMethod.transportadora => (
-        icon: LucideIcons.truck,
-        label: l10n.offer_sheet_delivery_carrier,
-      ),
-    };
+  Widget _deliveryTile(AppLocalizations l10n, String method) {
+    final presentation = deliveryPresentation(l10n, method);
+    return ChoiceTile(
+      icon: presentation.icon,
+      label: presentation.label,
+      selected: _deliveryMethod == method,
+      onTap: () {
+        if (_deliveryMethod == method) return;
+        HapticFeedback.selectionClick();
+        setState(() => _deliveryMethod = method);
+      },
+    );
   }
 
   @override
@@ -298,18 +292,7 @@ class _MakeOfferSheetState extends State<MakeOfferSheet> {
                 for (var i = 0; i < _deliveryOptions.length; i++) ...[
                   if (i > 0) const SizedBox(width: AppDimensions.space8),
                   Expanded(
-                    child: _DeliveryOption(
-                      presentation: _deliveryPresentation(
-                        l10n,
-                        _deliveryOptions[i],
-                      ),
-                      selected: _deliveryMethod == _deliveryOptions[i],
-                      onTap: () {
-                        if (_deliveryMethod == _deliveryOptions[i]) return;
-                        HapticFeedback.selectionClick();
-                        setState(() => _deliveryMethod = _deliveryOptions[i]);
-                      },
-                    ),
+                    child: _deliveryTile(l10n, _deliveryOptions[i]),
                   ),
                 ],
               ],
@@ -377,68 +360,6 @@ class _MakeOfferSheetState extends State<MakeOfferSheet> {
                   : Text(l10n.offer_sheet_submit_btn),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-/// One delivery method in a three-way selector: icon over a short label,
-/// filled with the brand soft tone when chosen.
-class _DeliveryOption extends StatelessWidget {
-  final ({IconData icon, String label}) presentation;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _DeliveryOption({
-    required this.presentation,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final triad = context.appBrandTriad;
-    final duration = AppMotion.of(context, AppMotion.standard);
-    final foreground = selected ? triad.foreground : context.appTextSecondary;
-
-    return Semantics(
-      button: true,
-      selected: selected,
-      child: PressableScale(
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: onTap,
-          child: AnimatedContainer(
-            duration: duration,
-            curve: AppMotion.easeOut,
-            constraints: const BoxConstraints(minHeight: 72),
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
-            decoration: BoxDecoration(
-              color: selected ? triad.background : context.appSurfaceVariant,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: selected ? triad.border : AppColors.transparent,
-                width: AppDimensions.borderWidthMedium,
-              ),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(presentation.icon, size: 20, color: foreground),
-                const SizedBox(height: 6),
-                Text(
-                  presentation.label,
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  style: AppTextStyles.labelMedium.copyWith(
-                    color: selected ? triad.foreground : context.appTextPrimary,
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
         ),
       ),
     );

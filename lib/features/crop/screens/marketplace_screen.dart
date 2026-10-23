@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import '../../../core/theme/app_icons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/crop_model.dart';
@@ -409,7 +409,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
               const SizedBox(height: AppDimensions.space16),
               _PublishOptionTile(
                 icon: LucideIcons.squarePen,
-                triad: sheetContext.appBrandTriad,
+                triad: sheetContext.appIconTriad,
                 title: l10n.market_publish_manual,
                 subtitle: l10n.market_publish_manual_desc,
                 onTap: () {
@@ -420,7 +420,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
               const SizedBox(height: AppDimensions.space12),
               _PublishOptionTile(
                 icon: LucideIcons.mic,
-                triad: sheetContext.appInfoTriad,
+                triad: sheetContext.appIconTriad,
                 title: l10n.market_publish_voice,
                 subtitle: l10n.market_publish_voice_desc,
                 onTap: () {
@@ -590,7 +590,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                     child: SizedBox.square(
                       dimension: 44,
                       child: Icon(
-                        LucideIcons.mic,
+                        LucideIcons.audioLines,
                         size: 20,
                         color: context.appOnPrimarySoft,
                       ),

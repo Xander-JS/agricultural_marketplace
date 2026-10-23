@@ -268,6 +268,12 @@ void main() {
 
         // Botones de acción disponibles porque es su turno
         expect(find.text('Aceptar oferta'), findsOneWidget);
+
+        // Contraofertar y Rechazar viven en el menú de acciones secundarias
+        await tester.tap(
+          find.byKey(const ValueKey('deal_detail_more_actions_button')),
+        );
+        await tester.pumpAndSettle();
         expect(find.text('Contraofertar'), findsOneWidget);
         expect(find.text('Rechazar trato'), findsOneWidget);
       },
@@ -293,6 +299,12 @@ void main() {
 
         // Botones de acción disponibles para el comprador
         expect(find.text('Aceptar oferta'), findsOneWidget);
+
+        // Contraofertar y Rechazar viven en el menú de acciones secundarias
+        await tester.tap(
+          find.byKey(const ValueKey('deal_detail_more_actions_button')),
+        );
+        await tester.pumpAndSettle();
         expect(find.text('Contraofertar'), findsOneWidget);
         expect(find.text('Rechazar trato'), findsOneWidget);
       },

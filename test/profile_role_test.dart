@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:agricultural_marketplace/core/theme/app_icons.dart';
 import 'package:agricultural_marketplace/core/localization/localization_config.dart';
 import 'package:agricultural_marketplace/core/theme/app_theme.dart';
 import 'package:agricultural_marketplace/features/profile/models/farmer_profile_data.dart';

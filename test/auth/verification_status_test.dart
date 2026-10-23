@@ -628,4 +628,278 @@ void main() {
       expect(signedOut, isTrue);
     });
   });
+
+  group('Pantalla de espera tras enviar la solicitud de registro', () {
+    testWidgets(
+      '15a. Pendiente con documentos completos muestra "Solicitud enviada" sin pedir documentos',
+      (tester) async {
+        await tester.pumpWidget(
+          createTestApp(
+            child: VerificationStatusScreen(
+              initialData: VerificationStatusData(
+                status: 'pendiente',
+                role: 'agricultor',
+                hasVerificationAttempt: true,
+                hasAllDocuments: true,
+              ),
+              enableAutoPolling: false,
+            ),
+          ),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
+
+        expect(find.text('Solicitud enviada'), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('verification_status_submitted_msg')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const ValueKey('verification_upload_documents')),
+          findsNothing,
+        );
+        expect(
+          find.byKey(const ValueKey('verification_status_refresh')),
+          findsOneWidget,
+        );
+        expect(find.byType(RefreshIndicator), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      '15b. Si la primera consulta ya devuelve aprobado, transiciona automáticamente',
+      (tester) async {
+        VerificationStatusData? approvedData;
+
+        await tester.pumpWidget(
+          createTestApp(
+            child: VerificationStatusScreen(
+              verificationService: VerificationService(
+                statusFetcher: () async => VerificationStatusData(
+                  status: 'aprobado',
+                  role: 'comprador',
+                ),
+              ),
+              enableAutoPolling: false,
+              onVerificationApproved: (data) => approvedData = data,
+            ),
+          ),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
+
+        expect(approvedData?.role, 'comprador');
+      },
+    );
+
+    testWidgets(
+      '15c. Deslizar para actualizar consulta el estado y transiciona al aprobarse',
+      (tester) async {
+        var currentStatus = 'en_revision_ia';
+        var fetches = 0;
+        var approved = false;
+
+        await tester.pumpWidget(
+          createTestApp(
+            child: VerificationStatusScreen(
+              verificationService: VerificationService(
+                statusFetcher: () async {
+                  fetches++;
+                  return VerificationStatusData(
+                    status: currentStatus,
+                    role: 'agricultor',
+                    hasVerificationAttempt: true,
+                    hasAllDocuments: true,
+                  );
+                },
+              ),
+              enableAutoPolling: false,
+              onVerificationApproved: (_) => approved = true,
+            ),
+          ),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
+        expect(fetches, 1);
+
+        currentStatus = 'aprobado';
+        final refresh = tester.state<RefreshIndicatorState>(
+          find.byType(RefreshIndicator),
+        );
+        unawaited(refresh.show());
+        await tester.pump();
+        await tester.pump(const Duration(seconds: 1));
+        await tester.pump(const Duration(seconds: 1));
+
+        expect(fetches, 2);
+        expect(approved, isTrue);
+      },
+    );
+
+    testWidgets(
+      '15d. Un signedIn repetido del mismo usuario no desmonta "Completa tu registro"',
+      (tester) async {
+        final authController = StreamController<AuthState>.broadcast();
+        final session = createMockSession(userId: 'new-user');
+        var profileFetches = 0;
+
+        await tester.pumpWidget(
+          createTestApp(
+            child: AuthGate(
+              authStateStream: authController.stream,
+              profileFetcher: (_) async {
+                profileFetches++;
+                return null;
+              },
+              enableAutoPolling: false,
+            ),
+          ),
+        );
+
+        authController.add(AuthState(AuthChangeEvent.signedIn, session));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
+        expect(find.byType(CompleteRegistrationScreen), findsOneWidget);
+        final formState = tester.state(find.byType(CompleteRegistrationScreen));
+
+        // Por ejemplo, al volver de la cámara.
+        authController.add(AuthState(AuthChangeEvent.signedIn, session));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
+
+        expect(profileFetches, 1);
+        expect(
+          tester.state(find.byType(CompleteRegistrationScreen)),
+          same(formState),
+        );
+
+        await authController.close();
+      },
+    );
+  });
+
+  group('Usuarios rechazados y reenvío de documentos', () {
+    test('16a. Estado efectivo combina perfil y última solicitud', () {
+      expect(
+        resolveEffectiveVerificationStatus(
+          profileStatus: 'rechazado',
+          attemptStatus: 'rechazado',
+        ),
+        'rechazado',
+      );
+      // Reenvió documentos y el servidor aún no actualizó el perfil.
+      expect(
+        resolveEffectiveVerificationStatus(
+          profileStatus: 'rechazado',
+          attemptStatus: 'pendiente',
+        ),
+        'pendiente',
+      );
+      // Con la migración aplicada el perfil pasa a en_revision_ia.
+      expect(
+        resolveEffectiveVerificationStatus(
+          profileStatus: 'en_revision_ia',
+          attemptStatus: 'pendiente',
+        ),
+        'en_revision_ia',
+      );
+      expect(
+        resolveEffectiveVerificationStatus(
+          profileStatus: 'aprobado',
+          attemptStatus: 'rechazado',
+        ),
+        'aprobado',
+      );
+      expect(
+        resolveEffectiveVerificationStatus(
+          profileStatus: 'pendiente',
+          attemptStatus: null,
+        ),
+        'pendiente',
+      );
+    });
+
+    testWidgets(
+      '16b. Login de usuario rechazado muestra el motivo del moderador, no "Completa tu registro"',
+      (tester) async {
+        final session = createMockSession(userId: 'rejected-user');
+
+        await tester.pumpWidget(
+          createTestApp(
+            child: AuthGate(
+              initialSession: session,
+              enableAutoPolling: false,
+              profileFetcher: (userId) async => {
+                'role': 'agricultor',
+                'verification_status': 'rechazado',
+                'has_verification_attempt': true,
+                'has_all_documents': true,
+                'rejection_reason': 'La selfie no coincide con la cédula.',
+              },
+            ),
+          ),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(seconds: 1));
+
+        expect(find.byType(CompleteRegistrationScreen), findsNothing);
+        expect(find.byType(VerificationStatusScreen), findsOneWidget);
+        expect(find.text('Verificación Rechazada'), findsOneWidget);
+        expect(find.text('La selfie no coincide con la cédula.'), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('verification_status_rejected_help')),
+          findsOneWidget,
+        );
+        expect(find.text('Corregir y reenviar documentos'), findsOneWidget);
+        expect(find.byType(MainDashboardScreen), findsNothing);
+      },
+    );
+
+    testWidgets(
+      '16c. Tras reenviar, la pantalla vuelve a la espera de moderación',
+      (tester) async {
+        var status = 'rechazado';
+        await tester.pumpWidget(
+          createTestApp(
+            child: VerificationStatusScreen(
+              verificationService: VerificationService(
+                statusFetcher: () async => VerificationStatusData(
+                  status: status,
+                  role: 'agricultor',
+                  hasVerificationAttempt: true,
+                  hasAllDocuments: true,
+                  rejectionReason: status == 'rechazado'
+                      ? 'Documento ilegible.'
+                      : null,
+                ),
+              ),
+              enableAutoPolling: false,
+            ),
+          ),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(seconds: 1));
+        expect(find.text('Documento ilegible.'), findsOneWidget);
+
+        status = 'en_revision_ia';
+        final state = tester.state<RefreshIndicatorState>(
+          find.byType(RefreshIndicator),
+        );
+        unawaited(state.show());
+        await tester.pump();
+        await tester.pump(const Duration(seconds: 1));
+        await tester.pump(const Duration(seconds: 1));
+
+        expect(find.text('Documento ilegible.'), findsNothing);
+        expect(
+          find.byKey(const ValueKey('verification_status_submitted_msg')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const ValueKey('verification_status_support_line')),
+          findsOneWidget,
+        );
+      },
+    );
+  });
 }

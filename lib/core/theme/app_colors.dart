@@ -95,6 +95,11 @@ abstract final class AppColors {
   // WhatsApp brand color
   static const Color whatsapp = Color(0xFF25D366);
 
+  /// Rating stars: a warm bronze-gold instead of signal amber. Both stops
+  /// clear 3:1 against their surface, the floor for meaningful glyphs.
+  static const Color ratingGoldLight = Color(0xFFA87A2A);
+  static const Color ratingGoldDark = Color(0xFFD4AF62);
+
   // ---------------------------------------------------------
   // Semantic triads: background / border / foreground
   // ---------------------------------------------------------
@@ -225,6 +230,19 @@ extension AppThemeColors on BuildContext {
     border: appBorder,
     foreground: appTextSecondary,
   );
+
+  /// Editorial icon container: slate glyph on a faint translucent wash of
+  /// the same slate, no hairline. The default for decorative icons, so only
+  /// real states (errors, outcomes) carry hue.
+  AppSemanticTriad get appIconTriad => AppSemanticTriad(
+    background: appTextSecondary.withValues(alpha: appIsDark ? 0.14 : 0.10),
+    border: AppColors.transparent,
+    foreground: appTextSecondary,
+  );
+
+  /// Filled rating stars.
+  Color get appRatingGold =>
+      appIsDark ? AppColors.ratingGoldDark : AppColors.ratingGoldLight;
 
   AppSemanticTriad get appSuccessTriad => appIsDark
       ? const AppSemanticTriad(

@@ -1,6 +1,15 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_dimensions.dart';
+import '../../../../core/theme/app_motion.dart';
+import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/brand/kus_brand_logo.dart';
+import '../../../../core/widgets/brand/topo_contours_painter.dart';
 import 'welcome_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -10,25 +19,12 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
-
+class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    )..repeat(reverse: true);
 
-    _animation = Tween<double>(
-      begin: 0.8,
-      end: 1.2,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-
-    // Simulate loading time and navigate to Welcome.
+    // Hold the brand moment, then hand off to Welcome.
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) {
         Navigator.of(context).pushReplacement(
@@ -39,28 +35,72 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.loadingBackground,
-      body: Center(
-        child: ScaleTransition(
-          scale: _animation,
-          child: Image.asset(
-            'assets/images/app_movil_only_lg.png',
-            errorBuilder: (context, error, stackTrace) => const Icon(
-              Icons.eco,
-              color: AppColors.onBrand,
-              size: 120,
+    final l10n = AppLocalizations.of(context);
+    final reduced = AppMotion.reduced(context);
+
+    Widget slogan = Text(
+      l10n?.brand_slogan ?? '',
+      textAlign: TextAlign.center,
+      style: AppTextStyles.bodyMedium.copyWith(
+        color: AppColors.onBrandSecondary,
+        fontWeight: FontWeight.w500,
+      ),
+    );
+    if (!reduced) {
+      slogan = slogan
+          .animate()
+          .fadeIn(
+            delay: 260.ms,
+            duration: AppMotion.entrance,
+            curve: AppMotion.easeOut,
+          )
+          .moveY(
+            begin: 6,
+            end: 0,
+            delay: 260.ms,
+            duration: AppMotion.entrance,
+            curve: AppMotion.easeOut,
+          );
+    }
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light.copyWith(
+        statusBarColor: AppColors.transparent,
+      ),
+      child: Scaffold(
+        backgroundColor: context.appBrandStage,
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            const CustomPaint(
+              painter: TopoContoursPainter(
+                color: AppColors.onBrand,
+                intensity: 0.16,
+              ),
             ),
-            width: 180,
-            height: 180,
-          ),
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppDimensions.space32,
+                ),
+                child: Column(
+                  children: [
+                    const Spacer(flex: 5),
+                    const KusBrandLogo.hero(onBrandStage: true),
+                    const SizedBox(height: AppDimensions.space24),
+                    slogan,
+                    const Spacer(flex: 4),
+                    const CupertinoActivityIndicator(
+                      radius: 10,
+                      color: AppColors.onBrand,
+                    ),
+                    const SizedBox(height: AppDimensions.space32),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

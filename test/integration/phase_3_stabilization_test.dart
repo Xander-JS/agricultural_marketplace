@@ -143,9 +143,9 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Referencia regional simulada'), findsOneWidget);
+      expect(find.text('Índice de referencia regional (Nariño)'), findsOneWidget);
       expect(find.text(SimulatedRegionalPriceReferences.notice), findsWidgets);
-      expect(find.text('SIMULADA'), findsOneWidget);
+      expect(find.text('PROYECCIÓN IA'), findsOneWidget);
     });
 
     testWidgets('1.4. CropDetailScreen muestra banner de referencia regional con disclaimer obligatorio',
@@ -170,7 +170,7 @@ void main() {
 
       expect(find.byKey(const Key('crop_detail_regional_reference_card')), findsOneWidget);
       expect(find.text(SimulatedRegionalPriceReferences.notice), findsOneWidget);
-      expect(find.text('SIMULADA'), findsOneWidget);
+      expect(find.text('PROYECCIÓN IA'), findsOneWidget);
     });
   });
 
@@ -328,7 +328,7 @@ void main() {
       expect(find.byType(VerificationStatusScreen), findsOneWidget);
       expect(find.byType(MainDashboardScreen), findsNothing);
       expect(
-        find.text('Diagnóstico simulado en revisión; tu cuenta está a la espera de aprobación por un moderador.'),
+        find.text('Análisis preliminar de IA completado; tu cuenta está en revisión final por parte de un moderador.'),
         findsOneWidget,
       );
       expect(find.byKey(const ValueKey('verification_status_refresh')), findsOneWidget);
@@ -420,7 +420,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
 
-      expect(find.text('Diagnóstico simulado en revisión; tu cuenta está a la espera de aprobación por un moderador.'), findsOneWidget);
+      expect(find.text('Análisis preliminar de IA completado; tu cuenta está en revisión final por parte de un moderador.'), findsOneWidget);
 
       // Simular que el moderador aprobó la cuenta en base de datos
       currentStatus = 'aprobado';

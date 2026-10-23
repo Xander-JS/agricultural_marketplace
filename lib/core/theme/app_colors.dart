@@ -45,6 +45,10 @@ abstract final class AppColors {
   static const Color darkHarvestAmber = Color(0xFFFBBF24);
   static const Color darkAccentAi = Color(0xFF38BDF8);
 
+  /// Segmented-control thumb: one lightness step above the track, the way
+  /// iOS lifts the selected segment in Dark Mode.
+  static const Color darkSegmentThumb = Color(0xFF34473D);
+
   static const Color darkTextPrimary = Color(0xFFF3F4F6);
   static const Color darkTextSecondary = Color(0xFF9CA3AF);
   static const Color darkTextMuted = Color(0xFF6B7280);
@@ -301,6 +305,10 @@ extension AppThemeColors on BuildContext {
   Color get appShadow => appIsDark
       ? Colors.black.withValues(alpha: 0.32)
       : const Color(0xFF0B110E).withValues(alpha: 0.06);
+
+  /// Selected segment of a sliding segmented control over [appSurfaceVariant].
+  Color get appSegmentThumb =>
+      appIsDark ? AppColors.darkSegmentThumb : appSurface;
 
   /// Base and highlight for shimmer skeletons on regular surfaces.
   Color get appSkeletonBase => appSurfaceVariant;

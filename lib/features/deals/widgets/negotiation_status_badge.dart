@@ -1,38 +1,51 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+
+import '../../../core/theme/app_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/badges/status_badge.dart';
 import '../models/negotiation_status.dart';
 
-/// Tone and mark of a negotiation status, shared by every surface that
+/// Accent and mark of a negotiation status, shared by every surface that
 /// shows one (deal list, deal detail, purchases).
 ///
-/// Live states carry a hue (pending blue, counter-offer amber, agreed
-/// green, rejected red); closed history (completed, cancelled) stays
-/// neutral so the eye lands on what still needs work.
-({StatusBadgeTone? tone, IconData icon}) negotiationStatusStyle(
+/// Every label sits on the same neutral wash; hue lives only in the text
+/// and its micro-icon: slate while pending, amber on a counter-offer,
+/// brand green once agreed or completed, red when rejected or cancelled.
+/// Red and amber use their AA-safe text tones so the small label stays
+/// legible on the gray wash.
+({Color accent, IconData icon}) negotiationStatusStyle(
+  BuildContext context,
   NegotiationStatus status,
 ) {
+  final amber = context.appIsDark
+      ? context.appSecondary
+      : AppColors.warningTextLight;
   return switch (status) {
     NegotiationStatus.propuesta => (
-      tone: StatusBadgeTone.info,
+      accent: context.appTextSecondary,
       icon: LucideIcons.clock,
     ),
     NegotiationStatus.contraofertada => (
-      tone: StatusBadgeTone.warning,
+      accent: amber,
       icon: LucideIcons.arrowLeftRight,
     ),
     NegotiationStatus.acordada => (
-      tone: StatusBadgeTone.success,
+      accent: context.appPrimary,
       icon: LucideIcons.handshake,
     ),
-    NegotiationStatus.completada => (tone: null, icon: LucideIcons.checkCheck),
+    NegotiationStatus.completada => (
+      accent: context.appPrimary,
+      icon: LucideIcons.checkCheck,
+    ),
     NegotiationStatus.rechazada => (
-      tone: StatusBadgeTone.error,
+      accent: context.appErrorText,
       icon: LucideIcons.circleX,
     ),
-    NegotiationStatus.cancelada => (tone: null, icon: LucideIcons.ban),
+    NegotiationStatus.cancelada => (
+      accent: context.appErrorText,
+      icon: LucideIcons.ban,
+    ),
   };
 }
 
@@ -46,16 +59,14 @@ class NegotiationStatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = negotiationStatusStyle(status);
-    final neutral = context.appNeutralTriad;
+    final style = negotiationStatusStyle(context, status);
 
     return StatusBadge(
       text: label ?? status.toDisplayName(),
       icon: style.icon,
-      tone: style.tone,
-      backgroundColor: neutral.background,
-      textColor: neutral.foreground,
-      borderColor: neutral.border,
+      backgroundColor: context.appSurfaceVariant,
+      textColor: style.accent,
+      borderColor: AppColors.transparent,
     );
   }
 }

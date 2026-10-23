@@ -122,6 +122,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
       selfie: _selfie,
     );
 
+    if (result.isSuccess) clearPersistedDocumentImages();
     if (!mounted) return;
 
     setState(() {

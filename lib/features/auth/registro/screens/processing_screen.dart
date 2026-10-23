@@ -1,20 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:agricultural_marketplace/core/localization/app_localizations.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/widgets/brand/kus_brand_logo.dart';
 import '../../../../core/widgets/loading/app_loading.dart';
 import '../../../../core/widgets/loading/loading_content.dart';
-import '../../widgets/verification_scan_visual.dart';
+import '../../verificacion/screens/verification_status_screen.dart';
+import '../../verificacion/services/verification_service.dart';
+import '../../widgets/auth_gate.dart';
+import '../../widgets/document_image_picker.dart';
+import '../../verificacion/widgets/review_ring.dart';
 import '../models/registration_data.dart';
 import '../services/registration_service.dart';
 
 class ProcessingScreen extends StatefulWidget {
   final RegistrationData data;
   final RegistrationService? registrationService;
+  final VerificationService? verificationService;
 
   const ProcessingScreen({
     super.key,
     required this.data,
     this.registrationService,
+    this.verificationService,
   });
 
   @override
@@ -88,12 +96,12 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
           _isSpinning = false;
         });
 
-        // Retornar a la raíz donde AuthGate ya resolvió la sesión y el perfil
+        // La solicitud ya quedó guardada: las copias locales sobran.
+        clearPersistedDocumentImages();
+
         final delay = result.documentsUploaded ? 1000 : 2200;
         Future.delayed(Duration(milliseconds: delay), () {
-          if (mounted) {
-            Navigator.of(context).popUntil((route) => route.isFirst);
-          }
+          if (mounted) _openVerificationStatus();
         });
       }
     } catch (e) {
@@ -105,6 +113,47 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
           _isSpinning = false;
         });
       }
+    }
+  }
+
+  /// Reemplaza toda la pila por la pantalla de espera de verificación.
+  ///
+  /// No se vuelve a la raíz con `popUntil`: durante el `signUp` el AuthGate
+  /// raíz recibe `signedIn` antes de que exista el perfil y queda mostrando
+  /// "Completa tu registro". Al reemplazar la pila ese estado obsoleto se
+  /// descarta y el usuario no puede volver al formulario con el botón atrás.
+  void _openVerificationStatus() {
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (routeContext) => VerificationStatusScreen(
+          verificationService: widget.verificationService,
+          // Tras la aprobación un AuthGate nuevo resuelve el rol y abre el
+          // panel principal con su manejo de sesión habitual.
+          onVerificationApproved: (_) => _restartAtAuthGate(routeContext),
+          onSignOut: () async {
+            await _signOut();
+            if (routeContext.mounted) _restartAtAuthGate(routeContext);
+          },
+        ),
+      ),
+      (route) => false,
+    );
+  }
+
+  static void _restartAtAuthGate(BuildContext context) {
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const AuthGate()),
+      (route) => false,
+    );
+  }
+
+  static Future<void> _signOut() async {
+    try {
+      await Supabase.instance.client.auth.signOut();
+    } catch (_) {
+      try {
+        await Supabase.instance.client.auth.signOut(scope: SignOutScope.local);
+      } catch (_) {}
     }
   }
 
@@ -140,7 +189,20 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
         backText: _requiresConfirmation
             ? l10n.login_title
             : l10n.processing_back,
-        workingVisual: const VerificationScanVisual(),
+        // Same contour ring as the waiting screen, on its first stage, so
+        // the hand-off after submitting reads as one continuous path.
+        workingVisual: ReviewRing(
+          stage: 0,
+          semanticsLabel: l10n.verification_status_ring_semantics(
+            l10n.verification_status_track_received,
+          ),
+          child: const KusBrandLogo(
+            variant: KusBrandLogoVariant.hero,
+            showWordmark: false,
+            onBrandStage: true,
+            markSize: 84,
+          ),
+        ),
       ),
     );
   }

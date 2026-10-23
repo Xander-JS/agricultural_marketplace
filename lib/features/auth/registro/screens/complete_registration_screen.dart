@@ -170,6 +170,7 @@ class _CompleteRegistrationScreenState
     if (!mounted) return;
 
     if (result.isSuccess) {
+      clearPersistedDocumentImages();
       final onCompleted = widget.onCompleted;
       if (onCompleted != null) {
         await onCompleted();

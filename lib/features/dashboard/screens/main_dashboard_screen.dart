@@ -48,14 +48,14 @@ class _MainDashboardScreenState extends State<MainDashboardScreen>
     if (_isBuyer) {
       _screens = [
         MarketplaceScreen(role: widget.role, onProfileTap: () => _selectTab(3)),
-        DealsScreen(role: widget.role),
+        DealsScreen(role: widget.role, onEmptyAction: () => _selectTab(0)),
         PurchasesScreen(onExploreMarket: () => _selectTab(0)),
         FarmerProfileScreen(onSignOut: widget.onSignOut),
       ];
     } else {
       _screens = [
         MarketplaceScreen(role: widget.role, onProfileTap: () => _selectTab(3)),
-        DealsScreen(role: widget.role),
+        DealsScreen(role: widget.role, onEmptyAction: () => _selectTab(0)),
         const CostsScreen(),
         FarmerProfileScreen(onSignOut: widget.onSignOut),
       ];

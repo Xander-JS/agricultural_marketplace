@@ -1,18 +1,25 @@
 import 'dart:io';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/constants/user_roles.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/widgets/app_bar/custom_app_bar.dart';
 import '../../../../core/widgets/buttons/primary_action_button.dart';
+import '../../../../core/widgets/cards/inset_group_card.dart';
+import '../../../../core/widgets/feedback/app_snack_bar.dart';
+import '../../../../core/widgets/feedback/status_banner.dart';
 import '../../../../core/widgets/inputs/custom_text_field.dart';
 import '../../widgets/document_image_picker.dart';
 import '../../widgets/document_selection_card.dart';
+import '../../widgets/registration_step_scaffold.dart';
+import '../../widgets/upload_progress_note.dart';
 import '../services/account_completion_service.dart';
 
 /// Pantalla de recuperación para cuentas que existen en Supabase Auth pero no
@@ -170,8 +177,10 @@ class _CompleteRegistrationScreenState
       }
       setState(() => _isSubmitting = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.complete_registration_success)),
+        showAppSnackBar(
+          context,
+          l10n.complete_registration_success,
+          tone: StatusTone.success,
         );
       }
       return;
@@ -201,222 +210,203 @@ class _CompleteRegistrationScreenState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final textSecondary = context.appTextSecondary;
 
-    return Scaffold(
-      key: const ValueKey('complete_registration_screen'),
-      backgroundColor: context.appBackground,
-      appBar: CustomAppBar(title: l10n.complete_registration_title),
-      body: SafeArea(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        l10n.complete_registration_description,
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: textSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      CustomTextField(
-                        key: const ValueKey('complete_registration_contact'),
-                        label: l10n.complete_registration_contact,
-                        hint: l10n.complete_registration_contact_hint,
-                        icon: Icons.phone_android,
-                        controller: _contactController,
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (value) {
-                          final clean = (value ?? '').trim().replaceAll(
-                            RegExp(r'[\s\-()]+'),
-                            '',
-                          );
-                          if (clean.isEmpty) {
-                            return l10n.personal_info_required;
-                          }
-                          if (!clean.contains('@') && clean.length < 7) {
-                            return l10n.complete_registration_invalid_data;
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 20),
-                      CustomTextField(
-                        key: const ValueKey('complete_registration_full_name'),
-                        label: l10n.complete_registration_full_name,
-                        hint: l10n.complete_registration_full_name_hint,
-                        icon: Icons.badge_outlined,
-                        controller: _fullNameController,
-                        validator: (value) =>
-                            value == null || value.trim().isEmpty
-                            ? l10n.personal_info_required
-                            : null,
-                      ),
-                      const SizedBox(height: 20),
-                      Text(
-                        l10n.complete_registration_role,
-                        style: AppTextStyles.labelMedium.copyWith(
-                          color: context.appTextPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 12,
-                        runSpacing: 8,
-                        children: [
-                          ChoiceChip(
-                            key: const ValueKey(
-                              'complete_registration_role_agricultor',
-                            ),
-                            label: Text(UserRole.agricultor.displayName),
-                            selected: _selectedRole == 'agricultor',
-                            onSelected: _isSubmitting
-                                ? null
-                                : (_) => setState(
-                                    () => _selectedRole = 'agricultor',
-                                  ),
-                          ),
-                          ChoiceChip(
-                            key: const ValueKey(
-                              'complete_registration_role_comprador',
-                            ),
-                            label: Text(UserRole.comprador.displayName),
-                            selected: _selectedRole == 'comprador',
-                            onSelected: _isSubmitting
-                                ? null
-                                : (_) => setState(
-                                    () => _selectedRole = 'comprador',
-                                  ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        l10n.complete_registration_documents,
-                        style: AppTextStyles.labelMedium.copyWith(
-                          color: context.appTextPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      DocumentSelectionCard(
-                        key: const ValueKey('complete_registration_front'),
-                        title: l10n.document_front_title,
-                        file: _documentFront,
-                        enabled: !_isSubmitting,
-                        pickButtonKey: const ValueKey(
-                          'complete_registration_front_pick',
-                        ),
-                        onPick: () => _pickImage(
-                          preferredCameraDevice: CameraDevice.rear,
-                          onSelected: (file) => _documentFront = file,
-                        ),
-                        onRemove: () => setState(() {
-                          _documentFront = null;
-                          _errorMessage = null;
-                        }),
-                      ),
-                      const SizedBox(height: 12),
-                      DocumentSelectionCard(
-                        key: const ValueKey('complete_registration_back'),
-                        title: l10n.document_back_title,
-                        file: _documentBack,
-                        enabled: !_isSubmitting,
-                        pickButtonKey: const ValueKey(
-                          'complete_registration_back_pick',
-                        ),
-                        onPick: () => _pickImage(
-                          preferredCameraDevice: CameraDevice.rear,
-                          onSelected: (file) => _documentBack = file,
-                        ),
-                        onRemove: () => setState(() {
-                          _documentBack = null;
-                          _errorMessage = null;
-                        }),
-                      ),
-                      const SizedBox(height: 12),
-                      DocumentSelectionCard(
-                        key: const ValueKey('complete_registration_selfie'),
-                        title: l10n.document_selfie_title,
-                        file: _selfie,
-                        enabled: !_isSubmitting,
-                        pickButtonKey: const ValueKey(
-                          'complete_registration_selfie_pick',
-                        ),
-                        onPick: () => _pickImage(
-                          preferredCameraDevice: CameraDevice.front,
-                          onSelected: (file) => _selfie = file,
-                        ),
-                        onRemove: () => setState(() {
-                          _selfie = null;
-                          _errorMessage = null;
-                        }),
-                      ),
-                      if (_isSubmitting) ...[
-                        const SizedBox(height: 16),
-                        const LinearProgressIndicator(),
-                      ],
-                      if (_errorMessage != null) ...[
-                        const SizedBox(height: 14),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: context.appErrorContainer,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: context.appError.withValues(alpha: 0.5),
-                            ),
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Icon(
-                                Icons.error_outline,
-                                color: context.appError,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  _errorMessage!,
-                                  style: AppTextStyles.bodySmall.copyWith(
-                                    color: context.appError,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ],
+    return Form(
+      key: _formKey,
+      child: RegistrationStepScaffold(
+        scaffoldKey: const ValueKey('complete_registration_screen'),
+        title: l10n.complete_registration_title,
+        lead: l10n.complete_registration_description,
+        bottom: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            PrimaryActionButton(
+              key: const ValueKey('complete_registration_submit'),
+              onPressed: _isSubmitting ? null : _submit,
+              text: l10n.complete_registration_submit,
+              isLoading: _isSubmitting,
+            ),
+            const SizedBox(height: AppDimensions.space4),
+            TextButton(
+              key: const ValueKey('complete_registration_logout'),
+              onPressed: _isSubmitting ? null : _handleSignOut,
+              style: TextButton.styleFrom(
+                foregroundColor: context.appTextSecondary,
+              ),
+              child: Text(l10n.profile_logout),
+            ),
+          ],
+        ),
+        children: [
+          InsetGroupCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                CustomTextField(
+                  key: const ValueKey('complete_registration_contact'),
+                  label: l10n.complete_registration_contact,
+                  hint: l10n.complete_registration_contact_hint,
+                  icon: LucideIcons.phone,
+                  controller: _contactController,
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                  validator: (value) {
+                    final clean = (value ?? '').trim().replaceAll(
+                      RegExp(r'[\s\-()]+'),
+                      '',
+                    );
+                    if (clean.isEmpty) {
+                      return l10n.personal_info_required;
+                    }
+                    if (!clean.contains('@') && clean.length < 7) {
+                      return l10n.complete_registration_invalid_data;
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: AppDimensions.space16),
+                CustomTextField(
+                  key: const ValueKey('complete_registration_full_name'),
+                  label: l10n.complete_registration_full_name,
+                  hint: l10n.complete_registration_full_name_hint,
+                  icon: LucideIcons.userRound,
+                  controller: _fullNameController,
+                  textInputAction: TextInputAction.done,
+                  validator: (value) => value == null || value.trim().isEmpty
+                      ? l10n.personal_info_required
+                      : null,
+                ),
+                const SizedBox(height: AppDimensions.space16),
+                Padding(
+                  padding: const EdgeInsets.only(
+                    left: AppDimensions.space4,
+                    bottom: AppDimensions.space8,
+                  ),
+                  child: Text(
+                    l10n.complete_registration_role,
+                    style: AppTextStyles.labelMedium.copyWith(
+                      color: context.appTextPrimary,
+                    ),
                   ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-                child: PrimaryActionButton(
-                  key: const ValueKey('complete_registration_submit'),
-                  onPressed: _isSubmitting ? null : _submit,
-                  text: l10n.complete_registration_submit,
-                  isLoading: _isSubmitting,
+                CupertinoSlidingSegmentedControl<String>(
+                  groupValue: _selectedRole,
+                  backgroundColor: context.appSurfaceVariant,
+                  thumbColor: context.appSurface,
+                  padding: const EdgeInsets.all(3),
+                  onValueChanged: (value) {
+                    if (_isSubmitting || value == null) return;
+                    setState(() => _selectedRole = value);
+                  },
+                  children: {
+                    'agricultor': _RoleSegment(
+                      key: const ValueKey(
+                        'complete_registration_role_agricultor',
+                      ),
+                      icon: LucideIcons.sprout,
+                      label: UserRole.agricultor.displayName,
+                    ),
+                    'comprador': _RoleSegment(
+                      key: const ValueKey(
+                        'complete_registration_role_comprador',
+                      ),
+                      icon: LucideIcons.briefcaseBusiness,
+                      label: UserRole.comprador.displayName,
+                    ),
+                  },
                 ),
-              ),
-              TextButton(
-                key: const ValueKey('complete_registration_logout'),
-                onPressed: _isSubmitting ? null : _handleSignOut,
-                child: Text(
-                  l10n.profile_logout,
-                  style: TextStyle(color: textSecondary),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
+          const SizedBox(height: AppDimensions.space24),
+          GroupHeading(l10n.complete_registration_documents),
+          DocumentSelectionCard(
+            key: const ValueKey('complete_registration_front'),
+            title: l10n.document_front_title,
+            file: _documentFront,
+            enabled: !_isSubmitting,
+            pickButtonKey: const ValueKey('complete_registration_front_pick'),
+            onPick: () => _pickImage(
+              preferredCameraDevice: CameraDevice.rear,
+              onSelected: (file) => _documentFront = file,
+            ),
+            onRemove: () => setState(() {
+              _documentFront = null;
+              _errorMessage = null;
+            }),
+          ),
+          const SizedBox(height: AppDimensions.space12),
+          DocumentSelectionCard(
+            key: const ValueKey('complete_registration_back'),
+            title: l10n.document_back_title,
+            file: _documentBack,
+            enabled: !_isSubmitting,
+            pickButtonKey: const ValueKey('complete_registration_back_pick'),
+            onPick: () => _pickImage(
+              preferredCameraDevice: CameraDevice.rear,
+              onSelected: (file) => _documentBack = file,
+            ),
+            onRemove: () => setState(() {
+              _documentBack = null;
+              _errorMessage = null;
+            }),
+          ),
+          const SizedBox(height: AppDimensions.space12),
+          DocumentSelectionCard(
+            key: const ValueKey('complete_registration_selfie'),
+            title: l10n.document_selfie_title,
+            file: _selfie,
+            enabled: !_isSubmitting,
+            pickButtonKey: const ValueKey('complete_registration_selfie_pick'),
+            onPick: () => _pickImage(
+              preferredCameraDevice: CameraDevice.front,
+              onSelected: (file) => _selfie = file,
+            ),
+            onRemove: () => setState(() {
+              _selfie = null;
+              _errorMessage = null;
+            }),
+          ),
+          if (_isSubmitting) ...[
+            const SizedBox(height: AppDimensions.space16),
+            UploadProgressNote(message: l10n.document_upload_in_progress),
+          ],
+          if (_errorMessage != null) ...[
+            const SizedBox(height: AppDimensions.space16),
+            StatusBanner(tone: StatusTone.error, message: _errorMessage!),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _RoleSegment extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _RoleSegment({super.key, required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppDimensions.space8),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: context.appTextPrimary),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.labelMedium.copyWith(
+                color: context.appTextPrimary,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

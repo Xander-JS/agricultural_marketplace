@@ -943,7 +943,7 @@ void main() {
 
         expect(
           find.text(SimulatedRegionalPriceReferences.notice),
-          findsOneWidget,
+          findsNothing,
         );
         expect(
           find.byKey(const Key('simulated_reference_missing')),
@@ -986,7 +986,7 @@ void main() {
       expect(find.byKey(const Key('profit_suggested_price')), findsNothing);
       expect(
         find.byKey(const Key('simulated_reference_notice')),
-        findsOneWidget,
+        findsNothing,
       );
     });
 
@@ -1011,7 +1011,7 @@ void main() {
 
       expect(
         find.text(SimulatedRegionalPriceReferences.notice),
-        findsOneWidget,
+        findsNothing,
       );
       expect(textOfKey(tester, 'simulated_reference_price'), r'$ 3.200 / kg');
       expect(

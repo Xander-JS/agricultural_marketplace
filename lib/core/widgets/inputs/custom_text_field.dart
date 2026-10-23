@@ -23,6 +23,10 @@ class CustomTextField extends StatelessWidget {
   final bool isUnderlineBorder;
   final TextInputAction? textInputAction;
   final Iterable<String>? autofillHints;
+  final int maxLines;
+  final int? maxLength;
+  final bool enabled;
+  final TextCapitalization textCapitalization;
 
   const CustomTextField({
     super.key,
@@ -39,6 +43,10 @@ class CustomTextField extends StatelessWidget {
     this.isUnderlineBorder = false,
     this.textInputAction,
     this.autofillHints,
+    this.maxLines = 1,
+    this.maxLength,
+    this.enabled = true,
+    this.textCapitalization = TextCapitalization.none,
   });
 
   @override
@@ -84,6 +92,10 @@ class CustomTextField extends StatelessWidget {
           validator: validator,
           textInputAction: textInputAction,
           autofillHints: autofillHints,
+          maxLines: maxLines,
+          maxLength: maxLength,
+          enabled: enabled,
+          textCapitalization: textCapitalization,
           style: AppTextStyles.bodyLarge.copyWith(
             color: context.appTextPrimary,
             fontWeight: FontWeight.w500,
@@ -94,7 +106,15 @@ class CustomTextField extends StatelessWidget {
             hintStyle: AppTextStyles.bodyMedium.copyWith(
               color: context.appTextSecondary,
             ),
-            prefixIcon: iconWidget,
+            // A multi-line field keeps its icon on the first line: the
+            // decorator centers the icon, so lift it by the extra lines
+            // (bodyLarge runs 22.5px per line).
+            prefixIcon: maxLines > 1
+                ? Padding(
+                    padding: EdgeInsets.only(bottom: (maxLines - 1) * 22.5),
+                    child: iconWidget,
+                  )
+                : iconWidget,
             prefixIconConstraints: const BoxConstraints(
               minWidth: AppDimensions.minTouchTarget,
               minHeight: AppDimensions.minTouchTarget,

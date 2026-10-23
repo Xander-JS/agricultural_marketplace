@@ -1,19 +1,40 @@
 import 'dart:async';
+import 'dart:ui' show ImageFilter;
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/negotiation_model.dart';
 import '../models/negotiation_offer_model.dart';
 import '../models/negotiation_status.dart';
 import '../services/negotiation_service.dart';
+import '../widgets/deal_crop_thumb.dart';
+import '../widgets/delivery_presentation.dart';
+import '../widgets/negotiation_status_badge.dart';
 import '../../review/services/review_service.dart';
 import 'counter_offer_screen.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimensions.dart';
+import '../../../core/theme/app_motion.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/constants/user_roles.dart';
 import '../../../core/utils/app_formatters.dart';
+import '../../../core/widgets/buttons/primary_action_button.dart';
+import '../../../core/widgets/buttons/secondary_action_button.dart';
+import '../../../core/widgets/cards/inset_group_card.dart';
+import '../../../core/widgets/cards/inset_group_section.dart';
+import '../../../core/widgets/feedback/app_empty_state.dart';
+import '../../../core/widgets/feedback/app_snack_bar.dart';
+import '../../../core/widgets/feedback/status_banner.dart';
+import '../../../core/widgets/inputs/custom_text_field.dart';
+import '../../../core/widgets/loading/app_skeleton.dart';
+import '../../../core/widgets/misc/icon_squircle.dart';
+import '../../../core/widgets/misc/pressable_scale.dart';
+import '../../../core/widgets/sheets/app_sheet_frame.dart';
 
 class DealDetailScreen extends StatefulWidget {
   final String negotiationId;
@@ -192,91 +213,180 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
       debugPrint('Aviso: no se pudo consultar contacto de contraparte: $e');
     } finally {
       _isLoadingContact = false;
+      // Retira el esqueleto de la tarjeta de contacto.
+      if (mounted) setState(() {});
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final n = _negotiation;
+    final showContent = !_isLoading && _errorMessage == null && n != null;
 
     return Scaffold(
       backgroundColor: context.appBackground,
-      appBar: AppBar(
-        title: Text(l10n.deal_detail_title),
-      ),
-      body: _buildBody(l10n),
+      // The action bar is translucent: the timeline scrolls beneath it.
+      extendBody: true,
+      appBar: AppBar(title: Text(l10n.deal_detail_title)),
+      body: Builder(builder: (context) => _buildBody(context, l10n)),
+      bottomNavigationBar: showContent ? _buildActionBar(n, l10n) : null,
     );
   }
 
-  Widget _buildBody(AppLocalizations l10n) {
+  List<NegotiationOfferModel> _sortedOffers(NegotiationModel n) {
+    final offers = n.offers != null
+        ? List<NegotiationOfferModel>.from(n.offers!)
+        : <NegotiationOfferModel>[];
+    offers.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    return offers;
+  }
+
+  Widget _buildBody(BuildContext context, AppLocalizations l10n) {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: CupertinoActivityIndicator(radius: 12));
     }
 
     if (_errorMessage != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error_outline, size: 48, color: context.appError),
-              const SizedBox(height: 16),
-              Text(
-                l10n.deals_error_prefix(_errorMessage!),
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: context.appTextPrimary,
-                ),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () => _loadData(reload: true),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: context.appPrimary,
-                  foregroundColor: context.appOnPrimary,
-                ),
-                child: Text(l10n.common_retry),
-              ),
-            ],
-          ),
+      return AppEmptyState(
+        icon: LucideIcons.cloudOff,
+        title: l10n.deals_error_prefix(_errorMessage!),
+        action: ElevatedButton.icon(
+          onPressed: () => _loadData(reload: true),
+          icon: const Icon(LucideIcons.refreshCw, size: 18),
+          label: Text(l10n.common_retry),
         ),
       );
     }
 
     if (_negotiation == null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              l10n.deal_detail_not_found,
-              style: TextStyle(
-                color: context.appTextSecondary,
-              ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => _loadData(reload: true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: context.appPrimary,
-                foregroundColor: context.appOnPrimary,
-              ),
-              child: Text(l10n.common_retry),
-            ),
-          ],
+      return AppEmptyState(
+        icon: LucideIcons.searchX,
+        title: l10n.deal_detail_not_found,
+        action: ElevatedButton.icon(
+          onPressed: () => _loadData(reload: true),
+          icon: const Icon(LucideIcons.refreshCw, size: 18),
+          label: Text(l10n.common_retry),
         ),
       );
     }
 
     final n = _negotiation!;
-
-    final offers = n.offers != null
-        ? List<NegotiationOfferModel>.from(n.offers!)
-        : <NegotiationOfferModel>[];
-    offers.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    final offers = _sortedOffers(n);
     final latestOffer = offers.isNotEmpty ? offers.last : null;
+    final isClosedWithContact =
+        n.status == NegotiationStatus.acordada ||
+        n.status == NegotiationStatus.completada;
+    final isActive =
+        n.status == NegotiationStatus.propuesta ||
+        n.status == NegotiationStatus.contraofertada;
 
+    return RefreshIndicator(
+      onRefresh: () => _loadData(reload: true),
+      color: context.appPrimary,
+      backgroundColor: context.appSurface,
+      strokeWidth: 2.5,
+      child: SingleChildScrollView(
+        physics: AppMotion.scrollPhysics,
+        padding: EdgeInsets.fromLTRB(
+          AppDimensions.space16,
+          AppDimensions.space8,
+          AppDimensions.space16,
+          AppDimensions.space32 + MediaQuery.paddingOf(context).bottom,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildSummaryCard(n, latestOffer, l10n),
+
+            if (n.status == NegotiationStatus.acordada) ...[
+              const SizedBox(height: AppDimensions.space12),
+              StatusBanner(
+                tone: StatusTone.success,
+                icon: LucideIcons.handshake,
+                message: l10n.deal_agreed_desc,
+              ),
+            ],
+
+            // Contacto comercial liberado cuando el trato está acordado o
+            // completado.
+            if (isClosedWithContact) ...[
+              const SizedBox(height: AppDimensions.space24),
+              _buildContactAndConsentSection(n, l10n),
+            ],
+
+            if (offers.isNotEmpty) ...[
+              const SizedBox(height: AppDimensions.space32),
+              Padding(
+                padding: const EdgeInsets.only(left: AppDimensions.space4),
+                child: Text(
+                  l10n.deal_history_title,
+                  style: AppTextStyles.titleMedium.copyWith(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: context.appTextPrimary,
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppDimensions.space12),
+              for (var i = 0; i < offers.length; i++)
+                _OfferBubble(
+                  offer: offers[i],
+                  previous: i > 0 ? offers[i - 1] : null,
+                  isMine: _isMine(offers[i], n),
+                  senderLabel: _isMine(offers[i], n)
+                      ? l10n.deal_detail_you
+                      : (_isBuyer
+                            ? l10n.deal_counterpart_farmer
+                            : l10n.deal_counterpart_buyer),
+                ),
+            ],
+
+            // Turno de la contraparte: una burbuja en espera cierra la
+            // conversación, como un "escribiendo…".
+            if (isActive && !_isMyTurn) ...[
+              _WaitingBubble(
+                message: _isBuyer
+                    ? l10n.deal_waiting_farmer
+                    : l10n.deal_waiting_buyer,
+              ),
+              if (_isBuyer && n.status == NegotiationStatus.propuesta) ...[
+                const SizedBox(height: AppDimensions.space16),
+                SecondaryActionButton(
+                  onPressed: _isActionInProgress ? null : () => _cancelOffer(n),
+                  text: l10n.deal_cancel_deal,
+                  icon: LucideIcons.ban,
+                  tone: SecondaryActionTone.destructive,
+                ),
+              ],
+            ],
+
+            if (n.status == NegotiationStatus.completada) ...[
+              const SizedBox(height: AppDimensions.space24),
+              _buildRatingSection(n, l10n),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Whether [offer] was sent by the signed-in user. Without a session the
+  /// side is inferred from the role: the buyer sends from `buyerId`.
+  bool _isMine(NegotiationOfferModel offer, NegotiationModel n) {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId != null) return offer.senderId == userId;
+    final sentByBuyer = offer.senderId == n.buyerId;
+    return _isBuyer ? sentByBuyer : !sentByBuyer;
+  }
+
+  /// Deal summary: the lot, the other party and the terms on the table.
+  Widget _buildSummaryCard(
+    NegotiationModel n,
+    NegotiationOfferModel? latestOffer,
+    AppLocalizations l10n,
+  ) {
+    final crop = n.crop;
     final counterpartLabel = _isBuyer
         ? l10n.deal_counterpart_farmer
         : l10n.deal_counterpart_buyer;
@@ -286,253 +396,365 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
               l10n.deals_producer_with_location(n.crop?.municipality ?? ''))
         : (n.buyerProfile?['full_name'] ?? l10n.deals_buyer);
 
-    return RefreshIndicator(
-      onRefresh: () => _loadData(reload: true),
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    final place = [
+      crop?.municipality,
+      crop?.department,
+    ].whereType<String>().where((s) => s.trim().isNotEmpty).join(', ');
+    final cropLine = [
+      crop?.cropType,
+      place,
+    ].whereType<String>().where((s) => s.trim().isNotEmpty).join(' · ');
+
+    return InsetGroupCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                DealCropThumb(crop: crop, size: 56),
+                const SizedBox(width: AppDimensions.space12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        crop?.title ?? l10n.deals_unknown_crop,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.headlineMedium.copyWith(
+                          color: context.appTextPrimary,
+                        ),
+                      ),
+                      if (cropLine.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          cropLine,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.bodySmall.copyWith(
+                            fontSize: 13,
+                            color: context.appTextSecondary,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: AppDimensions.space8),
+                      NegotiationStatusBadge(status: n.status),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Divider(height: 1, thickness: 1, color: context.appDivider),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            child: Row(
+              children: [
+                IconSquircle(
+                  icon: _isBuyer
+                      ? LucideIcons.sprout
+                      : LucideIcons.briefcaseBusiness,
+                  triad: _isBuyer
+                      ? context.appBrandTriad
+                      : context.appInfoTriad,
+                  size: 36,
+                ),
+                const SizedBox(width: AppDimensions.space12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        counterpartLabel,
+                        style: AppTextStyles.caption.copyWith(
+                          color: context.appTextSecondary,
+                        ),
+                      ),
+                      Text(
+                        counterpartName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.titleMedium.copyWith(
+                          color: context.appTextPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (latestOffer != null) ...[
+            Divider(height: 1, thickness: 1, color: context.appDivider),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+              child: IntrinsicHeight(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _TermFigure(
+                        label: l10n.deal_detail_price_per_kg,
+                        value: CurrencyFormatters.formatCop(
+                          latestOffer.proposedPricePerKg,
+                        ),
+                        emphasized: true,
+                      ),
+                    ),
+                    VerticalDivider(width: 24, color: context.appDivider),
+                    Expanded(
+                      child: _TermFigure(
+                        label: l10n.deal_detail_quantity,
+                        value: UnitFormatters.formatKg(latestOffer.quantityKg),
+                      ),
+                    ),
+                    VerticalDivider(width: 24, color: context.appDivider),
+                    Expanded(
+                      child: _TermFigure(
+                        label: l10n.deal_detail_total,
+                        value: CurrencyFormatters.formatCop(
+                          latestOffer.quantityKg *
+                              latestOffer.proposedPricePerKg,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Divider(height: 1, thickness: 1, color: context.appDivider),
+            _buildDeliveryRow(latestOffer, l10n),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDeliveryRow(NegotiationOfferModel offer, AppLocalizations l10n) {
+    final presentation = deliveryPresentation(l10n, offer.deliveryMethod);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      child: Row(
+        children: [
+          Icon(
+            presentation.icon,
+            size: AppDimensions.iconSM,
+            color: context.appTextSecondary,
+          ),
+          const SizedBox(width: AppDimensions.space12),
+          Text(
+            l10n.deal_detail_delivery_method,
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: context.appTextSecondary,
+            ),
+          ),
+          const SizedBox(width: AppDimensions.space12),
+          Expanded(
+            child: Text(
+              deliveryDisplayLabel(l10n, offer.deliveryMethod),
+              textAlign: TextAlign.right,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.titleSmall.copyWith(
+                color: context.appTextPrimary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Frosted bottom bar with the moves available to this user right now:
+  /// respond on their turn, or close an agreed deal.
+  Widget? _buildActionBar(NegotiationModel n, AppLocalizations l10n) {
+    final offers = _sortedOffers(n);
+    final latestOffer = offers.isNotEmpty ? offers.last : null;
+    final isActive =
+        n.status == NegotiationStatus.propuesta ||
+        n.status == NegotiationStatus.contraofertada;
+
+    if (n.status == NegotiationStatus.acordada) {
+      return _FrostedActionBar(
+        children: [
+          PrimaryActionButton(
+            onPressed: _isActionInProgress
+                ? null
+                : () => _completeNegotiation(n),
+            text: l10n.deal_complete_btn,
+          ),
+          const SizedBox(height: AppDimensions.space4),
+          SizedBox(
+            height: AppDimensions.minTouchTarget,
+            child: TextButton(
+              onPressed: _isActionInProgress ? null : () => _cancelOffer(n),
+              style: TextButton.styleFrom(
+                foregroundColor: context.appErrorText,
+              ),
+              child: Text(l10n.deal_cancel_agreed),
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (!isActive || !_isMyTurn) return null;
+
+    // Es mi turno: Aceptar, Contraofertar o Rechazar.
+    return _FrostedActionBar(
+      children: [
+        Row(
           children: [
-            Text(
-              n.crop?.title ?? l10n.deals_unknown_crop,
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: context.appTextPrimary,
+            Container(
+              width: 7,
+              height: 7,
+              decoration: BoxDecoration(
+                color: context.appPrimary,
+                shape: BoxShape.circle,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(width: AppDimensions.space8),
             Text(
-              counterpartLabel,
-              style: TextStyle(
+              l10n.deal_detail_your_turn_bar,
+              style: AppTextStyles.labelMedium.copyWith(
                 color: context.appTextSecondary,
-                fontSize: 13,
               ),
             ),
-            Text(
-              counterpartName,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: context.appTextPrimary,
-              ),
-            ),
-
-            Divider(
-              height: 32,
-              color: context.appDivider,
-            ),
-
-            if (latestOffer != null) ...[
-              _buildInfoRow(
-                l10n.deal_detail_quantity,
-                UnitFormatters.formatKg(latestOffer.quantityKg),
-                ),
-              const SizedBox(height: 10),
-              _buildInfoRow(
-                l10n.deal_detail_price_per_kg,
-                CurrencyFormatters.formatCop(latestOffer.proposedPricePerKg),
-                ),
-              const SizedBox(height: 10),
-              _buildInfoRow(
-                l10n.deal_detail_delivery_method,
-                latestOffer.deliveryMethod,
-                ),
-              Divider(
-                height: 32,
-                color: context.appDivider,
-              ),
-            ],
-
-            _buildInfoRow(
-              l10n.deal_detail_status,
-              n.status.toDisplayName(),
-              isStatus: true,
-              status: n.status,
-            ),
-
-            // SECCIÓN DE CONSENTIMIENTO Y CONTACTO CUANDO EL TRATO ESTÁ ACORDADO O COMPLETADO
-            if (n.status == NegotiationStatus.acordada ||
-                n.status == NegotiationStatus.completada) ...[
-              const SizedBox(height: 20),
-              _buildContactAndConsentSection(n, l10n),
-            ],
-
-            Divider(
-              height: 32,
-              color: context.appDivider,
-            ),
-
-            Text(
-              l10n.deal_history_title,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: context.appTextPrimary,
-              ),
-            ),
-            const SizedBox(height: 16),
-            ...offers.map((offer) => _buildOfferBubble(offer, n, l10n)),
-
-            const SizedBox(height: 24),
-
-            _buildActionButtons(n, latestOffer, l10n),
-
-            if (n.status == NegotiationStatus.completada) ...[
-              const SizedBox(height: 16),
-              Divider(
-                color: context.appDivider,
-              ),
-              const SizedBox(height: 16),
-              _buildRatingSection(n, l10n),
-            ],
-            const SizedBox(height: 32),
           ],
         ),
-      ),
+        const SizedBox(height: 10),
+        PrimaryActionButton(
+          onPressed: _isActionInProgress
+              ? null
+              : () => _acceptOffer(n, latestOffer),
+          text: l10n.deal_accept_offer,
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: SecondaryActionButton(
+                onPressed: (_isActionInProgress || latestOffer == null)
+                    ? null
+                    : () => _navigateToCounterOffer(n, latestOffer),
+                text: l10n.deal_counter_offer,
+                icon: LucideIcons.arrowLeftRight,
+                height: AppDimensions.buttonHeightMedium,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: SecondaryActionButton(
+                onPressed: _isActionInProgress ? null : () => _rejectOffer(n),
+                text: l10n.deal_reject_deal,
+                icon: LucideIcons.x,
+                tone: SecondaryActionTone.destructive,
+                height: AppDimensions.buttonHeightMedium,
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
   /// Sección de calificación postventa. Solo se muestra para tratos
   /// completados y deshabilita el formulario cuando ya existe una reseña del
   /// usuario autenticado.
-  Widget _buildRatingSection(
-    NegotiationModel n,
-    AppLocalizations l10n,
-  ) {
+  Widget _buildRatingSection(NegotiationModel n, AppLocalizations l10n) {
     final rateLabel = _isBuyer
         ? l10n.deal_detail_rate_farmer
         : l10n.deal_detail_rate_buyer;
-    final textPrimary = context.appTextPrimary;
-    final textSecondary = context.appTextSecondary;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: context.appSurface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: context.appBorder,
-        ),
-      ),
+    final Widget state;
+    if (_isLoadingReviewStatus) {
+      state = Row(
+        children: [
+          const CupertinoActivityIndicator(radius: 8),
+          const SizedBox(width: 10),
+          Text(
+            l10n.deal_detail_rate_loading,
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: context.appTextSecondary,
+            ),
+          ),
+        ],
+      );
+    } else if (_hasReviewed == true) {
+      state = StatusBanner(
+        tone: StatusTone.success,
+        icon: LucideIcons.badgeCheck,
+        title: l10n.deal_detail_rated,
+        message: l10n.deal_detail_rated_desc,
+      );
+    } else if (_reviewStatusError != null) {
+      state = Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            _reviewStatusError!,
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: context.appErrorText,
+            ),
+          ),
+          const SizedBox(height: AppDimensions.space12),
+          SecondaryActionButton(
+            onPressed: () => _loadReviewStatus(force: true),
+            text: l10n.common_retry,
+            icon: LucideIcons.refreshCw,
+            height: AppDimensions.buttonHeightMedium,
+          ),
+        ],
+      );
+    } else {
+      state = PrimaryActionButton(
+        onPressed: _hasReviewed == false ? () => _openRatingSheet(n) : null,
+        text: rateLabel,
+      );
+    }
+
+    return InsetGroupCard(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             children: [
-              Icon(
-                _hasReviewed == true
-                    ? Icons.star_rounded
-                    : Icons.star_outline_rounded,
-                color: context.appWarning,
-                size: 22,
+              IconSquircle(
+                icon: _hasReviewed == true
+                    ? CupertinoIcons.star_fill
+                    : CupertinoIcons.star,
+                triad: context.appWarningTriad,
+                size: 40,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppDimensions.space12),
               Expanded(
-                child: Text(
-                  l10n.deal_detail_rate_title,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: textPrimary,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.deal_detail_rate_title,
+                      style: AppTextStyles.titleMedium.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: context.appTextPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      l10n.deal_detail_rate_subtitle,
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: context.appTextSecondary,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          if (_isLoadingReviewStatus)
-            Row(
-              children: [
-                const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  l10n.deal_detail_rate_loading,
-                  style: TextStyle(fontSize: 13, color: textSecondary),
-                ),
-              ],
-            )
-          else if (_hasReviewed == true)
-            Row(
-              children: [
-                Icon(
-                  Icons.verified_rounded,
-                  color: context.appSuccess,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l10n.deal_detail_rated,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: context.appSuccess,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        l10n.deal_detail_rated_desc,
-                        style: TextStyle(fontSize: 13, color: textSecondary),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            )
-          else if (_reviewStatusError != null)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _reviewStatusError!,
-                  style: TextStyle(fontSize: 13, color: context.appError),
-                ),
-                const SizedBox(height: 8),
-                OutlinedButton.icon(
-                  onPressed: () => _loadReviewStatus(force: true),
-                  icon: const Icon(Icons.refresh, size: 18),
-                  label: Text(l10n.common_retry),
-                ),
-              ],
-            )
-          else
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.deal_detail_rate_subtitle,
-                  style: TextStyle(fontSize: 13, color: textSecondary),
-                ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: _hasReviewed == false
-                        ? () => _openRatingSheet(n)
-                        : null,
-                    icon: const Icon(Icons.star_outline),
-                    label: Text(rateLabel),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: context.appPrimary,
-                      foregroundColor: context.appOnPrimary,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          const SizedBox(height: AppDimensions.space16),
+          state,
         ],
       ),
     );
@@ -544,6 +766,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
     final submitted = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      showDragHandle: false,
       backgroundColor: AppColors.transparent,
       builder: (ctx) => _RatingSheet(
         counterpartLabel: _isBuyer
@@ -571,13 +794,10 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
       _reviewStatusError = null;
     });
     final l10n = AppLocalizations.of(context)!;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          l10n.deal_detail_rate_success,
-        ),
-        backgroundColor: context.appSuccess,
-      ),
+    showAppSnackBar(
+      context,
+      l10n.deal_detail_rate_success,
+      tone: StatusTone.success,
     );
   }
 
@@ -588,354 +808,199 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
         : message;
   }
 
-  /// Construye la tarjeta integral de contacto de la contraparte y configuración
-  /// de permisos propios para el trato acordado.
+  /// Tarjeta de contacto comercial liberado por la contraparte y acceso a los
+  /// permisos propios del trato acordado.
   Widget _buildContactAndConsentSection(
     NegotiationModel n,
     AppLocalizations l10n,
   ) {
     final contact = _contactInfo;
-    final counterpartTitle = _isBuyer
-        ? l10n.deal_detail_contact_farmer
-        : l10n.deal_detail_contact_buyer;
+    final isLoading = contact == null && _isLoadingContact;
+    final hasPhone = contact != null && contact.hasCounterpartPhone;
+    final hasLocation = contact != null && contact.hasCounterpartLocation;
+    final released = hasPhone || hasLocation;
+    final theCounterpart = _isBuyer
+        ? l10n.deal_detail_the_farmer
+        : l10n.deal_detail_the_buyer;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: context.appSurface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: context.appBorder,
+    final title = released
+        ? l10n.deal_detail_contact_released
+        : (_isBuyer
+              ? l10n.deal_detail_contact_farmer
+              : l10n.deal_detail_contact_buyer);
+
+    final rows = <Widget>[];
+
+    if (isLoading) {
+      rows.add(const _ContactSkeleton());
+    } else {
+      // 1. Teléfono / WhatsApp
+      if (hasPhone) {
+        rows.add(_buildPhoneBlock(contact.counterpartPhone!, l10n));
+      } else {
+        rows.add(
+          _LockedRow(
+            icon: LucideIcons.phoneOff,
+            text: l10n.deal_detail_contact_not_shared(theCounterpart),
+          ),
+        );
+      }
+
+      // 2. Ubicación física
+      if (hasLocation) {
+        final place = [
+          contact.counterpartMunicipality,
+          contact.counterpartDepartment,
+        ].whereType<String>().where((s) => s.trim().isNotEmpty).join(', ');
+        final hasCoordinates =
+            contact.counterpartLatitude != null &&
+            contact.counterpartLongitude != null;
+        rows.add(
+          InsetGroupRow(
+            leading: IconSquircle(
+              icon: LucideIcons.mapPin,
+              triad: context.appInfoTriad,
+              size: 30,
+            ),
+            title: place.isEmpty ? l10n.deal_detail_view_location : place,
+            subtitle: hasCoordinates
+                ? l10n.deal_detail_coordinates(
+                    contact.counterpartLatitude!.toStringAsFixed(6),
+                    contact.counterpartLongitude!.toStringAsFixed(6),
+                  )
+                : null,
+            onTap: () => _showLocationDialog(contact),
+          ),
+        );
+      } else {
+        rows.add(
+          _LockedRow(
+            icon: LucideIcons.mapPinOff,
+            text: l10n.deal_detail_location_not_shared(theCounterpart),
+          ),
+        );
+      }
+    }
+
+    // 3. Mis permisos configurados
+    final phoneStatus = contact?.mySharePhone == true
+        ? l10n.deal_detail_authorized
+        : l10n.deal_detail_private;
+    final locationStatus = contact?.myShareLocation == true
+        ? l10n.deal_detail_location_authorized_status
+        : l10n.deal_detail_location_private_status;
+    rows.add(
+      InsetGroupRow(
+        leading: IconSquircle(
+          icon: LucideIcons.shieldCheck,
+          triad: context.appBrandTriad,
+          size: 30,
         ),
+        title: l10n.deal_detail_my_permissions_title,
+        subtitle:
+            '${l10n.deal_detail_phone_permission(phoneStatus)} · '
+            '${l10n.deal_detail_location_permission(locationStatus)}',
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              l10n.deal_detail_modify,
+              style: AppTextStyles.labelMedium.copyWith(
+                color: context.appPrimary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(width: 2),
+            Icon(
+              CupertinoIcons.chevron_right,
+              size: 14,
+              color: context.appTextMuted,
+            ),
+          ],
+        ),
+        onTap: () => _showConsentBottomSheet(n),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(
+            left: AppDimensions.space4,
+            bottom: AppDimensions.space12,
+          ),
+          child: Row(
             children: [
               Icon(
-                Icons.verified_user_outlined,
-                color: context.appSuccess,
-                size: 22,
+                released ? LucideIcons.shieldCheck : LucideIcons.lockKeyhole,
+                size: 18,
+                color: released ? context.appSuccess : context.appTextSecondary,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppDimensions.space8),
               Expanded(
                 child: Text(
-                  counterpartTitle,
-                  style: TextStyle(
+                  title,
+                  style: AppTextStyles.titleMedium.copyWith(
                     fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w700,
                     color: context.appTextPrimary,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 14),
+        ),
+        InsetGroupSection(children: rows),
+      ],
+    );
+  }
 
-          // 1. TELÉFONO / WHATSAPP
-          if (contact != null && contact.hasCounterpartPhone) ...[
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: context.appSurfaceVariant,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: context.appSuccess.withValues(alpha: 0.3),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.phone,
-                        color: context.appSuccess,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        l10n.deal_detail_phone_whatsapp,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: context.appTextSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  SelectableText(
-                    contact.counterpartPhone!,
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
-                      color: context.appTextPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 6,
-                    children: [
-                      ActionChip(
-                        avatar: Icon(
-                          Icons.call,
-                          size: 16,
-                          color: context.appOverlayText,
-                        ),
-                        label: Text(l10n.deal_detail_call),
-                        backgroundColor: context.appSuccess,
-                        labelStyle: TextStyle(
-                          color: context.appOverlayText,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
-                        onPressed: () => _handleCall(contact.counterpartPhone!),
-                      ),
-                      ActionChip(
-                        avatar: Icon(
-                          Icons.chat_bubble_outline,
-                          size: 16,
-                          color: context.appOverlayText,
-                        ),
-                        label: Text(l10n.deal_detail_whatsapp),
-                        backgroundColor: AppColors.whatsapp,
-                        labelStyle: TextStyle(
-                          color: context.appOverlayText,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
-                        onPressed: () =>
-                            _handleWhatsApp(contact.counterpartPhone!),
-                      ),
-                      ActionChip(
-                        avatar: const Icon(Icons.copy, size: 16),
-                        label: Text(l10n.deal_detail_copy),
-                        onPressed: () => _copyToClipboard(
-                          contact.counterpartPhone!,
-                          l10n.deal_detail_phone,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+  /// Authorized phone in large tabular figures with Contacts-style actions
+  /// beneath it.
+  Widget _buildPhoneBlock(String phone, AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            l10n.deal_detail_phone_whatsapp.replaceAll(':', ''),
+            style: AppTextStyles.caption.copyWith(
+              color: context.appTextSecondary,
             ),
-          ] else ...[
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: context.appSurfaceVariant,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.phone_locked_outlined,
-                    color: context.appWarning,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      l10n.deal_detail_contact_not_shared(
-                        _isBuyer
-                            ? l10n.deal_detail_the_farmer
-                            : l10n.deal_detail_the_buyer,
-                      ),
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: context.appTextSecondary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-
-          const SizedBox(height: 12),
-
-          // 2. UBICACIÓN FÍSICA
-          if (contact != null && contact.hasCounterpartLocation) ...[
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: context.appSurfaceVariant,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: context.appInfo.withValues(alpha: 0.3),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.location_on,
-                        color: context.appInfo,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        l10n.deal_detail_location_authorized,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: context.appTextSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    '${contact.counterpartMunicipality ?? ""}${contact.counterpartMunicipality != null && contact.counterpartDepartment != null ? ", " : ""}${contact.counterpartDepartment ?? ""}',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: context.appTextPrimary,
-                    ),
-                  ),
-                  if (contact.counterpartLatitude != null &&
-                      contact.counterpartLongitude != null) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      l10n.deal_detail_coordinates(
-                        contact.counterpartLatitude!.toStringAsFixed(6),
-                        contact.counterpartLongitude!.toStringAsFixed(6),
-                      ),
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontFamily: 'monospace',
-                        color: context.appTextSecondary,
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 10),
-                  ActionChip(
-                    avatar: const Icon(Icons.map_outlined, size: 16),
-                    label: Text(l10n.deal_detail_view_location),
-                    onPressed: () => _showLocationDialog(contact),
-                  ),
-                ],
-              ),
-            ),
-          ] else ...[
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: context.appSurfaceVariant,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.location_off_outlined,
-                    color: context.appWarning,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      l10n.deal_detail_location_not_shared(
-                        _isBuyer
-                            ? l10n.deal_detail_the_farmer
-                            : l10n.deal_detail_the_buyer,
-                      ),
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: context.appTextSecondary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-
-          Divider(
-            height: 24,
-            color: context.appDivider,
           ),
-
-          // 3. MIS PERMISOS CONFIGURADOS
+          const SizedBox(height: 2),
+          SelectableText(
+            phone,
+            style: AppTextStyles.figureLarge.copyWith(
+              color: context.appTextPrimary,
+            ),
+          ),
+          const SizedBox(height: AppDimensions.space12),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.deal_detail_my_permissions,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                        color: context.appTextPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Wrap(
-                      spacing: 8,
-                      children: [
-                        Text(
-                          l10n.deal_detail_phone_permission(
-                            contact?.mySharePhone == true
-                                ? l10n.deal_detail_authorized
-                                : l10n.deal_detail_private,
-                          ),
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: contact?.mySharePhone == true
-                                ? context.appSuccess
-                                : context.appError,
-                          ),
-                        ),
-                        Text(
-                          '•',
-                          style: TextStyle(
-                            color: context.appTextDisabled,
-                          ),
-                        ),
-                        Text(
-                          l10n.deal_detail_location_permission(
-                            contact?.myShareLocation == true
-                                ? l10n.deal_detail_location_authorized_status
-                                : l10n.deal_detail_location_private_status,
-                          ),
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: contact?.myShareLocation == true
-                                ? context.appSuccess
-                                : context.appError,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                child: _ContactAction(
+                  icon: LucideIcons.phone,
+                  label: l10n.deal_detail_call,
+                  onTap: () => _handleCall(phone),
                 ),
               ),
-              OutlinedButton.icon(
-                onPressed: () => _showConsentBottomSheet(n),
-                icon: const Icon(Icons.security, size: 16),
-                label: Text(l10n.deal_detail_modify),
-                style: OutlinedButton.styleFrom(
-                  // El tema global define un ancho mínimo infinito para los
-                  // botones; dentro de un Row eso produce constraints
-                  // inválidas. Se limita el ancho para que el botón conviva
-                  // con el texto expandido de la izquierda.
-                  minimumSize: const Size(0, 40),
-                  visualDensity: VisualDensity.compact,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
+              const SizedBox(width: AppDimensions.space8),
+              Expanded(
+                child: _ContactAction(
+                  icon: LucideIcons.messageCircle,
+                  label: l10n.deal_detail_whatsapp,
+                  onTap: () => _handleWhatsApp(phone),
+                ),
+              ),
+              const SizedBox(width: AppDimensions.space8),
+              Expanded(
+                child: _ContactAction(
+                  icon: LucideIcons.copy,
+                  label: l10n.deal_detail_copy,
+                  onTap: () => _copyToClipboard(phone, l10n.deal_detail_phone),
                 ),
               ),
             ],
@@ -947,498 +1012,119 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
 
   void _copyToClipboard(String text, String label) {
     Clipboard.setData(ClipboardData(text: text));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(AppLocalizations.of(context)!.deal_detail_copied(label, text)),
-        backgroundColor: context.appSuccess,
-        duration: const Duration(seconds: 3),
-      ),
+    showAppSnackBar(
+      context,
+      AppLocalizations.of(context)!.deal_detail_copied(label, text),
+      tone: StatusTone.success,
     );
   }
 
   void _handleCall(String phone) {
     _copyToClipboard(phone, AppLocalizations.of(context)!.deal_detail_phone);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          AppLocalizations.of(context)!.deal_detail_phone_copied(phone),
-        ),
-        backgroundColor: context.appSuccess,
-        duration: const Duration(seconds: 4),
-      ),
+    showAppSnackBar(
+      context,
+      AppLocalizations.of(context)!.deal_detail_phone_copied(phone),
+      tone: StatusTone.success,
     );
   }
 
   void _handleWhatsApp(String phone) {
     _copyToClipboard(phone, AppLocalizations.of(context)!.deal_detail_whatsapp);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          AppLocalizations.of(context)!.deal_detail_whatsapp_copied(phone),
-        ),
-        backgroundColor: context.appSuccess,
-        duration: const Duration(seconds: 4),
-      ),
+    showAppSnackBar(
+      context,
+      AppLocalizations.of(context)!.deal_detail_whatsapp_copied(phone),
+      tone: StatusTone.success,
     );
   }
 
   void _showLocationDialog(NegotiationContactInfo contact) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.location_on, color: context.appSuccess),
-            const SizedBox(width: 8),
-            Text(AppLocalizations.of(ctx)!.deal_detail_location_authorized),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (contact.counterpartMunicipality != null ||
-                contact.counterpartDepartment != null) ...[
-              Text(
-                AppLocalizations.of(ctx)!.deal_detail_municipality_department,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: context.appTextSecondary,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                '${contact.counterpartMunicipality ?? ""}, ${contact.counterpartDepartment ?? ""}',
-                style: const TextStyle(fontSize: 16),
-              ),
-              const SizedBox(height: 12),
-            ],
-            if (contact.counterpartLatitude != null &&
-                contact.counterpartLongitude != null) ...[
-              Text(
-                AppLocalizations.of(ctx)!.deal_detail_geo_coordinates,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: context.appTextSecondary,
-                ),
-              ),
-              const SizedBox(height: 4),
-              SelectableText(
-                AppLocalizations.of(ctx)!.deal_detail_lat_lon(
-                  contact.counterpartLatitude!.toStringAsFixed(6),
-                  contact.counterpartLongitude!.toStringAsFixed(6),
-                ),
-                style: const TextStyle(fontSize: 15, fontFamily: 'monospace'),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                AppLocalizations.of(ctx)!.deal_detail_location_verified,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontStyle: FontStyle.italic,
-                  color: context.appTextDisabled,
-                ),
-              ),
-            ],
-          ],
-        ),
-        actions: [
-          if (contact.counterpartLatitude != null &&
-              contact.counterpartLongitude != null)
-            TextButton.icon(
-              onPressed: () {
-                final coords =
-                    '${contact.counterpartLatitude},${contact.counterpartLongitude}';
-                _copyToClipboard(coords, AppLocalizations.of(ctx)!.deal_detail_coordinates_label);
-                Navigator.pop(ctx);
-              },
-              icon: const Icon(Icons.copy),
-              label: Text(AppLocalizations.of(ctx)!.deal_detail_copy_coordinates),
-            ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(AppLocalizations.of(ctx)!.common_close),
+      builder: (ctx) {
+        final l10n = AppLocalizations.of(ctx)!;
+        final labelStyle = AppTextStyles.labelMedium.copyWith(
+          color: ctx.appTextSecondary,
+        );
+        final hasCoordinates =
+            contact.counterpartLatitude != null &&
+            contact.counterpartLongitude != null;
+
+        return AlertDialog(
+          icon: IconSquircle(
+            icon: LucideIcons.mapPin,
+            triad: ctx.appInfoTriad,
+            size: 48,
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(
-    String label,
-    String value,
-    {
-    bool isStatus = false,
-    NegotiationStatus? status,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: context.appTextSecondary,
-            fontSize: 15,
-          ),
-        ),
-        if (isStatus && status != null)
-          _buildStatusBadge(status)
-        else
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: context.appTextPrimary,
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildStatusBadge(NegotiationStatus status, ) {
-    Color color;
-    switch (status) {
-      case NegotiationStatus.propuesta:
-        color = context.appInfo;
-        break;
-      case NegotiationStatus.contraofertada:
-        color = context.appWarning;
-        break;
-      case NegotiationStatus.acordada:
-        color = context.appSuccess;
-        break;
-      case NegotiationStatus.completada:
-        color = context.appPrimary;
-        break;
-      case NegotiationStatus.rechazada:
-      case NegotiationStatus.cancelada:
-        color = context.appError;
-        break;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: context.appIsDark ? 0.2 : 0.12),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.4)),
-      ),
-      child: Text(
-        status.toDisplayName(),
-        style: TextStyle(
-          color: color,
-          fontSize: 13,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildOfferBubble(
-    NegotiationOfferModel offer,
-    NegotiationModel negotiation,
-    AppLocalizations l10n,
-  ) {
-    final user = Supabase.instance.client.auth.currentUser;
-    final isMe = offer.senderId == user?.id;
-
-    final senderLabel = isMe
-        ? l10n.deal_detail_you
-        : (_isBuyer
-              ? l10n.deal_counterpart_farmer
-              : l10n.deal_counterpart_buyer);
-
-    final primaryThemeColor = context.appPrimary;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: isMe
-              ? (context.appSurfaceVariant)
-              : (context.appSurface),
-          borderRadius: BorderRadius.circular(16).copyWith(
-            bottomRight: isMe
-                ? const Radius.circular(2)
-                : const Radius.circular(16),
-            bottomLeft: isMe
-                ? const Radius.circular(16)
-                : const Radius.circular(2),
-          ),
-          border: Border.all(
-            color: isMe
-                ? primaryThemeColor.withValues(alpha: 0.3)
-                : (context.appBorder),
-          ),
-        ),
-        width: MediaQuery.of(context).size.width * 0.78,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
+          title: Text(l10n.deal_detail_location_authorized.replaceAll(':', '')),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (contact.counterpartMunicipality != null ||
+                  contact.counterpartDepartment != null) ...[
                 Text(
-                  senderLabel,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: isMe
-                        ? primaryThemeColor
-                        : (context.appTextPrimary),
+                  l10n.deal_detail_municipality_department,
+                  style: labelStyle,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${contact.counterpartMunicipality ?? ""}, ${contact.counterpartDepartment ?? ""}',
+                  style: AppTextStyles.titleMedium.copyWith(
+                    color: ctx.appTextPrimary,
                   ),
                 ),
+                const SizedBox(height: 12),
+              ],
+              if (hasCoordinates) ...[
+                Text(l10n.deal_detail_geo_coordinates, style: labelStyle),
+                const SizedBox(height: 4),
+                SelectableText(
+                  l10n.deal_detail_lat_lon(
+                    contact.counterpartLatitude!.toStringAsFixed(6),
+                    contact.counterpartLongitude!.toStringAsFixed(6),
+                  ),
+                  style: AppTextStyles.figureSmall.copyWith(
+                    color: ctx.appTextPrimary,
+                  ),
+                ),
+                const SizedBox(height: 8),
                 Text(
-                  DateFormatters.formatOfferDateTime(offer.createdAt),
-                  style: TextStyle(
-                    color: context.appTextDisabled,
-                    fontSize: 11,
+                  l10n.deal_detail_location_verified,
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: ctx.appTextSecondary,
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              CurrencyFormatters.formatPricePerKg(offer.proposedPricePerKg),
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 15,
-                color: context.appTextPrimary,
-              ),
-            ),
-            Text(
-              UnitFormatters.formatKg(offer.quantityKg),
-              style: TextStyle(
-                color: context.appTextSecondary,
-              ),
-            ),
-            Text(
-              l10n.deal_detail_delivery(offer.deliveryMethod),
-              style: TextStyle(
-                color: context.appTextSecondary,
-              ),
-            ),
-            if (offer.message != null && offer.message!.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: context.appBackground,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  '"${offer.message}"',
-                  style: TextStyle(
-                    fontStyle: FontStyle.italic,
-                    fontSize: 13,
-                    color: context.appTextPrimary,
-                  ),
-                ),
-              ),
             ],
+          ),
+          actions: [
+            if (hasCoordinates)
+              TextButton.icon(
+                onPressed: () {
+                  final coords =
+                      '${contact.counterpartLatitude},${contact.counterpartLongitude}';
+                  _copyToClipboard(coords, l10n.deal_detail_coordinates_label);
+                  Navigator.pop(ctx);
+                },
+                icon: const Icon(LucideIcons.copy, size: 16),
+                label: Text(l10n.deal_detail_copy_coordinates),
+              ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l10n.common_close),
+            ),
           ],
-        ),
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildActionButtons(
-    NegotiationModel n,
-    NegotiationOfferModel? latestOffer,
-    AppLocalizations l10n,
-  ) {
-    if (n.status == NegotiationStatus.acordada) {
-      return Column(
-        children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: context.appSuccessContainer,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: context.appSuccess.withValues(alpha: 0.3),
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.handshake_outlined, color: context.appSuccess),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Text(
-                    l10n.deal_agreed_desc,
-                    style: TextStyle(
-                      color: context.appSuccess,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: _isActionInProgress
-                  ? null
-                  : () => _completeNegotiation(n),
-              icon: const Icon(Icons.check_circle_outline),
-              label: Text(
-                l10n.deal_complete_btn,
-              ),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                backgroundColor: context.appPrimary,
-                foregroundColor: context.appOnPrimary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: TextButton(
-              onPressed: _isActionInProgress ? null : () => _cancelOffer(n),
-              style: TextButton.styleFrom(
-                foregroundColor: context.appError,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-              ),
-              child: Text(l10n.deal_cancel_agreed),
-            ),
-          ),
-        ],
-      );
-    }
-
-    if (n.status == NegotiationStatus.completada ||
-        n.status == NegotiationStatus.rechazada ||
-        n.status == NegotiationStatus.cancelada) {
-      return const SizedBox.shrink();
-    }
-
-    // Si NO es mi turno, mostramos el aviso de espera
-    if (!_isMyTurn) {
-      final waitingMessage = _isBuyer
-          ? l10n.deal_waiting_farmer
-          : l10n.deal_waiting_buyer;
-
-      return Column(
-        children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: context.appWarningContainer,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: context.appWarning.withValues(alpha: 0.3),
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.hourglass_empty,
-                  color: context.appWarning,
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Text(
-                    waitingMessage,
-                    style: TextStyle(
-                      color: context.appWarning,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Si el comprador apenas envió propuesta y desea cancelar:
-          if (_isBuyer && n.status == NegotiationStatus.propuesta) ...[
-            const SizedBox(height: 12),
-            OutlinedButton(
-              onPressed: _isActionInProgress ? null : () => _cancelOffer(n),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: context.appError,
-                side: BorderSide(color: context.appError),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: Text(l10n.deal_cancel_deal),
-            ),
-          ],
-        ],
-      );
-    }
-
-    // SÍ es mi turno: Aceptar, Contraofertar o Rechazar
-    return Column(
-      children: [
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: _isActionInProgress
-                ? null
-                : () => _acceptOffer(n, latestOffer),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: context.appPrimary,
-              foregroundColor: context.appOnPrimary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: Text(
-              l10n.deal_accept_offer,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton(
-            onPressed: (_isActionInProgress || latestOffer == null)
-                ? null
-                : () => _navigateToCounterOffer(n, latestOffer),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: Text(
-              l10n.deal_counter_offer,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          width: double.infinity,
-          child: TextButton(
-            onPressed: _isActionInProgress ? null : () => _rejectOffer(n),
-            style: TextButton.styleFrom(
-              foregroundColor: context.appError,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-            ),
-            child: Text(
-              l10n.deal_reject_deal,
-              style: const TextStyle(fontSize: 16),
-            ),
-          ),
-        ),
-      ],
+  /// Small blocking indicator while a deal action reaches the server.
+  void _showProgressHud() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const _ProgressHud(),
     );
   }
 
@@ -1469,6 +1155,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      showDragHandle: false,
       backgroundColor: AppColors.transparent,
       builder: (ctx) => _AcceptOfferConsentSheet(
         negotiation: n,
@@ -1491,11 +1178,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
     _isActionInProgress = true;
     final l10n = AppLocalizations.of(context)!;
     try {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(child: CircularProgressIndicator()),
-      );
+      _showProgressHud();
 
       // 1. Aceptar oferta formalmente (RPC existente accept_negotiation que reserva inventario)
       await _service.acceptOffer(n.id);
@@ -1515,24 +1198,20 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
 
       if (mounted) {
         Navigator.pop(context); // pop loading dialog
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              l10n.deal_accept_success,
-            ),
-            backgroundColor: context.appSuccess,
-          ),
+        showAppSnackBar(
+          context,
+          l10n.deal_accept_success,
+          tone: StatusTone.success,
         );
         _loadData(reload: true);
       }
     } catch (e) {
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString().replaceFirst('Exception: ', '')),
-            backgroundColor: context.appError,
-          ),
+        showAppSnackBar(
+          context,
+          e.toString().replaceFirst('Exception: ', ''),
+          tone: StatusTone.error,
         );
       }
     } finally {
@@ -1554,6 +1233,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      showDragHandle: false,
       backgroundColor: AppColors.transparent,
       builder: (ctx) => _EditConsentSheet(
         initialSharePhone: currentPhone,
@@ -1562,11 +1242,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
         onSave: (sharePhone, shareLocation) async {
           Navigator.pop(ctx);
           try {
-            showDialog(
-              context: context,
-              barrierDismissible: false,
-              builder: (c) => const Center(child: CircularProgressIndicator()),
-            );
+            _showProgressHud();
 
             await _service.setNegotiationConsent(
               negotiationId: n.id,
@@ -1576,26 +1252,22 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
 
             if (mounted) {
               Navigator.pop(context); // pop loading
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(l10n.deal_detail_permissions_updated),
-                  backgroundColor: context.appSuccess,
-                ),
+              showAppSnackBar(
+                context,
+                l10n.deal_detail_permissions_updated,
+                tone: StatusTone.success,
               );
               _loadData(reload: true);
             }
           } catch (e) {
             if (mounted) {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    l10n.deal_detail_permissions_update_error(
-                      e.toString().replaceFirst('Exception: ', ''),
-                    ),
-                  ),
-                  backgroundColor: context.appError,
+              showAppSnackBar(
+                context,
+                l10n.deal_detail_permissions_update_error(
+                  e.toString().replaceFirst('Exception: ', ''),
                 ),
+                tone: StatusTone.error,
               );
             }
           }
@@ -1604,16 +1276,19 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
     );
   }
 
-  Future<void> _rejectOffer(NegotiationModel n) async {
-    if (_isActionInProgress) return;
+  /// Confirmation for a destructive or final deal action.
+  Future<bool?> _confirm({
+    required String title,
+    required String message,
+    required String confirmLabel,
+    bool destructive = true,
+  }) {
     final l10n = AppLocalizations.of(context)!;
-    final confirm = await showDialog<bool>(
+    return showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(l10n.deal_reject_confirm_title),
-        content: Text(
-          l10n.deal_reject_confirm_desc,
-        ),
+        title: Text(title),
+        content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -1622,50 +1297,54 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: context.appError,
-              foregroundColor: context.appOverlayText,
+              minimumSize: const Size(0, AppDimensions.buttonHeightMedium),
+              backgroundColor: destructive
+                  ? context.appError
+                  : context.appPrimary,
+              foregroundColor: destructive
+                  ? context.appOverlayText
+                  : context.appOnPrimary,
             ),
-            child: Text(l10n.deal_reject_deal),
+            child: Text(confirmLabel),
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _rejectOffer(NegotiationModel n) async {
+    if (_isActionInProgress) return;
+    final l10n = AppLocalizations.of(context)!;
+    final confirm = await _confirm(
+      title: l10n.deal_reject_confirm_title,
+      message: l10n.deal_reject_confirm_desc,
+      confirmLabel: l10n.deal_reject_deal,
     );
 
     if (confirm != true) return;
 
     _isActionInProgress = true;
     try {
-      if (mounted) {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) =>
-              const Center(child: CircularProgressIndicator()),
-        );
-      }
+      if (mounted) _showProgressHud();
 
       await _service.rejectOffer(n.id);
 
       if (mounted) {
         Navigator.pop(context); // pop loading
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              l10n.deal_reject_success,
-            ),
-            backgroundColor: context.appError,
-          ),
+        showAppSnackBar(
+          context,
+          l10n.deal_reject_success,
+          tone: StatusTone.error,
         );
         _loadData(reload: true);
       }
     } catch (e) {
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString().replaceFirst('Exception: ', '')),
-            backgroundColor: context.appError,
-          ),
+        showAppSnackBar(
+          context,
+          e.toString().replaceFirst('Exception: ', ''),
+          tone: StatusTone.error,
         );
       }
     } finally {
@@ -1683,77 +1362,42 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
     if (_isActionInProgress) return;
     final l10n = AppLocalizations.of(context)!;
     final isAgreed = n.status == NegotiationStatus.acordada;
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          isAgreed
-              ? l10n.deal_detail_cancel_confirm_title
-              : l10n.deal_detail_cancel_proposal_title,
-        ),
-        content: Text(
-          isAgreed
-              ? l10n.deal_detail_cancel_confirm_desc
-              : l10n.deal_detail_cancel_proposal_desc,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.profile_cancel),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: context.appError,
-              foregroundColor: context.appOverlayText,
-            ),
-            child: Text(
-              isAgreed
-                  ? (l10n.deal_cancel_agreed)
-                  : (l10n.deal_cancel_deal),
-            ),
-          ),
-        ],
-      ),
+    final confirm = await _confirm(
+      title: isAgreed
+          ? l10n.deal_detail_cancel_confirm_title
+          : l10n.deal_detail_cancel_proposal_title,
+      message: isAgreed
+          ? l10n.deal_detail_cancel_confirm_desc
+          : l10n.deal_detail_cancel_proposal_desc,
+      confirmLabel: isAgreed ? l10n.deal_cancel_agreed : l10n.deal_cancel_deal,
     );
 
     if (confirm != true) return;
 
     _isActionInProgress = true;
     try {
-      if (mounted) {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) =>
-              const Center(child: CircularProgressIndicator()),
-        );
-      }
+      if (mounted) _showProgressHud();
 
       await _service.cancelOffer(n.id);
 
       if (mounted) {
         Navigator.pop(context); // pop loading
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              isAgreed
-                  ? l10n.deal_detail_cancelled_success
-                  : l10n.deal_detail_proposal_cancelled_success,
-            ),
-            backgroundColor: context.appError,
-          ),
+        showAppSnackBar(
+          context,
+          isAgreed
+              ? l10n.deal_detail_cancelled_success
+              : l10n.deal_detail_proposal_cancelled_success,
+          tone: StatusTone.error,
         );
         _loadData(reload: true);
       }
     } catch (e) {
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString().replaceFirst('Exception: ', '')),
-            backgroundColor: context.appError,
-          ),
+        showAppSnackBar(
+          context,
+          e.toString().replaceFirst('Exception: ', ''),
+          tone: StatusTone.error,
         );
       }
     } finally {
@@ -1770,67 +1414,37 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
   Future<void> _completeNegotiation(NegotiationModel n) async {
     if (_isActionInProgress) return;
     final l10n = AppLocalizations.of(context)!;
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          l10n.deal_detail_complete_confirm_title,
-        ),
-        content: Text(
-          l10n.deal_detail_complete_confirm_desc,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.profile_cancel),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: context.appSuccess,
-              foregroundColor: context.appOverlayText,
-            ),
-            child: Text(l10n.deal_detail_complete),
-          ),
-        ],
-      ),
+    final confirm = await _confirm(
+      title: l10n.deal_detail_complete_confirm_title,
+      message: l10n.deal_detail_complete_confirm_desc,
+      confirmLabel: l10n.deal_detail_complete,
+      destructive: false,
     );
 
     if (confirm != true) return;
 
     _isActionInProgress = true;
     try {
-      if (mounted) {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) =>
-              const Center(child: CircularProgressIndicator()),
-        );
-      }
+      if (mounted) _showProgressHud();
 
       await _service.completeNegotiation(n.id);
 
       if (mounted) {
         Navigator.pop(context); // pop loading
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              l10n.deal_detail_completed,
-            ),
-            backgroundColor: context.appSuccess,
-          ),
+        showAppSnackBar(
+          context,
+          l10n.deal_detail_completed,
+          tone: StatusTone.success,
         );
         _loadData(reload: true);
       }
     } catch (e) {
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString().replaceFirst('Exception: ', '')),
-            backgroundColor: context.appError,
-          ),
+        showAppSnackBar(
+          context,
+          e.toString().replaceFirst('Exception: ', ''),
+          tone: StatusTone.error,
         );
       }
     } finally {
@@ -1842,6 +1456,439 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
         _isActionInProgress = false;
       }
     }
+  }
+}
+
+/// One term of the deal: a small label over its tabular figure.
+class _TermFigure extends StatelessWidget {
+  final String label;
+  final String value;
+  final bool emphasized;
+
+  const _TermFigure({
+    required this.label,
+    required this.value,
+    this.emphasized = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: AppTextStyles.caption.copyWith(
+            color: context.appTextSecondary,
+          ),
+        ),
+        const SizedBox(height: 2),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            value,
+            style: AppTextStyles.figureMedium.copyWith(
+              fontSize: 16,
+              color: emphasized ? context.appPrimary : context.appTextPrimary,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// One offer in the negotiation thread, iMessage style: the user's own
+/// offers sit right on the brand soft tone, the other party's sit left on
+/// the surface. The price per kg leads in large tabular figures; the move
+/// against the previous offer is spelled out beneath it.
+class _OfferBubble extends StatelessWidget {
+  final NegotiationOfferModel offer;
+  final NegotiationOfferModel? previous;
+  final bool isMine;
+  final String senderLabel;
+
+  const _OfferBubble({
+    required this.offer,
+    required this.previous,
+    required this.isMine,
+    required this.senderLabel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final brand = context.appBrandTriad;
+    final ink = context.appTextPrimary;
+    // Secondary text on the brand bubble is tinted from its hue, never grey.
+    final soft = isMine ? brand.foreground : context.appTextSecondary;
+    final delivery = deliveryPresentation(l10n, offer.deliveryMethod);
+    final subtotal = offer.quantityKg * offer.proposedPricePerKg;
+
+    const big = Radius.circular(20);
+    const tail = Radius.circular(6);
+
+    String? delta;
+    IconData? deltaIcon;
+    if (previous != null) {
+      final diff = offer.proposedPricePerKg - previous!.proposedPricePerKg;
+      if (diff == 0) {
+        delta = l10n.deal_detail_same_price;
+        deltaIcon = LucideIcons.equal;
+      } else {
+        final sign = diff > 0 ? '+' : '−';
+        delta = l10n.deal_detail_vs_previous(
+          '$sign${CurrencyFormatters.formatCop(diff.abs())}',
+        );
+        deltaIcon = diff > 0
+            ? LucideIcons.trendingUp
+            : LucideIcons.trendingDown;
+      }
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppDimensions.space12),
+      child: Align(
+        alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.sizeOf(context).width * 0.8,
+          ),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+            decoration: BoxDecoration(
+              color: isMine ? brand.background : context.appSurface,
+              borderRadius: BorderRadius.only(
+                topLeft: big,
+                topRight: big,
+                bottomLeft: isMine ? big : tail,
+                bottomRight: isMine ? tail : big,
+              ),
+              border: Border.all(
+                color: isMine ? brand.border : context.appBorder,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      senderLabel,
+                      style: AppTextStyles.labelMedium.copyWith(
+                        color: isMine ? brand.foreground : ink,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(width: AppDimensions.space12),
+                    Text(
+                      DateFormatters.formatOfferDateTime(offer.createdAt),
+                      style: AppTextStyles.caption.copyWith(
+                        color: soft,
+                        fontFeatures: AppTextStyles.tabularFigures,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppDimensions.space8),
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: CurrencyFormatters.formatCop(
+                          offer.proposedPricePerKg,
+                        ),
+                        style: AppTextStyles.figureLarge.copyWith(
+                          fontSize: 24,
+                          color: ink,
+                        ),
+                      ),
+                      TextSpan(
+                        text: ' /kg',
+                        style: AppTextStyles.bodySmall.copyWith(color: soft),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text.rich(
+                  TextSpan(
+                    style: AppTextStyles.figureSmall.copyWith(color: soft),
+                    children: [
+                      TextSpan(text: UnitFormatters.formatKg(offer.quantityKg)),
+                      const TextSpan(text: '  ·  '),
+                      TextSpan(text: '${l10n.deal_detail_total} '),
+                      TextSpan(
+                        text: CurrencyFormatters.formatCop(subtotal),
+                        style: TextStyle(
+                          color: ink,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (delta != null) ...[
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(deltaIcon, size: 13, color: soft),
+                      const SizedBox(width: 5),
+                      Flexible(
+                        child: Text(
+                          delta,
+                          style: AppTextStyles.caption.copyWith(
+                            color: soft,
+                            fontFeatures: AppTextStyles.tabularFigures,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: AppDimensions.space8),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(delivery.icon, size: 14, color: soft),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        l10n.deal_detail_delivery(
+                          deliveryDisplayLabel(l10n, offer.deliveryMethod),
+                        ),
+                        style: AppTextStyles.bodySmall.copyWith(color: soft),
+                      ),
+                    ),
+                  ],
+                ),
+                if (offer.message != null && offer.message!.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 9,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isMine
+                          ? context.appSurface
+                          : context.appSurfaceVariant,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      offer.message!,
+                      style: AppTextStyles.bodyMedium.copyWith(color: ink),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Closes the thread while the other party holds the turn.
+class _WaitingBubble extends StatelessWidget {
+  final String message;
+
+  const _WaitingBubble({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    const big = Radius.circular(20);
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+        decoration: BoxDecoration(
+          color: context.appSurfaceVariant,
+          borderRadius: const BorderRadius.only(
+            topLeft: big,
+            topRight: big,
+            bottomRight: big,
+            bottomLeft: Radius.circular(6),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              LucideIcons.hourglass,
+              size: 15,
+              color: context.appTextSecondary,
+            ),
+            const SizedBox(width: AppDimensions.space8),
+            Flexible(
+              child: Text(
+                message,
+                style: AppTextStyles.labelMedium.copyWith(
+                  color: context.appTextSecondary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Translucent bar pinned above the home indicator. The blur is the iOS
+/// bar material: the thread stays faintly visible as it scrolls beneath,
+/// while a 90% surface fill keeps every label at full contrast.
+class _FrostedActionBar extends StatelessWidget {
+  final List<Widget> children;
+
+  const _FrostedActionBar({required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: context.appSurface.withValues(alpha: 0.9),
+            border: Border(top: BorderSide(color: context.appDivider)),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: children,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Contacts-style action tile: icon over a short label.
+class _ContactAction extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _ContactAction({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return PressableScale(
+      child: Material(
+        color: context.appSurfaceVariant,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Column(
+              children: [
+                Icon(icon, size: 20, color: context.appPrimary),
+                const SizedBox(height: 4),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.labelMedium.copyWith(
+                    color: context.appPrimary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A contact detail the other party has kept private.
+class _LockedRow extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const _LockedRow({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return InsetGroupRow(
+      leading: IconSquircle(
+        icon: icon,
+        triad: context.appNeutralTriad,
+        size: 30,
+      ),
+      title: text,
+    );
+  }
+}
+
+/// Placeholder rows while the authorized contact loads.
+class _ContactSkeleton extends StatelessWidget {
+  const _ContactSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: AppShimmer(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            AppSkeletonBlock(width: 120, height: 10),
+            SizedBox(height: 8),
+            AppSkeletonBlock(width: 180, height: 22),
+            SizedBox(height: 14),
+            AppSkeletonBlock(height: 56, radius: 14),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Compact iOS progress HUD shown while a deal action is in flight.
+class _ProgressHud extends StatelessWidget {
+  const _ProgressHud();
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      canPop: false,
+      child: Center(
+        child: Container(
+          width: 84,
+          height: 84,
+          decoration: BoxDecoration(
+            color: context.appSurface,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: context.appBorder),
+          ),
+          child: const CupertinoActivityIndicator(radius: 13),
+        ),
+      ),
+    );
   }
 }
 
@@ -1860,6 +1907,7 @@ class _RatingSheet extends StatefulWidget {
 class _RatingSheetState extends State<_RatingSheet> {
   final TextEditingController _commentController = TextEditingController();
   int _rating = 0;
+  int _previousRating = 0;
   bool _isSubmitting = false;
   String? _errorMessage;
 
@@ -1867,6 +1915,15 @@ class _RatingSheetState extends State<_RatingSheet> {
   void dispose() {
     _commentController.dispose();
     super.dispose();
+  }
+
+  void _select(int value) {
+    if (_isSubmitting || value == _rating) return;
+    HapticFeedback.selectionClick();
+    setState(() {
+      _previousRating = _rating;
+      _rating = value;
+    });
   }
 
   Future<void> _submit() async {
@@ -1891,174 +1948,352 @@ class _RatingSheetState extends State<_RatingSheet> {
         _isSubmitting = false;
         _errorMessage = readable;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(readable), backgroundColor: context.appError),
-      );
     }
   }
+
+  String _ratingLabel(AppLocalizations l10n) => switch (_rating) {
+    1 => l10n.deal_rating_label_1,
+    2 => l10n.deal_rating_label_2,
+    3 => l10n.deal_rating_label_3,
+    4 => l10n.deal_rating_label_4,
+    _ => l10n.deal_rating_label_5,
+  };
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final textPrimary = context.appTextPrimary;
-    final textSecondary = context.appTextSecondary;
+    final canSubmit = _rating >= 1 && _rating <= 5 && !_isSubmitting;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: context.appBackground,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      padding: EdgeInsets.only(
-        top: 24,
-        left: 20,
-        right: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-      ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: context.appDivider,
-                  borderRadius: BorderRadius.circular(2),
+    return AppSheetFrame(
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SizedBox(height: AppDimensions.space8),
+          Center(
+            child: IconSquircle(
+              icon: LucideIcons.handshake,
+              triad: context.appWarningTriad,
+              size: 60,
+            ),
+          ),
+          const SizedBox(height: AppDimensions.space16),
+          Text(
+            l10n.deal_detail_rate_title,
+            textAlign: TextAlign.center,
+            style: AppTextStyles.headlineMedium.copyWith(
+              fontSize: 22,
+              color: context.appTextPrimary,
+            ),
+          ),
+          const SizedBox(height: AppDimensions.space4),
+          Text(
+            l10n.deal_detail_rate_subtitle,
+            textAlign: TextAlign.center,
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: context.appTextSecondary,
+            ),
+          ),
+          const SizedBox(height: AppDimensions.space12),
+          Center(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+              decoration: BoxDecoration(
+                color: context.appSurfaceVariant,
+                borderRadius: AppDimensions.borderRadiusFull,
+              ),
+              child: Text(
+                '${l10n.deal_detail_rate_target}: ${widget.counterpartLabel}',
+                style: AppTextStyles.labelMedium.copyWith(
+                  color: context.appTextPrimary,
                 ),
               ),
             ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Icon(
-                  Icons.star_rounded,
-                  color: context.appWarning,
-                  size: 28,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    l10n.deal_detail_rate_title,
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: textPrimary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '${l10n.deal_detail_rate_subtitle}\n'
-              '${l10n.deal_detail_rate_target}: ${widget.counterpartLabel}',
-              style: TextStyle(fontSize: 14, color: textSecondary),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              l10n.deal_detail_rate_stars_label,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: textPrimary,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.start,
+          ),
+          const SizedBox(height: AppDimensions.space20),
+          Semantics(
+            label: l10n.deal_detail_rate_stars_label,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(5, (index) {
                 final value = index + 1;
-                return IconButton(
+                final newlyFilled = value > _previousRating && value <= _rating;
+                return _RatingStar(
                   key: ValueKey('rating_star_$value'),
-                  tooltip: '$value',
-                  onPressed: _isSubmitting
-                      ? null
-                      : () => setState(() => _rating = value),
-                  iconSize: 38,
-                  color: context.appWarning,
-                  icon: Icon(
-                    value <= _rating
-                        ? Icons.star_rounded
-                        : Icons.star_outline_rounded,
-                  ),
+                  value: value,
+                  filled: value <= _rating,
+                  popDelay: newlyFilled
+                      ? const Duration(milliseconds: 40) *
+                            (value - _previousRating - 1)
+                      : Duration.zero,
+                  enabled: !_isSubmitting,
+                  onTap: () => _select(value),
                 );
               }),
             ),
-            if (_rating == 0)
-              Text(
-                l10n.deal_detail_rate_stars_required,
-                style: TextStyle(fontSize: 12, color: textSecondary),
-              ),
-            const SizedBox(height: 16),
-            Text(
-              l10n.deal_detail_rate_comment_label,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: textPrimary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              key: const ValueKey('rating_comment_field'),
-              controller: _commentController,
-              enabled: !_isSubmitting,
-              maxLines: 3,
-              maxLength: 500,
-              textInputAction: TextInputAction.newline,
-              decoration: InputDecoration(
-                hintText: l10n.deal_detail_rate_comment_hint,
-                hintStyle: TextStyle(fontSize: 14, color: textSecondary),
-                filled: true,
-                fillColor: context.appSurface,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-            if (_errorMessage != null) ...[
-              const SizedBox(height: 4),
-              Text(
-                _errorMessage!,
-                style: TextStyle(fontSize: 13, color: context.appError),
-              ),
-            ],
-            const SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                key: const ValueKey('rating_submit_button'),
-                onPressed: (_rating >= 1 && _rating <= 5 && !_isSubmitting)
-                    ? _submit
-                    : null,
-                icon: _isSubmitting
-                    ? SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: context.appOverlayText,
-                        ),
+          ),
+          const SizedBox(height: AppDimensions.space4),
+          SizedBox(
+            height: 20,
+            child: AnimatedSwitcher(
+              duration: AppMotion.of(context, AppMotion.quick),
+              switchInCurve: AppMotion.easeOut,
+              switchOutCurve: AppMotion.easeOut,
+              child: Text(
+                _rating == 0
+                    ? l10n.deal_detail_rate_stars_required
+                    : _ratingLabel(l10n),
+                key: ValueKey(_rating),
+                textAlign: TextAlign.center,
+                style: _rating == 0
+                    ? AppTextStyles.bodySmall.copyWith(
+                        color: context.appTextSecondary,
                       )
-                    : const Icon(Icons.send),
-                label: Text(
-                  l10n.deal_detail_rate_submit,
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: context.appPrimary,
-                  foregroundColor: context.appOnPrimary,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    : AppTextStyles.titleSmall.copyWith(
+                        color: context.appWarningText,
+                        fontWeight: FontWeight.w700,
+                      ),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppDimensions.space20),
+          CustomTextField(
+            key: const ValueKey('rating_comment_field'),
+            label: l10n.deal_detail_rate_comment_label,
+            hint: l10n.deal_detail_rate_comment_hint,
+            icon: LucideIcons.messageSquareText,
+            controller: _commentController,
+            isRequired: false,
+            enabled: !_isSubmitting,
+            maxLines: 3,
+            maxLength: 500,
+            keyboardType: TextInputType.multiline,
+            textInputAction: TextInputAction.newline,
+            textCapitalization: TextCapitalization.sentences,
+          ),
+          if (_errorMessage != null) ...[
+            const SizedBox(height: AppDimensions.space8),
+            StatusBanner(tone: StatusTone.error, message: _errorMessage!),
+          ],
+        ],
+      ),
+      footer: ElevatedButton(
+        key: const ValueKey('rating_submit_button'),
+        onPressed: canSubmit ? _submit : null,
+        child: _isSubmitting
+            ? CupertinoActivityIndicator(color: context.appTextMuted)
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(LucideIcons.send, size: 18),
+                  const SizedBox(width: AppDimensions.space8),
+                  Text(l10n.deal_detail_rate_submit),
+                ],
+              ),
+      ),
+    );
+  }
+}
+
+/// One star of the rating row. When it becomes filled it pops (1 → 1.22 →
+/// 1) after [popDelay], so a multi-star pick sweeps left to right. The
+/// delay lives inside the animation timeline, never in a timer.
+class _RatingStar extends StatefulWidget {
+  final int value;
+  final bool filled;
+  final Duration popDelay;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  const _RatingStar({
+    super.key,
+    required this.value,
+    required this.filled,
+    required this.popDelay,
+    required this.enabled,
+    required this.onTap,
+  });
+
+  @override
+  State<_RatingStar> createState() => _RatingStarState();
+}
+
+class _RatingStarState extends State<_RatingStar>
+    with SingleTickerProviderStateMixin {
+  static const Duration _pop = Duration(milliseconds: 260);
+
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: _pop,
+    value: 1,
+  );
+  Duration _delay = Duration.zero;
+
+  @override
+  void didUpdateWidget(covariant _RatingStar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!oldWidget.filled && widget.filled && !AppMotion.reduced(context)) {
+      _delay = widget.popDelay;
+      _controller.duration = _delay + _pop;
+      _controller.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  double _scaleAt(double progress) {
+    final total = _controller.duration!.inMicroseconds;
+    final start = total == 0 ? 0.0 : _delay.inMicroseconds / total;
+    if (progress <= start) return 1;
+    final t = ((progress - start) / (1 - start)).clamp(0.0, 1.0);
+    if (t < 0.4) {
+      return 1 + 0.22 * AppMotion.easeOut.transform(t / 0.4);
+    }
+    return 1.22 - 0.22 * Curves.easeInOut.transform((t - 0.4) / 0.6);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = widget.filled ? context.appWarning : context.appTextMuted;
+
+    return Semantics(
+      button: true,
+      selected: widget.filled,
+      label: '${widget.value}',
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: widget.enabled ? widget.onTap : null,
+        child: SizedBox.square(
+          dimension: 54,
+          child: AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) => Transform.scale(
+              scale: _scaleAt(_controller.value),
+              child: child,
+            ),
+            child: Icon(
+              widget.filled ? CupertinoIcons.star_fill : CupertinoIcons.star,
+              size: 40,
+              color: color,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Shared anatomy of the two consent sheets: shield header, the two
+/// sharing switches as an iOS grouped list, and the privacy note.
+class _ConsentBody extends StatelessWidget {
+  final String title;
+  final String description;
+  final Widget? summary;
+  final bool isBuyer;
+  final bool sharePhone;
+  final bool shareLocation;
+  final String phoneDescription;
+  final String locationDescription;
+  final ValueChanged<bool> onPhoneChanged;
+  final ValueChanged<bool> onLocationChanged;
+
+  const _ConsentBody({
+    required this.title,
+    required this.description,
+    this.summary,
+    required this.isBuyer,
+    required this.sharePhone,
+    required this.shareLocation,
+    required this.phoneDescription,
+    required this.locationDescription,
+    required this.onPhoneChanged,
+    required this.onLocationChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    Widget toggle(bool value, ValueChanged<bool> onChanged) => CupertinoSwitch(
+      value: value,
+      onChanged: (next) {
+        HapticFeedback.selectionClick();
+        onChanged(next);
+      },
+      activeTrackColor: context.appPrimary,
+    );
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            IconSquircle(
+              icon: LucideIcons.shieldCheck,
+              triad: context.appBrandTriad,
+              size: 48,
+            ),
+            const SizedBox(width: AppDimensions.space12),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text(
+                  title,
+                  style: AppTextStyles.headlineMedium.copyWith(
+                    fontSize: 20,
+                    color: context.appTextPrimary,
                   ),
                 ),
               ),
             ),
           ],
         ),
-      ),
+        const SizedBox(height: AppDimensions.space12),
+        Text(
+          description,
+          style: AppTextStyles.bodyMedium.copyWith(
+            color: context.appTextSecondary,
+          ),
+        ),
+        if (summary != null) ...[
+          const SizedBox(height: AppDimensions.space16),
+          summary!,
+        ],
+        const SizedBox(height: AppDimensions.space20),
+        InsetGroupSection(
+          footer: l10n.deal_detail_privacy_note,
+          children: [
+            InsetGroupRow(
+              leading: IconSquircle(
+                icon: LucideIcons.messageCircle,
+                triad: context.appSuccessTriad,
+                size: 30,
+              ),
+              title: l10n.deal_detail_share_phone,
+              subtitle: phoneDescription,
+              trailing: toggle(sharePhone, onPhoneChanged),
+            ),
+            InsetGroupRow(
+              leading: IconSquircle(
+                icon: LucideIcons.mapPin,
+                triad: context.appInfoTriad,
+                size: 30,
+              ),
+              title: isBuyer
+                  ? l10n.deal_detail_share_location
+                  : l10n.deal_detail_share_farm_location,
+              subtitle: locationDescription,
+              trailing: toggle(shareLocation, onLocationChanged),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -2089,142 +2324,87 @@ class _AcceptOfferConsentSheetState extends State<_AcceptOfferConsentSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final offer = widget.latestOffer;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: context.appBackground,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+    return AppSheetFrame(
+      body: _ConsentBody(
+        title: l10n.deal_detail_accept_terms_title,
+        description: l10n.deal_detail_accept_terms_desc,
+        summary: offer == null ? null : _AcceptedTermsStrip(offer: offer),
+        isBuyer: widget.isBuyer,
+        sharePhone: _sharePhone,
+        shareLocation: _shareLocation,
+        phoneDescription: l10n.deal_detail_share_phone_desc,
+        locationDescription: l10n.deal_detail_share_location_desc,
+        onPhoneChanged: (val) => setState(() => _sharePhone = val),
+        onLocationChanged: (val) => setState(() => _shareLocation = val),
       ),
-      padding: EdgeInsets.only(
-        top: 24,
-        left: 20,
-        right: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+      footer: Row(
         children: [
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: context.appDivider,
-                borderRadius: BorderRadius.circular(2),
-              ),
+          Expanded(
+            flex: 2,
+            child: SecondaryActionButton(
+              onPressed: () => Navigator.pop(context),
+              text: l10n.common_cancel,
             ),
           ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Icon(
-                Icons.handshake_outlined,
-                color: context.appSuccess,
-                size: 28,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  l10n.deal_detail_accept_terms_title,
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: context.appTextPrimary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            l10n.deal_detail_accept_terms_desc,
-            style: TextStyle(
-              fontSize: 14,
-              color: context.appTextSecondary,
+          const SizedBox(width: AppDimensions.space12),
+          Expanded(
+            flex: 3,
+            child: PrimaryActionButton(
+              onPressed: () => widget.onConfirm(_sharePhone, _shareLocation),
+              text: l10n.deal_detail_confirm_agreement,
             ),
-          ),
-          const SizedBox(height: 16),
-          Container(
-            decoration: BoxDecoration(
-              color: context.appSurface,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: context.appBorder,
-              ),
-            ),
-            child: Column(
-              children: [
-                SwitchListTile.adaptive(
-                  value: _sharePhone,
-                  onChanged: (val) => setState(() => _sharePhone = val),
-                  title: Text(
-                    l10n.deal_detail_share_phone,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  subtitle: Text(
-                    l10n.deal_detail_share_phone_desc,
-                  ),
-                  activeThumbColor: context.appSuccess,
-                ),
-                Divider(
-                  height: 1,
-                  color: context.appDivider,
-                ),
-                SwitchListTile.adaptive(
-                  value: _shareLocation,
-                  onChanged: (val) => setState(() => _shareLocation = val),
-                  title: Text(
-                    widget.isBuyer
-                        ? l10n.deal_detail_share_location
-                        : l10n.deal_detail_share_farm_location,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  subtitle: Text(
-                    l10n.deal_detail_share_location_desc,
-                  ),
-                  activeThumbColor: context.appSuccess,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: Text(l10n.common_cancel),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () =>
-                      widget.onConfirm(_sharePhone, _shareLocation),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    backgroundColor: context.appPrimary,
-                    foregroundColor: context.appOnPrimary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: Text(
-                    l10n.deal_detail_confirm_agreement,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-            ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// The terms being accepted, restated before the user commits.
+class _AcceptedTermsStrip extends StatelessWidget {
+  final NegotiationOfferModel offer;
+
+  const _AcceptedTermsStrip({required this.offer});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: context.appSurfaceVariant,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            Expanded(
+              child: _TermFigure(
+                label: l10n.deal_detail_price_per_kg,
+                value: CurrencyFormatters.formatCop(offer.proposedPricePerKg),
+                emphasized: true,
+              ),
+            ),
+            VerticalDivider(width: 20, color: context.appBorder),
+            Expanded(
+              child: _TermFigure(
+                label: l10n.deal_detail_quantity,
+                value: UnitFormatters.formatKg(offer.quantityKg),
+              ),
+            ),
+            VerticalDivider(width: 20, color: context.appBorder),
+            Expanded(
+              child: _TermFigure(
+                label: l10n.deal_detail_total,
+                value: CurrencyFormatters.formatCop(
+                  offer.quantityKg * offer.proposedPricePerKg,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -2264,134 +2444,34 @@ class _EditConsentSheetState extends State<_EditConsentSheet> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: context.appBackground,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+    return AppSheetFrame(
+      body: _ConsentBody(
+        title: l10n.deal_detail_my_permissions_title,
+        description: l10n.deal_detail_my_permissions_desc,
+        isBuyer: widget.isBuyer,
+        sharePhone: _sharePhone,
+        shareLocation: _shareLocation,
+        phoneDescription: l10n.deal_detail_share_phone_desc_permission,
+        locationDescription: l10n.deal_detail_share_location_desc_permission,
+        onPhoneChanged: (val) => setState(() => _sharePhone = val),
+        onLocationChanged: (val) => setState(() => _shareLocation = val),
       ),
-      padding: EdgeInsets.only(
-        top: 24,
-        left: 20,
-        right: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+      footer: Row(
         children: [
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: context.appDivider,
-                borderRadius: BorderRadius.circular(2),
-              ),
+          Expanded(
+            flex: 2,
+            child: SecondaryActionButton(
+              onPressed: () => Navigator.pop(context),
+              text: l10n.common_cancel,
             ),
           ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Icon(Icons.security, color: context.appSuccess, size: 28),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  l10n.deal_detail_my_permissions_title,
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: context.appTextPrimary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            l10n.deal_detail_my_permissions_desc,
-            style: TextStyle(
-              fontSize: 14,
-              color: context.appTextSecondary,
+          const SizedBox(width: AppDimensions.space12),
+          Expanded(
+            flex: 3,
+            child: PrimaryActionButton(
+              onPressed: () => widget.onSave(_sharePhone, _shareLocation),
+              text: l10n.common_save_changes,
             ),
-          ),
-          const SizedBox(height: 16),
-          Container(
-            decoration: BoxDecoration(
-              color: context.appSurface,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: context.appBorder,
-              ),
-            ),
-            child: Column(
-              children: [
-                SwitchListTile.adaptive(
-                  value: _sharePhone,
-                  onChanged: (val) => setState(() => _sharePhone = val),
-                  title: Text(
-                    l10n.deal_detail_share_phone,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  subtitle: Text(
-                    l10n.deal_detail_share_phone_desc_permission,
-                  ),
-                  activeThumbColor: context.appSuccess,
-                ),
-                Divider(
-                  height: 1,
-                  color: context.appDivider,
-                ),
-                SwitchListTile.adaptive(
-                  value: _shareLocation,
-                  onChanged: (val) => setState(() => _shareLocation = val),
-                  title: Text(
-                    widget.isBuyer
-                        ? l10n.deal_detail_share_location
-                        : l10n.deal_detail_share_farm_location,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  subtitle: Text(
-                    l10n.deal_detail_share_location_desc_permission,
-                  ),
-                  activeThumbColor: context.appSuccess,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: Text(l10n.common_cancel),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () => widget.onSave(_sharePhone, _shareLocation),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    backgroundColor: context.appPrimary,
-                    foregroundColor: context.appOnPrimary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: Text(
-                    l10n.common_save_changes,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-            ],
           ),
         ],
       ),

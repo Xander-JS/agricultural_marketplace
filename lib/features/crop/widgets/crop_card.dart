@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import '../../../core/theme/app_icons.dart';
 
 import '../models/crop_model.dart';
 import '../services/crop_service.dart';
@@ -256,9 +256,9 @@ class CropCard extends StatelessWidget {
       border: context.appSurfaceVariant,
       children: [
         Icon(
-          hasValidDistance ? Icons.near_me_outlined : Icons.place_outlined,
+          hasValidDistance ? LucideIcons.navigation : LucideIcons.mapPin,
           size: 13,
-          color: context.appPrimary,
+          color: context.appTextSecondary,
         ),
         const SizedBox(width: 4),
         if (locationName.isNotEmpty) ...[
@@ -283,19 +283,17 @@ class CropCard extends StatelessWidget {
     final value = summary.hasRatings
         ? '${summary.averageRating.toStringAsFixed(1)} (${summary.totalReviews})'
         : l10n.reputation_new;
-    final triad = context.appWarningTriad;
-
     return _Chip(
       key: ValueKey('crop_reputation_${crop.id}'),
-      background: triad.background,
-      border: triad.border,
+      background: context.appSurfaceVariant,
+      border: context.appSurfaceVariant,
       children: [
         Text.rich(
           TextSpan(
             children: [
               TextSpan(
                 text: '★ ',
-                style: TextStyle(color: triad.foreground),
+                style: TextStyle(color: context.appRatingGold),
               ),
               TextSpan(text: value),
             ],

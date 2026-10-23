@@ -773,8 +773,20 @@ abstract class AppLocalizations {
   /// No description provided for @verification_status_success_msg.
   ///
   /// In es, this message translates to:
-  /// **'Tu registro fue exitoso y estamos revisando tu información...'**
+  /// **'Tu solicitud de registro fue enviada y está siendo revisada por nuestros equipos de moderación.'**
   String get verification_status_success_msg;
+
+  /// No description provided for @verification_status_submitted_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Solicitud enviada'**
+  String get verification_status_submitted_title;
+
+  /// No description provided for @verification_status_submitted_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu cuenta queda pendiente de aprobación. Las funciones comerciales se habilitan en cuanto un moderador la apruebe; desliza hacia abajo para consultar el avance.'**
+  String get verification_status_submitted_desc;
 
   /// No description provided for @verification_status_upload_docs.
   ///
@@ -5066,19 +5078,19 @@ abstract class AppLocalizations {
   /// No description provided for @verification_status_track_received.
   ///
   /// In es, this message translates to:
-  /// **'Documentos recibidos'**
+  /// **'Solicitud recibida'**
   String get verification_status_track_received;
 
   /// No description provided for @verification_status_track_ai.
   ///
   /// In es, this message translates to:
-  /// **'Análisis KUS Vision'**
+  /// **'Validación biométrica y documental'**
   String get verification_status_track_ai;
 
   /// No description provided for @verification_status_track_moderator.
   ///
   /// In es, this message translates to:
-  /// **'Dictamen del moderador'**
+  /// **'Decisión del moderador'**
   String get verification_status_track_moderator;
 
   /// No description provided for @verification_status_reason_label.
@@ -5422,6 +5434,30 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Cambiar foto de perfil'**
   String get profile_change_photo;
+
+  /// No description provided for @verification_status_support_line.
+  ///
+  /// In es, this message translates to:
+  /// **'Validación biométrica y documental en curso — Te avisaremos en cuanto la decisión esté lista.'**
+  String get verification_status_support_line;
+
+  /// No description provided for @verification_status_track_current.
+  ///
+  /// In es, this message translates to:
+  /// **'En curso'**
+  String get verification_status_track_current;
+
+  /// No description provided for @verification_status_ring_semantics.
+  ///
+  /// In es, this message translates to:
+  /// **'Progreso de la revisión. Etapa actual: {stage}'**
+  String verification_status_ring_semantics(String stage);
+
+  /// No description provided for @verification_status_rejected_empathy.
+  ///
+  /// In es, this message translates to:
+  /// **'No te preocupes: puedes corregir los documentos señalados y enviarlos de nuevo. Tu solicitud volverá a revisión en cuanto los recibamos.'**
+  String get verification_status_rejected_empathy;
 }
 
 class _AppLocalizationsDelegate

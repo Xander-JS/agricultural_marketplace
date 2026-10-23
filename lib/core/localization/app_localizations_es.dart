@@ -381,7 +381,14 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get verification_status_success_msg =>
-      'Tu registro fue exitoso y estamos revisando tu información...';
+      'Tu solicitud de registro fue enviada y está siendo revisada por nuestros equipos de moderación.';
+
+  @override
+  String get verification_status_submitted_title => 'Solicitud enviada';
+
+  @override
+  String get verification_status_submitted_desc =>
+      'Tu cuenta queda pendiente de aprobación. Las funciones comerciales se habilitan en cuanto un moderador la apruebe; desliza hacia abajo para consultar el avance.';
 
   @override
   String get verification_status_upload_docs => 'Subir Documentos';
@@ -2792,13 +2799,14 @@ class AppLocalizationsEs extends AppLocalizations {
   String get facial_verification_capture_button => 'Tomar selfie';
 
   @override
-  String get verification_status_track_received => 'Documentos recibidos';
+  String get verification_status_track_received => 'Solicitud recibida';
 
   @override
-  String get verification_status_track_ai => 'Análisis KUS Vision';
+  String get verification_status_track_ai =>
+      'Validación biométrica y documental';
 
   @override
-  String get verification_status_track_moderator => 'Dictamen del moderador';
+  String get verification_status_track_moderator => 'Decisión del moderador';
 
   @override
   String get verification_status_reason_label => 'Motivo del rechazo';
@@ -3035,4 +3043,20 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get profile_change_photo => 'Cambiar foto de perfil';
+
+  @override
+  String get verification_status_support_line =>
+      'Validación biométrica y documental en curso — Te avisaremos en cuanto la decisión esté lista.';
+
+  @override
+  String get verification_status_track_current => 'En curso';
+
+  @override
+  String verification_status_ring_semantics(String stage) {
+    return 'Progreso de la revisión. Etapa actual: $stage';
+  }
+
+  @override
+  String get verification_status_rejected_empathy =>
+      'No te preocupes: puedes corregir los documentos señalados y enviarlos de nuevo. Tu solicitud volverá a revisión en cuanto los recibamos.';
 }

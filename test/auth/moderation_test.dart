@@ -527,8 +527,8 @@ void main() {
         ),
         findsOneWidget,
       );
-      expect(find.text('Diagnóstico documental'), findsOneWidget);
-      expect(find.text('SIMULADO'), findsOneWidget);
+      expect(find.text('Análisis biométrico y documental con IA'), findsOneWidget);
+      expect(find.text('KUS Vision'), findsOneWidget);
     });
 
     // 14. Integración en AuthGate: Moderador aprobado es enrutado directamente a ModerationQueueScreen

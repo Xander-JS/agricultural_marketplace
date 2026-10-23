@@ -3,6 +3,7 @@ import 'package:agricultural_marketplace/core/localization/app_localizations.dar
 
 import '../../../../core/widgets/loading/app_loading.dart';
 import '../../../../core/widgets/loading/loading_content.dart';
+import '../../widgets/verification_scan_visual.dart';
 import '../models/registration_data.dart';
 import '../services/registration_service.dart';
 
@@ -11,10 +12,10 @@ class ProcessingScreen extends StatefulWidget {
   final RegistrationService? registrationService;
 
   const ProcessingScreen({
-    Key? key,
+    super.key,
     required this.data,
     this.registrationService,
-  }) : super(key: key);
+  });
 
   @override
   State<ProcessingScreen> createState() => _ProcessingScreenState();
@@ -74,7 +75,8 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
 
       if (result.requiresConfirmation) {
         setState(() {
-          _statusMessage = result.message ?? l10n.processing_confirmation_required;
+          _statusMessage =
+              result.message ?? l10n.processing_confirmation_required;
           _isSpinning = false;
           _requiresConfirmation = true;
         });
@@ -138,6 +140,7 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
         backText: _requiresConfirmation
             ? l10n.login_title
             : l10n.processing_back,
+        workingVisual: const VerificationScanVisual(),
       ),
     );
   }

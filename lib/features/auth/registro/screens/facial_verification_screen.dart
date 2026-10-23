@@ -1,22 +1,21 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:agricultural_marketplace/core/localization/app_localizations.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/widgets/app_bar/custom_app_bar.dart';
-import '../../../../core/widgets/progress/step_progress_bar.dart';
-import '../../../../core/widgets/info/tip_pill.dart';
-import '../../../../core/widgets/buttons/primary_action_button.dart';
+import '../../../../core/theme/app_dimensions.dart';
+import '../../../../core/widgets/scanner/scanner_viewfinder.dart';
+import '../../widgets/document_capture_step.dart';
+import '../../widgets/registration_step_scaffold.dart';
 import '../models/registration_data.dart';
 import 'document_review_screen.dart';
 
 class FacialVerificationScreen extends StatefulWidget {
   final RegistrationData data;
-  const FacialVerificationScreen({Key? key, required this.data})
-    : super(key: key);
+  const FacialVerificationScreen({super.key, required this.data});
 
   @override
   State<FacialVerificationScreen> createState() =>
@@ -27,129 +26,92 @@ class _FacialVerificationScreenState extends State<FacialVerificationScreen> {
   File? _image;
   final ImagePicker _picker = ImagePicker();
 
+  @override
+  void initState() {
+    super.initState();
+    _image = widget.data.selfie;
+  }
+
   Future<void> _takePicture() async {
     final XFile? photo = await _picker.pickImage(
       source: ImageSource.camera,
       preferredCameraDevice: CameraDevice.front,
     );
-    if (photo != null) {
+    if (photo != null && mounted) {
       setState(() {
         _image = File(photo.path);
       });
       widget.data.selfie = _image;
-
-      Future.delayed(const Duration(milliseconds: 500), () {
-        if (!mounted) return;
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => DocumentReviewScreen(data: widget.data),
-          ),
-        );
-      });
     }
+  }
+
+  void _continue() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => DocumentReviewScreen(data: widget.data),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final captured = _image != null;
 
-    return Scaffold(
-      backgroundColor: context.appSurface,
-      appBar: CustomAppBar(title: l10n.facial_verification_header_title),
-      body: SafeArea(
-        child: Column(
-          children: [
-            const StepProgressBar(totalSteps: 4, currentStep: 4),
-
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24.0,
-                vertical: 16.0,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.facial_verification_description,
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: context.appTextSecondary,
-                    ),
-                  ),
-                ],
-              ),
+    final Widget face = captured
+        ? Image.file(
+            _image!,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) => Icon(
+              LucideIcons.imageOff,
+              size: AppDimensions.iconLG,
+              color: context.appTextMuted,
             ),
+          )
+        : Semantics(
+            label: l10n.capture_guide_semantics,
+            image: true,
+            child: Image.asset('assets/images/face_id.png', fit: BoxFit.cover),
+          );
 
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                child: Column(
-                  children: [
-                    const Spacer(),
-
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: context.appTextSecondary,
-                          width: 4,
-                        ),
-                      ),
-                      child: Container(
-                        width: 250,
-                        height: 250,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          image: _image != null
-                              ? DecorationImage(
-                                  image: FileImage(_image!),
-                                  fit: BoxFit.cover,
-                                )
-                              : const DecorationImage(
-                                  image: AssetImage(
-                                    'assets/images/face_id.png',
-                                  ),
-                                  fit: BoxFit.contain,
-                                ),
-                        ),
-                      ),
-                    ),
-
-                    const Spacer(),
-
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        TipPill(
-                          icon: Icons.light_mode_outlined,
-                          text: l10n.facial_verification_tip_light,
-                        ),
-                        const SizedBox(width: 8),
-                        TipPill(
-                          icon: Icons.visibility_off_outlined,
-                          text: l10n.facial_verification_tip_glasses,
-                        ),
-                        const SizedBox(width: 8),
-                        TipPill(
-                          icon: Icons.sentiment_satisfied_alt,
-                          text: l10n.facial_verification_tip_straight,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 32),
-
-                    PrimaryActionButton(
-                      onPressed: _takePicture,
-                      text: l10n.facial_verification_start_button,
-                    ),
-                    const SizedBox(height: 24),
-                  ],
-                ),
-              ),
+    return RegistrationStepScaffold(
+      title: l10n.facial_verification_header_title,
+      step: 4,
+      lead: l10n.facial_verification_description,
+      bottom: CaptureActions(
+        captured: captured,
+        captureLabel: l10n.facial_verification_capture_button,
+        onCapture: _takePicture,
+        onContinue: _continue,
+      ),
+      children: [
+        Center(
+          child: BiometricFrame(
+            captured: captured,
+            chip: captured
+                ? ScannerChip.captured(label: l10n.facial_verification_captured)
+                : ScannerChip.guide(
+                    label: l10n.facial_verification_guide_chip,
+                    icon: LucideIcons.scanFace,
+                  ),
+            child: face,
+          ),
+        ),
+        const SizedBox(height: AppDimensions.space24),
+        CaptureTips(
+          tips: [
+            CaptureTip(LucideIcons.sun, l10n.facial_verification_tip_light),
+            CaptureTip(
+              LucideIcons.glasses,
+              l10n.facial_verification_tip_glasses,
+            ),
+            CaptureTip(
+              LucideIcons.smile,
+              l10n.facial_verification_tip_straight,
             ),
           ],
         ),
-      ),
+      ],
     );
   }
 }

@@ -9,6 +9,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/app_formatters.dart';
+import '../../../../core/theme/app_motion.dart';
+import '../../../../core/widgets/loading/section_skeletons.dart';
 
 /// Pantalla principal del Módulo de Compras para el rol Comerciante/Comprador.
 ///
@@ -180,11 +182,7 @@ class _PurchasesScreenState extends State<PurchasesScreen>
       ),
       body: SafeArea(
         child: _isLoading
-            ? Center(
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(context.appPrimary),
-                ),
-              )
+            ? const SectionSkeleton(kind: SectionSkeletonKind.rowCards)
             : _errorMessage != null
                 ? Center(
                     child: Padding(
@@ -366,8 +364,10 @@ class _PurchasesScreenState extends State<PurchasesScreen>
       return RefreshIndicator(
         onRefresh: _loadPurchases,
         color: context.appPrimary,
+        backgroundColor: context.appSurface,
+        strokeWidth: 2.5,
         child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
+          physics: AppMotion.scrollPhysics,
           padding: AppDimensions.paddingScreen,
           child: _buildEmptyState(
             context: context,
@@ -380,7 +380,10 @@ class _PurchasesScreenState extends State<PurchasesScreen>
     return RefreshIndicator(
       onRefresh: _loadPurchases,
       color: context.appPrimary,
+      backgroundColor: context.appSurface,
+      strokeWidth: 2.5,
       child: ListView.builder(
+        physics: AppMotion.scrollPhysics,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         itemCount: items.length,
         itemBuilder: (context, index) {

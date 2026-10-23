@@ -11,6 +11,8 @@ import '../models/farmer_profile_data.dart';
 import '../services/profile_service.dart';
 import '../../review/models/review_model.dart';
 import '../../review/services/review_service.dart';
+import '../../../core/theme/app_motion.dart';
+import '../../../core/widgets/loading/section_skeletons.dart';
 
 /// Pantalla de Perfil compartida entre los roles Agricultor y Comerciante/Comprador.
 ///
@@ -418,12 +420,18 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
         ],
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator(color: context.appPrimary))
+          ? const SectionSkeleton(
+              kind: SectionSkeletonKind.profile,
+              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            )
           : RefreshIndicator(
               onRefresh: _loadProfileData,
               color: context.appPrimary,
+              backgroundColor: context.appSurface,
+              strokeWidth: 2.5,
               child: _profileData == null
                   ? ListView(
+                      physics: AppMotion.scrollPhysics,
                       children: [
                         const SizedBox(height: 100),
                         Center(
@@ -435,7 +443,7 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
                       ],
                     )
                   : SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
+                      physics: AppMotion.scrollPhysics,
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,

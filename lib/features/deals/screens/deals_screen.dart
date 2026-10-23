@@ -8,6 +8,8 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/constants/user_roles.dart';
 import '../../../core/utils/app_formatters.dart';
+import '../../../core/theme/app_motion.dart';
+import '../../../core/widgets/loading/section_skeletons.dart';
 
 class DealsScreen extends StatefulWidget {
   final String? role;
@@ -154,7 +156,7 @@ class _DealsScreenState extends State<DealsScreen> with SingleTickerProviderStat
 
   Widget _buildBody(AppLocalizations l10n) {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const SectionSkeleton(kind: SectionSkeletonKind.rowCards);
     }
 
     if (_errorMessage != null) {
@@ -201,8 +203,11 @@ class _DealsScreenState extends State<DealsScreen> with SingleTickerProviderStat
     if (list.isEmpty) {
       return RefreshIndicator(
         onRefresh: _loadData,
+        color: context.appPrimary,
+        backgroundColor: context.appSurface,
+        strokeWidth: 2.5,
         child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
+          physics: AppMotion.scrollPhysics,
           child: Container(
             height: MediaQuery.of(context).size.height * 0.6,
             alignment: Alignment.center,
@@ -214,7 +219,11 @@ class _DealsScreenState extends State<DealsScreen> with SingleTickerProviderStat
 
     return RefreshIndicator(
       onRefresh: _loadData,
+      color: context.appPrimary,
+      backgroundColor: context.appSurface,
+      strokeWidth: 2.5,
       child: ListView.builder(
+        physics: AppMotion.scrollPhysics,
         padding: const EdgeInsets.all(16.0),
         itemCount: list.length,
         itemBuilder: (context, index) {

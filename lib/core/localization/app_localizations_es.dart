@@ -853,6 +853,17 @@ class AppLocalizationsEs extends AppLocalizations {
   String get crop_detail_view_negotiations => 'Ver Negociaciones';
 
   @override
+  String get crop_detail_listing_active => 'Publicación activa';
+
+  @override
+  String get crop_detail_listing_active_desc =>
+      'Visible para los compradores en el mercado';
+
+  @override
+  String get crop_detail_listing_paused_desc =>
+      'Pausada: no aparece en el mercado';
+
+  @override
   String get crop_detail_negotiations_coming_soon =>
       'Próximamente: Ver negociaciones';
 
@@ -2030,6 +2041,37 @@ class AppLocalizationsEs extends AppLocalizations {
       'La diferencia se calcula como precio evaluado − referencia.';
 
   @override
+  String get profitability_tab_evaluate => 'Tu precio';
+
+  @override
+  String get profitability_tab_suggested => 'Sugerido';
+
+  @override
+  String get profitability_tab_regional => 'Índice Nariño';
+
+  @override
+  String get profitability_suggested_unavailable =>
+      'Registra costos válidos del cultivo para calcular un precio sugerido.';
+
+  @override
+  String get profitability_ticket_cost_base => 'Costo base por kg';
+
+  @override
+  String get profitability_ticket_target_margin => 'Margen objetivo';
+
+  @override
+  String get profitability_ticket_result => 'Precio sugerido por kg';
+
+  @override
+  String get profitability_chart_evaluated => 'Precio evaluado';
+
+  @override
+  String get profitability_chart_reference => 'Índice regional';
+
+  @override
+  String get profitability_chart_cost => 'Costo de producción';
+
+  @override
   String get crop_detail_less_than_km => '< 1 km';
 
   @override
@@ -2078,12 +2120,6 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get crop_detail_verification_desc =>
       'Para realizar ofertas y negociar con los agricultores, tu perfil debe estar verificado y aprobado por un moderador.';
-
-  @override
-  String get crop_detail_offer_sent => 'Oferta enviada exitosamente.';
-
-  @override
-  String get crop_detail_view_deals => 'Ver Tratos';
 
   @override
   String get crop_detail_total_available => 'Total Disponible';
@@ -2892,11 +2928,23 @@ class AppLocalizationsEs extends AppLocalizations {
   String get crop_detail_description => 'Descripción';
 
   @override
-  String get crop_detail_equivalences_pill => 'Ver en canastillas y bultos';
-
-  @override
   String get crop_detail_regional_index_title =>
       'Índice Regional Nariño • KUS AI';
+
+  @override
+  String get crop_detail_regional_index_short => 'Índice regional Nariño';
+
+  @override
+  String crop_detail_regional_delta(
+    String sign,
+    String amount,
+    String percent,
+  ) {
+    return '$sign$amount/kg ($sign$percent%) vs índice';
+  }
+
+  @override
+  String get crop_detail_regional_at_par => 'Igual al índice';
 
   @override
   String get units_kg_baseline_note =>
@@ -2918,6 +2966,16 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get ai_field_review => 'Revisar';
+
+  @override
+  String get ai_hint_pill =>
+      'Di el cultivo, la cantidad en kg o bultos y el precio esperado';
+
+  @override
+  String get ai_review_promise => 'Revisarás todo antes de publicar.';
+
+  @override
+  String get ai_unit => 'Unidad';
 
   @override
   String get costs_expenses_title => 'Gastos registrados';
@@ -2968,6 +3026,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get deal_detail_your_turn_bar => 'Es tu turno de responder';
+
+  @override
+  String get deal_detail_more_actions => 'Más acciones';
 
   @override
   String get deal_detail_contact_released => 'Contacto comercial liberado';
@@ -3059,4 +3120,27 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get verification_status_rejected_empathy =>
       'No te preocupes: puedes corregir los documentos señalados y enviarlos de nuevo. Tu solicitud volverá a revisión en cuanto los recibamos.';
+
+  @override
+  String get deal_detail_share_whatsapp => 'Compartir WhatsApp';
+
+  @override
+  String get deal_detail_share_delivery_location_short =>
+      'Compartir ubicación de entrega';
+
+  @override
+  String get deal_detail_share_farm_location_short =>
+      'Compartir ubicación de la finca';
+
+  @override
+  String get moderation_tab_user => 'Usuario';
+
+  @override
+  String get moderation_tab_evidence => 'Evidencia';
+
+  @override
+  String get moderation_tab_ai => 'Análisis IA';
+
+  @override
+  String get moderation_lbl_status => 'Estado:';
 }

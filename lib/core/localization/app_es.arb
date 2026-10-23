@@ -282,6 +282,9 @@
   "crop_detail_pause_crop": "Pausar Publicación",
   "crop_detail_activate_crop": "Activar Publicación",
   "crop_detail_view_negotiations": "Ver Negociaciones",
+  "crop_detail_listing_active": "Publicación activa",
+  "crop_detail_listing_active_desc": "Visible para los compradores en el mercado",
+  "crop_detail_listing_paused_desc": "Pausada: no aparece en el mercado",
   "crop_detail_negotiations_coming_soon": "Próximamente: Ver negociaciones",
   "crop_detail_make_offer": "Hacer oferta / Negociar",
   "crop_detail_farmer_info": "Información del Productor",
@@ -710,6 +713,16 @@
   "profitability_reference_simulated": "Proyección de mercado KUS AI",
   "profitability_reference_difference": "Diferencia frente al índice regional",
   "profitability_reference_difference_note": "La diferencia se calcula como precio evaluado − referencia.",
+  "profitability_tab_evaluate": "Tu precio",
+  "profitability_tab_suggested": "Sugerido",
+  "profitability_tab_regional": "Índice Nariño",
+  "profitability_suggested_unavailable": "Registra costos válidos del cultivo para calcular un precio sugerido.",
+  "profitability_ticket_cost_base": "Costo base por kg",
+  "profitability_ticket_target_margin": "Margen objetivo",
+  "profitability_ticket_result": "Precio sugerido por kg",
+  "profitability_chart_evaluated": "Precio evaluado",
+  "profitability_chart_reference": "Índice regional",
+  "profitability_chart_cost": "Costo de producción",
   "crop_detail_less_than_km": "< 1 km",
   "crop_detail_km": "{km} km",
   "@crop_detail_km": {
@@ -737,8 +750,6 @@
   "crop_detail_out_of_stock": "Esta cosecha se encuentra agotada o sin stock disponible.",
   "crop_detail_verification_required": "Verificación requerida",
   "crop_detail_verification_desc": "Para realizar ofertas y negociar con los agricultores, tu perfil debe estar verificado y aprobado por un moderador.",
-  "crop_detail_offer_sent": "Oferta enviada exitosamente.",
-  "crop_detail_view_deals": "Ver Tratos",
   "crop_detail_total_available": "Total Disponible",
   "crop_detail_price_matches_reference": "Precio igual a la referencia regional ({price}/kg)",
   "@crop_detail_price_matches_reference": {
@@ -1223,8 +1234,23 @@
   "market_voice_quick_action": "Publicar con asistente de voz",
   "market_no_results_desc": "Prueba con otro cultivo o vuelve al orden predeterminado.",
   "crop_detail_description": "Descripción",
-  "crop_detail_equivalences_pill": "Ver en canastillas y bultos",
   "crop_detail_regional_index_title": "Índice Regional Nariño • KUS AI",
+  "crop_detail_regional_index_short": "Índice regional Nariño",
+  "crop_detail_regional_delta": "{sign}{amount}/kg ({sign}{percent}%) vs índice",
+  "@crop_detail_regional_delta": {
+    "placeholders": {
+      "sign": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "crop_detail_regional_at_par": "Igual al índice",
   "units_kg_baseline_note": "La negociación siempre se pacta en kilogramos.",
   "offer_sheet_delivery_point": "Punto acordado",
   "offer_sheet_delivery_carrier": "Transportadora",
@@ -1241,6 +1267,9 @@
   },
   "ai_field_identified": "Identificado",
   "ai_field_review": "Revisar",
+  "ai_hint_pill": "Di el cultivo, la cantidad en kg o bultos y el precio esperado",
+  "ai_review_promise": "Revisarás todo antes de publicar.",
+  "ai_unit": "Unidad",
   "costs_expenses_title": "Gastos registrados",
   "deals_tab_in_progress": "En curso",
   "deals_awaiting_you": "{count, plural, =1{1 trato espera tu respuesta} other{{count} tratos esperan tu respuesta}}",
@@ -1272,6 +1301,7 @@
   },
   "deal_detail_same_price": "Mismo precio que la oferta anterior",
   "deal_detail_your_turn_bar": "Es tu turno de responder",
+  "deal_detail_more_actions": "Más acciones",
   "deal_detail_contact_released": "Contacto comercial liberado",
   "deal_detail_privacy_note": "Tú decides qué datos ve la contraparte. Puedes cambiarlo en cualquier momento.",
   "deal_rating_label_1": "Muy mala",
@@ -1317,5 +1347,12 @@
         "type": "String"
       }
     }
-  }
+  },
+  "deal_detail_share_whatsapp": "Compartir WhatsApp",
+  "deal_detail_share_delivery_location_short": "Compartir ubicación de entrega",
+  "deal_detail_share_farm_location_short": "Compartir ubicación de la finca",
+  "moderation_tab_user": "Usuario",
+  "moderation_tab_evidence": "Evidencia",
+  "moderation_tab_ai": "Análisis IA",
+  "moderation_lbl_status": "Estado:"
 }

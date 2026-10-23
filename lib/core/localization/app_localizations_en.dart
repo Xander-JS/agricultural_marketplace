@@ -790,11 +790,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get crop_detail_edit_tooltip => 'Edit';
 
   @override
-  String get crop_detail_confirm_delete_title => 'Delete Crop';
+  String get crop_detail_confirm_delete_title => 'Delete listing';
 
   @override
   String get crop_detail_confirm_delete_desc =>
-      'Are you sure you want to delete this publication? This action cannot be undone.';
+      'Are you sure you want to delete this listing? This action cannot be undone.';
 
   @override
   String get crop_detail_delete_success => 'Publication deleted successfully';
@@ -812,7 +812,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get crop_detail_available_stock => 'Total Available';
 
   @override
-  String get crop_detail_view_equivalences => 'View equivalences';
+  String get crop_detail_view_equivalences => 'View equivalencies';
 
   @override
   String get crop_detail_min_order => 'Minimum Order';
@@ -846,6 +846,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get crop_detail_view_negotiations => 'View Negotiations';
+
+  @override
+  String get crop_detail_listing_active => 'Listing active';
+
+  @override
+  String get crop_detail_listing_active_desc =>
+      'Visible to buyers in the market';
+
+  @override
+  String get crop_detail_listing_paused_desc =>
+      'Paused: hidden from the market';
 
   @override
   String get crop_detail_negotiations_coming_soon =>
@@ -2017,6 +2028,37 @@ class AppLocalizationsEn extends AppLocalizations {
       'The difference is calculated as evaluated price − reference.';
 
   @override
+  String get profitability_tab_evaluate => 'Your price';
+
+  @override
+  String get profitability_tab_suggested => 'Suggested';
+
+  @override
+  String get profitability_tab_regional => 'Nariño index';
+
+  @override
+  String get profitability_suggested_unavailable =>
+      'Record valid crop costs to calculate a suggested price.';
+
+  @override
+  String get profitability_ticket_cost_base => 'Base cost per kg';
+
+  @override
+  String get profitability_ticket_target_margin => 'Target margin';
+
+  @override
+  String get profitability_ticket_result => 'Suggested price per kg';
+
+  @override
+  String get profitability_chart_evaluated => 'Evaluated price';
+
+  @override
+  String get profitability_chart_reference => 'Regional index';
+
+  @override
+  String get profitability_chart_cost => 'Production cost';
+
+  @override
   String get crop_detail_less_than_km => '< 1 km';
 
   @override
@@ -2065,12 +2107,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get crop_detail_verification_desc =>
       'To make offers and negotiate with farmers, your profile must be verified and approved by a moderator.';
-
-  @override
-  String get crop_detail_offer_sent => 'Offer sent successfully.';
-
-  @override
-  String get crop_detail_view_deals => 'View Deals';
 
   @override
   String get crop_detail_total_available => 'Total Available';
@@ -2608,7 +2644,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ai_start => 'Start speaking';
 
   @override
-  String get ai_manual => 'I prefer to fill out the form manually';
+  String get ai_manual => 'I\'d prefer to fill out the form manually';
 
   @override
   String get ai_retry_mic => 'Retry microphone';
@@ -2875,11 +2911,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get crop_detail_description => 'Description';
 
   @override
-  String get crop_detail_equivalences_pill => 'See in crates and sacks';
-
-  @override
   String get crop_detail_regional_index_title =>
       'Nariño Regional Index • KUS AI';
+
+  @override
+  String get crop_detail_regional_index_short => 'Nariño regional index';
+
+  @override
+  String crop_detail_regional_delta(
+    String sign,
+    String amount,
+    String percent,
+  ) {
+    return '$sign$amount/kg ($sign$percent%) vs index';
+  }
+
+  @override
+  String get crop_detail_regional_at_par => 'Matches the index';
 
   @override
   String get units_kg_baseline_note =>
@@ -2901,6 +2949,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ai_field_review => 'Review';
+
+  @override
+  String get ai_hint_pill =>
+      'Tell us the crop, quantity in kg or bags, and expected price';
+
+  @override
+  String get ai_review_promise =>
+      'You\'ll review everything before publishing.';
+
+  @override
+  String get ai_unit => 'Unit';
 
   @override
   String get costs_expenses_title => 'Recorded expenses';
@@ -2951,6 +3010,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deal_detail_your_turn_bar => 'It\'s your turn to respond';
+
+  @override
+  String get deal_detail_more_actions => 'More actions';
 
   @override
   String get deal_detail_contact_released => 'Commercial contact released';
@@ -3042,4 +3104,26 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get verification_status_rejected_empathy =>
       'Don\'t worry: you can correct the flagged documents and send them again. Your application goes back to review as soon as we receive them.';
+
+  @override
+  String get deal_detail_share_whatsapp => 'Share WhatsApp';
+
+  @override
+  String get deal_detail_share_delivery_location_short =>
+      'Share delivery location';
+
+  @override
+  String get deal_detail_share_farm_location_short => 'Share farm location';
+
+  @override
+  String get moderation_tab_user => 'User';
+
+  @override
+  String get moderation_tab_evidence => 'Evidence';
+
+  @override
+  String get moderation_tab_ai => 'AI analysis';
+
+  @override
+  String get moderation_lbl_status => 'Status:';
 }

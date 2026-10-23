@@ -1664,6 +1664,24 @@ abstract class AppLocalizations {
   /// **'Ver Negociaciones'**
   String get crop_detail_view_negotiations;
 
+  /// No description provided for @crop_detail_listing_active.
+  ///
+  /// In es, this message translates to:
+  /// **'Publicación activa'**
+  String get crop_detail_listing_active;
+
+  /// No description provided for @crop_detail_listing_active_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Visible para los compradores en el mercado'**
+  String get crop_detail_listing_active_desc;
+
+  /// No description provided for @crop_detail_listing_paused_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Pausada: no aparece en el mercado'**
+  String get crop_detail_listing_paused_desc;
+
   /// No description provided for @crop_detail_negotiations_coming_soon.
   ///
   /// In es, this message translates to:
@@ -3762,6 +3780,66 @@ abstract class AppLocalizations {
   /// **'La diferencia se calcula como precio evaluado − referencia.'**
   String get profitability_reference_difference_note;
 
+  /// No description provided for @profitability_tab_evaluate.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu precio'**
+  String get profitability_tab_evaluate;
+
+  /// No description provided for @profitability_tab_suggested.
+  ///
+  /// In es, this message translates to:
+  /// **'Sugerido'**
+  String get profitability_tab_suggested;
+
+  /// No description provided for @profitability_tab_regional.
+  ///
+  /// In es, this message translates to:
+  /// **'Índice Nariño'**
+  String get profitability_tab_regional;
+
+  /// No description provided for @profitability_suggested_unavailable.
+  ///
+  /// In es, this message translates to:
+  /// **'Registra costos válidos del cultivo para calcular un precio sugerido.'**
+  String get profitability_suggested_unavailable;
+
+  /// No description provided for @profitability_ticket_cost_base.
+  ///
+  /// In es, this message translates to:
+  /// **'Costo base por kg'**
+  String get profitability_ticket_cost_base;
+
+  /// No description provided for @profitability_ticket_target_margin.
+  ///
+  /// In es, this message translates to:
+  /// **'Margen objetivo'**
+  String get profitability_ticket_target_margin;
+
+  /// No description provided for @profitability_ticket_result.
+  ///
+  /// In es, this message translates to:
+  /// **'Precio sugerido por kg'**
+  String get profitability_ticket_result;
+
+  /// No description provided for @profitability_chart_evaluated.
+  ///
+  /// In es, this message translates to:
+  /// **'Precio evaluado'**
+  String get profitability_chart_evaluated;
+
+  /// No description provided for @profitability_chart_reference.
+  ///
+  /// In es, this message translates to:
+  /// **'Índice regional'**
+  String get profitability_chart_reference;
+
+  /// No description provided for @profitability_chart_cost.
+  ///
+  /// In es, this message translates to:
+  /// **'Costo de producción'**
+  String get profitability_chart_cost;
+
   /// No description provided for @crop_detail_less_than_km.
   ///
   /// In es, this message translates to:
@@ -3839,18 +3917,6 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Para realizar ofertas y negociar con los agricultores, tu perfil debe estar verificado y aprobado por un moderador.'**
   String get crop_detail_verification_desc;
-
-  /// No description provided for @crop_detail_offer_sent.
-  ///
-  /// In es, this message translates to:
-  /// **'Oferta enviada exitosamente.'**
-  String get crop_detail_offer_sent;
-
-  /// No description provided for @crop_detail_view_deals.
-  ///
-  /// In es, this message translates to:
-  /// **'Ver Tratos'**
-  String get crop_detail_view_deals;
 
   /// No description provided for @crop_detail_total_available.
   ///
@@ -5201,17 +5267,29 @@ abstract class AppLocalizations {
   /// **'Descripción'**
   String get crop_detail_description;
 
-  /// No description provided for @crop_detail_equivalences_pill.
-  ///
-  /// In es, this message translates to:
-  /// **'Ver en canastillas y bultos'**
-  String get crop_detail_equivalences_pill;
-
   /// No description provided for @crop_detail_regional_index_title.
   ///
   /// In es, this message translates to:
   /// **'Índice Regional Nariño • KUS AI'**
   String get crop_detail_regional_index_title;
+
+  /// No description provided for @crop_detail_regional_index_short.
+  ///
+  /// In es, this message translates to:
+  /// **'Índice regional Nariño'**
+  String get crop_detail_regional_index_short;
+
+  /// No description provided for @crop_detail_regional_delta.
+  ///
+  /// In es, this message translates to:
+  /// **'{sign}{amount}/kg ({sign}{percent}%) vs índice'**
+  String crop_detail_regional_delta(String sign, String amount, String percent);
+
+  /// No description provided for @crop_detail_regional_at_par.
+  ///
+  /// In es, this message translates to:
+  /// **'Igual al índice'**
+  String get crop_detail_regional_at_par;
 
   /// No description provided for @units_kg_baseline_note.
   ///
@@ -5248,6 +5326,24 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Revisar'**
   String get ai_field_review;
+
+  /// No description provided for @ai_hint_pill.
+  ///
+  /// In es, this message translates to:
+  /// **'Di el cultivo, la cantidad en kg o bultos y el precio esperado'**
+  String get ai_hint_pill;
+
+  /// No description provided for @ai_review_promise.
+  ///
+  /// In es, this message translates to:
+  /// **'Revisarás todo antes de publicar.'**
+  String get ai_review_promise;
+
+  /// No description provided for @ai_unit.
+  ///
+  /// In es, this message translates to:
+  /// **'Unidad'**
+  String get ai_unit;
 
   /// No description provided for @costs_expenses_title.
   ///
@@ -5308,6 +5404,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Es tu turno de responder'**
   String get deal_detail_your_turn_bar;
+
+  /// No description provided for @deal_detail_more_actions.
+  ///
+  /// In es, this message translates to:
+  /// **'Más acciones'**
+  String get deal_detail_more_actions;
 
   /// No description provided for @deal_detail_contact_released.
   ///
@@ -5458,6 +5560,48 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'No te preocupes: puedes corregir los documentos señalados y enviarlos de nuevo. Tu solicitud volverá a revisión en cuanto los recibamos.'**
   String get verification_status_rejected_empathy;
+
+  /// No description provided for @deal_detail_share_whatsapp.
+  ///
+  /// In es, this message translates to:
+  /// **'Compartir WhatsApp'**
+  String get deal_detail_share_whatsapp;
+
+  /// No description provided for @deal_detail_share_delivery_location_short.
+  ///
+  /// In es, this message translates to:
+  /// **'Compartir ubicación de entrega'**
+  String get deal_detail_share_delivery_location_short;
+
+  /// No description provided for @deal_detail_share_farm_location_short.
+  ///
+  /// In es, this message translates to:
+  /// **'Compartir ubicación de la finca'**
+  String get deal_detail_share_farm_location_short;
+
+  /// No description provided for @moderation_tab_user.
+  ///
+  /// In es, this message translates to:
+  /// **'Usuario'**
+  String get moderation_tab_user;
+
+  /// No description provided for @moderation_tab_evidence.
+  ///
+  /// In es, this message translates to:
+  /// **'Evidencia'**
+  String get moderation_tab_evidence;
+
+  /// No description provided for @moderation_tab_ai.
+  ///
+  /// In es, this message translates to:
+  /// **'Análisis IA'**
+  String get moderation_tab_ai;
+
+  /// No description provided for @moderation_lbl_status.
+  ///
+  /// In es, this message translates to:
+  /// **'Estado:'**
+  String get moderation_lbl_status;
 }
 
 class _AppLocalizationsDelegate

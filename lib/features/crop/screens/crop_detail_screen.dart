@@ -1,8 +1,13 @@
+import 'dart:ui' show ImageFilter;
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/crop_model.dart';
 import '../services/crop_service.dart';
+import '../widgets/crop_photo_placeholder.dart';
 import '../widgets/crop_status_badge.dart';
 import '../widgets/make_offer_sheet.dart';
 import 'publish_crop_screen.dart';
@@ -11,6 +16,14 @@ import '../../deals/screens/deals_screen.dart';
 import '../../profile/models/farmer_profile_data.dart';
 import '../../profile/services/profile_service.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimensions.dart';
+import '../../../core/theme/app_motion.dart';
+import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/badges/media_capsule.dart';
+import '../../../core/widgets/cards/inset_group_card.dart';
+import '../../../core/widgets/loading/app_skeleton.dart';
+import '../../../core/widgets/misc/icon_squircle.dart';
+import '../../../core/widgets/misc/pressable_scale.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/constants/user_roles.dart';
 import '../../../core/widgets/avatars/user_avatar.dart';
@@ -209,7 +222,10 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
     }
   }
 
-  String _formatEstimatedDistance(AppLocalizations l10n, DistanceEvaluation eval) {
+  String _formatEstimatedDistance(
+    AppLocalizations l10n,
+    DistanceEvaluation eval,
+  ) {
     final km = eval.distanceKm;
     if (km == null || km < 0) return l10n.common_not_available;
     if (km < 1.0) return l10n.crop_detail_less_than_km;
@@ -222,6 +238,7 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      showDragHandle: false,
       backgroundColor: AppColors.transparent,
       builder: (ctx) =>
           UnitEquivalencesSheet(referenceKg: reference, cropTitle: _crop.title),
@@ -426,6 +443,7 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
     final result = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      showDragHandle: false,
       backgroundColor: AppColors.transparent,
       builder: (context) => MakeOfferSheet(
         crop: _crop,
@@ -458,8 +476,8 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
+    final showOfferBar = _isBuyer && !_isLoading;
 
     return Scaffold(
       backgroundColor: context.appBackground,
@@ -469,6 +487,7 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
             ? [
                 IconButton(
                   icon: const Icon(Icons.delete),
+                  color: context.appError,
                   onPressed: _confirmDelete,
                   tooltip: l10n.crop_detail_delete_tooltip,
                 ),
@@ -477,343 +496,432 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
                   onPressed: _navigateToEdit,
                   tooltip: l10n.crop_detail_edit_tooltip,
                 ),
+                const SizedBox(width: AppDimensions.space4),
               ]
             : const [],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CupertinoActivityIndicator(radius: 12))
           : SingleChildScrollView(
+              physics: AppMotion.scrollPhysics,
+              padding: const EdgeInsets.only(bottom: AppDimensions.space32),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Galería de imágenes
                   _buildImageGallery(context),
-
                   Padding(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // Título y Badge
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                _crop.title,
-                                style: theme.textTheme.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: context.appTextPrimary,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            CropStatusBadge(status: _crop.status),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          _crop.cropType,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            color: context.appTextSecondary,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          _crop.description,
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            color: context.appTextPrimary,
-                          ),
-                        ),
-
-                        Divider(
-                          height: 32,
-                          color: context.appDivider,
-                        ),
-
-                        // Datos de precio y existencias
-                        _buildInfoRow(
-                          context,
-                          l10n.crop_detail_price_per_kg,
-                          CurrencyFormatters.formatCop(_crop.pricePerKg),
-                        ),
+                        _buildTitleBlock(context),
+                        const SizedBox(height: AppDimensions.space20),
+                        _buildPriceCard(context, l10n),
+                        const SizedBox(height: AppDimensions.space12),
+                        _buildStockGroup(context, l10n),
                         if (_regionalReference != null) ...[
-                          const SizedBox(height: 4),
+                          const SizedBox(height: AppDimensions.space12),
                           _buildRegionalReferenceBanner(context),
-                          const SizedBox(height: 8),
                         ],
-                        _buildInfoRow(
-                          context,
-                          l10n.crop_detail_available_stock,
-                          UnitFormatters.formatKgWithEquivalence(
-                            _crop.availableStock,
-                          ),
-                          onTap: _isBuyer
-                              ? () => _showEquivalencesModal(context)
-                              : null,
-                        ),
-                        if (_isBuyer)
-                          Padding(
-                            padding: const EdgeInsets.only(
-                              top: 4.0,
-                              bottom: 8.0,
-                            ),
-                            child: Align(
-                              alignment: Alignment.centerRight,
-                              child: OutlinedButton.icon(
-                                key: const Key(
-                                  'crop_detail_equivalences_button',
-                                ),
-                                onPressed: () =>
-                                    _showEquivalencesModal(context),
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: context.appPrimary,
-                                  backgroundColor: context.appPrimary
-                                      .withValues(alpha: 0.08),
-                                  side: BorderSide(
-                                    color: context.appPrimary
-                                        .withValues(alpha: 0.8),
-                                    width: 1.4,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 14,
-                                    vertical: 8,
-                                  ),
-                                  minimumSize: Size.zero,
-                                  tapTargetSize:
-                                      MaterialTapTargetSize.shrinkWrap,
-                                ),
-                                icon: Icon(
-                                  Icons.calculate_outlined,
-                                  size: 18,
-                                  color: context.appPrimary,
-                                ),
-                                label: Text(
-                                  l10n.crop_detail_view_equivalences,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold,
-                                    color: context.appPrimary,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        _buildInfoRow(
-                          context,
-                          l10n.crop_detail_min_order,
-                          UnitFormatters.formatKg(_crop.minOrderKg),
-                        ),
-                        _buildInfoRow(
-                          context,
-                          l10n.crop_detail_location,
-                          _distanceEvaluation != null &&
-                                  _distanceEvaluation!.hasValidDistance
-                              ? '${_crop.municipality}, ${_crop.department} (${_distanceEvaluation!.formatted})'
-                              : '${_crop.municipality}, ${_crop.department}',
-                        ),
-                        if (_isBuyer &&
-                            _distanceEvaluation != null &&
-                            _distanceEvaluation!.hasValidDistance)
-                          _buildInfoRow(
-                            context,
-                            l10n.crop_detail_estimated_distance,
-                            _formatEstimatedDistance(
-                              l10n,
-                              _distanceEvaluation!,
-                            ),
-                          ),
-                        _buildInfoRow(
-                          context,
-                          l10n.crop_detail_publication_date,
-                          DateFormatters.formatMediumDate(_crop.createdAt),
-                        ),
-                        if (!_crop.isEarlySale &&
-                            _crop.estimatedHarvestDate != null)
-                          _buildInfoRow(
-                            context,
-                            l10n.crop_detail_estimated_harvest,
-                            DateFormatters.formatHarvestDateLong(
-                              _crop.estimatedHarvestDate,
-                            ),
-                          ),
-
+                        const SizedBox(height: AppDimensions.space12),
+                        _buildDateTiles(context, l10n),
                         if (_crop.isEarlySale) ...[
-                          Divider(
-                            height: 32,
-                            color: context.appDivider,
+                          const SizedBox(height: AppDimensions.space12),
+                          _buildEarlySaleCard(context, l10n),
+                        ],
+                        if (_crop.description.trim().isNotEmpty) ...[
+                          const SizedBox(height: AppDimensions.space24),
+                          _buildSectionLabel(
+                            context,
+                            l10n.crop_detail_description,
                           ),
                           Text(
-                            l10n.crop_detail_early_sale,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
+                            _crop.description,
+                            style: AppTextStyles.bodyLarge.copyWith(
                               color: context.appTextPrimary,
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          if (_crop.estimatedHarvestDate != null)
-                            _buildInfoRow(
-                              context,
-                              l10n.crop_detail_estimated_harvest,
-                              DateFormatters.formatHarvestDateLong(
-                                _crop.estimatedHarvestDate,
-                              ),
-                            ),
-                          if (_crop.estimatedYieldKg != null)
-                            _buildInfoRow(
-                              context,
-                              l10n.crop_detail_estimated_yield,
-                              UnitFormatters.formatKgWithEquivalence(
-                                _crop.estimatedYieldKg,
-                              ),
-                            ),
                         ],
-
-                        // Sección de información del Productor (para compradores)
                         if (_isBuyer) ...[
-                          Divider(
-                            height: 32,
-                            color: context.appDivider,
-                          ),
+                          const SizedBox(height: AppDimensions.space24),
                           _buildFarmerInfoCard(context, l10n),
                         ],
-
-                        // Sección de Acciones
-                        Divider(
-                          height: 32,
-                          color: context.appDivider,
-                        ),
-                        Text(
-                          l10n.crop_detail_quick_actions,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: context.appTextPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Si es agricultor dueño: Pausar/Activar y Ver Negociaciones
-                        if (_isOwner) ...[
-                          if (_crop.status == CropStatus.activa)
-                            ElevatedButton.icon(
-                              onPressed: () =>
-                                  _updateStatus(CropStatus.pausada),
-                              icon: const Icon(Icons.pause),
-                              label: Text(l10n.crop_detail_pause_crop),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: context.appWarning,
-                                foregroundColor: context.appOnPrimary,
-                                minimumSize: const Size.fromHeight(48),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            )
-                          else if (_crop.status == CropStatus.pausada ||
-                              _crop.status == CropStatus.borrador)
-                            ElevatedButton.icon(
-                              onPressed: () => _updateStatus(CropStatus.activa),
-                              icon: const Icon(Icons.play_arrow),
-                              label: Text(l10n.crop_detail_activate_crop),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: context.appSuccess,
-                                foregroundColor: context.appOnPrimary,
-                                minimumSize: const Size.fromHeight(48),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            ),
-                          const SizedBox(height: 16),
-                          OutlinedButton.icon(
-                            key: const Key(
-                              'crop_detail_farmer_negotiations_button',
-                            ),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => DealsScreen(
-                                    role: 'agricultor',
-                                    service: widget.negotiationService,
-                                  ),
-                                ),
-                              );
-                            },
-                            icon: const Icon(Icons.handshake),
-                            label: Text(l10n.crop_detail_view_negotiations),
-                            style: OutlinedButton.styleFrom(
-                              minimumSize: const Size.fromHeight(48),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                        ],
-
-                        // Si es comprador: Hacer oferta / Negociar y Ver equivalencias
-                        if (_isBuyer) ...[
-                          ElevatedButton.icon(
-                            onPressed: _openMakeOfferSheet,
-                            icon: const Icon(Icons.handshake_outlined),
-                            label: Text(
-                              l10n.crop_detail_make_offer,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: context.appPrimary,
-                              foregroundColor: context.appOnPrimary,
-                              minimumSize: const Size.fromHeight(52),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              elevation: 2,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          OutlinedButton.icon(
-                            key: const Key(
-                              'crop_detail_equivalences_action_button',
-                            ),
-                            onPressed: () => _showEquivalencesModal(context),
-                            icon: Icon(
-                              Icons.scale_outlined,
-                              color: context.appPrimary,
-                            ),
-                            label: Text(
-                              l10n.crop_detail_view_equivalences,
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                                color: context.appPrimary,
-                              ),
-                            ),
-                            style: OutlinedButton.styleFrom(
-                              minimumSize: const Size.fromHeight(48),
-                              side: BorderSide(
-                                color: context.appPrimary
-                                    .withValues(alpha: 0.8),
-                                width: 1.4,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                        ],
+                        const SizedBox(height: AppDimensions.space24),
+                        _buildActions(context, l10n),
                       ],
                     ),
                   ),
                 ],
               ),
             ),
+      bottomNavigationBar: showOfferBar ? _buildOfferBar(context, l10n) : null,
+    );
+  }
+
+  Widget _buildSectionLabel(BuildContext context, String text, {Key? key}) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: AppDimensions.space8),
+      child: Text(
+        text,
+        key: key,
+        style: AppTextStyles.titleMedium.copyWith(
+          color: context.appTextPrimary,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTitleBlock(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          _crop.title,
+          style: AppTextStyles.displaySmall.copyWith(
+            fontWeight: FontWeight.w800,
+            color: context.appTextPrimary,
+          ),
+        ),
+        const SizedBox(height: AppDimensions.space8),
+        Row(
+          children: [
+            Flexible(
+              child: Text(
+                _crop.cropType,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.bodyLarge.copyWith(
+                  color: context.appTextSecondary,
+                ),
+              ),
+            ),
+            const SizedBox(width: AppDimensions.space8),
+            CropStatusBadge(status: _crop.status),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// The two numbers a buyer weighs together: price per kilogram as the
+  /// hero figure, and the kilograms available right under it, where the
+  /// equivalences pill converts them.
+  Widget _buildPriceCard(BuildContext context, AppLocalizations l10n) {
+    return InsetGroupCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+            child: _buildPriceFigure(context, l10n),
+          ),
+          Divider(height: 1, indent: 16, color: context.appDivider),
+          _buildInfoRow(
+            context,
+            LucideIcons.package,
+            l10n.crop_detail_available_stock,
+            UnitFormatters.formatKgWithEquivalence(_crop.availableStock),
+            onTap: _isBuyer ? () => _showEquivalencesModal(context) : null,
+            footer: _isBuyer ? _buildEquivalencesPill(context, l10n) : null,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPriceFigure(BuildContext context, AppLocalizations l10n) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.crop_detail_price_per_kg,
+          style: AppTextStyles.bodySmall.copyWith(
+            color: context.appTextSecondary,
+          ),
+        ),
+        const SizedBox(height: AppDimensions.space4),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          children: [
+            Text(
+              CurrencyFormatters.formatCop(_crop.pricePerKg),
+              style: AppTextStyles.figureLarge.copyWith(
+                fontSize: 30,
+                letterSpacing: -0.8,
+                color: context.appPrimary,
+              ),
+            ),
+            const SizedBox(width: AppDimensions.space4),
+            Text(
+              '/ kg',
+              style: AppTextStyles.titleMedium.copyWith(
+                color: context.appTextSecondary,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// Minimum order, location and distance as an iOS inset-grouped list.
+  Widget _buildStockGroup(BuildContext context, AppLocalizations l10n) {
+    final hasDistance =
+        _distanceEvaluation != null && _distanceEvaluation!.hasValidDistance;
+
+    final rows = <Widget>[
+      _buildInfoRow(
+        context,
+        LucideIcons.packageCheck,
+        l10n.crop_detail_min_order,
+        UnitFormatters.formatKg(_crop.minOrderKg),
+      ),
+      _buildInfoRow(
+        context,
+        LucideIcons.mapPin,
+        l10n.crop_detail_location,
+        hasDistance
+            ? '${_crop.municipality}, ${_crop.department} (${_distanceEvaluation!.formatted})'
+            : '${_crop.municipality}, ${_crop.department}',
+      ),
+      if (_isBuyer && hasDistance)
+        _buildInfoRow(
+          context,
+          LucideIcons.navigation,
+          l10n.crop_detail_estimated_distance,
+          _formatEstimatedDistance(l10n, _distanceEvaluation!),
+        ),
+    ];
+
+    return InsetGroupCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        children: [
+          for (var i = 0; i < rows.length; i++) ...[
+            if (i > 0)
+              Divider(height: 1, indent: 48, color: context.appDivider),
+            rows[i],
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEquivalencesPill(BuildContext context, AppLocalizations l10n) {
+    final triad = context.appBrandTriad;
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: PressableScale(
+        child: Material(
+          color: triad.background,
+          shape: StadiumBorder(side: BorderSide(color: triad.border)),
+          child: InkWell(
+            key: const Key('crop_detail_equivalences_button'),
+            customBorder: const StadiumBorder(),
+            onTap: () => _showEquivalencesModal(context),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 36),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(LucideIcons.scale, size: 15, color: triad.foreground),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        l10n.crop_detail_equivalences_pill,
+                        style: AppTextStyles.labelMedium.copyWith(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: triad.foreground,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Publication and harvest dates side by side. The harvest tile is amber
+  /// so a future date can never be mistaken for the listing date.
+  Widget _buildDateTiles(BuildContext context, AppLocalizations l10n) {
+    final harvest = _crop.estimatedHarvestDate;
+
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: _DateTile(
+              icon: LucideIcons.calendar,
+              label: l10n.crop_detail_publication_date,
+              value: DateFormatters.formatMediumDate(_crop.createdAt),
+              triad: AppSemanticTriad(
+                background: context.appSurface,
+                border: context.appBorder,
+                foreground: context.appTextSecondary,
+              ),
+            ),
+          ),
+          if (harvest != null) ...[
+            const SizedBox(width: AppDimensions.space12),
+            Expanded(
+              child: _DateTile(
+                icon: LucideIcons.calendarClock,
+                label: l10n.crop_detail_estimated_harvest,
+                value: DateFormatters.formatHarvestDateLong(harvest),
+                triad: context.appWarningTriad,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEarlySaleCard(BuildContext context, AppLocalizations l10n) {
+    final triad = context.appBrandTriad;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: triad.background,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: triad.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(LucideIcons.sprout, size: 18, color: triad.foreground),
+              const SizedBox(width: AppDimensions.space8),
+              Text(
+                l10n.crop_detail_early_sale,
+                style: AppTextStyles.titleMedium.copyWith(
+                  color: triad.foreground,
+                ),
+              ),
+            ],
+          ),
+          if (_crop.estimatedYieldKg != null) ...[
+            const SizedBox(height: AppDimensions.space8),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    l10n.crop_detail_estimated_yield,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: context.appTextPrimary,
+                    ),
+                  ),
+                ),
+                Text(
+                  UnitFormatters.formatKgWithEquivalence(
+                    _crop.estimatedYieldKg,
+                  ),
+                  style: AppTextStyles.figureSmall.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: context.appTextPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActions(BuildContext context, AppLocalizations l10n) {
+    if (_isOwner) {
+      final warning = context.appWarningTriad;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildSectionLabel(context, l10n.crop_detail_quick_actions),
+          if (_crop.status == CropStatus.activa)
+            ElevatedButton.icon(
+              onPressed: () => _updateStatus(CropStatus.pausada),
+              icon: const Icon(LucideIcons.pause, size: 18),
+              label: Text(l10n.crop_detail_pause_crop),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: warning.background,
+                foregroundColor: warning.text,
+                side: BorderSide(color: warning.border),
+              ),
+            )
+          else if (_crop.status == CropStatus.pausada ||
+              _crop.status == CropStatus.borrador)
+            ElevatedButton.icon(
+              onPressed: () => _updateStatus(CropStatus.activa),
+              icon: const Icon(LucideIcons.play, size: 18),
+              label: Text(l10n.crop_detail_activate_crop),
+            ),
+          const SizedBox(height: AppDimensions.space12),
+          OutlinedButton.icon(
+            key: const Key('crop_detail_farmer_negotiations_button'),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DealsScreen(
+                    role: 'agricultor',
+                    service: widget.negotiationService,
+                  ),
+                ),
+              );
+            },
+            icon: const Icon(LucideIcons.handshake, size: 18),
+            label: Text(l10n.crop_detail_view_negotiations),
+          ),
+        ],
+      );
+    }
+
+    if (_isBuyer) {
+      return OutlinedButton.icon(
+        key: const Key('crop_detail_equivalences_action_button'),
+        onPressed: () => _showEquivalencesModal(context),
+        icon: const Icon(LucideIcons.scale, size: 18),
+        label: Text(l10n.crop_detail_view_equivalences),
+      );
+    }
+
+    return const SizedBox.shrink();
+  }
+
+  /// Frosted bar that keeps the buyer's primary action in reach while the
+  /// lot details scroll underneath.
+  Widget _buildOfferBar(BuildContext context, AppLocalizations l10n) {
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: context.appSurface.withValues(alpha: 0.88),
+            border: Border(top: BorderSide(color: context.appBorder)),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+              child: ElevatedButton.icon(
+                onPressed: _openMakeOfferSheet,
+                icon: const Icon(LucideIcons.handshake, size: 20),
+                label: Text(l10n.crop_detail_make_offer),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -825,36 +933,22 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
     if (_crop.imageUrls.length == 1) {
       final url = _cropService.getPublicImageUrl(_crop.imageUrls.first);
       return SizedBox(
-        height: 250,
+        height: _galleryHeight,
         width: double.infinity,
-        child: Image.network(
-          url,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) =>
-              _buildImageFallback(context),
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) return child;
-            return Container(
-              height: 250,
-              color: context.appSurfaceVariant,
-              child: const Center(
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            );
-          },
-        ),
+        child: _buildNetworkPhoto(context, url),
       );
     }
 
+    final count = _crop.imageUrls.length;
     return Column(
       children: [
         SizedBox(
-          height: 250,
+          height: _galleryHeight,
           child: Stack(
             children: [
               PageView.builder(
                 controller: _pageController,
-                itemCount: _crop.imageUrls.length,
+                itemCount: count,
                 onPageChanged: (index) {
                   setState(() {
                     _currentImageIndex = index;
@@ -864,65 +958,43 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
                   final url = _cropService.getPublicImageUrl(
                     _crop.imageUrls[index],
                   );
-                  return Image.network(
-                    url,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) =>
-                        _buildImageFallback(context),
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return Container(
-                        color: context.appSurfaceVariant,
-                        child: const Center(
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      );
-                    },
-                  );
+                  return _buildNetworkPhoto(context, url);
                 },
               ),
               Positioned(
-                bottom: 12,
+                top: 12,
                 right: 12,
-                child: Container(
+                child: MediaCapsule.custom(
                   key: const Key('crop_gallery_indicator'),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: context.appShadow.withValues(alpha: 0.65),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
                   child: Text(
-                    '${_currentImageIndex + 1} / ${_crop.imageUrls.length}',
-                    style: TextStyle(
-                      color: context.appOverlayText,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
+                    '${_currentImageIndex + 1} / $count',
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: AppColors.onBrand,
+                      fontWeight: FontWeight.w700,
+                      fontFeatures: AppTextStyles.tabularFigures,
                     ),
                   ),
                 ),
               ),
               Positioned(
                 bottom: 12,
-                left: 12,
-                child: Row(
-                  children: List.generate(_crop.imageUrls.length, (index) {
-                    final isSelected = index == _currentImageIndex;
-                    return AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      margin: const EdgeInsets.only(right: 6),
-                      width: isSelected ? 18 : 6,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? context.appOverlayText
-                            : context.appOverlayText.withValues(alpha: 0.4),
-                        borderRadius: BorderRadius.circular(3),
-                      ),
-                    );
-                  }),
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: MediaCapsule.custom(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        for (var i = 0; i < count; i++)
+                          Padding(
+                            padding: EdgeInsets.only(
+                              right: i == count - 1 ? 0 : 6,
+                            ),
+                            child: _PageDot(active: i == _currentImageIndex),
+                          ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -930,48 +1002,57 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
         ),
         Container(
           key: const Key('crop_gallery_thumbnails'),
-          height: 64,
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-          color: context.appSurface,
+          height: 72,
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: context.appSurface,
+            border: Border(bottom: BorderSide(color: context.appBorder)),
+          ),
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            itemCount: _crop.imageUrls.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 8),
+            padding: AppDimensions.paddingScreenHorizontal,
+            itemCount: count,
+            separatorBuilder: (_, _) =>
+                const SizedBox(width: AppDimensions.space8),
             itemBuilder: (context, index) {
               final isSelected = index == _currentImageIndex;
               final url = _cropService.getPublicImageUrl(
                 _crop.imageUrls[index],
               );
-              final borderColor = isSelected
-                  ? context.appPrimary
-                  : AppColors.transparent;
 
               return GestureDetector(
                 onTap: () {
                   _pageController.animateToPage(
                     index,
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
+                    duration: AppMotion.of(context, AppMotion.emphasized),
+                    curve: AppMotion.easeInOut,
                   );
                 },
-                child: Container(
-                  width: 48,
-                  height: 48,
+                child: AnimatedContainer(
+                  duration: AppMotion.of(context, AppMotion.standard),
+                  curve: AppMotion.easeOut,
+                  width: 52,
+                  height: 52,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: borderColor, width: 2),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isSelected
+                          ? context.appPrimary
+                          : context.appBorder,
+                      width: 2,
+                    ),
                   ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: BorderRadius.circular(10),
                     child: Image.network(
                       url,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) => Container(
                         color: context.appSurfaceVariant,
                         child: Icon(
-                          Icons.image_not_supported_outlined,
-                          size: 20,
-                          color: context.appTextDisabled,
+                          LucideIcons.imageOff,
+                          size: 18,
+                          color: context.appTextMuted,
                         ),
                       ),
                     ),
@@ -985,20 +1066,45 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
     );
   }
 
-  Widget _buildImageFallback(BuildContext context) {
-    return Container(
-      height: 200,
-      color: context.appSurfaceVariant,
-      child: Center(
-        child: Icon(
-          Icons.image_not_supported_outlined,
-          size: 64,
-          color: context.appTextDisabled,
-        ),
-      ),
+  static const double _galleryHeight = 280;
+
+  /// Network photo that shimmers while loading and fades in on its first
+  /// frame.
+  Widget _buildNetworkPhoto(BuildContext context, String url) {
+    return Image.network(
+      url,
+      fit: BoxFit.cover,
+      width: double.infinity,
+      errorBuilder: (context, error, stackTrace) =>
+          _buildImageFallback(context),
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) return child;
+        return const AppShimmer(
+          child: AppSkeletonBlock(height: _galleryHeight, radius: 0),
+        );
+      },
+      frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+        if (wasSynchronouslyLoaded) return child;
+        return AnimatedOpacity(
+          opacity: frame == null ? 0 : 1,
+          duration: AppMotion.of(context, AppMotion.standard),
+          curve: AppMotion.easeOut,
+          child: child,
+        );
+      },
     );
   }
 
+  Widget _buildImageFallback(BuildContext context) {
+    return const SizedBox(
+      height: 180,
+      width: double.infinity,
+      child: CropPhotoPlaceholder(iconSize: 44),
+    );
+  }
+
+  /// Market intelligence card: how the asking price sits against the
+  /// Nariño regional index. Informational blue, never alarm colors.
   Widget _buildRegionalReferenceBanner(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final ref = _regionalReference!;
@@ -1006,7 +1112,9 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
     final diffPercent = ref.referencePricePerKg > 0
         ? (diff / ref.referencePricePerKg) * 100
         : 0.0;
-    final sign = diff > 0 ? '+' : '';
+    // Both the amount and the percentage are shown unsigned with one shared
+    // sign, so a price under the index reads "-\$ 700/kg (-15.6%)".
+    final sign = diff > 0 ? '+' : '-';
     final comparisonText = diff == 0
         ? l10n.crop_detail_price_matches_reference(
             CurrencyFormatters.formatCop(ref.referencePricePerKg),
@@ -1014,66 +1122,59 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
         : l10n.crop_detail_price_vs_reference(
             sign,
             CurrencyFormatters.formatCop(diff.abs()),
-            diffPercent.toStringAsFixed(1),
+            diffPercent.abs().toStringAsFixed(1),
             CurrencyFormatters.formatCop(ref.referencePricePerKg),
           );
+    final info = context.appInfoTriad;
 
     return Container(
       key: const Key('crop_detail_regional_reference_card'),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: context.appWarningContainer,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: context.appWarning.withValues(alpha: 0.4)),
+        color: info.background,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: info.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                Icons.analytics_outlined,
-                size: 16,
-                color: context.appWarning,
+              IconSquircle(
+                icon: LucideIcons.trendingUp,
+                triad: AppSemanticTriad(
+                  background: context.appSurface,
+                  border: info.border,
+                  foreground: info.foreground,
+                ),
+                size: 36,
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: AppDimensions.space12),
               Expanded(
                 child: Text(
-                  l10n.crop_detail_regional_reference_region(ref.region),
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
+                  l10n.crop_detail_regional_index_title,
+                  style: AppTextStyles.titleSmall.copyWith(
                     color: context.appTextPrimary,
                   ),
                 ),
               ),
-              Chip(
-                label: Text(l10n.common_simulated),
-                visualDensity: VisualDensity.compact,
-                backgroundColor: context.appWarningContainer,
-                labelStyle: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: context.appWarning,
-                ),
-              ),
+              const SizedBox(width: AppDimensions.space8),
+              _InfoTag(label: l10n.common_simulated, triad: info),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppDimensions.space12),
           Text(
             comparisonText,
-            style: TextStyle(
-              fontSize: 13,
+            style: AppTextStyles.bodyMedium.copyWith(
               fontWeight: FontWeight.w600,
               color: context.appTextPrimary,
+              fontFeatures: AppTextStyles.tabularFigures,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppDimensions.space4),
           Text(
-            SimulatedRegionalPriceReferences.notice,
-            style: TextStyle(
-              fontSize: 11,
-              fontStyle: FontStyle.italic,
+            l10n.profitability_reference_notice,
+            style: AppTextStyles.caption.copyWith(
               color: context.appTextSecondary,
             ),
           ),
@@ -1082,10 +1183,7 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
     );
   }
 
-  Widget _buildFarmerInfoCard(
-    BuildContext context,
-    AppLocalizations l10n,
-  ) {
+  Widget _buildFarmerInfoCard(BuildContext context, AppLocalizations l10n) {
     final producerName = _farmerProfile?.fullName.isNotEmpty == true
         ? _farmerProfile!.fullName
         : l10n.crop_detail_producer_with_location(
@@ -1098,71 +1196,71 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
             _farmerProfile!.profilePath!.isNotEmpty
         ? _profileService.getPublicProfileImageUrl(_farmerProfile!.profilePath!)
         : null;
+    final showPhone =
+        _farmerProfile?.settings.sharePhone == true &&
+        _farmerProfile?.phone != null &&
+        _farmerProfile!.phone.isNotEmpty;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: context.appSurface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.appBorder),
-      ),
+    return InsetGroupCard(
+      padding: EdgeInsets.zero,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              UserAvatar(
-                imageUrl: avatarUrl,
-                radius: 22,
-                backgroundColor: context.appPrimary.withValues(alpha: 0.15),
-                borderColor: context.appPrimary.withValues(alpha: 0.4),
-                iconColor: context.appPrimary,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.crop_detail_farmer_info,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: context.appTextSecondary,
-                      ),
-                    ),
-                    Text(
-                      producerName,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: context.appTextPrimary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          if (_farmerProfile?.settings.sharePhone == true &&
-              _farmerProfile?.phone != null &&
-              _farmerProfile!.phone.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Row(
+          Padding(
+            padding: const EdgeInsets.all(AppDimensions.space16),
+            child: Row(
               children: [
-                Icon(
-                  Icons.phone,
-                  size: 16,
-                  color: context.appPrimary,
+                UserAvatar(
+                  imageUrl: avatarUrl,
+                  radius: 24,
+                  backgroundColor: context.appPrimarySoft,
+                  borderColor: context.appBrandTriad.border,
+                  iconColor: context.appOnPrimarySoft,
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  _farmerProfile!.phone,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: context.appTextPrimary,
+                const SizedBox(width: AppDimensions.space12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.crop_detail_farmer_info,
+                        style: AppTextStyles.caption.copyWith(
+                          color: context.appTextSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        producerName,
+                        style: AppTextStyles.titleLarge.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: context.appTextPrimary,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
+            ),
+          ),
+          if (showPhone) ...[
+            Divider(height: 1, indent: 16, color: context.appDivider),
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppDimensions.space16,
+                vertical: 14,
+              ),
+              child: Row(
+                children: [
+                  Icon(LucideIcons.phone, size: 16, color: context.appPrimary),
+                  const SizedBox(width: AppDimensions.space12),
+                  Text(
+                    _farmerProfile!.phone,
+                    style: AppTextStyles.bodyLarge.copyWith(
+                      color: context.appTextPrimary,
+                      fontFeatures: AppTextStyles.tabularFigures,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ],
@@ -1172,42 +1270,157 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
 
   Widget _buildInfoRow(
     BuildContext context,
+    IconData icon,
     String label,
     String value, {
     VoidCallback? onTap,
+    Widget? footer,
   }) {
     final rowContent = Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      padding: const EdgeInsets.fromLTRB(16, 13, 16, 13),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              color: context.appTextSecondary,
-            ),
-          ),
-          Flexible(
-            child: Text(
-              value,
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: context.appTextPrimary,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 1),
+                child: Icon(icon, size: 18, color: context.appTextSecondary),
               ),
-            ),
+              const SizedBox(width: 14),
+              Text(
+                label,
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: context.appTextSecondary,
+                ),
+              ),
+              const SizedBox(width: AppDimensions.space12),
+              Expanded(
+                child: Text(
+                  value,
+                  textAlign: TextAlign.right,
+                  style: AppTextStyles.figureSmall.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: context.appTextPrimary,
+                  ),
+                ),
+              ),
+            ],
           ),
+          if (footer != null) ...[
+            const SizedBox(height: AppDimensions.space12),
+            Padding(padding: const EdgeInsets.only(left: 32), child: footer),
+          ],
         ],
       ),
     );
 
     if (onTap != null) {
-      return InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: rowContent,
-      );
+      return InkWell(onTap: onTap, child: rowContent);
     }
     return rowContent;
+  }
+}
+
+/// iOS page control dot: fixed size, only the fill changes, so paging
+/// never shifts the row.
+class _PageDot extends StatelessWidget {
+  final bool active;
+
+  const _PageDot({required this.active});
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<Color?>(
+      tween: ColorTween(
+        end: active
+            ? AppColors.onBrand
+            : AppColors.onBrand.withValues(alpha: 0.42),
+      ),
+      duration: AppMotion.of(context, AppMotion.standard),
+      curve: AppMotion.easeOut,
+      builder: (context, color, _) => Container(
+        width: 7,
+        height: 7,
+        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      ),
+    );
+  }
+}
+
+class _DateTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final AppSemanticTriad triad;
+
+  const _DateTile({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.triad,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: triad.background,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: triad.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 18, color: triad.foreground),
+          const SizedBox(height: AppDimensions.space8),
+          Text(
+            label,
+            style: AppTextStyles.caption.copyWith(
+              color: triad.text,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: AppTextStyles.titleSmall.copyWith(
+              color: context.appTextPrimary,
+              fontFeatures: AppTextStyles.tabularFigures,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoTag extends StatelessWidget {
+  final String label;
+  final AppSemanticTriad triad;
+
+  const _InfoTag({required this.label, required this.triad});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: context.appSurface,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: triad.border),
+      ),
+      child: Text(
+        label,
+        style: AppTextStyles.labelSmall.copyWith(
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.4,
+          color: triad.text,
+        ),
+      ),
+    );
   }
 }

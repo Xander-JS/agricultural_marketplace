@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../deals/models/negotiation_model.dart';
 import '../../deals/models/negotiation_status.dart';
 import '../services/purchases_service.dart';
@@ -9,6 +11,16 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/app_formatters.dart';
+import '../../../../core/theme/app_motion.dart';
+import '../../../../core/widgets/brand/kus_brand_logo.dart';
+import '../../../../core/widgets/cards/inset_group_card.dart';
+import '../../../../core/widgets/feedback/app_empty_state.dart';
+import '../../../../core/widgets/inputs/app_segmented_control.dart';
+import '../../../../core/widgets/loading/section_skeletons.dart';
+import '../../../../core/widgets/misc/staggered_entrance.dart';
+
+/// Sections of the purchases list.
+enum _PurchasesFilter { all, agreed, completed }
 
 /// Pantalla principal del Módulo de Compras para el rol Comerciante/Comprador.
 ///
@@ -31,23 +43,19 @@ class PurchasesScreen extends StatefulWidget {
   State<PurchasesScreen> createState() => _PurchasesScreenState();
 }
 
-class _PurchasesScreenState extends State<PurchasesScreen>
-    with SingleTickerProviderStateMixin {
+class _PurchasesScreenState extends State<PurchasesScreen> {
   late final PurchasesService _service;
-  late final TabController _tabController;
 
   bool _isLoading = true;
   String? _errorMessage;
   List<NegotiationModel> _purchases = [];
+  _PurchasesFilter _filter = _PurchasesFilter.all;
+  bool _entrancePlayed = false;
 
   @override
   void initState() {
     super.initState();
     _service = widget.service ?? PurchasesService();
-    _tabController = TabController(length: 3, vsync: this);
-    _tabController.addListener(() {
-      if (mounted) setState(() {});
-    });
 
     if (widget.initialPurchases != null) {
       _purchases = widget.initialPurchases!;
@@ -55,12 +63,6 @@ class _PurchasesScreenState extends State<PurchasesScreen>
     } else {
       _loadPurchases();
     }
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
   }
 
   Future<void> _loadPurchases() async {
@@ -103,18 +105,17 @@ class _PurchasesScreenState extends State<PurchasesScreen>
     }
   }
 
-  List<NegotiationModel> _getFilteredPurchases(int tabIndex) {
-    switch (tabIndex) {
-      case 1:
+  List<NegotiationModel> _getFilteredPurchases(_PurchasesFilter filter) {
+    switch (filter) {
+      case _PurchasesFilter.agreed:
         return _purchases
             .where((p) => p.status == NegotiationStatus.acordada)
             .toList();
-      case 2:
+      case _PurchasesFilter.completed:
         return _purchases
             .where((p) => p.status == NegotiationStatus.completada)
             .toList();
-      case 0:
-      default:
+      case _PurchasesFilter.all:
         return _purchases;
     }
   }
@@ -155,360 +156,391 @@ class _PurchasesScreenState extends State<PurchasesScreen>
     return Scaffold(
       backgroundColor: context.appBackground,
       appBar: AppBar(
-        title: Text(
-          l10n.purchases_title,
-          style: AppTextStyles.displaySmall.copyWith(
-            color: context.appTextPrimary,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: context.appSurface,
-        elevation: 0,
         centerTitle: false,
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: context.appPrimary,
-          unselectedLabelColor: context.appTextSecondary,
-          indicatorColor: context.appPrimary,
-          indicatorWeight: 3,
-          tabs: [
-            Tab(text: l10n.purchases_tab_all),
-            Tab(text: l10n.purchases_tab_agreed),
-            Tab(text: l10n.purchases_tab_completed),
+        titleSpacing: AppDimensions.space16,
+        title: const KusBrandLogo.compact(),
+      ),
+      body: RefreshIndicator(
+        onRefresh: _loadPurchases,
+        color: context.appPrimary,
+        backgroundColor: context.appSurface,
+        strokeWidth: 2.5,
+        child: CustomScrollView(
+          physics: AppMotion.scrollPhysics,
+          slivers: [
+            SliverToBoxAdapter(child: _buildHeader(l10n)),
+            ..._buildContentSlivers(l10n),
           ],
         ),
       ),
-      body: SafeArea(
-        child: _isLoading
-            ? Center(
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(context.appPrimary),
-                ),
-              )
-            : _errorMessage != null
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24.0),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            size: 48,
-                            color: context.appError,
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            l10n.purchases_error_prefix(_errorMessage!),
-                            textAlign: TextAlign.center,
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: context.appTextPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          ElevatedButton.icon(
-                            onPressed: _loadPurchases,
-                            icon: const Icon(Icons.refresh),
-                            label: Text(l10n.common_retry),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: context.appPrimary,
-                              foregroundColor: context.appOnPrimary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
-                : Column(
-                    children: [
-                      // Banner resumen de métricas
-                      _buildSummaryBanner(
-                        l10n: l10n,
-                        agreedCount: _agreedCount,
-                        totalInvested: _totalInvested,
-                        totalVolumeKg: _totalVolumeKg,
-                      ),
-                      // Pestañas con lista de compras
-                      Expanded(
-                        child: TabBarView(
-                          controller: _tabController,
-                          children: [
-                            _buildPurchasesList(
-                              context: context,
-                              items: _getFilteredPurchases(0),
-                              l10n: l10n,
-                            ),
-                            _buildPurchasesList(
-                              context: context,
-                              items: _getFilteredPurchases(1),
-                              l10n: l10n,
-                            ),
-                            _buildPurchasesList(
-                              context: context,
-                              items: _getFilteredPurchases(2),
-                              l10n: l10n,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-      ),
     );
   }
 
-  Widget _buildSummaryBanner({
-    required AppLocalizations l10n,
-    required int agreedCount,
-    required double totalInvested,
-    required double totalVolumeKg,
-  }) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: context.appSurface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: context.appBorder,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: context.appShadow,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _buildBannerItem(
-              label: l10n.purchases_total_agreed,
-              value: agreedCount.toString(),
-              icon: Icons.handshake_outlined,
-              color: context.appPrimary,
-            ),
-          ),
-          Container(
-            width: 1,
-            height: 36,
-            color: context.appDivider,
-          ),
-          Expanded(
-            child: _buildBannerItem(
-              label: l10n.purchases_total_invested,
-              value: CurrencyFormatters.formatCop(totalInvested),
-              icon: Icons.payments_outlined,
-              color: context.appSuccess,
-            ),
-          ),
-          Container(
-            width: 1,
-            height: 36,
-            color: context.appDivider,
-          ),
-          Expanded(
-            child: _buildBannerItem(
-              label: l10n.purchases_total_volume,
-              value: UnitFormatters.formatKg(totalVolumeKg),
-              icon: Icons.scale_outlined,
-              color: context.appWarning,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBannerItem({
-    required String label,
-    required String value,
-    required IconData icon,
-    required Color color,
-  }) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 20, color: color),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: context.appTextPrimary,
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 10,
-            color: context.appTextSecondary,
-          ),
-          textAlign: TextAlign.center,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPurchasesList({
-    required BuildContext context,
-    required List<NegotiationModel> items,
-    required AppLocalizations l10n,
-  }) {
-    if (items.isEmpty) {
-      return RefreshIndicator(
-        onRefresh: _loadPurchases,
-        color: context.appPrimary,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: AppDimensions.paddingScreen,
-          child: _buildEmptyState(
-            context: context,
-            l10n: l10n,
-          ),
-        ),
-      );
-    }
-
-    return RefreshIndicator(
-      onRefresh: _loadPurchases,
-      color: context.appPrimary,
-      child: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        itemCount: items.length,
-        itemBuilder: (context, index) {
-          final item = items[index];
-          return PurchaseCard(
-            purchase: item,
-            onRefresh: _loadPurchases,
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildEmptyState({
-    required BuildContext context,
-    required AppLocalizations l10n,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppDimensions.space20,
-        vertical: AppDimensions.space32,
-      ),
-      decoration: BoxDecoration(
-        color: context.appSurface,
-        borderRadius: AppDimensions.borderRadiusLG,
-        border: Border.all(color: context.appBorder),
-        boxShadow: [
-          BoxShadow(
-            color: context.appShadow,
-            offset: const Offset(0, 4),
-            blurRadius: 12,
-          ),
-        ],
-      ),
+  Widget _buildHeader(AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: context.appPrimaryContainer,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.shopping_bag_outlined,
-              size: AppDimensions.iconXL,
-              color: context.appPrimary,
-            ),
-          ),
-          const SizedBox(height: AppDimensions.space16),
           Text(
-            l10n.purchases_placeholder_title,
-            textAlign: TextAlign.center,
-            style: AppTextStyles.titleLarge.copyWith(
+            l10n.purchases_title,
+            style: AppTextStyles.displayMedium.copyWith(
+              fontSize: 30,
               color: context.appTextPrimary,
-              fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: AppDimensions.space8),
+          const SizedBox(height: 2),
           Text(
-            l10n.purchases_empty_title,
-            textAlign: TextAlign.center,
-            style: AppTextStyles.labelMedium.copyWith(
-              color: context.appPrimary,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: AppDimensions.space8),
-          Text(
-            l10n.purchases_empty_desc,
-            textAlign: TextAlign.center,
+            l10n.purchases_subtitle,
             style: AppTextStyles.bodyMedium.copyWith(
               color: context.appTextSecondary,
-              height: 1.4,
             ),
           ),
-          const SizedBox(height: AppDimensions.space24),
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppDimensions.space16,
-              vertical: AppDimensions.space8,
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildContentSlivers(AppLocalizations l10n) {
+    if (_isLoading && _purchases.isEmpty) {
+      return const [
+        SliverToBoxAdapter(
+          child: SectionSkeleton(
+            kind: SectionSkeletonKind.rowCards,
+            padding: EdgeInsets.fromLTRB(16, 4, 16, 24),
+          ),
+        ),
+      ];
+    }
+
+    if (_errorMessage != null) {
+      return [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: AppEmptyState(
+            icon: LucideIcons.cloudOff,
+            title: l10n.purchases_error_prefix(_errorMessage!),
+            action: ElevatedButton.icon(
+              onPressed: _loadPurchases,
+              icon: const Icon(LucideIcons.refreshCw, size: 18),
+              label: Text(l10n.common_retry),
             ),
-            decoration: BoxDecoration(
-              color: context.appPrimaryContainer,
-              borderRadius: AppDimensions.borderRadiusFull,
-              border: Border.all(
-                color: context.appPrimary.withValues(alpha: 0.3),
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.verified_outlined,
-                  size: AppDimensions.iconXS,
-                  color: context.appPrimary,
+          ),
+        ),
+      ];
+    }
+
+    if (_purchases.isEmpty) {
+      return [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: _buildEmptyState(l10n),
+        ),
+      ];
+    }
+
+    final items = _getFilteredPurchases(_filter);
+
+    final animateEntrance = !_entrancePlayed;
+    if (animateEntrance) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _entrancePlayed = true;
+      });
+    }
+
+    return [
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+          child: _SummaryCard(
+            totalInvested: _totalInvested,
+            purchasesCount: _purchases.length,
+            agreedCount: _agreedCount,
+            totalVolumeKg: _totalVolumeKg,
+          ),
+        ),
+      ),
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          child: SizedBox(
+            width: double.infinity,
+            child: AppSegmentedControl<_PurchasesFilter>(
+              value: _filter,
+              onChanged: (filter) => setState(() => _filter = filter),
+              segments: {
+                _PurchasesFilter.all: AppSegment(label: l10n.purchases_tab_all),
+                _PurchasesFilter.agreed: AppSegment(
+                  label: l10n.purchases_tab_agreed,
                 ),
-                const SizedBox(width: AppDimensions.space4),
+                _PurchasesFilter.completed: AppSegment(
+                  label: l10n.purchases_tab_completed,
+                ),
+              },
+            ),
+          ),
+        ),
+      ),
+      if (items.isEmpty)
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: AppEmptyState(
+            icon: LucideIcons.inbox,
+            title: l10n.purchases_filter_empty,
+          ),
+        )
+      else
+        // Purchases are few and bounded, so the list is built eagerly:
+        // every card exists for the staggered entrance and for tests.
+        SliverPadding(
+          padding: EdgeInsets.fromLTRB(
+            16,
+            4,
+            16,
+            24 + MediaQuery.paddingOf(context).bottom,
+          ),
+          sliver: SliverToBoxAdapter(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (var index = 0; index < items.length; index++) ...[
+                  if (index > 0) const SizedBox(height: AppDimensions.space12),
+                  StaggeredEntrance(
+                    index: index,
+                    enabled: animateEntrance,
+                    child: PurchaseCard(
+                      key: ValueKey('purchase_card_${items[index].id}'),
+                      purchase: items[index],
+                      onRefresh: _loadPurchases,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+    ];
+  }
+
+  Widget _buildEmptyState(AppLocalizations l10n) {
+    return AppEmptyState(
+      icon: LucideIcons.shoppingBag,
+      tone: AppEmptyStateTone.brand,
+      title: l10n.purchases_empty_title,
+      message: l10n.purchases_empty_desc,
+      action: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (widget.onExploreMarket != null) ...[
+            ElevatedButton.icon(
+              onPressed: widget.onExploreMarket,
+              icon: const Icon(LucideIcons.store, size: 18),
+              label: Text(l10n.purchases_empty_action),
+            ),
+            const SizedBox(height: AppDimensions.space16),
+          ],
+          // Which module and role this space belongs to.
+          // Row, not Wrap: SliverFillRemaining sizes this card from its
+          // intrinsic height, which Wrap under-reports.
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: Text(
+                  l10n.purchases_placeholder_title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.labelMedium.copyWith(
+                    color: context.appTextSecondary,
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppDimensions.space8),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppDimensions.space8,
+                  vertical: 3,
+                ),
+                decoration: BoxDecoration(
+                  color: context.appInfoTriad.background,
+                  borderRadius: AppDimensions.borderRadiusSM,
+                  border: Border.all(color: context.appInfoTriad.border),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      LucideIcons.briefcaseBusiness,
+                      size: 12,
+                      color: context.appInfoTriad.foreground,
+                    ),
+                    const SizedBox(width: AppDimensions.space4),
+                    Text(
+                      l10n.purchases_merchant_role,
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: context.appInfoTriad.text,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Wallet-style summary of the buyer's purchases. The agreed total answers
+/// the screen's question and leads at display size; open agreements and
+/// volume sit beneath it, split by a hairline.
+class _SummaryCard extends StatelessWidget {
+  final double totalInvested;
+  final int purchasesCount;
+  final int agreedCount;
+  final double totalVolumeKg;
+
+  const _SummaryCard({
+    required this.totalInvested,
+    required this.purchasesCount,
+    required this.agreedCount,
+    required this.totalVolumeKg,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return InsetGroupCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _KpiLabel(
+                  icon: LucideIcons.wallet,
+                  label: l10n.purchases_total_invested,
+                ),
+                const SizedBox(height: 6),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    CurrencyFormatters.formatCop(totalInvested),
+                    style: AppTextStyles.figureLarge.copyWith(
+                      fontSize: 32,
+                      letterSpacing: -0.8,
+                      color: context.appTextPrimary,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 2),
                 Text(
-                  l10n.purchases_merchant_role,
-                  style: AppTextStyles.labelSmall.copyWith(
-                    color: context.appPrimary,
-                    fontWeight: FontWeight.w600,
+                  l10n.purchases_total_caption(purchasesCount),
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: context.appTextSecondary,
                   ),
                 ),
               ],
             ),
           ),
-          if (widget.onExploreMarket != null) ...[
-            const SizedBox(height: AppDimensions.space20),
-            ElevatedButton.icon(
-              onPressed: widget.onExploreMarket,
-              icon: const Icon(Icons.storefront_outlined),
-              label: Text(l10n.purchases_empty_action),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: context.appPrimary,
-                foregroundColor: context.appOnPrimary,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppDimensions.space24,
-                  vertical: AppDimensions.space12,
+          Divider(height: 1, thickness: 1, color: context.appDivider),
+          IntrinsicHeight(
+            child: Row(
+              children: [
+                Expanded(
+                  child: _SecondaryKpi(
+                    icon: LucideIcons.handshake,
+                    label: l10n.purchases_total_agreed,
+                    value: agreedCount.toString(),
+                  ),
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                VerticalDivider(
+                  width: 1,
+                  thickness: 1,
+                  color: context.appDivider,
                 ),
+                Expanded(
+                  child: _SecondaryKpi(
+                    icon: LucideIcons.scale,
+                    label: l10n.purchases_total_volume,
+                    value: UnitFormatters.formatKg(totalVolumeKg),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _KpiLabel extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _KpiLabel({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 15, color: context.appTextSecondary),
+        const SizedBox(width: 6),
+        Flexible(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTextStyles.labelMedium.copyWith(
+              fontSize: 13,
+              color: context.appTextSecondary,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SecondaryKpi extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+
+  const _SecondaryKpi({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18, 12, 12, 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _KpiLabel(icon: icon, label: label),
+          const SizedBox(height: 4),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              style: AppTextStyles.figureMedium.copyWith(
+                fontSize: 20,
+                color: context.appTextPrimary,
               ),
             ),
-          ],
+          ),
         ],
       ),
     );

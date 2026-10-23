@@ -1,76 +1,58 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
+
 import '../../theme/app_colors.dart';
 import '../../theme/app_dimensions.dart';
+import '../brand/kus_brand_logo.dart';
 
-class LoadingIndicator extends StatefulWidget {
+/// Brand loader for the [AppLoading] stage: the KUS mark with an iOS
+/// activity indicator beneath it while [isSpinning].
+///
+/// When idle the indicator's slot stays reserved, so text below the mark
+/// never jumps when work finishes, and no animation keeps running.
+class LoadingIndicator extends StatelessWidget {
   final bool isSpinning;
 
-  const LoadingIndicator({super.key, this.isSpinning = true});
+  /// Draws on the full-bleed brand stage (light marks). Set to false to use
+  /// the regular surface colors.
+  final bool onBrandStage;
 
-  @override
-  State<LoadingIndicator> createState() => _LoadingIndicatorState();
-}
+  const LoadingIndicator({
+    super.key,
+    this.isSpinning = true,
+    this.onBrandStage = true,
+  });
 
-class _LoadingIndicatorState extends State<LoadingIndicator>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    );
-
-    _animation = Tween<double>(
-      begin: 0.8,
-      end: 1.2,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-
-    if (widget.isSpinning) {
-      _controller.repeat(reverse: true);
-    }
-  }
-
-  @override
-  void didUpdateWidget(covariant LoadingIndicator oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.isSpinning != oldWidget.isSpinning) {
-      if (widget.isSpinning) {
-        _controller.repeat(reverse: true);
-      } else {
-        _controller.stop();
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+  // Mark + gap + indicator = 80px, the loader's footprint across the app.
+  static const double _markSize = 56;
+  static const double _indicatorRadius = 8;
 
   @override
   Widget build(BuildContext context) {
-    final logo = Image.asset(
-      'assets/images/app_movil_only_sm.png',
-      width: AppDimensions.space64 + AppDimensions.space16,
-      height: AppDimensions.space64 + AppDimensions.space16,
-      errorBuilder: (context, error, stackTrace) => const Icon(
-        Icons.eco,
-        color: AppColors.onBrand,
-        size: AppDimensions.space64 + AppDimensions.space16,
-      ),
-    );
+    final indicatorColor = onBrandStage
+        ? AppColors.onBrand
+        : context.appPrimary;
 
-    if (widget.isSpinning) {
-      return ScaleTransition(
-        scale: _animation,
-        child: logo,
-      );
-    }
-    return logo;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        KusBrandLogo(
+          variant: KusBrandLogoVariant.hero,
+          markSize: _markSize,
+          showWordmark: false,
+          onBrandStage: onBrandStage,
+          animateEntrance: true,
+        ),
+        const SizedBox(height: AppDimensions.space8),
+        SizedBox.square(
+          dimension: _indicatorRadius * 2,
+          child: isSpinning
+              ? CupertinoActivityIndicator(
+                  radius: _indicatorRadius,
+                  color: indicatorColor,
+                )
+              : null,
+        ),
+      ],
+    );
   }
 }

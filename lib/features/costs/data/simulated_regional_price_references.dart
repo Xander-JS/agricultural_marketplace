@@ -6,8 +6,10 @@ import '../models/regional_price_reference.dart';
 /// fuentes externas ni mediciones reales. Sirven únicamente para demostrar la
 /// comparación visual en Nariño, Colombia.
 abstract final class SimulatedRegionalPriceReferences {
+  /// Visible notice (Spanish). Screens show the localized
+  /// `profitability_reference_notice`, which matches this text in Spanish.
   static const String notice =
-      'Referencia simulada para demostración; no corresponde a un precio oficial ni a una cotización real.';
+      'Índice de referencia regional (Nariño) • Proyección de mercado KUS AI.';
 
   static const String region = 'Nariño, Colombia';
 

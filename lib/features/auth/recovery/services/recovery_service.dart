@@ -1,5 +1,6 @@
 // ignore_for_file: prefer_initializing_formals
 import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -24,13 +25,12 @@ class RecoveryResult {
     required String message,
     bool isNetwork = false,
     bool isValidation = false,
-  }) =>
-      RecoveryResult(
-        success: false,
-        message: message,
-        isNetworkError: isNetwork,
-        isValidationError: isValidation,
-      );
+  }) => RecoveryResult(
+    success: false,
+    message: message,
+    isNetworkError: isNetwork,
+    isValidationError: isValidation,
+  );
 }
 
 typedef PasswordResetInvoker = Future<void> Function(
@@ -59,10 +59,10 @@ class RecoveryService {
     PasswordResetInvoker? resetInvoker,
     PasswordUpdateInvoker? updateInvoker,
     SessionChecker? sessionChecker,
-  })  : _clientOverride = client,
-        _resetInvoker = resetInvoker,
-        _updateInvoker = updateInvoker,
-        _sessionChecker = sessionChecker;
+  }) : _clientOverride = client,
+       _resetInvoker = resetInvoker,
+       _updateInvoker = updateInvoker,
+       _sessionChecker = sessionChecker;
 
   SupabaseClient? get _client {
     if (_clientOverride != null) return _clientOverride;
@@ -97,13 +97,12 @@ class RecoveryService {
     }
 
     // Comprobar si el usuario ingresó un teléfono puro
-    final isPhone = !trimmed.contains('@') &&
-        RegExp(r'^[+0-9\s\-()]+$').hasMatch(trimmed);
+    final isPhone =
+        !trimmed.contains('@') && RegExp(r'^[+0-9\s\-()]+$').hasMatch(trimmed);
 
     if (isPhone) {
       return RecoveryResult.failure(
-        message:
-            'La recuperación por enlace requiere un correo electrónico. Si te registraste únicamente con un número de teléfono, por favor contacta al administrador.',
+        message: 'La recuperación por enlace requiere un correo electrónico. Si te registraste únicamente con un número de teléfono, por favor contacta al administrador.',
         isValidation: true,
       );
     }
@@ -120,8 +119,7 @@ class RecoveryService {
     // Si es un correo sintético interno generado para teléfonos, tampoco es un destino de correo real
     if (trimmed.toLowerCase().endsWith('@agromarket.com')) {
       return RecoveryResult.failure(
-        message:
-            'La dirección indicada corresponde a un identificador interno de teléfono sin buzón de correo. La recuperación por enlace requiere un correo electrónico real.',
+        message: 'La dirección indicada corresponde a un identificador interno de teléfono sin buzón de correo. La recuperación por enlace requiere un correo electrónico real.',
         isValidation: true,
       );
     }
@@ -145,13 +143,11 @@ class RecoveryService {
 
       // Mensaje genérico para evitar enumeración de cuentas
       return RecoveryResult.success(
-        message:
-            'Si los datos corresponden a una cuenta registrada, se enviarán las instrucciones para restablecer tu contraseña.',
+        message: 'Si los datos corresponden a una cuenta registrada, se enviarán las instrucciones para restablecer tu contraseña.',
       );
     } on SocketException catch (_) {
       return RecoveryResult.failure(
-        message:
-            'Error de conexión. Verifica tu acceso a internet e inténtalo nuevamente.',
+        message: 'Error de conexión. Verifica tu acceso a internet e inténtalo nuevamente.',
         isNetwork: true,
       );
     } on AuthException catch (e) {
@@ -160,10 +156,10 @@ class RecoveryService {
         'type=${e.runtimeType}, statusCode=${e.statusCode}, code=${e.code}, message=${e.message}',
       );
       // Manejar posibles errores del proveedor (rate limit, etc.)
-      if (e.statusCode == '429' || e.message.toLowerCase().contains('rate limit')) {
+      if (e.statusCode == '429' ||
+          e.message.toLowerCase().contains('rate limit')) {
         return RecoveryResult.failure(
-          message:
-              'Demasiadas solicitudes en poco tiempo. Por favor, espera unos minutos antes de intentar de nuevo.',
+          message: 'Demasiadas solicitudes en poco tiempo. Por favor, espera unos minutos antes de intentar de nuevo.',
         );
       }
       return RecoveryResult.failure(
@@ -179,13 +175,13 @@ class RecoveryService {
       final errStr = e.toString();
       if (_isNetworkErrorString(errStr)) {
         return RecoveryResult.failure(
-          message:
-              'Error de conexión. Verifica tu acceso a internet e inténtalo nuevamente.',
+          message: 'Error de conexión. Verifica tu acceso a internet e inténtalo nuevamente.',
           isNetwork: true,
         );
       }
       return RecoveryResult.failure(
-        message: 'No se pudo procesar la solicitud. Por favor intenta más tarde.',
+        message:
+            'No se pudo procesar la solicitud. Por favor intenta más tarde.',
       );
     }
   }
@@ -225,8 +221,7 @@ class RecoveryService {
     final session = currentSession;
     if (session == null && _updateInvoker == null) {
       return RecoveryResult.failure(
-        message:
-            'El enlace de recuperación es inválido o ha caducado. Por favor, solicita uno nuevo.',
+        message: 'El enlace de recuperación es inválido o ha caducado. Por favor, solicita uno nuevo.',
       );
     }
 
@@ -245,13 +240,11 @@ class RecoveryService {
       }
 
       return RecoveryResult.success(
-        message:
-            'Contraseña actualizada exitosamente. Por favor, inicia sesión con tu nueva contraseña.',
+        message: 'Contraseña actualizada exitosamente. Por favor, inicia sesión con tu nueva contraseña.',
       );
     } on SocketException catch (_) {
       return RecoveryResult.failure(
-        message:
-            'Error de conexión. Verifica tu acceso a internet e inténtalo nuevamente.',
+        message: 'Error de conexión. Verifica tu acceso a internet e inténtalo nuevamente.',
         isNetwork: true,
       );
     } on AuthException catch (e) {
@@ -261,26 +254,23 @@ class RecoveryService {
           msg.contains('jwt') ||
           msg.contains('token')) {
         return RecoveryResult.failure(
-          message:
-              'El enlace de recuperación es inválido o ha caducado. Por favor, solicita uno nuevo.',
+          message: 'El enlace de recuperación es inválido o ha caducado. Por favor, solicita uno nuevo.',
         );
       }
       return RecoveryResult.failure(
-        message: e.message.isNotEmpty
-            ? e.message
-            : 'No se pudo actualizar la contraseña. Por favor intenta más tarde.',
+        message: e.message.isNotEmpty ? e.message : 'No se pudo actualizar la contraseña. Por favor intenta más tarde.',
       );
     } catch (e) {
       final errStr = e.toString();
       if (_isNetworkErrorString(errStr)) {
         return RecoveryResult.failure(
-          message:
-              'Error de conexión. Verifica tu acceso a internet e inténtalo nuevamente.',
+          message: 'Error de conexión. Verifica tu acceso a internet e inténtalo nuevamente.',
           isNetwork: true,
         );
       }
       return RecoveryResult.failure(
-        message: 'No se pudo actualizar la contraseña. Por favor intenta más tarde.',
+        message:
+            'No se pudo actualizar la contraseña. Por favor intenta más tarde.',
       );
     }
   }

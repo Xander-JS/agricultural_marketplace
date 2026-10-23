@@ -1,37 +1,61 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../models/negotiation_model.dart';
+import '../models/negotiation_offer_model.dart';
 import '../models/negotiation_status.dart';
 import '../services/negotiation_service.dart';
+import '../widgets/deal_crop_thumb.dart';
+import '../widgets/negotiation_status_badge.dart';
 import 'deal_detail_screen.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimensions.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/constants/user_roles.dart';
 import '../../../core/utils/app_formatters.dart';
+import '../../../core/theme/app_motion.dart';
+import '../../../core/widgets/brand/kus_brand_logo.dart';
+import '../../../core/widgets/feedback/app_empty_state.dart';
+import '../../../core/widgets/inputs/app_segmented_control.dart';
+import '../../../core/widgets/loading/section_skeletons.dart';
+import '../../../core/widgets/misc/pressable_scale.dart';
+import '../../../core/widgets/misc/staggered_entrance.dart';
+
+/// Sections of the deals list, from everything to what is already closed.
+enum _DealsFilter { all, inProgress, agreed, history }
 
 class DealsScreen extends StatefulWidget {
   final String? role;
   final List<NegotiationModel>? initialNegotiations;
   final NegotiationService? service;
 
+  /// Action of the empty state (explore the market or the user's own
+  /// harvests). Falls back to popping the route when not given.
+  final VoidCallback? onEmptyAction;
+
   const DealsScreen({
     super.key,
     this.role,
     this.initialNegotiations,
     this.service,
+    this.onEmptyAction,
   });
 
   @override
   State<DealsScreen> createState() => _DealsScreenState();
 }
 
-class _DealsScreenState extends State<DealsScreen> with SingleTickerProviderStateMixin {
+class _DealsScreenState extends State<DealsScreen> {
   late final NegotiationService _service;
   bool _isLoading = true;
   String? _errorMessage;
   List<NegotiationModel> _negotiations = [];
   String? _userRole;
-  late TabController _tabController;
+  _DealsFilter _filter = _DealsFilter.all;
+  bool _entrancePlayed = false;
 
   bool get _isBuyer => UserRole.isBuyerRole(widget.role ?? _userRole);
 
@@ -39,7 +63,6 @@ class _DealsScreenState extends State<DealsScreen> with SingleTickerProviderStat
   void initState() {
     super.initState();
     _service = widget.service ?? NegotiationService();
-    _tabController = TabController(length: 5, vsync: this);
 
     if (widget.initialNegotiations != null) {
       _negotiations = widget.initialNegotiations!;
@@ -47,12 +70,6 @@ class _DealsScreenState extends State<DealsScreen> with SingleTickerProviderStat
     } else {
       _loadData();
     }
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -108,24 +125,23 @@ class _DealsScreenState extends State<DealsScreen> with SingleTickerProviderStat
     }
   }
 
-  List<NegotiationModel> _getFilteredNegotiations(int index) {
-    if (index == 0) return _negotiations;
-    switch (index) {
-      case 1: // Pendientes
-        return _negotiations.where((n) => n.status == NegotiationStatus.propuesta).toList();
-      case 2: // En negociación
-        return _negotiations.where((n) => n.status == NegotiationStatus.contraofertada).toList();
-      case 3: // Acordados
-        return _negotiations.where((n) => n.status == NegotiationStatus.acordada).toList();
-      case 4: // Historial (completados, rechazados, cancelados)
-        return _negotiations.where((n) =>
-          n.status == NegotiationStatus.completada ||
-          n.status == NegotiationStatus.rechazada ||
-          n.status == NegotiationStatus.cancelada
-        ).toList();
-      default:
-        return _negotiations;
-    }
+  bool _isActive(NegotiationModel n) =>
+      n.status == NegotiationStatus.propuesta ||
+      n.status == NegotiationStatus.contraofertada;
+
+  bool _isMyTurn(NegotiationModel n) =>
+      _isActive(n) && n.isMyTurn(isBuyer: _isBuyer);
+
+  bool _matches(NegotiationModel n, _DealsFilter filter) {
+    return switch (filter) {
+      _DealsFilter.all => true,
+      _DealsFilter.inProgress => _isActive(n),
+      _DealsFilter.agreed => n.status == NegotiationStatus.acordada,
+      _DealsFilter.history =>
+        n.status == NegotiationStatus.completada ||
+            n.status == NegotiationStatus.rechazada ||
+            n.status == NegotiationStatus.cancelada,
+    };
   }
 
   @override
@@ -135,291 +151,206 @@ class _DealsScreenState extends State<DealsScreen> with SingleTickerProviderStat
     return Scaffold(
       backgroundColor: context.appBackground,
       appBar: AppBar(
-        title: Text(l10n.deals_title),
-        bottom: TabBar(
-          controller: _tabController,
-          isScrollable: true,
-          tabs: [
-            Tab(text: l10n.deals_tab_all),
-            Tab(text: l10n.deals_tab_pending),
-            Tab(text: l10n.deals_tab_in_negotiation),
-            Tab(text: l10n.deals_tab_agreed),
-            Tab(text: l10n.deals_tab_history),
+        centerTitle: false,
+        titleSpacing: AppDimensions.space16,
+        title: const KusBrandLogo.compact(),
+      ),
+      body: RefreshIndicator(
+        onRefresh: _loadData,
+        color: context.appPrimary,
+        backgroundColor: context.appSurface,
+        strokeWidth: 2.5,
+        child: CustomScrollView(
+          physics: AppMotion.scrollPhysics,
+          slivers: [
+            SliverToBoxAdapter(child: _buildHeader(l10n)),
+            if (_showsList) SliverToBoxAdapter(child: _buildFilterBar(l10n)),
+            ..._buildContentSlivers(l10n),
           ],
         ),
       ),
-      body: _buildBody(l10n),
     );
   }
 
-  Widget _buildBody(AppLocalizations l10n) {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+  bool get _showsList =>
+      !_isLoading && _errorMessage == null && _negotiations.isNotEmpty;
+
+  /// Large title; the line beneath it answers the screen's question first:
+  /// how many deals are waiting on this user.
+  Widget _buildHeader(AppLocalizations l10n) {
+    final awaiting = _negotiations.where(_isMyTurn).length;
+    final String? subtitle = !_showsList
+        ? null
+        : awaiting > 0
+        ? l10n.deals_awaiting_you(awaiting)
+        : l10n.deals_total_count(_negotiations.length);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.deals_title,
+            style: AppTextStyles.displayMedium.copyWith(
+              fontSize: 30,
+              color: context.appTextPrimary,
+            ),
+          ),
+          AnimatedSwitcher(
+            duration: AppMotion.of(context, AppMotion.standard),
+            switchInCurve: AppMotion.easeOut,
+            switchOutCurve: AppMotion.easeOut,
+            child: subtitle == null
+                ? const SizedBox(
+                    key: ValueKey('deals_subtitle_empty'),
+                    width: double.infinity,
+                  )
+                : Padding(
+                    key: ValueKey(subtitle),
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Row(
+                      children: [
+                        if (awaiting > 0) ...[
+                          const _TurnDot(),
+                          const SizedBox(width: AppDimensions.space8),
+                        ],
+                        Flexible(
+                          child: Text(
+                            subtitle,
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: awaiting > 0
+                                  ? context.appTextPrimary
+                                  : context.appTextSecondary,
+                              fontWeight: awaiting > 0
+                                  ? FontWeight.w600
+                                  : FontWeight.w400,
+                              fontFeatures: AppTextStyles.tabularFigures,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterBar(AppLocalizations l10n) {
+    final hasTurnInProgress = _negotiations.any(_isMyTurn);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: SizedBox(
+        width: double.infinity,
+        child: AppSegmentedControl<_DealsFilter>(
+          value: _filter,
+          onChanged: (filter) => setState(() => _filter = filter),
+          segments: {
+            _DealsFilter.all: AppSegment(label: l10n.deals_tab_all),
+            _DealsFilter.inProgress: AppSegment(
+              label: l10n.deals_tab_in_progress,
+              showDot: hasTurnInProgress,
+            ),
+            _DealsFilter.agreed: AppSegment(label: l10n.deals_tab_agreed),
+            _DealsFilter.history: AppSegment(label: l10n.deals_tab_history),
+          },
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildContentSlivers(AppLocalizations l10n) {
+    if (_isLoading && _negotiations.isEmpty) {
+      return const [
+        SliverToBoxAdapter(
+          child: SectionSkeleton(
+            kind: SectionSkeletonKind.rowCards,
+            padding: EdgeInsets.fromLTRB(16, 4, 16, 24),
+          ),
+        ),
+      ];
     }
 
     if (_errorMessage != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error_outline, size: 48, color: context.appError),
-              const SizedBox(height: 16),
-              Text(
-                l10n.deals_error_prefix(_errorMessage!),
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: context.appTextPrimary,
-                ),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _loadData,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: context.appPrimary,
-                  foregroundColor: context.appOnPrimary,
-                ),
-                child: Text(l10n.common_retry),
-              ),
-            ],
+      return [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: AppEmptyState(
+            icon: LucideIcons.cloudOff,
+            title: l10n.deals_error_prefix(_errorMessage!),
+            action: ElevatedButton.icon(
+              onPressed: _loadData,
+              icon: const Icon(LucideIcons.refreshCw, size: 18),
+              label: Text(l10n.common_retry),
+            ),
           ),
         ),
-      );
+      ];
     }
 
-    return TabBarView(
-      controller: _tabController,
-      children: List.generate(
-        5,
-        (index) => _buildList(_getFilteredNegotiations(index), l10n),
-      ),
-    );
-  }
+    if (_negotiations.isEmpty) {
+      return [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: _buildEmptyState(l10n),
+        ),
+      ];
+    }
 
-  Widget _buildList(List<NegotiationModel> list, AppLocalizations l10n) {
+    final list = _negotiations.where((n) => _matches(n, _filter)).toList();
     if (list.isEmpty) {
-      return RefreshIndicator(
-        onRefresh: _loadData,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Container(
-            height: MediaQuery.of(context).size.height * 0.6,
-            alignment: Alignment.center,
-            child: _buildEmptyState(l10n),
+      return [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: AppEmptyState(
+            icon: LucideIcons.inbox,
+            title: l10n.deals_filter_empty,
+            message: l10n.deals_filter_empty_desc,
           ),
         ),
-      );
+      ];
     }
 
-    return RefreshIndicator(
-      onRefresh: _loadData,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(16.0),
-        itemCount: list.length,
-        itemBuilder: (context, index) {
-          return _buildDealCard(list[index], l10n);
-        },
-      ),
-    );
-  }
-
-  Widget _buildDealCard(NegotiationModel negotiation, AppLocalizations l10n) {
-    final latestOffer = (negotiation.offers != null && negotiation.offers!.isNotEmpty)
-        ? negotiation.offers!.reduce((a, b) => a.createdAt.isAfter(b.createdAt) ? a : b)
-        : null;
-
-    final quantity = latestOffer?.quantityKg ?? 0;
-    final price = latestOffer?.proposedPricePerKg ?? 0;
-
-    final counterpartLabel = _isBuyer
-        ? l10n.deal_counterpart_farmer
-        : l10n.deal_counterpart_buyer;
-
-    final counterpartName = _isBuyer
-        ? (negotiation.farmerProfile?['full_name'] ??
-            (negotiation.crop?.municipality != null
-                ? l10n.deals_producer_with_location(
-                    negotiation.crop!.municipality,
-                  )
-                : l10n.deals_producer))
-        : (negotiation.buyerProfile?['full_name'] ?? l10n.deals_buyer);
-
-    final formattedDate = DateFormatters.formatFullDateTime(negotiation.updatedAt);
-
-    // Determinar si es el turno del usuario autenticado
-    final isPendingOrNegotiating =
-        negotiation.status == NegotiationStatus.propuesta ||
-        negotiation.status == NegotiationStatus.contraofertada;
-
-    final isMyTurn = isPendingOrNegotiating &&
-        negotiation.isMyTurn(isBuyer: _isBuyer);
-
-    final isWaiting = isPendingOrNegotiating && !isMyTurn;
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16.0),
-      color: context.appSurface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: context.appBorder),
-      ),
-      elevation: 0,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    negotiation.crop?.title ?? l10n.deals_unknown_crop,
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
-                      color: context.appTextPrimary,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                _buildStatusBadge(negotiation.status),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Text(
-              l10n.deals_counterpart_name(counterpartLabel, counterpartName),
-              style: TextStyle(
-                color: context.appTextSecondary,
-                fontSize: 14,
-              ),
-            ),
-            const SizedBox(height: 8),
-            if (latestOffer != null) ...[
-              Row(
-                children: [
-                  Text(
-                    UnitFormatters.formatKg(quantity),
-                    style: TextStyle(
-                      color: context.appTextSecondary,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    CurrencyFormatters.formatPricePerKg(price),
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
-                      color: context.appTextPrimary,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Icon(
-                  Icons.access_time,
-                  size: 14,
-                  color: context.appTextDisabled,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  formattedDate,
-                  style: TextStyle(
-                    color: context.appTextDisabled,
-                    fontSize: 12,
-                  ),
-                ),
-                const Spacer(),
-                if (isMyTurn)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: context.appPrimary.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      l10n.deals_your_turn,
-                      style: TextStyle(
-                        color: context.appPrimary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  )
-                else if (isWaiting)
-                  Text(
-                    l10n.deals_waiting_response,
-                    style: TextStyle(
-                      color: context.appWarning,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton(
-                onPressed: () => _navigateToDetail(negotiation),
-                style: OutlinedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                ),
-                child: Text(l10n.deals_see_deal),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatusBadge(NegotiationStatus status) {
-    Color color;
-    switch (status) {
-      case NegotiationStatus.propuesta:
-        color = context.appInfo;
-        break;
-      case NegotiationStatus.contraofertada:
-        color = context.appWarning;
-        break;
-      case NegotiationStatus.acordada:
-        color = context.appSuccess;
-        break;
-      case NegotiationStatus.completada:
-        color = context.appPrimary;
-        break;
-      case NegotiationStatus.rechazada:
-      case NegotiationStatus.cancelada:
-        color = context.appError;
-        break;
+    final animateEntrance = !_entrancePlayed;
+    if (animateEntrance) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _entrancePlayed = true;
+      });
     }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withValues(alpha: 0.35)),
-      ),
-      child: Text(
-        status.toDisplayName(),
-        style: TextStyle(
-          color: color,
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
+    return [
+      SliverPadding(
+        padding: EdgeInsets.fromLTRB(
+          16,
+          4,
+          16,
+          24 + MediaQuery.paddingOf(context).bottom,
+        ),
+        sliver: SliverList.separated(
+          itemCount: list.length,
+          separatorBuilder: (context, index) =>
+              const SizedBox(height: AppDimensions.space12),
+          itemBuilder: (context, index) {
+            final negotiation = list[index];
+            return StaggeredEntrance(
+              index: index,
+              enabled: animateEntrance,
+              child: _DealCard(
+                key: ValueKey('deal_card_${negotiation.id}'),
+                negotiation: negotiation,
+                isBuyer: _isBuyer,
+                isMyTurn: _isMyTurn(negotiation),
+                isWaiting: _isActive(negotiation) && !_isMyTurn(negotiation),
+                onTap: () => _navigateToDetail(negotiation),
+              ),
+            );
+          },
         ),
       ),
-    );
+    ];
   }
 
   Widget _buildEmptyState(AppLocalizations l10n) {
@@ -435,50 +366,16 @@ class _DealsScreenState extends State<DealsScreen> with SingleTickerProviderStat
         ? l10n.deals_explore_market
         : l10n.deals_view_crops;
 
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.handshake_outlined,
-            size: 80,
-            color: context.appTextDisabled,
-          ),
-          const SizedBox(height: 24),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: context.appTextPrimary,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            desc,
-            style: TextStyle(
-              fontSize: 15,
-              color: context.appTextSecondary,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 28),
-          ElevatedButton.icon(
-            onPressed: () {
-              Navigator.of(context).maybePop();
-            },
-            icon: Icon(_isBuyer ? Icons.storefront : Icons.grass),
-            label: Text(buttonLabel),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: context.appPrimary,
-              foregroundColor: context.appOnPrimary,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-          ),
-        ],
+    return AppEmptyState(
+      icon: LucideIcons.handshake,
+      tone: AppEmptyStateTone.brand,
+      title: title,
+      message: desc,
+      action: ElevatedButton.icon(
+        onPressed:
+            widget.onEmptyAction ?? () => Navigator.of(context).maybePop(),
+        icon: Icon(_isBuyer ? LucideIcons.store : LucideIcons.sprout, size: 18),
+        label: Text(buttonLabel),
       ),
     );
   }
@@ -497,5 +394,236 @@ class _DealsScreenState extends State<DealsScreen> with SingleTickerProviderStat
     if (result == true) {
       _loadData();
     }
+  }
+}
+
+/// One negotiation in the list: the lot, the other party, the latest
+/// figures on the table and whose move it is.
+class _DealCard extends StatelessWidget {
+  final NegotiationModel negotiation;
+  final bool isBuyer;
+  final bool isMyTurn;
+  final bool isWaiting;
+  final VoidCallback onTap;
+
+  const _DealCard({
+    super.key,
+    required this.negotiation,
+    required this.isBuyer,
+    required this.isMyTurn,
+    required this.isWaiting,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final offers = negotiation.offers;
+    final NegotiationOfferModel? latestOffer =
+        (offers != null && offers.isNotEmpty)
+        ? offers.reduce((a, b) => a.createdAt.isAfter(b.createdAt) ? a : b)
+        : null;
+
+    final counterpartLabel = isBuyer
+        ? l10n.deal_counterpart_farmer
+        : l10n.deal_counterpart_buyer;
+
+    final counterpartName = isBuyer
+        ? (negotiation.farmerProfile?['full_name'] ??
+              (negotiation.crop?.municipality != null
+                  ? l10n.deals_producer_with_location(
+                      negotiation.crop!.municipality,
+                    )
+                  : l10n.deals_producer))
+        : (negotiation.buyerProfile?['full_name'] ?? l10n.deals_buyer);
+
+    // A deal waiting on this user lifts its hairline to the brand tone.
+    final borderColor = isMyTurn
+        ? context.appBrandTriad.border
+        : context.appBorder;
+
+    return PressableScale(
+      pressedScale: 0.985,
+      child: Material(
+        color: context.appSurface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: borderColor),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    DealCropThumb(crop: negotiation.crop, size: 48),
+                    const SizedBox(width: AppDimensions.space12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            negotiation.crop?.title ?? l10n.deals_unknown_crop,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyles.titleMedium.copyWith(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: context.appTextPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            l10n.deals_counterpart_name(
+                              counterpartLabel,
+                              counterpartName,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyles.bodySmall.copyWith(
+                              fontSize: 13,
+                              color: context.appTextSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                // The latest figures on the table, with the deal's status at
+                // the end of the same line so the title keeps its full width.
+                const SizedBox(height: AppDimensions.space16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: latestOffer == null
+                          ? const SizedBox.shrink()
+                          : Row(
+                              children: [
+                                Flexible(
+                                  child: Text.rich(
+                                    TextSpan(
+                                      children: [
+                                        TextSpan(
+                                          text: CurrencyFormatters.formatCop(
+                                            latestOffer.proposedPricePerKg,
+                                          ),
+                                          style: AppTextStyles.figureMedium
+                                              .copyWith(
+                                                fontSize: 20,
+                                                color: context.appTextPrimary,
+                                              ),
+                                        ),
+                                        TextSpan(
+                                          text: ' /kg',
+                                          style: AppTextStyles.bodySmall
+                                              .copyWith(
+                                                color: context.appTextSecondary,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Text(
+                                  UnitFormatters.formatKg(
+                                    latestOffer.quantityKg,
+                                  ),
+                                  style: AppTextStyles.figureSmall.copyWith(
+                                    color: context.appTextSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                    ),
+                    const SizedBox(width: AppDimensions.space8),
+                    NegotiationStatusBadge(status: negotiation.status),
+                  ],
+                ),
+                const SizedBox(height: AppDimensions.space12),
+                Divider(height: 1, thickness: 1, color: context.appDivider),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    if (isMyTurn) ...[
+                      const _TurnDot(),
+                      const SizedBox(width: AppDimensions.space8),
+                      Text(
+                        l10n.deals_your_turn,
+                        style: AppTextStyles.labelMedium.copyWith(
+                          color: context.appPrimary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ] else if (isWaiting) ...[
+                      Icon(
+                        LucideIcons.hourglass,
+                        size: 13,
+                        color: context.appTextSecondary,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        l10n.deals_waiting_response,
+                        style: AppTextStyles.labelMedium.copyWith(
+                          color: context.appTextSecondary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                    const Spacer(),
+                    Text(
+                      DateFormatters.formatFullDateTime(negotiation.updatedAt),
+                      style: AppTextStyles.caption.copyWith(
+                        color: context.appTextSecondary,
+                        fontFeatures: AppTextStyles.tabularFigures,
+                      ),
+                    ),
+                    const SizedBox(width: AppDimensions.space4),
+                    Icon(
+                      CupertinoIcons.chevron_right,
+                      size: 14,
+                      color: context.appTextMuted,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// "Your move" mark: a brand dot inside a soft halo of the same hue, the
+/// way iOS flags an unread thread. Static on purpose: the list is opened
+/// many times a day and a pulsing dot would only add noise.
+class _TurnDot extends StatelessWidget {
+  const _TurnDot();
+
+  @override
+  Widget build(BuildContext context) {
+    final color = context.appPrimary;
+    return Container(
+      width: 14,
+      height: 14,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: context.appIsDark ? 0.22 : 0.14),
+        shape: BoxShape.circle,
+      ),
+      child: Container(
+        width: 7,
+        height: 7,
+        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      ),
+    );
   }
 }

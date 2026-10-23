@@ -1,7 +1,16 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 import '../models/crop_model.dart';
 import '../../deals/services/negotiation_service.dart';
+import '../../deals/widgets/delivery_presentation.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimensions.dart';
+import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/inputs/choice_tile.dart';
+import '../../../core/widgets/sheets/app_sheet_frame.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/constants/delivery_methods.dart';
 import '../../../core/utils/app_formatters.dart';
@@ -39,11 +48,17 @@ class _MakeOfferSheetState extends State<MakeOfferSheet> {
     _service = widget.negotiationService ?? NegotiationService();
 
     final initialQty = widget.crop.minOrderKg > 0
-        ? UnitFormatters.formatCleanValue(widget.crop.minOrderKg, useLocaleSeparators: false)
+        ? UnitFormatters.formatCleanValue(
+            widget.crop.minOrderKg,
+            useLocaleSeparators: false,
+          )
         : '1';
     _quantityController = TextEditingController(text: initialQty);
     _priceController = TextEditingController(
-      text: UnitFormatters.formatCleanValue(widget.crop.pricePerKg, useLocaleSeparators: false),
+      text: UnitFormatters.formatCleanValue(
+        widget.crop.pricePerKg,
+        useLocaleSeparators: false,
+      ),
     );
     _messageController = TextEditingController();
   }
@@ -97,10 +112,7 @@ class _MakeOfferSheetState extends State<MakeOfferSheet> {
       if (mounted) {
         final message = e.toString().replaceFirst('Exception: ', '');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message),
-            backgroundColor: context.appError,
-          ),
+          SnackBar(content: Text(message), backgroundColor: context.appError),
         );
       }
     } finally {
@@ -110,241 +122,290 @@ class _MakeOfferSheetState extends State<MakeOfferSheet> {
     }
   }
 
+  Widget _deliveryTile(AppLocalizations l10n, String method) {
+    final presentation = deliveryPresentation(l10n, method);
+    return ChoiceTile(
+      icon: presentation.icon,
+      label: presentation.label,
+      selected: _deliveryMethod == method,
+      onTap: () {
+        if (_deliveryMethod == method) return;
+        HapticFeedback.selectionClick();
+        setState(() => _deliveryMethod = method);
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final figureStyle = AppTextStyles.figureSmall.copyWith(
+      fontSize: 16,
+      color: context.appTextPrimary,
+    );
 
-    return Container(
-      decoration: BoxDecoration(
-        color: context.appSurface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-      ),
-      child: SafeArea(
-        child: SingleChildScrollView(
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Handle bar
-                Center(
-                  child: Container(
-                    width: 48,
-                    height: 5,
-                    decoration: BoxDecoration(
-                      color: context.appDivider,
-                      borderRadius: BorderRadius.circular(4),
+    return Form(
+      key: _formKey,
+      child: AppSheetFrame(
+        body: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              l10n.offer_sheet_title,
+              style: AppTextStyles.headlineMedium.copyWith(
+                fontSize: 22,
+                color: context.appTextPrimary,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              '${widget.crop.title} — ${widget.crop.cropType}',
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: context.appTextSecondary,
+              ),
+            ),
+            const SizedBox(height: AppDimensions.space16),
+
+            // Terms of the lot the offer has to respect.
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: context.appSurfaceVariant,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: IntrinsicHeight(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _LotTerm(
+                        label: l10n.crop_card_price_per_kg,
+                        value: CurrencyFormatters.formatCop(
+                          widget.crop.pricePerKg,
+                        ),
+                        emphasized: true,
+                      ),
                     ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Header
-                Text(
-                  l10n.offer_sheet_title,
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: context.appTextPrimary,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${widget.crop.title} — ${widget.crop.cropType}',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: context.appTextSecondary,
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Stock & base price reminder
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: context.appSurfaceVariant,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: context.appBorder),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        l10n.offer_sheet_base_price(
-                          CurrencyFormatters.formatPricePerKg(widget.crop.pricePerKg),
-                        ),
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: context.appPrimary,
+                    VerticalDivider(width: 20, color: context.appBorder),
+                    Expanded(
+                      child: _LotTerm(
+                        label: l10n.offer_sheet_min_order,
+                        value: UnitFormatters.formatKg(widget.crop.minOrderKg),
+                      ),
+                    ),
+                    VerticalDivider(width: 20, color: context.appBorder),
+                    Expanded(
+                      child: _LotTerm(
+                        label: l10n.offer_sheet_available_stock,
+                        value: UnitFormatters.formatKg(
+                          widget.crop.availableStock,
                         ),
                       ),
-                      Text(
-                        l10n.offer_sheet_min_stock(
-                          UnitFormatters.formatKg(widget.crop.minOrderKg),
-                          UnitFormatters.formatKg(widget.crop.availableStock),
-                        ),
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: context.appTextSecondary,
-                        ),
-                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: AppDimensions.space16),
+
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _quantityController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
                     ],
+                    style: figureStyle,
+                    decoration: InputDecoration(
+                      labelText: l10n.offer_sheet_quantity_label,
+                      suffixText: 'kg',
+                      prefixIcon: const Icon(LucideIcons.weight, size: 18),
+                    ),
+                    onChanged: (_) => setState(() {}),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return l10n.offer_sheet_val_required;
+                      }
+                      final parsed = double.tryParse(value.trim());
+                      if (parsed == null || parsed <= 0) {
+                        return l10n.offer_sheet_val_positive;
+                      }
+                      if (parsed < widget.crop.minOrderKg) {
+                        return l10n.offer_sheet_val_min_order;
+                      }
+                      if (parsed > widget.crop.availableStock) {
+                        return l10n.offer_sheet_val_max_stock;
+                      }
+                      return null;
+                    },
                   ),
                 ),
-                const SizedBox(height: 16),
-
-                // Cantidad
-                TextFormField(
-                  controller: _quantityController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: InputDecoration(
-                    labelText: l10n.offer_sheet_quantity_label,
-                    suffixText: 'kg',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  onChanged: (_) => setState(() {}),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return l10n.offer_sheet_val_required;
-                    }
-                    final parsed = double.tryParse(value.trim());
-                    if (parsed == null || parsed <= 0) {
-                      return l10n.offer_sheet_val_positive;
-                    }
-                    if (parsed < widget.crop.minOrderKg) {
-                      return l10n.offer_sheet_val_min_order;
-                    }
-                    if (parsed > widget.crop.availableStock) {
-                      return l10n.offer_sheet_val_max_stock;
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 14),
-
-                // Precio propuesto por kg
-                TextFormField(
-                  controller: _priceController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: InputDecoration(
-                    labelText: l10n.offer_sheet_price_label,
-                    prefixText: '\$ ',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  onChanged: (_) => setState(() {}),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return l10n.offer_sheet_val_required;
-                    }
-                    final parsed = double.tryParse(value.trim());
-                    if (parsed == null || parsed <= 0) {
-                      return l10n.offer_sheet_val_positive;
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 14),
-
-                // Método de entrega
-                DropdownButtonFormField<String>(
-                  initialValue: _deliveryMethod,
-                  decoration: InputDecoration(
-                    labelText: l10n.offer_sheet_delivery_label,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  items: _deliveryOptions.map((method) {
-                    return DropdownMenuItem(
-                      value: method,
-                      child: Text(method),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() => _deliveryMethod = value);
-                    }
-                  },
-                ),
-                const SizedBox(height: 14),
-
-                // Mensaje opcional
-                TextFormField(
-                  controller: _messageController,
-                  maxLines: 2,
-                  decoration: InputDecoration(
-                    labelText: l10n.offer_sheet_message_label,
-                    hintText: l10n.offer_sheet_message_hint,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                // Subtotal Estimado Card
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: context.appSurfaceVariant,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        l10n.offer_sheet_estimated_total,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: context.appTextPrimary,
-                        ),
-                      ),
-                      Text(
-                        CurrencyFormatters.formatCop(_estimatedTotal),
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: context.appPrimary,
-                        ),
-                      ),
+                const SizedBox(width: AppDimensions.space12),
+                Expanded(
+                  child: TextFormField(
+                    controller: _priceController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
                     ],
+                    style: figureStyle,
+                    decoration: InputDecoration(
+                      labelText: l10n.offer_sheet_price_label,
+                      prefixText: '\$ ',
+                      suffixText: '/ kg',
+                    ),
+                    onChanged: (_) => setState(() {}),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return l10n.offer_sheet_val_required;
+                      }
+                      final parsed = double.tryParse(value.trim());
+                      if (parsed == null || parsed <= 0) {
+                        return l10n.offer_sheet_val_positive;
+                      }
+                      return null;
+                    },
                   ),
-                ),
-                const SizedBox(height: 24),
-
-                // Botón Enviar
-                ElevatedButton(
-                  onPressed: _isSubmitting ? null : _submit,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: context.appPrimary,
-                    foregroundColor: context.appOnPrimary,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                  ),
-                  child: _isSubmitting
-                      ? SizedBox(
-                          height: 22,
-                          width: 22,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: context.appOnPrimary,
-                          ),
-                        )
-                      : Text(
-                          l10n.offer_sheet_submit_btn,
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
                 ),
               ],
             ),
-          ),
+            const SizedBox(height: AppDimensions.space20),
+
+            Padding(
+              padding: const EdgeInsets.only(left: 4, bottom: 8),
+              child: Text(
+                l10n.offer_sheet_delivery_label,
+                style: AppTextStyles.titleSmall.copyWith(
+                  color: context.appTextSecondary,
+                ),
+              ),
+            ),
+            Row(
+              children: [
+                for (var i = 0; i < _deliveryOptions.length; i++) ...[
+                  if (i > 0) const SizedBox(width: AppDimensions.space8),
+                  Expanded(
+                    child: _deliveryTile(l10n, _deliveryOptions[i]),
+                  ),
+                ],
+              ],
+            ),
+            const SizedBox(height: AppDimensions.space20),
+
+            TextFormField(
+              controller: _messageController,
+              maxLines: 2,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: InputDecoration(
+                labelText: l10n.offer_sheet_message_label,
+                hintText: l10n.offer_sheet_message_hint,
+                alignLabelWithHint: true,
+              ),
+            ),
+          ],
+        ),
+        footer: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.offer_sheet_estimated_total,
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: context.appTextSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        l10n.offer_sheet_total_breakdown(
+                          UnitFormatters.formatKg(_currentQuantity),
+                          CurrencyFormatters.formatCop(_currentPrice),
+                        ),
+                        style: AppTextStyles.caption.copyWith(
+                          color: context.appTextSecondary,
+                          fontFeatures: AppTextStyles.tabularFigures,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AppDimensions.space12),
+                Text(
+                  CurrencyFormatters.formatCop(_estimatedTotal),
+                  style: AppTextStyles.figureLarge.copyWith(
+                    fontSize: 24,
+                    color: context.appPrimary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppDimensions.space12),
+            ElevatedButton(
+              onPressed: _isSubmitting ? null : _submit,
+              child: _isSubmitting
+                  ? CupertinoActivityIndicator(color: context.appTextMuted)
+                  : Text(l10n.offer_sheet_submit_btn),
+            ),
+          ],
         ),
       ),
+    );
+  }
+}
+
+/// One term of the lot the offer must respect: a small label over its
+/// figure.
+class _LotTerm extends StatelessWidget {
+  final String label;
+  final String value;
+  final bool emphasized;
+
+  const _LotTerm({
+    required this.label,
+    required this.value,
+    this.emphasized = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: AppTextStyles.caption.copyWith(
+            color: context.appTextSecondary,
+          ),
+        ),
+        const SizedBox(height: 2),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            value,
+            style: AppTextStyles.figureSmall.copyWith(
+              fontWeight: FontWeight.w700,
+              color: emphasized ? context.appPrimary : context.appTextPrimary,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

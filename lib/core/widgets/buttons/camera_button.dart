@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 import '../../theme/app_colors.dart';
 import '../../theme/app_dimensions.dart';
+import '../misc/pressable_scale.dart';
 
+/// Capture control for document and selfie flows.
+///
+/// A 52px squircle on the `primary`/`onPrimary` pair, wide enough to hit
+/// without looking, with press feedback and a light haptic tick.
 class CameraButton extends StatelessWidget {
   final VoidCallback onTap;
 
@@ -9,23 +17,28 @@ class CameraButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: AppDimensions.space64 + AppDimensions.space8,
-        height: AppDimensions.space64 + AppDimensions.space8,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: context.appSuccess.withValues(alpha: 0.3),
-            width: AppDimensions.space4,
-          ),
-          color: context.appSuccess,
+    return PressableScale(
+      child: Material(
+        color: context.appPrimary,
+        shape: RoundedRectangleBorder(
+          borderRadius: AppDimensions.borderRadiusControl,
         ),
-        child: const Icon(
-          Icons.camera_alt,
-          color: AppColors.onBrand,
-          size: AppDimensions.iconLG,
+        child: InkWell(
+          borderRadius: AppDimensions.borderRadiusControl,
+          splashFactory: NoSplash.splashFactory,
+          onTap: () {
+            HapticFeedback.mediumImpact();
+            onTap();
+          },
+          child: SizedBox(
+            width: AppDimensions.space64 + AppDimensions.space8,
+            height: AppDimensions.buttonHeightPrimary,
+            child: Icon(
+              LucideIcons.camera,
+              color: context.appOnPrimary,
+              size: AppDimensions.iconMD,
+            ),
+          ),
         ),
       ),
     );

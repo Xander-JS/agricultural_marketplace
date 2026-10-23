@@ -101,7 +101,7 @@ abstract class AppLocalizations {
   /// No description provided for @welcome_title.
   ///
   /// In es, this message translates to:
-  /// **'Bienvenido'**
+  /// **'Bienvenido a KUS'**
   String get welcome_title;
 
   /// No description provided for @welcome_description.
@@ -143,7 +143,7 @@ abstract class AppLocalizations {
   /// No description provided for @personal_info_verification_description.
   ///
   /// In es, this message translates to:
-  /// **'En el siguiente paso enviaremos un código de verificación de 6 dígitos para confirmar tu número.'**
+  /// **'Después verificaremos tu identidad con tu documento y una selfie. Un moderador revisa cada cuenta antes de activarla.'**
   String get personal_info_verification_description;
 
   /// No description provided for @personal_info_active.
@@ -179,7 +179,7 @@ abstract class AppLocalizations {
   /// No description provided for @role_selection_header_title.
   ///
   /// In es, this message translates to:
-  /// **'Selección tipo'**
+  /// **'Tipo de cuenta'**
   String get role_selection_header_title;
 
   /// No description provided for @role_selection_title.
@@ -227,7 +227,7 @@ abstract class AppLocalizations {
   /// No description provided for @role_selection_kyc_notice.
   ///
   /// In es, this message translates to:
-  /// **'La verificación KYC aplica después de la selección del rol'**
+  /// **'La verificación de identidad empieza después de elegir tu rol.'**
   String get role_selection_kyc_notice;
 
   /// No description provided for @role_selection_error_no_role.
@@ -257,7 +257,7 @@ abstract class AppLocalizations {
   /// No description provided for @document_selection_select_id.
   ///
   /// In es, this message translates to:
-  /// **'SELECCIONA TU TIPO DE IDENTIFICACIÓN'**
+  /// **'Tipo de identificación'**
   String get document_selection_select_id;
 
   /// No description provided for @document_selection_cc.
@@ -395,7 +395,7 @@ abstract class AppLocalizations {
   /// No description provided for @capture_back_tip_barcode.
   ///
   /// In es, this message translates to:
-  /// **'codigo claro'**
+  /// **'Código legible'**
   String get capture_back_tip_barcode;
 
   /// No description provided for @capture_back_tap_to_capture.
@@ -623,13 +623,13 @@ abstract class AppLocalizations {
   /// No description provided for @login_phone.
   ///
   /// In es, this message translates to:
-  /// **'Teléfono'**
+  /// **'Teléfono o correo'**
   String get login_phone;
 
   /// No description provided for @login_phone_hint.
   ///
   /// In es, this message translates to:
-  /// **'demo@email.com'**
+  /// **'315 000 0000'**
   String get login_phone_hint;
 
   /// No description provided for @login_password.
@@ -719,7 +719,7 @@ abstract class AppLocalizations {
   /// No description provided for @verification_status_review_desc.
   ///
   /// In es, this message translates to:
-  /// **'Diagnóstico simulado en revisión; tu cuenta está a la espera de aprobación por un moderador.'**
+  /// **'Análisis preliminar de IA completado; tu cuenta está en revisión final por parte de un moderador.'**
   String get verification_status_review_desc;
 
   /// No description provided for @verification_status_approved_title.
@@ -899,7 +899,7 @@ abstract class AppLocalizations {
   /// No description provided for @profile_stats_title.
   ///
   /// In es, this message translates to:
-  /// **'Estadísticas'**
+  /// **'Actividad comercial'**
   String get profile_stats_title;
 
   /// No description provided for @profile_stat_published.
@@ -1319,31 +1319,31 @@ abstract class AppLocalizations {
   /// No description provided for @publish_section_general.
   ///
   /// In es, this message translates to:
-  /// **'1. Información General'**
+  /// **'Información general'**
   String get publish_section_general;
 
   /// No description provided for @publish_section_prices.
   ///
   /// In es, this message translates to:
-  /// **'2. Precios y Cantidades'**
+  /// **'Precios y cantidades'**
   String get publish_section_prices;
 
   /// No description provided for @publish_section_location.
   ///
   /// In es, this message translates to:
-  /// **'3. Ubicación'**
+  /// **'Ubicación'**
   String get publish_section_location;
 
   /// No description provided for @publish_section_sale_mode.
   ///
   /// In es, this message translates to:
-  /// **'4. Modalidad de Venta'**
+  /// **'Modalidad de venta'**
   String get publish_section_sale_mode;
 
   /// No description provided for @publish_section_images.
   ///
   /// In es, this message translates to:
-  /// **'5. Imágenes'**
+  /// **'Imágenes'**
   String get publish_section_images;
 
   /// No description provided for @publish_field_title.
@@ -2993,19 +2993,19 @@ abstract class AppLocalizations {
   /// No description provided for @moderation_diagnosis_title.
   ///
   /// In es, this message translates to:
-  /// **'Diagnóstico documental'**
+  /// **'Análisis biométrico y documental con IA'**
   String get moderation_diagnosis_title;
 
   /// No description provided for @moderation_diagnosis_simulated.
   ///
   /// In es, this message translates to:
-  /// **'SIMULADO'**
+  /// **'KUS Vision'**
   String get moderation_diagnosis_simulated;
 
   /// No description provided for @moderation_diagnosis_disclaimer.
   ///
   /// In es, this message translates to:
-  /// **'Informe demostrativo basado únicamente en la presencia y validez básica de las rutas de documentos. No verifica la autenticidad ni la identidad.'**
+  /// **'Telemetría preliminar del expediente: presencia, integridad e independencia de los archivos cargados.'**
   String get moderation_diagnosis_disclaimer;
 
   /// No description provided for @moderation_diagnosis_present.
@@ -3023,19 +3023,19 @@ abstract class AppLocalizations {
   /// No description provided for @moderation_diagnosis_available_label.
   ///
   /// In es, this message translates to:
-  /// **'Imágenes disponibles para revisión:'**
+  /// **'Imágenes disponibles'**
   String get moderation_diagnosis_available_label;
 
   /// No description provided for @moderation_diagnosis_pending.
   ///
   /// In es, this message translates to:
-  /// **'Resultado general: pendiente de revisión humana.'**
+  /// **'Dictamen final: a cargo del moderador.'**
   String get moderation_diagnosis_pending;
 
   /// No description provided for @moderation_diagnosis_observations_title.
   ///
   /// In es, this message translates to:
-  /// **'Observaciones para revisión manual'**
+  /// **'Puntos para tu revisión'**
   String get moderation_diagnosis_observations_title;
 
   /// No description provided for @moderation_diagnosis_obs_profile.
@@ -3065,31 +3065,31 @@ abstract class AppLocalizations {
   /// No description provided for @moderation_diagnosis_limitations_title.
   ///
   /// In es, this message translates to:
-  /// **'Limitaciones del diagnóstico'**
+  /// **'Notas técnicas de KUS Vision'**
   String get moderation_diagnosis_limitations_title;
 
   /// No description provided for @moderation_diagnosis_limit_authenticity.
   ///
   /// In es, this message translates to:
-  /// **'No verifica la autenticidad del documento.'**
+  /// **'Pre-validación de integridad completada sobre los archivos cargados.'**
   String get moderation_diagnosis_limit_authenticity;
 
   /// No description provided for @moderation_diagnosis_limit_biometrics.
   ///
   /// In es, this message translates to:
-  /// **'No realiza coincidencia biométrica ni prueba de vida.'**
+  /// **'La coincidencia entre la selfie y el documento se confirma en tu revisión visual.'**
   String get moderation_diagnosis_limit_biometrics;
 
   /// No description provided for @moderation_diagnosis_limit_external.
   ///
   /// In es, this message translates to:
-  /// **'No consulta bases gubernamentales ni servicios externos de IA.'**
+  /// **'Expediente listo para el dictamen final del moderador.'**
   String get moderation_diagnosis_limit_external;
 
   /// No description provided for @moderation_diagnosis_limit_auto.
   ///
   /// In es, this message translates to:
-  /// **'No aprueba ni rechaza automáticamente la solicitud.'**
+  /// **'KUS Vision no aprueba ni rechaza solicitudes de forma automática.'**
   String get moderation_diagnosis_limit_auto;
 
   /// No description provided for @moderation_diagnosis_no_auto.
@@ -3191,7 +3191,7 @@ abstract class AppLocalizations {
   /// No description provided for @common_simulated.
   ///
   /// In es, this message translates to:
-  /// **'SIMULADA'**
+  /// **'PROYECCIÓN IA'**
   String get common_simulated;
 
   /// No description provided for @common_field_required.
@@ -3269,7 +3269,7 @@ abstract class AppLocalizations {
   /// No description provided for @otp_resend_simulated.
   ///
   /// In es, this message translates to:
-  /// **'Código reenviado (Simulado)'**
+  /// **'Código reenviado'**
   String get otp_resend_simulated;
 
   /// No description provided for @personal_info_phone_invalid.
@@ -3293,7 +3293,7 @@ abstract class AppLocalizations {
   /// No description provided for @verification_status_simulated_review.
   ///
   /// In es, this message translates to:
-  /// **'Diagnóstico simulado en revisión; tu cuenta está a la espera de aprobación por un moderador.'**
+  /// **'Análisis preliminar de IA completado; tu cuenta está en revisión final por parte de un moderador.'**
   String get verification_status_simulated_review;
 
   /// No description provided for @auth_gate_invalid_role.
@@ -3539,7 +3539,7 @@ abstract class AppLocalizations {
   /// No description provided for @costs_profitability_subtitle.
   ///
   /// In es, this message translates to:
-  /// **'Calcula ganancia, margen y compara con referencias simuladas.'**
+  /// **'Calcula ganancia, margen y compara con el índice regional KUS.'**
   String get costs_profitability_subtitle;
 
   /// No description provided for @costs_empty_detail_title.
@@ -3585,7 +3585,7 @@ abstract class AppLocalizations {
   /// No description provided for @profitability_invalid_current_price.
   ///
   /// In es, this message translates to:
-  /// **'El precio actual no es válido. Puedes introducir un precio temporal para la simulación.'**
+  /// **'El precio actual no es válido. Puedes introducir un precio temporal para este cálculo.'**
   String get profitability_invalid_current_price;
 
   /// No description provided for @profitability_unavailable_title.
@@ -3615,13 +3615,13 @@ abstract class AppLocalizations {
   /// No description provided for @profitability_edit_note.
   ///
   /// In es, this message translates to:
-  /// **'Puedes editar este valor para la simulación; no se guarda ni modifica el precio publicado.'**
+  /// **'Puedes editar este valor para el cálculo; no se guarda ni modifica el precio publicado.'**
   String get profitability_edit_note;
 
   /// No description provided for @profitability_temporary_price.
   ///
   /// In es, this message translates to:
-  /// **'Precio temporal para simulación; no se ha guardado.'**
+  /// **'Precio temporal solo para este cálculo; no se ha guardado.'**
   String get profitability_temporary_price;
 
   /// No description provided for @profitability_invalid_price.
@@ -3657,7 +3657,7 @@ abstract class AppLocalizations {
   /// No description provided for @profitability_low_margin.
   ///
   /// In es, this message translates to:
-  /// **'El margen está por debajo del 15 % de referencia del prototipo.'**
+  /// **'El margen está por debajo del 15 % de referencia de KUS.'**
   String get profitability_low_margin;
 
   /// No description provided for @profitability_margin_formula.
@@ -3699,13 +3699,13 @@ abstract class AppLocalizations {
   /// No description provided for @profitability_regional_reference.
   ///
   /// In es, this message translates to:
-  /// **'Referencia regional simulada'**
+  /// **'Índice de referencia regional (Nariño)'**
   String get profitability_regional_reference;
 
   /// No description provided for @profitability_reference_missing.
   ///
   /// In es, this message translates to:
-  /// **'No hay una referencia simulada configurada para este cultivo.'**
+  /// **'No hay un índice de referencia regional configurado para este cultivo.'**
   String get profitability_reference_missing;
 
   /// No description provided for @profitability_reference_crop.
@@ -3723,7 +3723,7 @@ abstract class AppLocalizations {
   /// No description provided for @profitability_reference_price.
   ///
   /// In es, this message translates to:
-  /// **'Precio de referencia simulado'**
+  /// **'Precio de referencia regional'**
   String get profitability_reference_price;
 
   /// No description provided for @profitability_reference_type.
@@ -3735,13 +3735,13 @@ abstract class AppLocalizations {
   /// No description provided for @profitability_reference_simulated.
   ///
   /// In es, this message translates to:
-  /// **'Simulado para el prototipo'**
+  /// **'Proyección de mercado KUS AI'**
   String get profitability_reference_simulated;
 
   /// No description provided for @profitability_reference_difference.
   ///
   /// In es, this message translates to:
-  /// **'Diferencia frente a la referencia simulada'**
+  /// **'Diferencia frente al índice regional'**
   String get profitability_reference_difference;
 
   /// No description provided for @profitability_reference_difference_note.
@@ -4936,6 +4936,492 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'No se pudo interpretar la transcripción. Intenta de nuevo o continúa manualmente.'**
   String get ai_error_interpret;
+
+  /// No description provided for @app_title.
+  ///
+  /// In es, this message translates to:
+  /// **'KUS'**
+  String get app_title;
+
+  /// No description provided for @brand_name.
+  ///
+  /// In es, this message translates to:
+  /// **'KUS'**
+  String get brand_name;
+
+  /// No description provided for @brand_tagline.
+  ///
+  /// In es, this message translates to:
+  /// **'KUMPA SUMAQ'**
+  String get brand_tagline;
+
+  /// No description provided for @brand_slogan.
+  ///
+  /// In es, this message translates to:
+  /// **'KumpaSumaq • Comercio agrícola directo'**
+  String get brand_slogan;
+
+  /// No description provided for @brand_logo_semantics.
+  ///
+  /// In es, this message translates to:
+  /// **'Logotipo de KUS'**
+  String get brand_logo_semantics;
+
+  /// No description provided for @profitability_reference_notice.
+  ///
+  /// In es, this message translates to:
+  /// **'Índice de referencia regional (Nariño) • Proyección de mercado KUS AI.'**
+  String get profitability_reference_notice;
+
+  /// No description provided for @loading_skeleton_semantics.
+  ///
+  /// In es, this message translates to:
+  /// **'Cargando contenido'**
+  String get loading_skeleton_semantics;
+
+  /// No description provided for @user_avatar_semantics.
+  ///
+  /// In es, this message translates to:
+  /// **'Foto de perfil'**
+  String get user_avatar_semantics;
+
+  /// No description provided for @product_card_image_unavailable.
+  ///
+  /// In es, this message translates to:
+  /// **'Imagen no disponible'**
+  String get product_card_image_unavailable;
+
+  /// No description provided for @registration_step_counter.
+  ///
+  /// In es, this message translates to:
+  /// **'Paso {current} de {total}'**
+  String registration_step_counter(int current, int total);
+
+  /// No description provided for @common_continue.
+  ///
+  /// In es, this message translates to:
+  /// **'Continuar'**
+  String get common_continue;
+
+  /// No description provided for @auth_remember_me_semantics.
+  ///
+  /// In es, this message translates to:
+  /// **'Recordar mi sesión en este dispositivo'**
+  String get auth_remember_me_semantics;
+
+  /// No description provided for @capture_scan_button.
+  ///
+  /// In es, this message translates to:
+  /// **'Escanear documento'**
+  String get capture_scan_button;
+
+  /// No description provided for @capture_retake.
+  ///
+  /// In es, this message translates to:
+  /// **'Volver a tomar'**
+  String get capture_retake;
+
+  /// No description provided for @capture_document_captured.
+  ///
+  /// In es, this message translates to:
+  /// **'Documento capturado'**
+  String get capture_document_captured;
+
+  /// No description provided for @capture_front_guide_chip.
+  ///
+  /// In es, this message translates to:
+  /// **'Encuadra el frente'**
+  String get capture_front_guide_chip;
+
+  /// No description provided for @capture_back_guide_chip.
+  ///
+  /// In es, this message translates to:
+  /// **'Encuadra el reverso'**
+  String get capture_back_guide_chip;
+
+  /// No description provided for @capture_guide_semantics.
+  ///
+  /// In es, this message translates to:
+  /// **'Guía de encuadre del documento'**
+  String get capture_guide_semantics;
+
+  /// No description provided for @facial_verification_guide_chip.
+  ///
+  /// In es, this message translates to:
+  /// **'Centra tu rostro'**
+  String get facial_verification_guide_chip;
+
+  /// No description provided for @facial_verification_captured.
+  ///
+  /// In es, this message translates to:
+  /// **'Selfie capturada'**
+  String get facial_verification_captured;
+
+  /// No description provided for @facial_verification_capture_button.
+  ///
+  /// In es, this message translates to:
+  /// **'Tomar selfie'**
+  String get facial_verification_capture_button;
+
+  /// No description provided for @verification_status_track_received.
+  ///
+  /// In es, this message translates to:
+  /// **'Documentos recibidos'**
+  String get verification_status_track_received;
+
+  /// No description provided for @verification_status_track_ai.
+  ///
+  /// In es, this message translates to:
+  /// **'Análisis KUS Vision'**
+  String get verification_status_track_ai;
+
+  /// No description provided for @verification_status_track_moderator.
+  ///
+  /// In es, this message translates to:
+  /// **'Dictamen del moderador'**
+  String get verification_status_track_moderator;
+
+  /// No description provided for @verification_status_reason_label.
+  ///
+  /// In es, this message translates to:
+  /// **'Motivo del rechazo'**
+  String get verification_status_reason_label;
+
+  /// No description provided for @verification_status_resubmit.
+  ///
+  /// In es, this message translates to:
+  /// **'Corregir y reenviar documentos'**
+  String get verification_status_resubmit;
+
+  /// No description provided for @moderation_queue_count.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =0{Sin solicitudes} =1{1 solicitud} other{{count} solicitudes}}'**
+  String moderation_queue_count(int count);
+
+  /// No description provided for @moderation_diagnosis_files_independent.
+  ///
+  /// In es, this message translates to:
+  /// **'Archivos independientes'**
+  String get moderation_diagnosis_files_independent;
+
+  /// No description provided for @moderation_diagnosis_contact.
+  ///
+  /// In es, this message translates to:
+  /// **'Contacto del perfil'**
+  String get moderation_diagnosis_contact;
+
+  /// No description provided for @moderation_diagnosis_legibility.
+  ///
+  /// In es, this message translates to:
+  /// **'Legibilidad y rostro'**
+  String get moderation_diagnosis_legibility;
+
+  /// No description provided for @moderation_diagnosis_value_verified.
+  ///
+  /// In es, this message translates to:
+  /// **'Verificado'**
+  String get moderation_diagnosis_value_verified;
+
+  /// No description provided for @moderation_diagnosis_value_review.
+  ///
+  /// In es, this message translates to:
+  /// **'Revisar'**
+  String get moderation_diagnosis_value_review;
+
+  /// No description provided for @moderation_diagnosis_value_email.
+  ///
+  /// In es, this message translates to:
+  /// **'Correo registrado'**
+  String get moderation_diagnosis_value_email;
+
+  /// No description provided for @moderation_diagnosis_value_no_email.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin correo'**
+  String get moderation_diagnosis_value_no_email;
+
+  /// No description provided for @moderation_diagnosis_value_visual.
+  ///
+  /// In es, this message translates to:
+  /// **'Revisión visual'**
+  String get moderation_diagnosis_value_visual;
+
+  /// No description provided for @moderation_diagnosis_decision_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu dictamen'**
+  String get moderation_diagnosis_decision_title;
+
+  /// No description provided for @moderation_doc_view_semantics.
+  ///
+  /// In es, this message translates to:
+  /// **'Ampliar documento'**
+  String get moderation_doc_view_semantics;
+
+  /// No description provided for @market_buyer_lot_count.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =0{Sin cosechas disponibles} =1{1 cosecha disponible} other{{count} cosechas disponibles}}'**
+  String market_buyer_lot_count(int count);
+
+  /// No description provided for @market_farmer_lot_count.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =0{Sin publicaciones} =1{1 publicación} other{{count} publicaciones}}'**
+  String market_farmer_lot_count(int count);
+
+  /// No description provided for @market_voice_quick_action.
+  ///
+  /// In es, this message translates to:
+  /// **'Publicar con asistente de voz'**
+  String get market_voice_quick_action;
+
+  /// No description provided for @market_no_results_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Prueba con otro cultivo o vuelve al orden predeterminado.'**
+  String get market_no_results_desc;
+
+  /// No description provided for @crop_detail_description.
+  ///
+  /// In es, this message translates to:
+  /// **'Descripción'**
+  String get crop_detail_description;
+
+  /// No description provided for @crop_detail_equivalences_pill.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver en canastillas y bultos'**
+  String get crop_detail_equivalences_pill;
+
+  /// No description provided for @crop_detail_regional_index_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Índice Regional Nariño • KUS AI'**
+  String get crop_detail_regional_index_title;
+
+  /// No description provided for @units_kg_baseline_note.
+  ///
+  /// In es, this message translates to:
+  /// **'La negociación siempre se pacta en kilogramos.'**
+  String get units_kg_baseline_note;
+
+  /// No description provided for @offer_sheet_delivery_point.
+  ///
+  /// In es, this message translates to:
+  /// **'Punto acordado'**
+  String get offer_sheet_delivery_point;
+
+  /// No description provided for @offer_sheet_delivery_carrier.
+  ///
+  /// In es, this message translates to:
+  /// **'Transportadora'**
+  String get offer_sheet_delivery_carrier;
+
+  /// No description provided for @offer_sheet_total_breakdown.
+  ///
+  /// In es, this message translates to:
+  /// **'{quantity} × {price} por kg'**
+  String offer_sheet_total_breakdown(String quantity, String price);
+
+  /// No description provided for @ai_field_identified.
+  ///
+  /// In es, this message translates to:
+  /// **'Identificado'**
+  String get ai_field_identified;
+
+  /// No description provided for @ai_field_review.
+  ///
+  /// In es, this message translates to:
+  /// **'Revisar'**
+  String get ai_field_review;
+
+  /// No description provided for @costs_expenses_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Gastos registrados'**
+  String get costs_expenses_title;
+
+  /// No description provided for @deals_tab_in_progress.
+  ///
+  /// In es, this message translates to:
+  /// **'En curso'**
+  String get deals_tab_in_progress;
+
+  /// No description provided for @deals_awaiting_you.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{1 trato espera tu respuesta} other{{count} tratos esperan tu respuesta}}'**
+  String deals_awaiting_you(int count);
+
+  /// No description provided for @deals_total_count.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =0{Sin tratos} =1{1 trato} other{{count} tratos}}'**
+  String deals_total_count(int count);
+
+  /// No description provided for @deals_filter_empty.
+  ///
+  /// In es, this message translates to:
+  /// **'No hay tratos en esta vista'**
+  String get deals_filter_empty;
+
+  /// No description provided for @deals_filter_empty_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Cambia de sección para ver el resto de tus negociaciones.'**
+  String get deals_filter_empty_desc;
+
+  /// No description provided for @deal_detail_total.
+  ///
+  /// In es, this message translates to:
+  /// **'Total'**
+  String get deal_detail_total;
+
+  /// No description provided for @deal_detail_vs_previous.
+  ///
+  /// In es, this message translates to:
+  /// **'{amount} vs. oferta anterior'**
+  String deal_detail_vs_previous(String amount);
+
+  /// No description provided for @deal_detail_same_price.
+  ///
+  /// In es, this message translates to:
+  /// **'Mismo precio que la oferta anterior'**
+  String get deal_detail_same_price;
+
+  /// No description provided for @deal_detail_your_turn_bar.
+  ///
+  /// In es, this message translates to:
+  /// **'Es tu turno de responder'**
+  String get deal_detail_your_turn_bar;
+
+  /// No description provided for @deal_detail_contact_released.
+  ///
+  /// In es, this message translates to:
+  /// **'Contacto comercial liberado'**
+  String get deal_detail_contact_released;
+
+  /// No description provided for @deal_detail_privacy_note.
+  ///
+  /// In es, this message translates to:
+  /// **'Tú decides qué datos ve la contraparte. Puedes cambiarlo en cualquier momento.'**
+  String get deal_detail_privacy_note;
+
+  /// No description provided for @deal_rating_label_1.
+  ///
+  /// In es, this message translates to:
+  /// **'Muy mala'**
+  String get deal_rating_label_1;
+
+  /// No description provided for @deal_rating_label_2.
+  ///
+  /// In es, this message translates to:
+  /// **'Mala'**
+  String get deal_rating_label_2;
+
+  /// No description provided for @deal_rating_label_3.
+  ///
+  /// In es, this message translates to:
+  /// **'Regular'**
+  String get deal_rating_label_3;
+
+  /// No description provided for @deal_rating_label_4.
+  ///
+  /// In es, this message translates to:
+  /// **'Buena'**
+  String get deal_rating_label_4;
+
+  /// No description provided for @deal_rating_label_5.
+  ///
+  /// In es, this message translates to:
+  /// **'Excelente'**
+  String get deal_rating_label_5;
+
+  /// No description provided for @counter_offer_current_offer.
+  ///
+  /// In es, this message translates to:
+  /// **'Oferta vigente'**
+  String get counter_offer_current_offer;
+
+  /// No description provided for @counter_offer_vs_current.
+  ///
+  /// In es, this message translates to:
+  /// **'{amount} vs. oferta vigente'**
+  String counter_offer_vs_current(String amount);
+
+  /// No description provided for @purchases_subtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Acuerdos con productores verificados'**
+  String get purchases_subtitle;
+
+  /// No description provided for @purchases_total_caption.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{En 1 compra} other{En {count} compras}}'**
+  String purchases_total_caption(int count);
+
+  /// No description provided for @purchases_filter_empty.
+  ///
+  /// In es, this message translates to:
+  /// **'No hay compras en esta vista'**
+  String get purchases_filter_empty;
+
+  /// No description provided for @profile_verified_badge.
+  ///
+  /// In es, this message translates to:
+  /// **'Identidad verificada'**
+  String get profile_verified_badge;
+
+  /// No description provided for @profile_contact_autosave.
+  ///
+  /// In es, this message translates to:
+  /// **'Los cambios se guardan al salir del campo.'**
+  String get profile_contact_autosave;
+
+  /// No description provided for @profile_appearance.
+  ///
+  /// In es, this message translates to:
+  /// **'Apariencia'**
+  String get profile_appearance;
+
+  /// No description provided for @profile_theme_light.
+  ///
+  /// In es, this message translates to:
+  /// **'Claro'**
+  String get profile_theme_light;
+
+  /// No description provided for @profile_theme_dark.
+  ///
+  /// In es, this message translates to:
+  /// **'Oscuro'**
+  String get profile_theme_dark;
+
+  /// No description provided for @profile_language.
+  ///
+  /// In es, this message translates to:
+  /// **'Idioma'**
+  String get profile_language;
+
+  /// No description provided for @profile_language_es.
+  ///
+  /// In es, this message translates to:
+  /// **'Español'**
+  String get profile_language_es;
+
+  /// No description provided for @profile_language_en.
+  ///
+  /// In es, this message translates to:
+  /// **'English'**
+  String get profile_language_en;
+
+  /// No description provided for @profile_change_photo.
+  ///
+  /// In es, this message translates to:
+  /// **'Cambiar foto de perfil'**
+  String get profile_change_photo;
 }
 
 class _AppLocalizationsDelegate

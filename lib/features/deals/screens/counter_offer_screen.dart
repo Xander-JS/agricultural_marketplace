@@ -1,13 +1,25 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../models/negotiation_model.dart';
 import '../models/negotiation_offer_model.dart';
 import '../services/negotiation_service.dart';
+import '../widgets/delivery_presentation.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimensions.dart';
+import '../../../core/theme/app_motion.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/constants/user_roles.dart';
 import '../../../core/constants/delivery_methods.dart';
 import '../../../core/utils/app_formatters.dart';
+import '../../../core/widgets/cards/inset_group_card.dart';
+import '../../../core/widgets/feedback/app_snack_bar.dart';
+import '../../../core/widgets/feedback/status_banner.dart';
+import '../../../core/widgets/inputs/choice_tile.dart';
 
 class CounterOfferScreen extends StatefulWidget {
   final NegotiationModel negotiation;
@@ -73,7 +85,9 @@ class _CounterOfferScreenState extends State<CounterOfferScreen> {
     if (_deliveryOptions.contains(widget.latestOffer.deliveryMethod)) {
       _deliveryMethod = widget.latestOffer.deliveryMethod;
     } else {
-      _deliveryMethod = DeliveryMethod.toLabel(widget.latestOffer.deliveryMethod);
+      _deliveryMethod = DeliveryMethod.toLabel(
+        widget.latestOffer.deliveryMethod,
+      );
       if (!_deliveryOptions.contains(_deliveryMethod)) {
         _deliveryMethod = _deliveryOptions.first;
       }
@@ -122,21 +136,19 @@ class _CounterOfferScreenState extends State<CounterOfferScreen> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.counter_offer_success),
-            backgroundColor: context.appSuccess,
-          ),
+        showAppSnackBar(
+          context,
+          l10n.counter_offer_success,
+          tone: StatusTone.success,
         );
         Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString().replaceFirst('Exception: ', '')),
-            backgroundColor: context.appError,
-          ),
+        showAppSnackBar(
+          context,
+          e.toString().replaceFirst('Exception: ', ''),
+          tone: StatusTone.error,
         );
       }
     } finally {
@@ -146,21 +158,41 @@ class _CounterOfferScreenState extends State<CounterOfferScreen> {
     }
   }
 
+  String? _validatePositive(String? value, AppLocalizations l10n) {
+    if (value == null || value.trim().isEmpty) {
+      return l10n.offer_sheet_val_required;
+    }
+    final parsed = double.tryParse(value.trim());
+    if (parsed == null || parsed <= 0) {
+      return l10n.offer_sheet_val_positive;
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final figureStyle = AppTextStyles.figureSmall.copyWith(
+      fontSize: 16,
+      color: context.appTextPrimary,
+    );
+    final numberFormatters = [
+      FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+    ];
 
     return Scaffold(
       backgroundColor: context.appBackground,
-      appBar: AppBar(
-        title: Text(l10n.counter_offer_title),
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Form(
-                key: _formKey,
+      appBar: AppBar(title: Text(l10n.counter_offer_title)),
+      body: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                physics: AppMotion.scrollPhysics,
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -169,136 +201,334 @@ class _CounterOfferScreenState extends State<CounterOfferScreen> {
                         widget.negotiation.crop?.title ??
                             l10n.deals_unknown_crop,
                       ),
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: context.appTextPrimary,
+                      style: AppTextStyles.bodyLarge.copyWith(
+                        color: context.appTextSecondary,
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppDimensions.space16),
+                    _CurrentOfferCard(offer: widget.latestOffer),
+                    const SizedBox(height: AppDimensions.space24),
 
-                    TextFormField(
-                      controller: _quantityController,
-                      decoration: InputDecoration(
-                        labelText: l10n.counter_offer_quantity_label,
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        suffixText: 'kg',
-                      ),
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      onChanged: (_) => setState(() {}),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return l10n.offer_sheet_val_required;
-                        }
-                        final parsed = double.tryParse(value.trim());
-                        if (parsed == null || parsed <= 0) {
-                          return l10n.offer_sheet_val_positive;
-                        }
-                        return null;
-                      },
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: _quantityController,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            inputFormatters: numberFormatters,
+                            style: figureStyle,
+                            decoration: InputDecoration(
+                              labelText: l10n.counter_offer_quantity_label,
+                              suffixText: 'kg',
+                              prefixIcon: const Icon(
+                                LucideIcons.weight,
+                                size: 18,
+                              ),
+                            ),
+                            onChanged: (_) => setState(() {}),
+                            validator: (value) =>
+                                _validatePositive(value, l10n),
+                          ),
+                        ),
+                        const SizedBox(width: AppDimensions.space12),
+                        Expanded(
+                          child: TextFormField(
+                            controller: _priceController,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            inputFormatters: numberFormatters,
+                            style: figureStyle,
+                            decoration: InputDecoration(
+                              labelText: l10n.counter_offer_price_label,
+                              prefixText: '\$ ',
+                              suffixText: '/ kg',
+                            ),
+                            onChanged: (_) => setState(() {}),
+                            validator: (value) =>
+                                _validatePositive(value, l10n),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 16),
+                    _buildPriceDelta(l10n),
+                    const SizedBox(height: AppDimensions.space20),
 
-                    TextFormField(
-                      controller: _priceController,
-                      decoration: InputDecoration(
-                        labelText: l10n.counter_offer_price_label,
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        prefixText: '\$ ',
+                    Padding(
+                      padding: const EdgeInsets.only(left: 4, bottom: 8),
+                      child: Text(
+                        l10n.counter_offer_delivery_label,
+                        style: AppTextStyles.titleSmall.copyWith(
+                          color: context.appTextSecondary,
+                        ),
                       ),
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      onChanged: (_) => setState(() {}),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return l10n.offer_sheet_val_required;
-                        }
-                        final parsed = double.tryParse(value.trim());
-                        if (parsed == null || parsed <= 0) {
-                          return l10n.offer_sheet_val_positive;
-                        }
-                        return null;
-                      },
                     ),
-                    const SizedBox(height: 16),
-
-                    DropdownButtonFormField<String>(
-                      initialValue: _deliveryMethod,
-                      decoration: InputDecoration(
-                        labelText: l10n.counter_offer_delivery_label,
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      items: _deliveryOptions.map((method) {
-                        return DropdownMenuItem(
-                          value: method,
-                          child: Text(method),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        if (value != null) {
-                          setState(() => _deliveryMethod = value);
-                        }
-                      },
+                    Row(
+                      children: [
+                        for (var i = 0; i < _deliveryOptions.length; i++) ...[
+                          if (i > 0)
+                            const SizedBox(width: AppDimensions.space8),
+                          Expanded(
+                            child: _deliveryTile(l10n, _deliveryOptions[i]),
+                          ),
+                        ],
+                      ],
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppDimensions.space20),
 
                     TextFormField(
                       controller: _messageController,
+                      maxLines: 3,
+                      textCapitalization: TextCapitalization.sentences,
                       decoration: InputDecoration(
                         labelText: l10n.counter_offer_message_label,
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                         hintText: l10n.counter_offer_message_hint,
-                      ),
-                      maxLines: 3,
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Subtotal Estimado
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: context.appSurfaceVariant,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            l10n.offer_sheet_estimated_total,
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: context.appTextPrimary,
-                            ),
-                          ),
-                          Text(
-                            CurrencyFormatters.formatCop(_estimatedTotal),
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: context.appPrimary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 28),
-
-                    ElevatedButton(
-                      onPressed: _submit,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: context.appPrimary,
-                        foregroundColor: context.appOnPrimary,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: Text(
-                        l10n.counter_offer_send_btn,
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        alignLabelWithHint: true,
                       ),
                     ),
                   ],
                 ),
               ),
             ),
+            _buildFooter(l10n),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _deliveryTile(AppLocalizations l10n, String method) {
+    final presentation = deliveryPresentation(l10n, method);
+    return ChoiceTile(
+      icon: presentation.icon,
+      label: presentation.label,
+      selected: _deliveryMethod == method,
+      onTap: () {
+        if (_deliveryMethod == method) return;
+        HapticFeedback.selectionClick();
+        setState(() => _deliveryMethod = method);
+      },
+    );
+  }
+
+  /// How far the counter-offer moves the price per kg from the offer on
+  /// the table; hidden while the price is unchanged or not a number.
+  Widget _buildPriceDelta(AppLocalizations l10n) {
+    final diff = _currentPrice - widget.latestOffer.proposedPricePerKg;
+    final show = _currentPrice > 0 && diff != 0;
+    final sign = diff > 0 ? '+' : '−';
+
+    return AnimatedSize(
+      duration: AppMotion.of(context, AppMotion.standard),
+      curve: AppMotion.easeOut,
+      alignment: Alignment.topCenter,
+      child: show
+          ? Padding(
+              padding: const EdgeInsets.only(top: 10, left: 4),
+              child: Row(
+                children: [
+                  Icon(
+                    diff > 0
+                        ? LucideIcons.trendingUp
+                        : LucideIcons.trendingDown,
+                    size: 14,
+                    color: context.appTextSecondary,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      l10n.counter_offer_vs_current(
+                        '$sign${CurrencyFormatters.formatCop(diff.abs())} / kg',
+                      ),
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: context.appTextSecondary,
+                        fontFeatures: AppTextStyles.tabularFigures,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : const SizedBox(width: double.infinity),
+    );
+  }
+
+  /// Total of the counter-offer and its send button, kept above the
+  /// keyboard and the home indicator.
+  Widget _buildFooter(AppLocalizations l10n) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: context.appSurface,
+        border: Border(top: BorderSide(color: context.appDivider)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.offer_sheet_estimated_total,
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: context.appTextSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          l10n.offer_sheet_total_breakdown(
+                            UnitFormatters.formatKg(_currentQuantity),
+                            CurrencyFormatters.formatCop(_currentPrice),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.caption.copyWith(
+                            color: context.appTextSecondary,
+                            fontFeatures: AppTextStyles.tabularFigures,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: AppDimensions.space12),
+                  Text(
+                    CurrencyFormatters.formatCop(_estimatedTotal),
+                    style: AppTextStyles.figureLarge.copyWith(
+                      fontSize: 24,
+                      color: context.appPrimary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppDimensions.space12),
+              ElevatedButton(
+                onPressed: _isLoading ? null : _submit,
+                child: _isLoading
+                    ? CupertinoActivityIndicator(color: context.appTextMuted)
+                    : Text(l10n.counter_offer_send_btn),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The offer on the table that this counter-offer answers.
+class _CurrentOfferCard extends StatelessWidget {
+  final NegotiationOfferModel offer;
+
+  const _CurrentOfferCard({required this.offer});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final delivery = deliveryPresentation(l10n, offer.deliveryMethod);
+
+    Widget figure(String label, String value, {bool emphasized = false}) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: AppTextStyles.caption.copyWith(
+              color: context.appTextSecondary,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: AppTextStyles.figureMedium.copyWith(
+              fontSize: 16,
+              color: emphasized ? context.appPrimary : context.appTextPrimary,
+            ),
+          ),
+        ],
+      );
+    }
+
+    return InsetGroupCard(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Icon(
+                LucideIcons.receipt,
+                size: 16,
+                color: context.appTextSecondary,
+              ),
+              const SizedBox(width: AppDimensions.space8),
+              Text(
+                l10n.counter_offer_current_offer,
+                style: AppTextStyles.titleSmall.copyWith(
+                  color: context.appTextPrimary,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                DateFormatters.formatOfferDateTime(offer.createdAt),
+                style: AppTextStyles.caption.copyWith(
+                  color: context.appTextSecondary,
+                  fontFeatures: AppTextStyles.tabularFigures,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppDimensions.space12),
+          IntrinsicHeight(
+            child: Row(
+              children: [
+                Expanded(
+                  child: figure(
+                    l10n.deal_detail_price_per_kg,
+                    CurrencyFormatters.formatCop(offer.proposedPricePerKg),
+                    emphasized: true,
+                  ),
+                ),
+                VerticalDivider(width: 24, color: context.appDivider),
+                Expanded(
+                  child: figure(
+                    l10n.deal_detail_quantity,
+                    UnitFormatters.formatKg(offer.quantityKg),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppDimensions.space12),
+          Divider(height: 1, thickness: 1, color: context.appDivider),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Icon(delivery.icon, size: 16, color: context.appTextSecondary),
+              const SizedBox(width: AppDimensions.space8),
+              Expanded(
+                child: Text(
+                  deliveryDisplayLabel(l10n, offer.deliveryMethod),
+                  style: AppTextStyles.bodySmall.copyWith(
+                    fontSize: 13,
+                    color: context.appTextSecondary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

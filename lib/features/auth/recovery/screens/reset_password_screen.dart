@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/widgets/buttons/primary_action_button.dart';
+import '../../../../core/widgets/cards/inset_group_card.dart';
+import '../../../../core/widgets/feedback/app_snack_bar.dart';
+import '../../../../core/widgets/feedback/status_banner.dart';
 import '../../../../core/widgets/inputs/custom_text_field.dart';
 import '../../login/widgets/topo_header.dart';
+import '../../widgets/auth_layout.dart';
 import '../services/recovery_service.dart';
 
 /// Pantalla para establecer una nueva contraseña tras abrir un enlace de recuperación.
@@ -78,14 +84,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         _isSuccess = true;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            l10n?.reset_password_success ?? result.message,
-          ),
-          backgroundColor: context.appSuccess,
-          duration: const Duration(seconds: 3),
-        ),
+      showAppSnackBar(
+        context,
+        l10n?.reset_password_success ?? result.message,
+        tone: StatusTone.success,
       );
 
       // Notificar a AuthGate o al llamador para cerrar sesión y volver a LoginScreen
@@ -105,25 +107,40 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+
+    Widget visibilityToggle(bool obscured, VoidCallback onPressed) {
+      return IconButton(
+        icon: Icon(
+          obscured ? LucideIcons.eye : LucideIcons.eyeOff,
+          size: AppDimensions.iconSM,
+          color: context.appTextSecondary,
+        ),
+        onPressed: onPressed,
+      );
+    }
 
     return Scaffold(
       backgroundColor: context.appBackground,
       body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         child: Column(
           children: [
             Stack(
               children: [
-                const SizedBox(
-                  height: 220,
+                SizedBox(
+                  height: TopoHeader.compactHeight(context),
                   width: double.infinity,
-                  child: TopoHeader(),
+                  child: const TopoHeader(compact: true),
                 ),
                 if (widget.onCancel != null)
                   SafeArea(
                     child: Padding(
-                      padding: const EdgeInsets.only(left: 8.0, top: 8.0),
-                      child: IconButton(
-                        icon: Icon(Icons.close, color: context.appSuccess),
+                      padding: const EdgeInsets.all(AppDimensions.space12),
+                      child: AuthHeaderButton(
+                        icon: LucideIcons.x,
+                        tooltip: l10n.reset_password_cancel,
                         onPressed: widget.onCancel,
                       ),
                     ),
@@ -131,153 +148,116 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               ],
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      l10n.reset_password_title,
-                      style: AppTextStyles.headlineMedium.copyWith(
-                        color: context.appTextPrimary,
-                        fontWeight: FontWeight.bold,
+              padding: EdgeInsets.fromLTRB(
+                AppDimensions.space20,
+                AppDimensions.space8,
+                AppDimensions.space20,
+                AppDimensions.space24 + bottomInset,
+              ),
+              child: AuthFormEntrance(
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      AuthTaskHeader(
+                        icon: LucideIcons.lockKeyhole,
+                        title: l10n.reset_password_title,
+                        subtitle: l10n.reset_password_subtitle,
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      l10n.reset_password_subtitle,
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: context.appTextSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-
-                    // Campo de nueva contraseña
-                    CustomTextField(
-                      label: l10n.reset_password_new_label,
-                      hint: l10n.reset_password_new_hint,
-                      icon: Icons.lock_outline,
-                      controller: _passwordController,
-                      obscureText: _obscurePassword,
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility_off_outlined
-                              : Icons.visibility_outlined,
-                          color: context.appTextSecondary,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _obscurePassword = !_obscurePassword;
-                          });
-                        },
-                      ),
-                      validator: (value) {
-                        final val = value ?? '';
-                        if (val.isEmpty) {
-                          return l10n.reset_password_required_error;
-                        }
-                        if (val.length < 6) {
-                          return l10n.reset_password_length_error;
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Campo de confirmación de contraseña
-                    CustomTextField(
-                      label: l10n.reset_password_confirm_label,
-                      hint: l10n.reset_password_confirm_hint,
-                      icon: Icons.lock_outline,
-                      controller: _confirmPasswordController,
-                      obscureText: _obscureConfirmPassword,
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscureConfirmPassword
-                              ? Icons.visibility_off_outlined
-                              : Icons.visibility_outlined,
-                          color: context.appTextSecondary,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _obscureConfirmPassword = !_obscureConfirmPassword;
-                          });
-                        },
-                      ),
-                      validator: (value) {
-                        final val = value ?? '';
-                        if (val.isEmpty) {
-                          return l10n.reset_password_required_error;
-                        }
-                        if (val != _passwordController.text) {
-                          return l10n.reset_password_mismatch_error;
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Mensaje de error si ocurrió
-                    if (_errorMessage != null) ...[
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: context.appError.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: context.appError,
-                            width: 1,
-                          ),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      const SizedBox(height: AppDimensions.space20),
+                      InsetGroupCard(
+                        child: Column(
                           children: [
-                            Icon(
-                              Icons.error_outline,
-                              color: context.appError,
-                              size: 24,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                _errorMessage!,
-                                style: AppTextStyles.bodyMedium.copyWith(
-                                  color: context.appError,
+                            CustomTextField(
+                              label: l10n.reset_password_new_label,
+                              hint: l10n.reset_password_new_hint,
+                              icon: LucideIcons.lockKeyhole,
+                              controller: _passwordController,
+                              obscureText: _obscurePassword,
+                              textInputAction: TextInputAction.next,
+                              autofillHints: const [AutofillHints.newPassword],
+                              suffixIcon: visibilityToggle(
+                                _obscurePassword,
+                                () => setState(
+                                  () => _obscurePassword = !_obscurePassword,
                                 ),
                               ),
+                              validator: (value) {
+                                final val = value ?? '';
+                                if (val.isEmpty) {
+                                  return l10n.reset_password_required_error;
+                                }
+                                if (val.length < 6) {
+                                  return l10n.reset_password_length_error;
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: AppDimensions.space16),
+                            CustomTextField(
+                              label: l10n.reset_password_confirm_label,
+                              hint: l10n.reset_password_confirm_hint,
+                              icon: LucideIcons.keyRound,
+                              controller: _confirmPasswordController,
+                              obscureText: _obscureConfirmPassword,
+                              textInputAction: TextInputAction.done,
+                              autofillHints: const [AutofillHints.newPassword],
+                              suffixIcon: visibilityToggle(
+                                _obscureConfirmPassword,
+                                () => setState(
+                                  () => _obscureConfirmPassword =
+                                      !_obscureConfirmPassword,
+                                ),
+                              ),
+                              validator: (value) {
+                                final val = value ?? '';
+                                if (val.isEmpty) {
+                                  return l10n.reset_password_required_error;
+                                }
+                                if (val != _passwordController.text) {
+                                  return l10n.reset_password_mismatch_error;
+                                }
+                                return null;
+                              },
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 24),
-                    ],
 
-                    // Botón de actualización
-                    PrimaryActionButton(
-                      onPressed: (_isLoading || _isSuccess)
-                          ? null
-                          : _handleUpdatePassword,
-                      text: _isLoading
-                          ? (l10n.reset_password_updating)
-                          : (l10n.reset_password_submit_button),
-                      isLoading: _isLoading,
-                    ),
-                    const SizedBox(height: 16),
-
-                    if (widget.onCancel != null)
-                      TextButton(
-                        onPressed: _isLoading ? null : widget.onCancel,
-                        child: Text(
-                          l10n.reset_password_cancel,
-                          style: AppTextStyles.labelMedium.copyWith(
-                            color: context.appTextSecondary,
+                      // Error devuelto por el servicio de recuperación
+                      if (_errorMessage != null) ...[
+                        const SizedBox(height: AppDimensions.space16),
+                        StatusBanner(
+                          tone: StatusTone.error,
+                          icon: Icons.error_outline,
+                          message: _errorMessage!,
+                        ),
+                      ],
+                      const SizedBox(height: AppDimensions.space20),
+                      PrimaryActionButton(
+                        onPressed: (_isLoading || _isSuccess)
+                            ? null
+                            : _handleUpdatePassword,
+                        text: _isLoading
+                            ? l10n.reset_password_updating
+                            : l10n.reset_password_submit_button,
+                        isLoading: _isLoading,
+                      ),
+                      if (widget.onCancel != null) ...[
+                        const SizedBox(height: AppDimensions.space8),
+                        Center(
+                          child: TextButton(
+                            onPressed: _isLoading ? null : widget.onCancel,
+                            style: TextButton.styleFrom(
+                              foregroundColor: context.appTextSecondary,
+                            ),
+                            child: Text(l10n.reset_password_cancel),
                           ),
                         ),
-                      ),
-                    const SizedBox(height: 32),
-                  ],
+                      ],
+                    ],
+                  ),
                 ),
               ),
             ),

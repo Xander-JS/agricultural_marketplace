@@ -1,27 +1,83 @@
-import 'package:flutter/material.dart';
 import 'dart:math' as math;
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
+import '../../../../core/widgets/brand/kus_brand_logo.dart';
+import '../../../../core/widgets/brand/topo_contours_painter.dart';
 
+/// Auth header: a deep forest field falling into dark emerald, traced with
+/// the Nariño contour lines and closed by a soft wave.
+///
+/// Carries the KUS lockup on the brand stage (white mark and type, AAA on
+/// both gradient stops). The lockup is centered in the band between the
+/// status bar and the wave so it never collides with a back button placed
+/// top-left by the screen. [compact] swaps the hero lockup for the header
+/// size on task screens (password recovery) where the form leads.
 class TopoHeader extends StatelessWidget {
-  const TopoHeader({super.key});
+  final bool showLogo;
+  final bool compact;
+
+  const TopoHeader({super.key, this.showLogo = true, this.compact = false});
+
+  static const double _waveHeight = AppDimensions.space48;
+
+  /// Height for the [compact] header: the status bar plus a band that fits
+  /// the header lockup above the wave.
+  static double compactHeight(BuildContext context) =>
+      MediaQuery.paddingOf(context).top + 132;
 
   @override
   Widget build(BuildContext context) {
-    return ClipPath(
-      clipper: _HeaderWaveClipper(),
-      child: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: AppColors.brandGradient,
+    final topInset = MediaQuery.paddingOf(context).top;
+
+    final Widget logo = compact
+        ? const KusBrandLogo(
+            variant: KusBrandLogoVariant.header,
+            onBrandStage: true,
+            animateEntrance: true,
+          )
+        : const KusBrandLogo.hero(onBrandStage: true);
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light.copyWith(
+        statusBarColor: AppColors.transparent,
+      ),
+      child: ClipPath(
+        clipper: _HeaderWaveClipper(),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: context.appAuthHeaderGradient,
+            ),
           ),
-        ),
-        child: CustomPaint(
-          painter: _TopoPainter(color: AppColors.loadingBackground),
-          child: const SizedBox.expand(),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              const CustomPaint(
+                painter: TopoContoursPainter(
+                  color: AppColors.onBrand,
+                  intensity: 0.22,
+                ),
+              ),
+              if (showLogo)
+                Padding(
+                  padding: EdgeInsets.only(
+                    top: topInset + AppDimensions.space8,
+                    bottom: _waveHeight * 0.7,
+                    left: AppDimensions.space24,
+                    right: AppDimensions.space24,
+                  ),
+                  child: Center(
+                    child: FittedBox(fit: BoxFit.scaleDown, child: logo),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -32,7 +88,7 @@ class _HeaderWaveClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
     final path = Path();
-    final waveHeight = AppDimensions.space64 + AppDimensions.space4;
+    const waveHeight = TopoHeader._waveHeight;
     final startY = math.max(0.0, size.height - waveHeight);
 
     path.lineTo(0, startY);
@@ -51,93 +107,4 @@ class _HeaderWaveClipper extends CustomClipper<Path> {
 
   @override
   bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
-}
-
-class _TopoPainter extends CustomPainter {
-  final Color color;
-  _TopoPainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final scaleX = size.width / 393.0;
-    final scaleY = size.height / 360.0;
-    canvas.scale(scaleX, scaleY);
-
-    void drawPath(Path path, double opacity, double strokeWidth) {
-      final paint = Paint()
-        ..color = color.withValues(alpha: opacity)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeWidth;
-      canvas.drawPath(path, paint);
-    }
-
-    void drawRotatedEllipse(
-      double cx,
-      double cy,
-      double rx,
-      double ry,
-      double opacity,
-      double strokeWidth,
-      double angleDeg,
-    ) {
-      canvas.save();
-      canvas.translate(cx, cy);
-      canvas.rotate(angleDeg * math.pi / 180.0);
-      final paint = Paint()
-        ..color = color.withValues(alpha: opacity)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeWidth;
-      canvas.drawOval(
-        Rect.fromCenter(center: Offset.zero, width: rx * 2, height: ry * 2),
-        paint,
-      );
-      canvas.restore();
-    }
-
-    final p1 = Path()
-      ..moveTo(-20, 40)
-      ..quadraticBezierTo(60, 10, 140, 50)
-      ..quadraticBezierTo(220, 90, 300, 30)
-      ..quadraticBezierTo(380, -30, 420, 80);
-    drawPath(p1, 0.3, 1.2);
-
-    final p2 = Path()
-      ..moveTo(-30, 80)
-      ..quadraticBezierTo(70, 40, 160, 95)
-      ..quadraticBezierTo(250, 150, 320, 60)
-      ..quadraticBezierTo(390, -30, 430, 120);
-    drawPath(p2, 0.35, 1.2);
-
-    final p3 = Path()
-      ..moveTo(-20, 130)
-      ..quadraticBezierTo(90, 90, 190, 140)
-      ..quadraticBezierTo(290, 190, 350, 110)
-      ..quadraticBezierTo(410, 30, 430, 170);
-    drawPath(p3, 0.4, 1.4);
-
-    final p4 = Path()
-      ..moveTo(-10, 180)
-      ..quadraticBezierTo(100, 140, 210, 190)
-      ..quadraticBezierTo(320, 240, 370, 160)
-      ..quadraticBezierTo(420, 80, 430, 220);
-    drawPath(p4, 0.45, 1.4);
-
-    final p5 = Path()
-      ..moveTo(-10, 230)
-      ..quadraticBezierTo(120, 190, 230, 240)
-      ..quadraticBezierTo(340, 290, 380, 210)
-      ..quadraticBezierTo(420, 130, 440, 270);
-    drawPath(p5, 0.5, 1.5);
-
-    drawRotatedEllipse(290, 190, 90, 50, 0.3, 1.2, -15);
-    drawRotatedEllipse(290, 190, 65, 35, 0.35, 1.2, -15);
-    drawRotatedEllipse(290, 190, 40, 20, 0.4, 1.4, -15);
-    drawRotatedEllipse(290, 190, 18, 9, 0.45, 1.5, -15);
-
-    drawRotatedEllipse(80, 100, 70, 40, 0.25, 1.2, 10);
-    drawRotatedEllipse(80, 100, 45, 25, 0.3, 1.2, 10);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

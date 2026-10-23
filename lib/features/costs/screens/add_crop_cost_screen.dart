@@ -1,6 +1,15 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimensions.dart';
+import '../../../core/theme/app_motion.dart';
+import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/misc/icon_squircle.dart';
+import '../../../core/widgets/misc/pressable_scale.dart';
+import '../widgets/cost_category_style.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/utils/unit_formatters.dart';
 import '../models/crop_cost_model.dart';
@@ -85,16 +94,14 @@ class _AddCropCostScreenState extends State<AddCropCostScreen> {
       if (widget.costToEdit == null) {
         await _costService.createCost(cost);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.costs_added)),
-          );
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(l10n.costs_added)));
         }
       } else {
         await _costService.updateCost(cost);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.costs_updated)),
-          );
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(l10n.costs_updated)));
         }
       }
 
@@ -127,62 +134,49 @@ class _AddCropCostScreenState extends State<AddCropCostScreen> {
         title: Text(isEditing ? l10n.costs_edit_title : l10n.costs_add_title),
       ),
       body: _isSaving
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CupertinoActivityIndicator(radius: 12))
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
+              physics: AppMotion.scrollPhysics,
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
               child: Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(
-                      l10n.costs_category,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: context.appTextPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    DropdownButtonFormField<CostCategory>(
-                      initialValue: _selectedCategory,
-                      decoration: InputDecoration(
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      ),
-                      items: CostCategory.values.map((category) {
-                        return DropdownMenuItem(
-                          value: category,
-                          child: Text(category.toDisplayName()),
+                    _buildLabel(l10n.costs_category),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        const gap = AppDimensions.space8;
+                        final width = (constraints.maxWidth - gap) / 2;
+                        return Wrap(
+                          spacing: gap,
+                          runSpacing: gap,
+                          children: [
+                            for (final category in CostCategory.values)
+                              SizedBox(
+                                width: width,
+                                child: _CategoryTile(
+                                  category: category,
+                                  selected: category == _selectedCategory,
+                                  onTap: () {
+                                    if (category == _selectedCategory) return;
+                                    HapticFeedback.selectionClick();
+                                    setState(() {
+                                      _selectedCategory = category;
+                                    });
+                                  },
+                                ),
+                              ),
+                          ],
                         );
-                      }).toList(),
-                      onChanged: (value) {
-                        if (value != null) {
-                          setState(() {
-                            _selectedCategory = value;
-                          });
-                        }
                       },
                     ),
-                    const SizedBox(height: 24),
-                    Text(
-                      l10n.costs_description,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: context.appTextPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppDimensions.space24),
+                    _buildLabel(l10n.costs_description),
                     TextFormField(
                       controller: _descriptionController,
                       decoration: InputDecoration(
                         hintText: l10n.costs_description_hint,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
                       ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
@@ -193,24 +187,17 @@ class _AddCropCostScreenState extends State<AddCropCostScreen> {
                       maxLines: 2,
                       textCapitalization: TextCapitalization.sentences,
                     ),
-                    const SizedBox(height: 24),
-                    Text(
-                      l10n.costs_value,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: context.appTextPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppDimensions.space24),
+                    _buildLabel(l10n.costs_value),
                     TextFormField(
                       controller: _amountController,
+                      style: AppTextStyles.figureMedium.copyWith(
+                        color: context.appTextPrimary,
+                      ),
                       decoration: InputDecoration(
                         hintText: l10n.costs_value_hint,
                         prefixText: '\$ ',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                        suffixText: 'COP',
                       ),
                       keyboardType: const TextInputType.numberWithOptions(
                         decimal: true,
@@ -228,24 +215,100 @@ class _AddCropCostScreenState extends State<AddCropCostScreen> {
                         return null;
                       },
                     ),
-                    const SizedBox(height: 40),
-                    ElevatedButton(
+                    const SizedBox(height: AppDimensions.space40),
+                    ElevatedButton.icon(
                       onPressed: _saveCost,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                      icon: Icon(
+                        isEditing ? LucideIcons.check : LucideIcons.plus,
+                        size: 18,
                       ),
-                      child: Text(
+                      label: Text(
                         isEditing ? l10n.costs_update : l10n.costs_save,
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],
                 ),
               ),
             ),
+    );
+  }
+
+  Widget _buildLabel(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: AppDimensions.space8),
+      child: Text(
+        text,
+        style: AppTextStyles.titleSmall.copyWith(
+          color: context.appTextSecondary,
+        ),
+      ),
+    );
+  }
+}
+
+/// Selectable expense category: its squircle icon and name, outlined in
+/// the category tint when chosen.
+class _CategoryTile extends StatelessWidget {
+  final CostCategory category;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _CategoryTile({
+    required this.category,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final triad = category.triad(context);
+
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: PressableScale(
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: AppMotion.of(context, AppMotion.standard),
+            curve: AppMotion.easeOut,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: context.appSurface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: selected ? triad.foreground : context.appBorder,
+                width: selected
+                    ? AppDimensions.borderWidthThick
+                    : AppDimensions.borderWidthThin,
+              ),
+            ),
+            child: Row(
+              children: [
+                IconSquircle(icon: category.icon, triad: triad, size: 36),
+                const SizedBox(width: AppDimensions.space8),
+                Expanded(
+                  child: Text(
+                    category.toDisplayName(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.titleSmall.copyWith(
+                      color: context.appTextPrimary,
+                    ),
+                  ),
+                ),
+                if (selected)
+                  Icon(
+                    LucideIcons.circleCheck,
+                    size: 18,
+                    color: triad.foreground,
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

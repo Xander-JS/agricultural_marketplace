@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:agricultural_marketplace/core/localization/localization_config.dart';
 import 'package:agricultural_marketplace/core/theme/app_theme.dart';
 import 'package:agricultural_marketplace/features/profile/models/farmer_profile_data.dart';
@@ -133,7 +134,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Abrir modal de configuración
-      await tester.tap(find.byIcon(Icons.settings_outlined));
+      await tester.tap(find.byIcon(LucideIcons.settings));
       await tester.pumpAndSettle();
 
       // Opciones presentes para agricultor
@@ -154,7 +155,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Abrir modal de configuración
-      await tester.tap(find.byIcon(Icons.settings_outlined));
+      await tester.tap(find.byIcon(LucideIcons.settings));
       await tester.pumpAndSettle();
 
       // Opciones para comerciante
@@ -199,7 +200,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Abrir modal de configuración
-      await tester.tap(find.byIcon(Icons.settings_outlined));
+      await tester.tap(find.byIcon(LucideIcons.settings));
       await tester.pumpAndSettle();
 
       // Desplazar y pulsar cerrar sesión en el modal

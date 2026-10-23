@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimensions.dart';
+import '../../../core/theme/app_motion.dart';
+import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/cards/inset_group_card.dart';
+import '../../../core/widgets/misc/icon_squircle.dart';
+import '../widgets/cost_wallet_panel.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/utils/currency_formatters.dart';
 import '../../../core/utils/unit_formatters.dart';
@@ -56,8 +63,10 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
   @override
   void initState() {
     super.initState();
-    _referenceService = widget.regionalReferenceService ?? RegionalPriceReferenceService();
-    _regionalReference = widget.initialReference ??
+    _referenceService =
+        widget.regionalReferenceService ?? RegionalPriceReferenceService();
+    _regionalReference =
+        widget.initialReference ??
         SimulatedRegionalPriceReferences.findForCrop(
           cropType: widget.crop.cropType,
           title: widget.crop.title,
@@ -119,23 +128,24 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
       appBar: AppBar(title: Text(l10n.profitability_title)),
       body: Column(
         children: [
-          _buildSimulatedNoticeBanner(),
+          _buildReferenceNoticeBanner(),
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0).copyWith(bottom: 32),
+              physics: AppMotion.scrollPhysics,
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _buildCostSummary(l10n),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppDimensions.space12),
                   if (!widget.costPerKgResult.isCalculated)
                     _buildUnavailableCard(l10n)
                   else ...[
                     _buildPriceEvaluationCard(l10n, marginResult),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppDimensions.space12),
                     _buildSuggestedPriceCard(l10n, suggestedResult),
                   ],
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppDimensions.space12),
                   _buildRegionalReferenceCard(l10n),
                 ],
               ),
@@ -146,26 +156,33 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
     );
   }
 
-  Widget _buildSimulatedNoticeBanner() {
+  Widget _buildReferenceNoticeBanner() {
+    final l10n = AppLocalizations.of(context)!;
+    final triad = context.appInfoTriad;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      color: context.appWarningContainer,
+      decoration: BoxDecoration(
+        color: triad.background,
+        border: Border(bottom: BorderSide(color: triad.border)),
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.info_outline,
-            size: 18,
-            color: context.appTextPrimary,
+          Padding(
+            padding: const EdgeInsets.only(top: 1),
+            child: Icon(
+              LucideIcons.sparkles,
+              size: 16,
+              color: triad.foreground,
+            ),
           ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              SimulatedRegionalPriceReferences.notice,
+              l10n.profitability_reference_notice,
               key: const Key('simulated_reference_notice'),
-              style: TextStyle(
-                fontSize: 12,
+              style: AppTextStyles.bodySmall.copyWith(
                 fontWeight: FontWeight.w600,
                 color: context.appTextPrimary,
               ),
@@ -176,142 +193,157 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
     );
   }
 
+  /// Card heading shared by the calculator cards: tinted squircle + title.
+  Widget _buildCardHeader(String title, IconData icon, AppSemanticTriad triad) {
+    return Row(
+      children: [
+        IconSquircle(icon: icon, triad: triad, size: 32),
+        const SizedBox(width: AppDimensions.space12),
+        Expanded(
+          child: Text(
+            title,
+            style: AppTextStyles.titleMedium.copyWith(
+              color: context.appTextPrimary,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildCostSummary(AppLocalizations l10n) {
     final result = widget.costPerKgResult;
+    const secondary = AppColors.onBrandSecondary;
 
-    return Card(
-      elevation: 0,
-      color: context.appPrimaryContainer,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.scale_outlined, size: 20, color: context.appPrimary),
-                const SizedBox(width: 8),
-                Text(
-                  l10n.profitability_cost_per_kg,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: context.appTextPrimary,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            if (result.isCalculated)
+    return CostWalletPanel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(LucideIcons.scale, size: 16, color: secondary),
+              const SizedBox(width: 6),
               Text(
-                CurrencyFormatters.formatPricePerKg(result.costPerKg),
-                key: const Key('profit_cost_per_kg'),
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: context.appPrimary,
-                ),
-              )
-            else
-              Text(
-                result.message,
-                key: const Key('profit_cost_unavailable_message'),
-                style: TextStyle(color: context.appTextSecondary),
-              ),
-            if (result.denominator != null) ...[
-              const SizedBox(height: 4),
-              Text(
-                l10n.profitability_used_quantity(
-                  UnitFormatters.formatKg(result.denominator),
-                  result.denominatorSource.displayName,
-                  result.denominatorSource.fieldName,
-                ),
-                style: TextStyle(fontSize: 12, color: context.appTextSecondary),
+                l10n.profitability_cost_per_kg,
+                style: AppTextStyles.bodySmall.copyWith(color: secondary),
               ),
             ],
-            Divider(height: 24, color: context.appDivider),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    l10n.profitability_current_price,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: context.appTextPrimary,
-                    ),
-                  ),
-                ),
-                Text(
-                  _hasCurrentPrice
-                      ? CurrencyFormatters.formatPricePerKg(
-                          widget.crop.pricePerKg,
-                        )
-                      : l10n.common_not_available,
-                  key: const Key('profit_current_price'),
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: context.appTextPrimary,
-                  ),
-                ),
-              ],
-            ),
-            if (!_hasCurrentPrice) ...[
-              const SizedBox(height: 4),
-              Text(
-                l10n.profitability_invalid_current_price,
-                style: TextStyle(fontSize: 12, color: context.appTextSecondary),
+          ),
+          const SizedBox(height: 4),
+          if (result.isCalculated)
+            Text(
+              CurrencyFormatters.formatPricePerKg(result.costPerKg),
+              key: const Key('profit_cost_per_kg'),
+              style: AppTextStyles.figureLarge.copyWith(
+                fontSize: 32,
+                letterSpacing: -1,
+                color: AppColors.onBrand,
               ),
-            ],
+            )
+          else
+            Text(
+              result.message,
+              key: const Key('profit_cost_unavailable_message'),
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.onBrand,
+              ),
+            ),
+          if (result.denominator != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              l10n.profitability_used_quantity(
+                UnitFormatters.formatKg(result.denominator),
+                result.denominatorSource.displayName,
+                result.denominatorSource.fieldName,
+              ),
+              style: AppTextStyles.caption.copyWith(
+                color: secondary,
+                fontFeatures: AppTextStyles.tabularFigures,
+              ),
+            ),
           ],
-        ),
+          const SizedBox(height: AppDimensions.space16),
+          Container(
+            height: 1,
+            color: AppColors.onBrand.withValues(alpha: 0.16),
+          ),
+          const SizedBox(height: AppDimensions.space12),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l10n.profitability_current_price,
+                  style: AppTextStyles.bodySmall.copyWith(color: secondary),
+                ),
+              ),
+              Text(
+                _hasCurrentPrice
+                    ? CurrencyFormatters.formatPricePerKg(
+                        widget.crop.pricePerKg,
+                      )
+                    : l10n.common_not_available,
+                key: const Key('profit_current_price'),
+                style: AppTextStyles.figureSmall.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.onBrand,
+                ),
+              ),
+            ],
+          ),
+          if (!_hasCurrentPrice) ...[
+            const SizedBox(height: 4),
+            Text(
+              l10n.profitability_invalid_current_price,
+              style: AppTextStyles.caption.copyWith(color: secondary),
+            ),
+          ],
+        ],
       ),
     );
   }
 
   Widget _buildUnavailableCard(AppLocalizations l10n) {
-    return Card(
-      elevation: 0,
-      color: context.appErrorContainer,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(
-              Icons.info_outline,
-              color: context.appError,
+    final triad = context.appErrorTriad;
+    return Container(
+      padding: const EdgeInsets.all(AppDimensions.space16),
+      decoration: BoxDecoration(
+        color: triad.background,
+        borderRadius: BorderRadius.circular(InsetGroupCard.radius),
+        border: Border.all(color: triad.border),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(LucideIcons.circleAlert, size: 20, color: triad.foreground),
+          const SizedBox(width: AppDimensions.space12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.profitability_unavailable_title,
+                  style: AppTextStyles.titleMedium.copyWith(
+                    color: context.appTextPrimary,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  widget.costPerKgResult.message,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: context.appTextPrimary,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  l10n.profitability_unavailable_desc,
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: context.appTextSecondary,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.profitability_unavailable_title,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: context.appTextPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    widget.costPerKgResult.message,
-                    style: TextStyle(color: context.appTextSecondary),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    l10n.profitability_unavailable_desc,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: context.appTextSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -320,162 +352,160 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
     AppLocalizations l10n,
     ProfitMarginResult marginResult,
   ) {
-    final color = marginResult.isLoss ? context.appError : context.appSuccess;
+    // Success green when the evaluated price leaves a profit, coral red
+    // when it does not cover the production cost.
+    final outcome = marginResult.isLoss
+        ? context.appErrorTriad
+        : context.appSuccessTriad;
 
-    return Card(
-      color: context.appSurface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.profitability_evaluate_title,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: context.appTextPrimary,
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              key: const Key('profit_selling_price_field'),
-              controller: _sellingPriceController,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-              ],
-              decoration: InputDecoration(
-                labelText: l10n.profitability_selling_price,
-                prefixText: '\$ ',
-                suffixText: '/ kg',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              onChanged: (value) {
-                setState(() {
-                  _priceEdited = true;
-                  _evaluatedPrice = CropCostCalculator.parseAmount(value);
-                });
-              },
-            ),
-            const SizedBox(height: 8),
-            Text(
-              l10n.profitability_edit_note,
-              style: TextStyle(fontSize: 12, color: context.appTextSecondary),
-            ),
-            if (_isUsingTemporaryPrice) ...[
-              const SizedBox(height: 4),
-              Text(
-                l10n.profitability_temporary_price,
-                key: const Key('profit_temporary_price_note'),
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: context.appWarning,
-                ),
-              ),
+    return InsetGroupCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildCardHeader(
+            l10n.profitability_evaluate_title,
+            LucideIcons.coins,
+            context.appBrandTriad,
+          ),
+          const SizedBox(height: AppDimensions.space16),
+          TextFormField(
+            key: const Key('profit_selling_price_field'),
+            controller: _sellingPriceController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
             ],
-            const SizedBox(height: 12),
-            if (_evaluatedPrice == null)
-              Text(
-                l10n.profitability_invalid_price,
-                key: const Key('profit_price_error'),
-                style: TextStyle(
-                  color: context.appError,
-                  fontWeight: FontWeight.w600,
-                ),
-              )
-            else if (marginResult.isCalculated)
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: color.withValues(alpha: 0.3)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      marginResult.isLoss
-                          ? l10n.profitability_loss_per_kg
-                          : l10n.profitability_profit_per_kg,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: context.appTextPrimary,
-                      ),
-                    ),
-                    Text(
-                      CurrencyFormatters.formatPricePerKg(
-                        marginResult.profitPerKg,
-                      ),
-                      key: const Key('profit_amount_value'),
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: color,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      l10n.profitability_margin_over_price,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: context.appTextPrimary,
-                      ),
-                    ),
-                    Text(
-                      _formatPercentage(l10n, marginResult.marginPercentage),
-                      key: const Key('profit_margin_value'),
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: color,
-                      ),
-                    ),
-                    if (marginResult.isLoss)
-                      Text(
-                        l10n.profitability_loss_message,
-                        key: const Key('profit_loss_message'),
-                        style: TextStyle(
-                          color: color,
-                          fontWeight: FontWeight.w600,
+            style: AppTextStyles.figureMedium.copyWith(
+              color: context.appTextPrimary,
+            ),
+            decoration: InputDecoration(
+              labelText: l10n.profitability_selling_price,
+              prefixText: '\$ ',
+              suffixText: '/ kg',
+            ),
+            onChanged: (value) {
+              setState(() {
+                _priceEdited = true;
+                _evaluatedPrice = CropCostCalculator.parseAmount(value);
+              });
+            },
+          ),
+          const SizedBox(height: AppDimensions.space8),
+          Text(
+            l10n.profitability_edit_note,
+            style: AppTextStyles.caption.copyWith(
+              color: context.appTextSecondary,
+            ),
+          ),
+          if (_isUsingTemporaryPrice) ...[
+            const SizedBox(height: 4),
+            Text(
+              l10n.profitability_temporary_price,
+              key: const Key('profit_temporary_price_note'),
+              style: AppTextStyles.caption.copyWith(
+                fontWeight: FontWeight.w700,
+                color: context.appWarningText,
+              ),
+            ),
+          ],
+          const SizedBox(height: AppDimensions.space16),
+          if (_evaluatedPrice == null)
+            Text(
+              l10n.profitability_invalid_price,
+              key: const Key('profit_price_error'),
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: context.appErrorText,
+                fontWeight: FontWeight.w600,
+              ),
+            )
+          else if (marginResult.isCalculated)
+            AnimatedContainer(
+              duration: AppMotion.of(context, AppMotion.standard),
+              curve: AppMotion.easeOut,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: outcome.background,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: outcome.border),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(
+                          child: _OutcomeFigure(
+                            label: marginResult.isLoss
+                                ? l10n.profitability_loss_per_kg
+                                : l10n.profitability_profit_per_kg,
+                            value: CurrencyFormatters.formatPricePerKg(
+                              marginResult.profitPerKg,
+                            ),
+                            valueKey: const Key('profit_amount_value'),
+                            color: outcome.text,
+                            icon: marginResult.isLoss
+                                ? LucideIcons.trendingDown
+                                : LucideIcons.trendingUp,
+                          ),
                         ),
-                      )
-                    else if ((marginResult.marginPercentage ?? 0) <
-                        ProfitMarginCalculator.referenceMarginPercentage)
-                      Text(
-                        l10n.profitability_low_margin,
-                        key: const Key('profit_low_margin_warning'),
-                        style: TextStyle(
-                          color: context.appWarning,
-                          fontWeight: FontWeight.w600,
+                        const SizedBox(width: AppDimensions.space12),
+                        Expanded(
+                          child: _OutcomeFigure(
+                            label: l10n.profitability_margin_over_price,
+                            value: _formatPercentage(
+                              l10n,
+                              marginResult.marginPercentage,
+                            ),
+                            valueKey: const Key('profit_margin_value'),
+                            color: outcome.text,
+                          ),
                         ),
-                      ),
-                    const SizedBox(height: 4),
+                      ],
+                    ),
+                  ),
+                  if (marginResult.isLoss) ...[
+                    const SizedBox(height: AppDimensions.space12),
                     Text(
-                      l10n.profitability_margin_formula,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: context.appTextSecondary,
+                      l10n.profitability_loss_message,
+                      key: const Key('profit_loss_message'),
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: outcome.text,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ] else if ((marginResult.marginPercentage ?? 0) <
+                      ProfitMarginCalculator.referenceMarginPercentage) ...[
+                    const SizedBox(height: AppDimensions.space12),
+                    Text(
+                      l10n.profitability_low_margin,
+                      key: const Key('profit_low_margin_warning'),
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: context.appWarningText,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ],
-                ),
-              )
-            else
-              Text(
-                marginResult.message,
-                key: const Key('profit_margin_message'),
-                style: TextStyle(color: context.appTextSecondary),
+                  const SizedBox(height: AppDimensions.space8),
+                  Text(
+                    l10n.profitability_margin_formula,
+                    style: AppTextStyles.caption.copyWith(
+                      color: context.appTextSecondary,
+                    ),
+                  ),
+                ],
               ),
-          ],
-        ),
+            )
+          else
+            Text(
+              marginResult.message,
+              key: const Key('profit_margin_message'),
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: context.appTextSecondary,
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -484,142 +514,170 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
     AppLocalizations l10n,
     SuggestedPriceResult suggestedResult,
   ) {
-    return Card(
-      color: context.appSurface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    return InsetGroupCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildCardHeader(
+            l10n.profitability_suggested_title,
+            LucideIcons.target,
+            context.appInfoTriad,
+          ),
+          const SizedBox(height: AppDimensions.space16),
+          TextFormField(
+            key: const Key('profit_target_margin_field'),
+            controller: _targetMarginController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+            ],
+            style: AppTextStyles.figureMedium.copyWith(
+              color: context.appTextPrimary,
+            ),
+            decoration: InputDecoration(
+              labelText: l10n.profitability_target_margin,
+              suffixText: '%',
+            ),
+            onChanged: (value) {
+              setState(() {
+                _targetMargin = ProfitMarginCalculator.parseMarginPercentage(
+                  value,
+                );
+              });
+            },
+          ),
+          const SizedBox(height: AppDimensions.space8),
+          Text(
+            l10n.profitability_margin_note,
+            style: AppTextStyles.caption.copyWith(
+              color: context.appTextSecondary,
+            ),
+          ),
+          const SizedBox(height: AppDimensions.space16),
+          if (_targetMargin == null)
             Text(
-              l10n.profitability_suggested_title,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: context.appTextPrimary,
+              l10n.profitability_invalid_margin,
+              key: const Key('profit_target_margin_error'),
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: context.appErrorText,
+                fontWeight: FontWeight.w600,
               ),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              key: const Key('profit_target_margin_field'),
-              controller: _targetMarginController,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
+            )
+          else if (suggestedResult.isCalculated)
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: context.appPrimarySoft,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: context.appBrandTriad.border),
               ),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-              ],
-              decoration: InputDecoration(
-                labelText: l10n.profitability_target_margin,
-                suffixText: '%',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    CurrencyFormatters.formatPricePerKg(
+                      suggestedResult.suggestedPricePerKg,
+                    ),
+                    key: const Key('profit_suggested_price'),
+                    style: AppTextStyles.figureLarge.copyWith(
+                      fontSize: 28,
+                      color: context.appOnPrimarySoft,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    l10n.profitability_orientation,
+                    style: AppTextStyles.caption.copyWith(
+                      color: context.appTextSecondary,
+                    ),
+                  ),
+                ],
               ),
-              onChanged: (value) {
-                setState(() {
-                  _targetMargin = ProfitMarginCalculator.parseMarginPercentage(
-                    value,
-                  );
-                });
-              },
-            ),
-            const SizedBox(height: 8),
+            )
+          else
             Text(
-              l10n.profitability_margin_note,
-              style: TextStyle(fontSize: 12, color: context.appTextSecondary),
+              suggestedResult.message,
+              key: const Key('profit_suggested_message'),
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: context.appTextSecondary,
+              ),
             ),
-            const SizedBox(height: 12),
-            if (_targetMargin == null)
-              Text(
-                l10n.profitability_invalid_margin,
-                key: const Key('profit_target_margin_error'),
-                style: TextStyle(
-                  color: context.appError,
-                  fontWeight: FontWeight.w600,
-                ),
-              )
-            else if (suggestedResult.isCalculated) ...[
-              Text(
-                CurrencyFormatters.formatPricePerKg(
-                  suggestedResult.suggestedPricePerKg,
-                ),
-                key: const Key('profit_suggested_price'),
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: context.appPrimary,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                l10n.profitability_orientation,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: context.appTextSecondary,
-                ),
-              ),
-            ] else
-              Text(
-                suggestedResult.message,
-                key: const Key('profit_suggested_message'),
-                style: TextStyle(color: context.appTextSecondary),
-              ),
-          ],
-        ),
+        ],
       ),
     );
   }
 
   Widget _buildRegionalReferenceCard(AppLocalizations l10n) {
     final reference = _regionalReference;
+    final info = context.appInfoTriad;
 
-    return Card(
-      elevation: 0,
-      color: context.appSurfaceVariant,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
+    return Container(
+      padding: const EdgeInsets.all(AppDimensions.space16),
+      decoration: BoxDecoration(
+        color: info.background,
+        borderRadius: BorderRadius.circular(InsetGroupCard.radius),
+        border: Border.all(color: info.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              IconSquircle(
+                icon: LucideIcons.trendingUp,
+                triad: AppSemanticTriad(
+                  background: context.appSurface,
+                  border: info.border,
+                  foreground: info.foreground,
+                ),
+                size: 32,
+              ),
+              const SizedBox(width: AppDimensions.space12),
+              Expanded(
+                child: Text(
+                  l10n.profitability_regional_reference,
+                  style: AppTextStyles.titleMedium.copyWith(
+                    color: context.appTextPrimary,
+                  ),
+                ),
+              ),
+              if (reference?.isSimulated == true) ...[
+                const SizedBox(width: AppDimensions.space8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: context.appSurface,
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(color: info.border),
+                  ),
                   child: Text(
-                    l10n.profitability_regional_reference,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: context.appTextPrimary,
+                    l10n.common_simulated,
+                    style: AppTextStyles.labelSmall.copyWith(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.4,
+                      color: info.text,
                     ),
                   ),
                 ),
-                if (reference?.isSimulated == true)
-                  Chip(
-                    label: Text(l10n.common_simulated),
-                    visualDensity: VisualDensity.compact,
-                    backgroundColor: context.appWarningContainer,
-                    labelStyle: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: context.appWarning,
-                    ),
-                  ),
               ],
-            ),
-            const SizedBox(height: 8),
-            if (reference == null)
-              Text(
-                l10n.profitability_reference_missing,
-                key: const Key('simulated_reference_missing'),
-                style: TextStyle(color: context.appTextSecondary),
-              )
-            else
-              _buildReferenceDetails(l10n, reference),
-          ],
-        ),
+            ],
+          ),
+          const SizedBox(height: AppDimensions.space12),
+          if (reference == null)
+            Text(
+              l10n.profitability_reference_missing,
+              key: const Key('simulated_reference_missing'),
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: context.appTextSecondary,
+              ),
+            )
+          else
+            _buildReferenceDetails(l10n, reference),
+        ],
       ),
     );
   }
@@ -632,6 +690,12 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
       evaluatedPricePerKg: _evaluatedPrice,
       referencePricePerKg: reference.referencePricePerKg,
     );
+    final difference = comparison.differencePerKg ?? 0;
+    final differenceColor = !comparison.isCalculated || difference == 0
+        ? context.appTextPrimary
+        : difference > 0
+        ? context.appSuccessText
+        : context.appErrorText;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -647,58 +711,70 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
           l10n.profitability_reference_type,
           l10n.profitability_reference_simulated,
         ),
-        Divider(height: 24, color: context.appDivider),
+        Divider(height: 20, color: context.appInfoTriad.border),
         if (comparison.isCalculated) ...[
           _buildInfoRow(
             l10n.profitability_reference_difference,
             CurrencyFormatters.formatPricePerKg(comparison.differencePerKg),
             valueKey: const Key('simulated_reference_difference'),
+            valueColor: differenceColor,
           ),
           Text(
             comparison.message,
-            style: TextStyle(
-              fontSize: 12,
-              color: context.appTextSecondary,
+            style: AppTextStyles.bodySmall.copyWith(
+              color: context.appTextPrimary,
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             l10n.profitability_reference_difference_note,
-            style: TextStyle(fontSize: 12, color: context.appTextSecondary),
+            style: AppTextStyles.caption.copyWith(
+              color: context.appTextSecondary,
+            ),
           ),
         ] else
           Text(
             comparison.message,
             key: const Key('simulated_reference_difference_unavailable'),
-            style: TextStyle(fontSize: 12, color: context.appTextSecondary),
+            style: AppTextStyles.bodySmall.copyWith(
+              color: context.appTextSecondary,
+            ),
           ),
       ],
     );
   }
 
-  Widget _buildInfoRow(String label, String value, {Key? valueKey}) {
+  Widget _buildInfoRow(
+    String label,
+    String value, {
+    Key? valueKey,
+    Color? valueColor,
+  }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
             child: Text(
               label,
-              style: TextStyle(fontSize: 13, color: context.appTextSecondary),
+              style: AppTextStyles.bodySmall.copyWith(
+                fontSize: 13,
+                color: context.appTextSecondary,
+              ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppDimensions.space12),
           Flexible(
             child: Text(
               value,
               key: valueKey,
               textAlign: TextAlign.end,
-              style: TextStyle(
+              style: AppTextStyles.figureSmall.copyWith(
                 fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: context.appTextPrimary,
+                fontWeight: FontWeight.w700,
+                color: valueColor ?? context.appTextPrimary,
               ),
             ),
           ),
@@ -710,5 +786,65 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
   String _formatPercentage(AppLocalizations l10n, double? value) {
     if (value == null || !value.isFinite) return l10n.common_not_available;
     return '${UnitFormatters.formatCleanValue(value, maxDecimals: 2)} %';
+  }
+}
+
+/// One outcome figure in the evaluation result: label, then the value in
+/// the outcome tint with tabular figures.
+class _OutcomeFigure extends StatelessWidget {
+  final String label;
+  final String value;
+  final Key valueKey;
+  final Color color;
+  final IconData? icon;
+
+  const _OutcomeFigure({
+    required this.label,
+    required this.value,
+    required this.valueKey,
+    required this.color,
+    this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Labels may wrap to different line counts; the values stay on one
+    // shared line at the bottom of the pair.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: AppTextStyles.caption.copyWith(
+            color: context.appTextPrimary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: 16, color: color),
+              const SizedBox(width: 4),
+            ],
+            Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  value,
+                  key: valueKey,
+                  style: AppTextStyles.figureLarge.copyWith(
+                    fontSize: 20,
+                    color: color,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
   }
 }

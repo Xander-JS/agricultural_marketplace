@@ -1018,8 +1018,8 @@ void main() {
         textOfKey(tester, 'simulated_reference_difference'),
         r'$ 6.800 / kg',
       );
-      expect(find.text('SIMULADA'), findsOneWidget);
-      expect(find.text('Simulado para el prototipo'), findsOneWidget);
+      expect(find.text('PROYECCIÓN IA'), findsOneWidget);
+      expect(find.text('Proyección de mercado KUS AI'), findsOneWidget);
       expect(find.textContaining('Fuente:'), findsNothing);
     });
 

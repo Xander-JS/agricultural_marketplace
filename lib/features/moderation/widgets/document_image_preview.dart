@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimensions.dart';
+import '../../../core/theme/app_motion.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/loading/app_skeleton.dart';
 import '../services/document_diagnosis_service.dart';
 import '../services/document_image_service.dart';
 
@@ -13,6 +17,9 @@ typedef DocumentImageWidgetBuilder = Widget Function(
 
 /// Vista segura de una imagen de documento privada. Solicita una URL firmada
 /// temporal y muestra estados de carga, error, reintento y documento ausente.
+///
+/// While the signed link and bytes load, a shimmer holds the frame's real
+/// size; tapping a loaded document opens it full screen with pinch zoom.
 class DocumentImagePreview extends StatefulWidget {
   final String title;
   final String? path;
@@ -65,68 +72,76 @@ class _DocumentImagePreviewState extends State<DocumentImagePreview> {
     final path = widget.path;
     final hasPath = path != null && path.trim().isNotEmpty;
     final isValidPath = DocumentPathValidator.isValid(path);
+    final triad = isValidPath
+        ? context.appSuccessTriad
+        : context.appWarningTriad;
 
-    return Card(
-      elevation: 1,
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+    return Container(
+      padding: const EdgeInsets.all(AppDimensions.space12),
+      decoration: BoxDecoration(
+        color: context.appSurface,
+        borderRadius: AppDimensions.borderRadiusLG,
+        border: Border.all(color: context.appBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 2, 4, 0),
+            child: Row(
               children: [
                 Icon(
                   isValidPath
-                      ? Icons.verified_user_outlined
-                      : Icons.report_gmailerrorred_outlined,
-                  size: 20,
-                  color: isValidPath ? context.appSuccess : context.appWarning,
+                      ? LucideIcons.shieldCheck
+                      : LucideIcons.shieldAlert,
+                  size: 18,
+                  color: triad.foreground,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppDimensions.space8),
                 Expanded(
                   child: Text(
                     widget.title,
                     style: AppTextStyles.titleSmall.copyWith(
-                      fontWeight: FontWeight.bold,
+                      color: context.appTextPrimary,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 10),
-            AspectRatio(
-              aspectRatio: 16 / 10,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Container(
-                  color: context.appSurfaceVariant,
-                  child: _buildContent(
-                    context,
-                    l10n,
-                    hasPath: hasPath,
-                    isValidPath: isValidPath,
-                  ),
+          ),
+          const SizedBox(height: AppDimensions.space12),
+          AspectRatio(
+            aspectRatio: 16 / 10,
+            child: ClipRRect(
+              borderRadius: AppDimensions.borderRadiusMD,
+              child: ColoredBox(
+                color: context.appSurfaceVariant,
+                child: _buildContent(
+                  context,
+                  l10n,
+                  hasPath: hasPath,
+                  isValidPath: isValidPath,
                 ),
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
+          ),
+          const SizedBox(height: AppDimensions.space8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Text(
               isValidPath
                   ? l10n.document_image_available
                   : hasPath
                   ? l10n.document_image_invalid
                   : l10n.document_image_missing,
               style: AppTextStyles.bodySmall.copyWith(
-                color: isValidPath
-                    ? context.appSuccess
-                    : context.appTextSecondary,
+                color: isValidPath ? triad.text : context.appTextSecondary,
                 fontWeight: FontWeight.w600,
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -139,16 +154,16 @@ class _DocumentImagePreviewState extends State<DocumentImagePreview> {
   }) {
     if (!hasPath) {
       return _status(
-        Icons.no_photography_outlined,
+        LucideIcons.cameraOff,
         l10n.document_image_missing,
-        context.appTextDisabled,
+        context.appTextSecondary,
       );
     }
     if (!isValidPath) {
       return _status(
-        Icons.link_off,
+        LucideIcons.unlink,
         l10n.document_image_invalid,
-        context.appWarning,
+        context.appWarningText,
       );
     }
 
@@ -156,88 +171,170 @@ class _DocumentImagePreviewState extends State<DocumentImagePreview> {
       future: _urlFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return _status(
-            Icons.lock_clock_outlined,
-            l10n.document_image_loading,
-            context.appInfo,
-            showProgress: true,
-          );
+          return _loadingPlaceholder(l10n);
         }
 
         final result = snapshot.data;
         if (snapshot.hasError || result == null || !result.isSuccess) {
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.lock_outline, color: context.appError, size: 34),
-              const SizedBox(height: 6),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Text(
-                  l10n.document_image_error,
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: context.appError,
+          return Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(LucideIcons.lock, color: context.appErrorText, size: 28),
+                const SizedBox(height: AppDimensions.space8),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppDimensions.space16,
+                  ),
+                  child: Text(
+                    l10n.document_image_error,
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: context.appErrorText,
+                    ),
                   ),
                 ),
-              ),
-              TextButton(
-                key: const ValueKey('document_image_retry'),
-                onPressed: () => setState(_load),
-                child: Text(l10n.document_image_retry),
-              ),
-            ],
+                TextButton.icon(
+                  key: const ValueKey('document_image_retry'),
+                  onPressed: () => setState(_load),
+                  icon: const Icon(LucideIcons.refreshCw, size: 16),
+                  label: Text(l10n.document_image_retry),
+                ),
+              ],
+            ),
           );
         }
 
-        final builder = widget.imageBuilder;
-        if (builder != null) {
-          return builder(context, result.url!);
+        final url = result.url!;
+        final heroTag = 'document-preview-${widget.title}-${widget.path}';
+        Widget image(BoxFit fit) {
+          final builder = widget.imageBuilder;
+          if (builder != null) return builder(context, url);
+          return Image.network(
+            url,
+            fit: fit,
+            loadingBuilder: (_, child, progress) {
+              if (progress == null) return child;
+              return _loadingPlaceholder(l10n);
+            },
+            errorBuilder: (_, _, _) => _status(
+              LucideIcons.imageOff,
+              l10n.document_image_display_error,
+              context.appErrorText,
+            ),
+          );
         }
 
-        return Image.network(
-          result.url!,
-          fit: BoxFit.contain,
-          loadingBuilder: (_, child, progress) {
-            if (progress == null) return child;
-            return _status(
-              Icons.lock_clock_outlined,
-              l10n.document_image_loading,
-              context.appInfo,
-              showProgress: true,
-            );
-          },
-          errorBuilder: (_, _, _) => _status(
-            Icons.broken_image_outlined,
-            l10n.document_image_display_error,
-            context.appError,
+        return Semantics(
+          button: true,
+          label: l10n.moderation_doc_view_semantics,
+          child: GestureDetector(
+            onTap: () => _openViewer(context, heroTag, image),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Hero(tag: heroTag, child: image(BoxFit.contain)),
+                Positioned(
+                  right: AppDimensions.space8,
+                  bottom: AppDimensions.space8,
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: context.appSurface,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: context.appBorder),
+                    ),
+                    child: Icon(
+                      LucideIcons.maximize2,
+                      size: 15,
+                      color: context.appTextPrimary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
     );
   }
 
-  Widget _status(
-    IconData icon,
-    String label,
-    Color color, {
-    bool showProgress = false,
-  }) {
+  void _openViewer(
+    BuildContext context,
+    String heroTag,
+    Widget Function(BoxFit fit) image,
+  ) {
+    Navigator.of(context).push(
+      PageRouteBuilder<void>(
+        opaque: false,
+        barrierColor: AppColors.transparent,
+        transitionDuration: AppMotion.of(context, AppMotion.emphasized),
+        reverseTransitionDuration: AppMotion.of(context, AppMotion.standard),
+        pageBuilder: (context, animation, _) => FadeTransition(
+          opacity: CurvedAnimation(parent: animation, curve: AppMotion.easeOut),
+          child: _DocumentViewer(
+            title: widget.title,
+            heroTag: heroTag,
+            child: image(BoxFit.contain),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Shimmer at the frame's real size while the signed link or the image
+  /// bytes arrive, with the reason in words for screen readers and people.
+  Widget _loadingPlaceholder(AppLocalizations l10n) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        const AppShimmer(child: AppSkeletonBlock(height: double.infinity)),
+        Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppDimensions.space12,
+              vertical: 6,
+            ),
+            decoration: BoxDecoration(
+              color: context.appSurface,
+              borderRadius: AppDimensions.borderRadiusFull,
+              border: Border.all(color: context.appBorder),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  LucideIcons.lockKeyhole,
+                  size: 13,
+                  color: context.appInfoText,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  l10n.document_image_loading,
+                  style: AppTextStyles.labelMedium.copyWith(
+                    color: context.appTextSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _status(IconData icon, String label, Color color) {
     return Center(
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          if (showProgress)
-            const SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(strokeWidth: 2.5),
-            )
-          else
-            Icon(icon, color: color, size: 34),
-          const SizedBox(height: 8),
+          Icon(icon, color: color, size: 28),
+          const SizedBox(height: AppDimensions.space8),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppDimensions.space16,
+            ),
             child: Text(
               label,
               textAlign: TextAlign.center,
@@ -245,6 +342,77 @@ class _DocumentImagePreviewState extends State<DocumentImagePreview> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Full-screen, pinch-to-zoom look at one document on a dark field, so
+/// small print and the photo can be read clearly before deciding.
+class _DocumentViewer extends StatelessWidget {
+  final String title;
+  final String heroTag;
+  final Widget child;
+
+  const _DocumentViewer({
+    required this.title,
+    required this.heroTag,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return Scaffold(
+      backgroundColor: AppColors.darkBackground,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppDimensions.space20,
+                AppDimensions.space8,
+                AppDimensions.space8,
+                AppDimensions.space8,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: AppTextStyles.titleLarge.copyWith(
+                        color: AppColors.onBrand,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: l10n.common_close,
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(LucideIcons.x, size: AppDimensions.iconSM),
+                    style: IconButton.styleFrom(
+                      foregroundColor: AppColors.onBrand,
+                      backgroundColor: AppColors.onBrand.withValues(
+                        alpha: 0.12,
+                      ),
+                      fixedSize: const Size.square(
+                        AppDimensions.minTouchTarget,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: InteractiveViewer(
+                maxScale: 5,
+                child: Center(
+                  child: Hero(tag: heroTag, child: child),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

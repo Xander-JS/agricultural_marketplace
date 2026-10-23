@@ -1,21 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:agricultural_marketplace/core/localization/app_localizations.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/widgets/app_bar/custom_app_bar.dart';
-import '../../../../core/widgets/progress/step_progress_bar.dart';
+import '../../../../core/theme/app_dimensions.dart';
+import '../../../../core/widgets/cards/inset_group_card.dart';
+import '../../../../core/widgets/feedback/status_banner.dart';
 import '../../../../core/widgets/inputs/custom_text_field.dart';
 import '../../../../core/widgets/buttons/primary_action_button.dart';
+import '../../widgets/registration_step_scaffold.dart';
 import '../models/registration_data.dart';
 import 'role_selection_screen.dart';
+
 // Nota: OtpVerificationScreen eliminado del flujo de registro por defecto.
 // El proveedor SMS de Supabase está desactivado (enable_signup = false en [auth.sms]).
 // La verificación de identidad se realiza a través de documentos físicos revisados por moderador.
 
 class PersonalDetailsScreen extends StatefulWidget {
   final RegistrationData? data;
-  const PersonalDetailsScreen({Key? key, this.data}) : super(key: key);
+  const PersonalDetailsScreen({super.key, this.data});
 
   @override
   State<PersonalDetailsScreen> createState() => _PersonalDetailsScreenState();
@@ -61,9 +64,7 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
       // El flujo de OTP por SMS fue eliminado: Supabase no tiene SMS habilitado.
       // Se navega directamente a la selección de rol.
       Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => RoleSelectionScreen(data: _data),
-        ),
+        MaterialPageRoute(builder: (_) => RoleSelectionScreen(data: _data)),
       );
     }
   }
@@ -72,128 +73,104 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return Scaffold(
-      backgroundColor: context.appBackground,
-      appBar: CustomAppBar(title: l10n.personal_info_title),
-      body: SafeArea(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              const StepProgressBar(totalSteps: 4, currentStep: 1),
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.all(24.0),
-                  children: [
-                    CustomTextField(
-                      label: l10n.personal_info_phone,
-                      hint: l10n.personal_info_phone_hint,
-                      icon: Icons.phone_android,
-                      controller: _phoneController,
-                      keyboardType: TextInputType.phone,
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return l10n.personal_info_required;
-                        }
-                        final clean = value.replaceAll(RegExp(r'[\s\-()]+'), '');
-                        if (!clean.contains('@') && clean.length < 7) {
-                          return l10n.personal_info_phone_invalid;
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 24),
-
-                    CustomTextField(
-                      label: l10n.personal_info_first_name,
-                      hint: l10n.personal_info_first_name_hint,
-                      icon: Icons.badge_outlined,
-                      controller: _firstNameController,
-                      validator: (value) =>
-                          value == null || value.trim().isEmpty ? l10n.personal_info_required : null,
-                    ),
-                    const SizedBox(height: 24),
-
-                    CustomTextField(
-                      label: l10n.personal_info_last_name,
-                      hint: l10n.personal_info_last_name_hint,
-                      icon: Icons.person_outline,
-                      controller: _lastNameController,
-                      validator: (value) =>
-                          value == null || value.trim().isEmpty ? l10n.personal_info_required : null,
-                    ),
-                    const SizedBox(height: 24),
-
-                    CustomTextField(
-                      label: l10n.login_password,
-                      hint: l10n.login_password_hint,
-                      icon: Icons.lock_outline,
-                      controller: _passwordController,
-                      obscureText: !_isPasswordVisible,
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _isPasswordVisible
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
-                          color: context.appTextSecondary,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _isPasswordVisible = !_isPasswordVisible;
-                          });
-                        },
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return l10n.personal_info_required;
-                        }
-                        if (value.length < 6) {
-                          return l10n.personal_info_password_min;
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 32),
-
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: context.appPrimaryContainer,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.verified_user_outlined,
-                            color: AppColors.success,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              l10n.personal_info_verification_description,
-                              style: AppTextStyles.bodySmall.copyWith(
-                                color: context.appTextSecondary,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: _isLoading 
-                    ? const Center(child: CircularProgressIndicator()) 
-                    : PrimaryActionButton(
-                        onPressed: _onNext,
-                        icon: Icons.arrow_forward,
-                      ),
-              ),
-            ],
-          ),
+    return Form(
+      key: _formKey,
+      child: RegistrationStepScaffold(
+        title: l10n.personal_info_title,
+        step: 1,
+        bottom: PrimaryActionButton(
+          onPressed: _onNext,
+          text: l10n.common_continue,
+          isLoading: _isLoading,
         ),
+        children: [
+          InsetGroupCard(
+            child: Column(
+              children: [
+                CustomTextField(
+                  label: l10n.personal_info_phone,
+                  hint: l10n.personal_info_phone_hint,
+                  icon: LucideIcons.phone,
+                  controller: _phoneController,
+                  keyboardType: TextInputType.phone,
+                  textInputAction: TextInputAction.next,
+                  autofillHints: const [AutofillHints.telephoneNumber],
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return l10n.personal_info_required;
+                    }
+                    final clean = value.replaceAll(RegExp(r'[\s\-()]+'), '');
+                    if (!clean.contains('@') && clean.length < 7) {
+                      return l10n.personal_info_phone_invalid;
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: AppDimensions.space16),
+                CustomTextField(
+                  label: l10n.personal_info_first_name,
+                  hint: l10n.personal_info_first_name_hint,
+                  icon: LucideIcons.userRound,
+                  controller: _firstNameController,
+                  textInputAction: TextInputAction.next,
+                  autofillHints: const [AutofillHints.givenName],
+                  validator: (value) => value == null || value.trim().isEmpty
+                      ? l10n.personal_info_required
+                      : null,
+                ),
+                const SizedBox(height: AppDimensions.space16),
+                CustomTextField(
+                  label: l10n.personal_info_last_name,
+                  hint: l10n.personal_info_last_name_hint,
+                  icon: LucideIcons.userRound,
+                  controller: _lastNameController,
+                  textInputAction: TextInputAction.next,
+                  autofillHints: const [AutofillHints.familyName],
+                  validator: (value) => value == null || value.trim().isEmpty
+                      ? l10n.personal_info_required
+                      : null,
+                ),
+                const SizedBox(height: AppDimensions.space16),
+                CustomTextField(
+                  label: l10n.login_password,
+                  hint: l10n.login_password_hint,
+                  icon: LucideIcons.lockKeyhole,
+                  controller: _passwordController,
+                  obscureText: !_isPasswordVisible,
+                  textInputAction: TextInputAction.done,
+                  autofillHints: const [AutofillHints.newPassword],
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isPasswordVisible ? LucideIcons.eyeOff : LucideIcons.eye,
+                      size: AppDimensions.iconSM,
+                      color: context.appTextSecondary,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isPasswordVisible = !_isPasswordVisible;
+                      });
+                    },
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return l10n.personal_info_required;
+                    }
+                    if (value.length < 6) {
+                      return l10n.personal_info_password_min;
+                    }
+                    return null;
+                  },
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppDimensions.space16),
+          StatusBanner(
+            tone: StatusTone.brand,
+            icon: LucideIcons.shieldCheck,
+            message: l10n.personal_info_verification_description,
+          ),
+        ],
       ),
     );
   }

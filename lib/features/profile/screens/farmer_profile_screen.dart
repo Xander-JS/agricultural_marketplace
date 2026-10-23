@@ -1,16 +1,34 @@
 import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/services/app_preferences_service.dart';
 import '../../../core/widgets/avatars/user_avatar.dart';
+import '../../../core/widgets/badges/status_badge.dart';
+import '../../../core/widgets/brand/kus_brand_logo.dart';
+import '../../../core/widgets/buttons/secondary_action_button.dart';
+import '../../../core/widgets/cards/inset_group_card.dart';
+import '../../../core/widgets/cards/inset_group_section.dart';
+import '../../../core/widgets/feedback/app_empty_state.dart';
+import '../../../core/widgets/feedback/app_snack_bar.dart';
+import '../../../core/widgets/feedback/status_banner.dart';
+import '../../../core/widgets/inputs/app_segmented_control.dart';
+import '../../../core/widgets/misc/icon_squircle.dart';
+import '../../../core/widgets/misc/pressable_scale.dart';
 import '../models/farmer_profile_data.dart';
 import '../services/profile_service.dart';
 import '../../review/models/review_model.dart';
 import '../../review/services/review_service.dart';
+import '../../../core/theme/app_motion.dart';
+import '../../../core/widgets/loading/section_skeletons.dart';
 
 /// Pantalla de Perfil compartida entre los roles Agricultor y Comerciante/Comprador.
 ///
@@ -38,8 +56,10 @@ class FarmerProfileScreen extends StatefulWidget {
 }
 
 class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
-  late final ProfileService _profileService = widget.profileService ?? ProfileService();
-  late final ReviewService _reviewService = widget.reviewService ?? ReviewService();
+  late final ProfileService _profileService =
+      widget.profileService ?? ProfileService();
+  late final ReviewService _reviewService =
+      widget.reviewService ?? ReviewService();
   late final ImagePicker _imagePicker = widget.imagePicker ?? ImagePicker();
 
   bool _isLoading = true;
@@ -63,7 +83,10 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
   late FocusNode _phoneFocusNode;
   bool _emailSaved = false;
   bool _phoneSaved = false;
-  StateSetter? _modalSetState;
+  String? _savingField;
+
+  /// Anchor of the settings groups, reached from the navigation bar.
+  final GlobalKey _settingsKey = GlobalKey();
 
   bool get _isBuyer {
     final role = _profileData?.role.trim().toLowerCase() ?? '';
@@ -86,8 +109,8 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
         _checkAndSaveField('email', _emailController.text.trim());
       } else {
         _emailSaved = false;
-        _modalSetState?.call(() {});
       }
+      if (mounted) setState(() {});
     });
 
     _phoneFocusNode.addListener(() {
@@ -95,8 +118,8 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
         _checkAndSaveField('phone', _phoneController.text.trim());
       } else {
         _phoneSaved = false;
-        _modalSetState?.call(() {});
       }
+      if (mounted) setState(() {});
     });
 
     if (widget.initialProfileData != null) {
@@ -133,7 +156,9 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
     try {
       final currentUser = Supabase.instance.client.auth.currentUser;
       if (currentUser == null) {
-        throw Exception('No hay usuario autenticado. (Modo prueba activo sin sesión)');
+        throw Exception(
+          'No hay usuario autenticado. (Modo prueba activo sin sesión)',
+        );
       }
       final userId = currentUser.id;
       final data = await _profileService.getFarmerProfileData(userId);
@@ -152,11 +177,10 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${l10n.profile_load_error}: $e'),
-            backgroundColor: context.appError,
-          ),
+        showAppSnackBar(
+          context,
+          '${l10n.profile_load_error}: $e',
+          tone: StatusTone.error,
         );
       }
     }
@@ -196,8 +220,10 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
     if (field == 'email' && value == _profileData!.email) return;
     if (field == 'phone' && value == _profileData!.phone) return;
 
-    setState(() => _isSaving = true);
-    _modalSetState?.call(() {});
+    setState(() {
+      _isSaving = true;
+      _savingField = field;
+    });
 
     try {
       if (field == 'email') {
@@ -229,19 +255,22 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
       }
 
       if (mounted) {
-        setState(() => _isSaving = false);
-        _modalSetState?.call(() {});
+        setState(() {
+          _isSaving = false;
+          _savingField = null;
+        });
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _isSaving = false);
-        _modalSetState?.call(() {});
+        setState(() {
+          _isSaving = false;
+          _savingField = null;
+        });
         final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.profile_update_error(e.toString())),
-            backgroundColor: context.appError,
-          ),
+        showAppSnackBar(
+          context,
+          l10n.profile_update_error(e.toString()),
+          tone: StatusTone.error,
         );
       }
     }
@@ -269,11 +298,10 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
       await _loadProfileData();
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${l10n.profile_save_settings_error}: $e'),
-            backgroundColor: context.appError,
-          ),
+        showAppSnackBar(
+          context,
+          '${l10n.profile_save_settings_error}: $e',
+          tone: StatusTone.error,
         );
       }
     }
@@ -305,21 +333,19 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
           _profileData = _profileData!.copyWith(profilePath: newPath);
         });
         final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.profile_updated_photo),
-            backgroundColor: context.appSuccess,
-          ),
+        showAppSnackBar(
+          context,
+          l10n.profile_updated_photo,
+          tone: StatusTone.success,
         );
       }
     } catch (e) {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.profile_photo_error(e.toString())),
-            backgroundColor: context.appError,
-          ),
+        showAppSnackBar(
+          context,
+          l10n.profile_photo_error(e.toString()),
+          tone: StatusTone.error,
         );
       }
     } finally {
@@ -335,34 +361,24 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          backgroundColor: Theme.of(dialogContext).colorScheme.surface,
-          title: Text(
-            l10n.profile_logout_confirm_title,
-            style: TextStyle(
-              color: Theme.of(dialogContext).colorScheme.onSurface,
-            ),
+          icon: IconSquircle(
+            icon: LucideIcons.logOut,
+            triad: dialogContext.appErrorTriad,
+            size: 48,
           ),
-          content: Text(
-            l10n.profile_logout_confirm_desc,
-            style: TextStyle(
-              color: Theme.of(dialogContext).colorScheme.onSurfaceVariant,
-            ),
-          ),
+          title: Text(l10n.profile_logout_confirm_title),
+          content: Text(l10n.profile_logout_confirm_desc),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: Text(
-                l10n.profile_cancel,
-                style: TextStyle(
-                  color: Theme.of(dialogContext).colorScheme.onSurfaceVariant,
-                ),
-              ),
+              child: Text(l10n.profile_cancel),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(dialogContext, true),
               style: ElevatedButton.styleFrom(
-                backgroundColor: context.appError,
-                foregroundColor: context.appOnPrimary,
+                minimumSize: const Size(0, AppDimensions.buttonHeightMedium),
+                backgroundColor: dialogContext.appError,
+                foregroundColor: dialogContext.appOverlayText,
               ),
               child: Text(l10n.profile_logout),
             ),
@@ -381,11 +397,23 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
         } catch (e) {
           debugPrint('Sign out remote error: $e');
           try {
-            await Supabase.instance.client.auth.signOut(scope: SignOutScope.local);
+            await Supabase.instance.client.auth.signOut(
+              scope: SignOutScope.local,
+            );
           } catch (_) {}
         }
       }
     }
+  }
+
+  void _scrollToSettings() {
+    final target = _settingsKey.currentContext;
+    if (target == null) return;
+    Scrollable.ensureVisible(
+      target,
+      duration: AppMotion.of(context, AppMotion.entrance),
+      curve: AppMotion.easeInOut,
+    );
   }
 
   @override
@@ -399,53 +427,103 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
     return Scaffold(
       backgroundColor: context.appBackground,
       appBar: AppBar(
-        title: Text(
-          screenTitle,
-          style: AppTextStyles.displaySmall.copyWith(
-            color: context.appTextPrimary,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: context.appSurface,
-        elevation: 0,
-        iconTheme: IconThemeData(color: context.appTextPrimary),
+        centerTitle: false,
+        titleSpacing: AppDimensions.space16,
+        title: const KusBrandLogo.compact(),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: _isSaving || _profileData == null ? null : _showSettingsBottomSheet,
-            tooltip: l10n.profile_settings_title,
+          Padding(
+            padding: const EdgeInsets.only(right: AppDimensions.space12),
+            child: IconButton(
+              icon: const Icon(
+                LucideIcons.settings,
+                size: AppDimensions.iconSM,
+              ),
+              onPressed: _profileData == null ? null : _scrollToSettings,
+              tooltip: l10n.profile_settings_title,
+              style: IconButton.styleFrom(
+                foregroundColor: context.appTextPrimary,
+                backgroundColor: context.appSurface,
+                fixedSize: const Size.square(AppDimensions.minTouchTarget),
+                shape: CircleBorder(side: BorderSide(color: context.appBorder)),
+              ),
+            ),
           ),
         ],
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator(color: context.appPrimary))
+          ? const SectionSkeleton(
+              kind: SectionSkeletonKind.profile,
+              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            )
           : RefreshIndicator(
               onRefresh: _loadProfileData,
               color: context.appPrimary,
+              backgroundColor: context.appSurface,
+              strokeWidth: 2.5,
               child: _profileData == null
                   ? ListView(
+                      physics: AppMotion.scrollPhysics,
                       children: [
-                        const SizedBox(height: 100),
-                        Center(
-                          child: Text(
-                            l10n.profile_no_data,
-                            style: TextStyle(color: context.appTextSecondary),
+                        const SizedBox(height: AppDimensions.space48),
+                        AppEmptyState(
+                          icon: LucideIcons.cloudOff,
+                          title: l10n.profile_no_data,
+                          action: ElevatedButton.icon(
+                            onPressed: _loadProfileData,
+                            icon: const Icon(LucideIcons.refreshCw, size: 18),
+                            label: Text(l10n.common_retry),
                           ),
                         ),
                       ],
                     )
                   : SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                      physics: AppMotion.scrollPhysics,
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
+                      padding: EdgeInsets.fromLTRB(
+                        16,
+                        4,
+                        16,
+                        40 + MediaQuery.paddingOf(context).bottom,
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          _buildProfileHeader(),
-                          const SizedBox(height: 32),
-                          _buildStatisticsSection(),
-                          const SizedBox(height: 32),
-                          _buildReputationSection(),
-                          const SizedBox(height: 40),
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: Text(
+                              screenTitle,
+                              style: AppTextStyles.displayMedium.copyWith(
+                                fontSize: 30,
+                                color: context.appTextPrimary,
+                              ),
+                            ),
+                          ),
+                          _buildProfileHeader(l10n),
+                          const SizedBox(height: AppDimensions.space32),
+                          _buildStatisticsSection(l10n),
+                          const SizedBox(height: AppDimensions.space32),
+                          KeyedSubtree(
+                            key: _settingsKey,
+                            child: _buildContactSection(l10n),
+                          ),
+                          if (!_isBuyer) ...[
+                            const SizedBox(height: AppDimensions.space24),
+                            _buildNegotiationSections(l10n),
+                          ],
+                          const SizedBox(height: AppDimensions.space24),
+                          _buildPreferencesSection(l10n),
+                          const SizedBox(height: AppDimensions.space32),
+                          InsetGroupSection(
+                            children: [
+                              InsetGroupRow(
+                                title: l10n.profile_logout,
+                                destructive: true,
+                                destructiveIcon: LucideIcons.logOut,
+                                onTap: _handleLogout,
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     ),
@@ -453,662 +531,560 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
     );
   }
 
-  void _showSettingsBottomSheet() {
-    _emailSaved = false;
-    _phoneSaved = false;
+  /// Apple ID-style identity card: avatar inside the verified ring, name,
+  /// role and verification, then the user's reputation.
+  Widget _buildProfileHeader(AppLocalizations l10n) {
+    String? imageUrl;
+    if (_profileData!.profilePath != null &&
+        _profileData!.profilePath!.isNotEmpty) {
+      imageUrl = _profileService.getPublicProfileImageUrl(
+        _profileData!.profilePath!,
+      );
+    }
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.transparent,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) {
-          _modalSetState = setModalState;
-          final l10n = AppLocalizations.of(context)!;
-          final settings = _profileData!.settings;
+    final roleTriad = _isBuyer ? context.appInfoTriad : context.appBrandTriad;
 
-          return Container(
-            decoration: BoxDecoration(
-              color: context.appBackground,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            ),
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-              top: 24,
-              left: 20,
-              right: 20,
-            ),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 4,
-                      margin: const EdgeInsets.only(bottom: 24),
-                      decoration: BoxDecoration(
-                        color: context.appDivider,
-                        borderRadius: BorderRadius.circular(2),
+    return InsetGroupCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 24, 16, 20),
+            child: Column(
+              children: [
+                SizedBox(
+                  width: 112,
+                  height: 112,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      // Verified ring: brand hairline, a gap of surface, then
+                      // the photo.
+                      Container(
+                        width: 112,
+                        height: 112,
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: context.appPrimary,
+                            width: AppDimensions.borderWidthThick,
+                          ),
+                        ),
+                        child: ValueListenableBuilder<String?>(
+                          valueListenable: _profileService.profilePathNotifier,
+                          builder: (context, livePath, _) {
+                            final currentPath =
+                                livePath ?? _profileData?.profilePath;
+                            final resolvedImageUrl =
+                                (currentPath != null && currentPath.isNotEmpty)
+                                ? _profileService.getPublicProfileImageUrl(
+                                    currentPath,
+                                  )
+                                : imageUrl;
+                            return UserAvatar(
+                              imageUrl: resolvedImageUrl,
+                              radius: 50,
+                              backgroundColor: context.appSurfaceVariant,
+                              borderColor: AppColors.transparent,
+                              borderWidth: 0,
+                              iconColor: context.appTextMuted,
+                            );
+                          },
+                        ),
                       ),
-                    ),
-                  ),
-                  Text(
-                    l10n.profile_contact_info,
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: context.appTextPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildTextField(
-                    label: l10n.profile_email,
-                    controller: _emailController,
-                    originalValue: _profileData!.email,
-                    icon: Icons.email_outlined,
-                    focusNode: _emailFocusNode,
-                    isSaved: _emailSaved,
-                    keyboardType: TextInputType.emailAddress,
+                      Positioned(
+                        right: -2,
+                        bottom: -2,
+                        child: Semantics(
+                          button: true,
+                          label: l10n.profile_change_photo,
+                          child: PressableScale(
+                            enabled: !_isSaving,
+                            child: GestureDetector(
+                              key: const Key('change_avatar_button'),
+                              onTap: _isSaving ? null : _pickAndUploadImage,
+                              child: Container(
+                                width: 38,
+                                height: 38,
+                                decoration: BoxDecoration(
+                                  color: context.appPrimary,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: context.appSurface,
+                                    width: 3,
+                                  ),
+                                ),
+                                alignment: Alignment.center,
+                                child: _isSaving && _savingField == null
+                                    ? CupertinoActivityIndicator(
+                                        radius: 7,
+                                        color: context.appOnPrimary,
+                                      )
+                                    : Icon(
+                                        LucideIcons.camera,
+                                        size: 16,
+                                        color: context.appOnPrimary,
                                       ),
-                  const SizedBox(height: 16),
-                  _buildTextField(
-                    label: l10n.profile_phone,
-                    controller: _phoneController,
-                    originalValue: _profileData!.phone,
-                    icon: Icons.phone_outlined,
-                    focusNode: _phoneFocusNode,
-                    isSaved: _phoneSaved,
-                    keyboardType: TextInputType.phone,
-                                      ),
-                  const SizedBox(height: 24),
-
-                  // Opciones de negociación: EXCLUSIVAS DEL AGRICULTOR
-                  if (!_isBuyer) ...[
-                    Text(
-                      l10n.profile_negotiation_options,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: context.appTextPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildSwitchTile(
-                      title: l10n.profile_enable_early_sale,
-                      value: settings.enableEarlySale,
-                      icon: Icons.calendar_month_outlined,
-                                            onChanged: (val) {
-                        setModalState(() {
-                          _updateSettings(FarmerSettingsData(
-                            enableEarlySale: val,
-                            sharePhone: settings.sharePhone,
-                            shareLocation: settings.shareLocation,
-                            shareWhatsapp: settings.shareWhatsapp,
-                          ));
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      l10n.profile_visibility_negotiation,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: context.appTextPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Material(
-                      color: context.appSurface,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        side: BorderSide(color: context.appBorder),
-                      ),
-                      child: Column(
-                        children: [
-                          _buildSwitchListTileInside(
-                            title: l10n.profile_visibility_phone,
-                            value: settings.sharePhone,
-                                                        onChanged: (val) {
-                              setModalState(() {
-                                _updateSettings(FarmerSettingsData(
-                                  enableEarlySale: settings.enableEarlySale,
-                                  sharePhone: val,
-                                  shareLocation: settings.shareLocation,
-                                  shareWhatsapp: settings.shareWhatsapp,
-                                ));
-                              });
-                            },
+                              ),
+                            ),
                           ),
-                          Divider(height: 1, color: context.appDivider),
-                          _buildSwitchListTileInside(
-                            title: l10n.profile_visibility_location,
-                            value: settings.shareLocation,
-                                                        onChanged: (val) {
-                              setModalState(() {
-                                _updateSettings(FarmerSettingsData(
-                                  enableEarlySale: settings.enableEarlySale,
-                                  sharePhone: settings.sharePhone,
-                                  shareLocation: val,
-                                  shareWhatsapp: settings.shareWhatsapp,
-                                ));
-                              });
-                            },
-                          ),
-                          Divider(height: 1, color: context.appDivider),
-                          _buildSwitchListTileInside(
-                            title: l10n.profile_visibility_whatsapp,
-                            value: settings.shareWhatsapp,
-                                                        onChanged: (val) {
-                              setModalState(() {
-                                _updateSettings(FarmerSettingsData(
-                                  enableEarlySale: settings.enableEarlySale,
-                                  sharePhone: settings.sharePhone,
-                                  shareLocation: settings.shareLocation,
-                                  shareWhatsapp: val,
-                                ));
-                              });
-                            },
-                          ),
-                        ],
+                        ),
                       ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppDimensions.space16),
+                Text(
+                  _profileData!.fullName,
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.displaySmall.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: context.appTextPrimary,
+                  ),
+                ),
+                const SizedBox(height: AppDimensions.space8),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: AppDimensions.space8,
+                  runSpacing: AppDimensions.space8,
+                  children: [
+                    StatusBadge(
+                      text: _profileData!.role.toUpperCase(),
+                      icon: _isBuyer
+                          ? LucideIcons.briefcaseBusiness
+                          : LucideIcons.sprout,
+                      backgroundColor: roleTriad.background,
+                      textColor: roleTriad.text,
+                      borderColor: roleTriad.border,
                     ),
-                    const SizedBox(height: 24),
+                    StatusBadge(
+                      text: l10n.profile_verified_badge,
+                      icon: LucideIcons.badgeCheck,
+                      backgroundColor: AppColors.successBgLight,
+                      textColor: AppColors.successFgLight,
+                      tone: StatusBadgeTone.success,
+                    ),
                   ],
-
-                  // Accesibilidad: Común para ambos roles
-                  Text(
-                    l10n.profile_accessibility,
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: context.appTextPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Material(
-                    color: context.appSurface,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      side: BorderSide(color: context.appBorder),
-                    ),
-                    child: Column(
-                      children: [
-                        _buildSwitchListTileInside(
-                          title: l10n.profile_dark_mode,
-                          value: _isDarkMode,
-                                                    onChanged: (val) async {
-                            setModalState(() {
-                              _isDarkMode = val;
-                            });
-                            setState(() {
-                              _isDarkMode = val;
-                            });
-                            await AppPreferencesService.instance.toggleDarkMode(val);
-                          },
-                        ),
-                        Divider(height: 1, color: context.appDivider),
-                        _buildSwitchListTileInside(
-                          title: l10n.profile_english_language,
-                          value: _isEnglish,
-                                                    onChanged: (val) async {
-                            setModalState(() {
-                              _isEnglish = val;
-                            });
-                            setState(() {
-                              _isEnglish = val;
-                            });
-                            await AppPreferencesService.instance.toggleEnglish(val);
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-
-                  // Cierre de sesión: Común para ambos roles
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        _handleLogout();
-                      },
-                      icon: Icon(Icons.logout, color: context.appError),
-                      label: Text(
-                        l10n.profile_logout,
-                        style: TextStyle(
-                          color: context.appError,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: context.appError),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-              ),
+                ),
+              ],
             ),
-          );
-        },
+          ),
+          Divider(height: 1, thickness: 1, color: context.appDivider),
+          _buildReputationSection(l10n),
+        ],
       ),
     );
   }
 
-  Widget _buildProfileHeader() {
-    String? imageUrl;
-    if (_profileData!.profilePath != null && _profileData!.profilePath!.isNotEmpty) {
-      imageUrl = _profileService.getPublicProfileImageUrl(_profileData!.profilePath!);
-    }
-
-
-    return Column(
-      children: [
-        Stack(
-          alignment: Alignment.bottomRight,
-          children: [
-            ValueListenableBuilder<String?>(
-              valueListenable: _profileService.profilePathNotifier,
-              builder: (context, livePath, _) {
-                final currentPath = livePath ?? _profileData?.profilePath;
-                final resolvedImageUrl = (currentPath != null && currentPath.isNotEmpty)
-                    ? _profileService.getPublicProfileImageUrl(currentPath)
-                    : imageUrl;
-                return UserAvatar(
-                  imageUrl: resolvedImageUrl,
-                  radius: 50,
-                  backgroundColor: context.appSurfaceVariant,
-                  borderColor: context.appBorder,
-                  iconColor: context.appTextDisabled,
-                );
-              },
-            ),
-            GestureDetector(
-              key: const Key('change_avatar_button'),
-              onTap: _isSaving ? null : _pickAndUploadImage,
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: context.appPrimary,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.camera_alt, color: context.appOverlayText, size: 20),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          decoration: BoxDecoration(
-            color: context.appPrimaryContainer,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Text(
-            (_profileData!.role).toUpperCase(),
-            style: TextStyle(
-              color: context.appOnPrimaryContainer,
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          _profileData!.fullName,
-          textAlign: TextAlign.center,
-          style: AppTextStyles.displaySmall.copyWith(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: context.appTextPrimary,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTextField({
-    required String label,
-    required TextEditingController controller,
-    required String originalValue,
-    required IconData icon,
-    required FocusNode focusNode,
-    required bool isSaved,
-    TextInputType? keyboardType,
-  }) {
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: context.appTextSecondary,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextField(
-          controller: controller,
-          keyboardType: keyboardType,
-          focusNode: focusNode,
-          style: TextStyle(color: context.appTextPrimary),
-          decoration: InputDecoration(
-            prefixIcon: Icon(icon, color: context.appTextDisabled),
-            suffixIcon: isSaved
-                ? Icon(Icons.check_circle, color: context.appSuccess)
-                : null,
-            filled: true,
-            fillColor: context.appSurface,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: context.appBorder),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: context.appPrimary),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatisticsSection() {
-    final l10n = AppLocalizations.of(context)!;
+  Widget _buildStatisticsSection(AppLocalizations l10n) {
     final stats = _profileData!.stats;
 
+    final tiles = <Widget>[
+      // Para el Agricultor: 3 estadísticas (Publicados, Negociando, Cerradas);
+      // para el Comerciante ÚNICAMENTE 2 (Negociando, Cerrados).
+      if (!_isBuyer)
+        _StatTile(
+          icon: LucideIcons.sprout,
+          label: l10n.profile_stat_published,
+          value: stats.published.toString(),
+        ),
+      _StatTile(
+        icon: LucideIcons.arrowLeftRight,
+        label: l10n.profile_stat_negotiating,
+        value: stats.negotiating.toString(),
+      ),
+      _StatTile(
+        icon: LucideIcons.handshake,
+        label: _isBuyer
+            ? l10n.profile_stat_closed_buyer
+            : l10n.profile_stat_closed_farmer,
+        value: stats.closed.toString(),
+      ),
+    ];
+
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          l10n.profile_stats_title,
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: context.appTextPrimary,
+        Padding(
+          padding: const EdgeInsets.only(left: 16, bottom: 8),
+          child: Text(
+            l10n.profile_stats_title,
+            style: AppTextStyles.titleSmall.copyWith(
+              color: context.appTextSecondary,
+            ),
           ),
         ),
-        const SizedBox(height: 16),
-        if (!_isBuyer) ...[
-          // Para el Agricultor: 3 estadísticas (Publicados, Negociando, Cerradas)
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatCard(
-                  l10n.profile_stat_published,
-                  stats.published.toString(),
-                  Icons.grass_outlined,
-                  context.appInfo,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildStatCard(
-                  l10n.profile_stat_negotiating,
-                  stats.negotiating.toString(),
-                  Icons.handshake_outlined,
-                  context.appWarning,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildStatCard(
-                  l10n.profile_stat_closed_farmer,
-                  stats.closed.toString(),
-                  Icons.check_circle_outline,
-                  context.appSuccess,
-                ),
-              ),
+        Row(
+          children: [
+            for (var i = 0; i < tiles.length; i++) ...[
+              if (i > 0) const SizedBox(width: AppDimensions.space8),
+              Expanded(child: tiles[i]),
             ],
-          ),
-        ] else ...[
-          // Para el Comerciante: ÚNICAMENTE 2 estadísticas (Negociando, Cerrados)
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatCard(
-                  l10n.profile_stat_negotiating,
-                  stats.negotiating.toString(),
-                  Icons.handshake_outlined,
-                  context.appWarning,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildStatCard(
-                  l10n.profile_stat_closed_buyer,
-                  stats.closed.toString(),
-                  Icons.check_circle_outline,
-                  context.appSuccess,
-                ),
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ],
     );
   }
 
-  Widget _buildReputationSection() {
-    final l10n = AppLocalizations.of(context)!;
+  Widget _buildReputationSection(AppLocalizations l10n) {
     final summary = _reputation;
     final isLoading =
         _isLoadingReputation || (summary == null && !_reputationLoadFailed);
 
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          l10n.reputation_title,
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: context.appTextPrimary,
+    final Widget content;
+    if (isLoading) {
+      content = Row(
+        children: [
+          const CupertinoActivityIndicator(radius: 8),
+          const SizedBox(width: 10),
+          Text(
+            l10n.reputation_loading,
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: context.appTextSecondary,
+            ),
           ),
-        ),
-        const SizedBox(height: 16),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: context.appSurface,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: context.appBorder),
-            boxShadow: [
-              BoxShadow(
-                color: context.appShadow,
-                blurRadius: 8,
-                offset: const Offset(0, 2),
+        ],
+      );
+    } else if (_reputationLoadFailed) {
+      content = Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Icon(
+                LucideIcons.circleAlert,
+                color: context.appError,
+                size: AppDimensions.iconSM,
+              ),
+              const SizedBox(width: AppDimensions.space8),
+              Expanded(
+                child: Text(
+                  l10n.reputation_load_error,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: context.appErrorText,
+                  ),
+                ),
               ),
             ],
           ),
-          child: isLoading
-              ? Row(
-                  children: [
-                    SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: context.appPrimary,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Text(
-                      l10n.reputation_loading,
-                      style: TextStyle(fontSize: 13, color: context.appTextSecondary),
-                    ),
-                  ],
-                )
-              : _reputationLoadFailed
-              ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.error_outline,
-                          color: context.appError,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            l10n.reputation_load_error,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: context.appError,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    OutlinedButton.icon(
-                      key: const ValueKey('profile_reputation_retry'),
-                      onPressed: () => _loadReputation(_profileData!.id),
-                      icon: const Icon(Icons.refresh, size: 18),
-                      label: Text(l10n.market_retry),
-                    ),
-                  ],
-                )
-              : summary == null || summary.isNew
-              ? Row(
-                  children: [
-                    Icon(
-                      Icons.star_outline_rounded,
-                      color: context.appTextDisabled,
-                      size: 24,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        l10n.reputation_no_ratings,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: context.appTextSecondary,
-                        ),
-                      ),
-                    ),
-                  ],
-                )
-              : Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        children: [
-                          Text(
-                            '★ ${summary.averageRating.toStringAsFixed(1)}',
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: context.appWarning,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            l10n.reputation_average_label,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: context.appTextSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      width: 1,
-                      height: 52,
-                      color: context.appDivider,
-                    ),
-                    Expanded(
-                      child: Column(
-                        children: [
-                          Text(
-                            '${summary.totalReviews}',
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: context.appTextPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            l10n.reputation_reviews_received,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: context.appTextSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+          const SizedBox(height: AppDimensions.space12),
+          SecondaryActionButton(
+            key: const ValueKey('profile_reputation_retry'),
+            onPressed: () => _loadReputation(_profileData!.id),
+            text: l10n.market_retry,
+            icon: LucideIcons.refreshCw,
+            height: AppDimensions.minTouchTarget,
+          ),
+        ],
+      );
+    } else if (summary == null || summary.isNew) {
+      content = Row(
+        children: [
+          Icon(
+            CupertinoIcons.star,
+            color: context.appTextMuted,
+            size: AppDimensions.iconMD,
+          ),
+          const SizedBox(width: AppDimensions.space8),
+          Expanded(
+            child: Text(
+              l10n.reputation_no_ratings,
+              style: AppTextStyles.bodyMedium.copyWith(
+                fontWeight: FontWeight.w500,
+                color: context.appTextSecondary,
+              ),
+            ),
+          ),
+        ],
+      );
+    } else {
+      Widget figure(String value, String label, {Color? color}) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              value,
+              style: AppTextStyles.figureLarge.copyWith(
+                fontSize: 26,
+                color: color ?? context.appTextPrimary,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: AppTextStyles.bodySmall.copyWith(
+                color: context.appTextSecondary,
+              ),
+            ),
+          ],
+        );
+      }
+
+      content = IntrinsicHeight(
+        child: Row(
+          children: [
+            Expanded(
+              child: figure(
+                '★ ${summary.averageRating.toStringAsFixed(1)}',
+                l10n.reputation_average_label,
+                color: context.appWarningText,
+              ),
+            ),
+            VerticalDivider(width: 32, color: context.appDivider),
+            Expanded(
+              child: figure(
+                '${summary.totalReviews}',
+                l10n.reputation_reviews_received,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            l10n.reputation_title,
+            style: AppTextStyles.titleSmall.copyWith(
+              color: context.appTextSecondary,
+            ),
+          ),
+          const SizedBox(height: 10),
+          content,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContactSection(AppLocalizations l10n) {
+    return InsetGroupSection(
+      header: l10n.profile_contact_info,
+      footer: l10n.profile_contact_autosave,
+      children: [
+        _EditableContactRow(
+          icon: LucideIcons.mail,
+          triad: context.appInfoTriad,
+          label: l10n.profile_email,
+          controller: _emailController,
+          focusNode: _emailFocusNode,
+          keyboardType: TextInputType.emailAddress,
+          isSaving: _savingField == 'email',
+          isSaved: _emailSaved,
+        ),
+        _EditableContactRow(
+          icon: LucideIcons.phone,
+          triad: context.appSuccessTriad,
+          label: l10n.profile_phone,
+          controller: _phoneController,
+          focusNode: _phoneFocusNode,
+          keyboardType: TextInputType.phone,
+          isSaving: _savingField == 'phone',
+          isSaved: _phoneSaved,
         ),
       ],
     );
   }
 
-  Widget _buildStatCard(
-    String title,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
+  /// Preferencias comerciales: EXCLUSIVAS DEL AGRICULTOR.
+  Widget _buildNegotiationSections(AppLocalizations l10n) {
+    final settings = _profileData!.settings;
 
+    Widget toggle(bool value, ValueChanged<bool> onChanged) => CupertinoSwitch(
+      value: value,
+      onChanged: _isSaving ? null : onChanged,
+      activeTrackColor: context.appPrimary,
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        InsetGroupSection(
+          header: l10n.profile_negotiation_options,
+          children: [
+            InsetGroupRow(
+              leading: IconSquircle(
+                icon: LucideIcons.calendarClock,
+                triad: context.appWarningTriad,
+                size: 30,
+              ),
+              title: l10n.profile_enable_early_sale,
+              trailing: toggle(settings.enableEarlySale, (val) {
+                _updateSettings(
+                  FarmerSettingsData(
+                    enableEarlySale: val,
+                    sharePhone: settings.sharePhone,
+                    shareLocation: settings.shareLocation,
+                    shareWhatsapp: settings.shareWhatsapp,
+                  ),
+                );
+              }),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppDimensions.space24),
+        InsetGroupSection(
+          header: l10n.profile_visibility_negotiation,
+          children: [
+            InsetGroupRow(
+              leading: IconSquircle(
+                icon: LucideIcons.phone,
+                triad: context.appSuccessTriad,
+                size: 30,
+              ),
+              title: l10n.profile_visibility_phone,
+              trailing: toggle(settings.sharePhone, (val) {
+                _updateSettings(
+                  FarmerSettingsData(
+                    enableEarlySale: settings.enableEarlySale,
+                    sharePhone: val,
+                    shareLocation: settings.shareLocation,
+                    shareWhatsapp: settings.shareWhatsapp,
+                  ),
+                );
+              }),
+            ),
+            InsetGroupRow(
+              leading: IconSquircle(
+                icon: LucideIcons.messageCircle,
+                triad: context.appBrandTriad,
+                size: 30,
+              ),
+              title: l10n.profile_visibility_whatsapp,
+              trailing: toggle(settings.shareWhatsapp, (val) {
+                _updateSettings(
+                  FarmerSettingsData(
+                    enableEarlySale: settings.enableEarlySale,
+                    sharePhone: settings.sharePhone,
+                    shareLocation: settings.shareLocation,
+                    shareWhatsapp: val,
+                  ),
+                );
+              }),
+            ),
+            InsetGroupRow(
+              leading: IconSquircle(
+                icon: LucideIcons.mapPin,
+                triad: context.appInfoTriad,
+                size: 30,
+              ),
+              title: l10n.profile_visibility_location,
+              trailing: toggle(settings.shareLocation, (val) {
+                _updateSettings(
+                  FarmerSettingsData(
+                    enableEarlySale: settings.enableEarlySale,
+                    sharePhone: settings.sharePhone,
+                    shareLocation: val,
+                    shareWhatsapp: settings.shareWhatsapp,
+                  ),
+                );
+              }),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// Apariencia e idioma: común para ambos roles. Cada control aplica el
+  /// cambio al instante en toda la app.
+  Widget _buildPreferencesSection(AppLocalizations l10n) {
+    return InsetGroupSection(
+      header: l10n.profile_accessibility,
+      children: [
+        InsetGroupRow(
+          leading: IconSquircle(
+            icon: _isDarkMode ? LucideIcons.moon : LucideIcons.sun,
+            triad: context.appNeutralTriad,
+            size: 30,
+          ),
+          title: l10n.profile_appearance,
+          trailing: AppSegmentedControl<bool>(
+            compact: true,
+            value: _isDarkMode,
+            onChanged: (val) async {
+              setState(() {
+                _isDarkMode = val;
+              });
+              await AppPreferencesService.instance.toggleDarkMode(val);
+            },
+            segments: {
+              false: AppSegment(label: l10n.profile_theme_light),
+              true: AppSegment(label: l10n.profile_theme_dark),
+            },
+          ),
+        ),
+        InsetGroupRow(
+          leading: IconSquircle(
+            icon: LucideIcons.globe,
+            triad: context.appInfoTriad,
+            size: 30,
+          ),
+          title: l10n.profile_language,
+          trailing: AppSegmentedControl<bool>(
+            compact: true,
+            value: _isEnglish,
+            onChanged: (val) async {
+              setState(() {
+                _isEnglish = val;
+              });
+              await AppPreferencesService.instance.toggleEnglish(val);
+            },
+            segments: {
+              false: AppSegment(label: l10n.profile_language_es),
+              true: AppSegment(label: l10n.profile_language_en),
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// One commercial counter: a small mark and label over the figure.
+class _StatTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+
+  const _StatTile({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+      padding: const EdgeInsets.fromLTRB(14, 12, 10, 14),
       decoration: BoxDecoration(
         color: context.appSurface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppDimensions.borderRadiusLG,
         border: Border.all(color: context.appBorder),
-        boxShadow: [
-          BoxShadow(
-            color: context.appShadow,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color, size: 28),
-          const SizedBox(height: 8),
+          Icon(icon, size: 16, color: context.appTextSecondary),
+          const SizedBox(height: AppDimensions.space12),
           Text(
             value,
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: color,
+            style: AppTextStyles.figureLarge.copyWith(
+              fontSize: 26,
+              color: context.appTextPrimary,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           Text(
-            title,
-            textAlign: TextAlign.center,
+            label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
+            style: AppTextStyles.bodySmall.copyWith(
               color: context.appTextSecondary,
             ),
           ),
@@ -1116,61 +1092,105 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
       ),
     );
   }
+}
 
-  Widget _buildSwitchTile({
-    required String title,
-    required bool value,
-    required ValueChanged<bool> onChanged,
-    required IconData icon,
-  }) {
+/// Contact detail edited in place, the way iOS edits a contact field. The
+/// value saves when the field loses focus; the trailing mark reports it.
+class _EditableContactRow extends StatelessWidget {
+  final IconData icon;
+  final AppSemanticTriad triad;
+  final String label;
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final TextInputType keyboardType;
+  final bool isSaving;
+  final bool isSaved;
 
-    return Material(
-      color: context.appSurface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: context.appBorder),
-      ),
-      child: SwitchListTile(
-        title: Text(
-          title,
-          style: TextStyle(fontWeight: FontWeight.w600, color: context.appTextPrimary),
+  const _EditableContactRow({
+    required this.icon,
+    required this.triad,
+    required this.label,
+    required this.controller,
+    required this.focusNode,
+    required this.keyboardType,
+    required this.isSaving,
+    required this.isSaved,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final Widget trailing;
+    if (isSaving) {
+      trailing = const CupertinoActivityIndicator(
+        key: ValueKey('saving'),
+        radius: 8,
+      );
+    } else if (isSaved) {
+      trailing = Icon(
+        LucideIcons.circleCheck,
+        key: const ValueKey('saved'),
+        size: 18,
+        color: context.appSuccess,
+      );
+    } else if (!focusNode.hasFocus) {
+      trailing = Icon(
+        LucideIcons.squarePen,
+        key: const ValueKey('editable'),
+        size: 16,
+        color: context.appTextMuted,
+      );
+    } else {
+      trailing = const SizedBox(key: ValueKey('editing'), width: 18);
+    }
+
+    return InkWell(
+      onTap: focusNode.requestFocus,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        child: Row(
+          children: [
+            IconSquircle(icon: icon, triad: triad, size: 30),
+            const SizedBox(width: AppDimensions.space12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: AppTextStyles.caption.copyWith(
+                      color: context.appTextSecondary,
+                    ),
+                  ),
+                  TextField(
+                    controller: controller,
+                    focusNode: focusNode,
+                    keyboardType: keyboardType,
+                    style: AppTextStyles.bodyLarge.copyWith(
+                      color: context.appTextPrimary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    decoration: const InputDecoration(
+                      isDense: true,
+                      filled: false,
+                      contentPadding: EdgeInsets.only(top: 2, bottom: 2),
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: AppDimensions.space12),
+            AnimatedSwitcher(
+              duration: AppMotion.of(context, AppMotion.quick),
+              switchInCurve: AppMotion.easeOut,
+              switchOutCurve: AppMotion.easeOut,
+              child: trailing,
+            ),
+          ],
         ),
-        secondary: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: context.appPrimaryContainer,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(icon, color: context.appOnPrimaryContainer),
-        ),
-        value: value,
-        onChanged: _isSaving ? null : onChanged,
-        activeThumbColor: context.appSurface,
-        activeTrackColor: context.appPrimary,
-        inactiveThumbColor: context.appTextDisabled,
-        inactiveTrackColor: context.appBorder,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       ),
-    );
-  }
-
-  Widget _buildSwitchListTileInside({
-    required String title,
-    required bool value,
-    required ValueChanged<bool> onChanged,
-  }) {
-
-    return SwitchListTile(
-      title: Text(
-        title,
-        style: TextStyle(fontWeight: FontWeight.w500, color: context.appTextPrimary),
-      ),
-      value: value,
-      onChanged: _isSaving ? null : onChanged,
-      activeThumbColor: context.appSurface,
-      activeTrackColor: context.appPrimary,
-      inactiveThumbColor: context.appTextDisabled,
-      inactiveTrackColor: context.appBorder,
     );
   }
 }

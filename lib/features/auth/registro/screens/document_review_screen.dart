@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/localization/app_localizations.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/widgets/app_bar/custom_app_bar.dart';
+import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/widgets/buttons/primary_action_button.dart';
+import '../../../../core/widgets/feedback/status_banner.dart';
 import '../../widgets/document_image_picker.dart';
 import '../../widgets/document_selection_card.dart';
+import '../../widgets/registration_step_scaffold.dart';
 import '../models/registration_data.dart';
 import 'processing_screen.dart';
 
@@ -102,153 +102,76 @@ class _DocumentReviewScreenState extends State<DocumentReviewScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return Scaffold(
-      backgroundColor: context.appBackground,
-      appBar: CustomAppBar(title: l10n.document_review_title),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      l10n.document_review_description,
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: context.appTextSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    DocumentSelectionCard(
-                      key: const ValueKey('document_review_front'),
-                      title: l10n.document_front_title,
-                      file: widget.data.documentFront,
-                      enabled: !_isSubmitting,
-                      pickButtonKey: const ValueKey(
-                        'document_review_front_pick',
-                      ),
-                      onPick: () => _pickImage(
-                        title: l10n.document_front_title,
-                        preferredCameraDevice: CameraDevice.rear,
-                        onSelected: (file) => widget.data.documentFront = file,
-                      ),
-                      onRemove: () => setState(() {
-                        widget.data.documentFront = null;
-                        _errorMessage = null;
-                      }),
-                    ),
-                    const SizedBox(height: 12),
-                    DocumentSelectionCard(
-                      key: const ValueKey('document_review_back'),
-                      title: l10n.document_back_title,
-                      file: widget.data.documentBack,
-                      enabled: !_isSubmitting,
-                      pickButtonKey: const ValueKey(
-                        'document_review_back_pick',
-                      ),
-                      onPick: () => _pickImage(
-                        title: l10n.document_back_title,
-                        preferredCameraDevice: CameraDevice.rear,
-                        onSelected: (file) => widget.data.documentBack = file,
-                      ),
-                      onRemove: () => setState(() {
-                        widget.data.documentBack = null;
-                        _errorMessage = null;
-                      }),
-                    ),
-                    const SizedBox(height: 12),
-                    DocumentSelectionCard(
-                      key: const ValueKey('document_review_selfie'),
-                      title: l10n.document_selfie_title,
-                      file: widget.data.selfie,
-                      enabled: !_isSubmitting,
-                      pickButtonKey: const ValueKey(
-                        'document_review_selfie_pick',
-                      ),
-                      onPick: () => _pickImage(
-                        title: l10n.document_selfie_title,
-                        preferredCameraDevice: CameraDevice.front,
-                        onSelected: (file) => widget.data.selfie = file,
-                      ),
-                      onRemove: () => setState(() {
-                        widget.data.selfie = null;
-                        _errorMessage = null;
-                      }),
-                    ),
-                    if (_errorMessage != null) ...[
-                      const SizedBox(height: 14),
-                      _ErrorBanner(message: _errorMessage!),
-                    ],
-                    if (_hasAllDocuments) ...[
-                      const SizedBox(height: 14),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.check_circle_outline,
-                            color: context.appSuccess,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              l10n.document_review_ready,
-                              style: AppTextStyles.bodySmall.copyWith(
-                                color: context.appSuccess,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-              child: PrimaryActionButton(
-                onPressed: _isSubmitting ? null : _submit,
-                text: l10n.document_review_submit,
-                isLoading: _isSubmitting,
-              ),
-            ),
-          ],
+    return RegistrationStepScaffold(
+      title: l10n.document_review_title,
+      lead: l10n.document_review_description,
+      bottom: PrimaryActionButton(
+        onPressed: _isSubmitting ? null : _submit,
+        text: l10n.document_review_submit,
+        isLoading: _isSubmitting,
+      ),
+      children: [
+        DocumentSelectionCard(
+          key: const ValueKey('document_review_front'),
+          title: l10n.document_front_title,
+          file: widget.data.documentFront,
+          enabled: !_isSubmitting,
+          pickButtonKey: const ValueKey('document_review_front_pick'),
+          onPick: () => _pickImage(
+            title: l10n.document_front_title,
+            preferredCameraDevice: CameraDevice.rear,
+            onSelected: (file) => widget.data.documentFront = file,
+          ),
+          onRemove: () => setState(() {
+            widget.data.documentFront = null;
+            _errorMessage = null;
+          }),
         ),
-      ),
-    );
-  }
-}
-
-class _ErrorBanner extends StatelessWidget {
-  final String message;
-
-  const _ErrorBanner({required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: context.appErrorContainer,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: context.appError.withValues(alpha: 0.5)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.error_outline, color: context.appError, size: 20),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              message,
-              style: AppTextStyles.bodySmall.copyWith(color: context.appError),
-            ),
+        const SizedBox(height: AppDimensions.space12),
+        DocumentSelectionCard(
+          key: const ValueKey('document_review_back'),
+          title: l10n.document_back_title,
+          file: widget.data.documentBack,
+          enabled: !_isSubmitting,
+          pickButtonKey: const ValueKey('document_review_back_pick'),
+          onPick: () => _pickImage(
+            title: l10n.document_back_title,
+            preferredCameraDevice: CameraDevice.rear,
+            onSelected: (file) => widget.data.documentBack = file,
+          ),
+          onRemove: () => setState(() {
+            widget.data.documentBack = null;
+            _errorMessage = null;
+          }),
+        ),
+        const SizedBox(height: AppDimensions.space12),
+        DocumentSelectionCard(
+          key: const ValueKey('document_review_selfie'),
+          title: l10n.document_selfie_title,
+          file: widget.data.selfie,
+          enabled: !_isSubmitting,
+          pickButtonKey: const ValueKey('document_review_selfie_pick'),
+          onPick: () => _pickImage(
+            title: l10n.document_selfie_title,
+            preferredCameraDevice: CameraDevice.front,
+            onSelected: (file) => widget.data.selfie = file,
+          ),
+          onRemove: () => setState(() {
+            widget.data.selfie = null;
+            _errorMessage = null;
+          }),
+        ),
+        if (_errorMessage != null) ...[
+          const SizedBox(height: AppDimensions.space16),
+          StatusBanner(tone: StatusTone.error, message: _errorMessage!),
+        ] else if (_hasAllDocuments) ...[
+          const SizedBox(height: AppDimensions.space16),
+          StatusBanner(
+            tone: StatusTone.success,
+            message: l10n.document_review_ready,
           ),
         ],
-      ),
+      ],
     );
   }
 }

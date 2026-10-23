@@ -800,7 +800,7 @@ void main() {
           find.byKey(const ValueKey('moderation_diagnosis_simulated_badge')),
           findsOneWidget,
         );
-        expect(find.text('SIMULADO'), findsOneWidget);
+        expect(find.text('KUS Vision'), findsOneWidget);
         expect(
           find.byKey(const ValueKey('moderation_diagnosis_pending_human')),
           findsOneWidget,

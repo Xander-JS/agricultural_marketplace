@@ -322,8 +322,8 @@ abstract final class ProfitMarginCalculator {
       differencePerKg: differencePerKg,
       percentageDifference: percentageDifference,
       message: differencePerKg >= 0
-          ? 'El precio evaluado está por encima de la referencia simulada.'
-          : 'El precio evaluado está por debajo de la referencia simulada.',
+          ? 'El precio evaluado está por encima del índice regional.'
+          : 'El precio evaluado está por debajo del índice regional.',
     );
   }
 }

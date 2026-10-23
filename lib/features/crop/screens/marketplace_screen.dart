@@ -1,4 +1,7 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/crop_model.dart';
@@ -14,6 +17,16 @@ import '../../review/services/review_service.dart';
 import '../../geo/models/simulated_location.dart';
 import '../../geo/services/geo_simulation_service.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimensions.dart';
+import '../../../core/theme/app_motion.dart';
+import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/brand/kus_brand_logo.dart';
+import '../../../core/widgets/feedback/app_empty_state.dart';
+import '../../../core/widgets/loading/section_skeletons.dart';
+import '../../../core/widgets/misc/icon_squircle.dart';
+import '../../../core/widgets/misc/pressable_scale.dart';
+import '../../../core/widgets/misc/staggered_entrance.dart';
+import '../../../core/widgets/sheets/app_sheet_frame.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/constants/user_roles.dart';
 import '../../ai_assistant/models/voice_crop_draft.dart';
@@ -65,6 +78,10 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
   FarmerProfileData? _currentUserProfile;
   bool _isLoading = true;
   String? _errorMessage;
+
+  /// The first page of cards staggers in once; later rebuilds (sorting,
+  /// search, cards recycled by the lazy list) show items immediately.
+  bool _entrancePlayed = false;
 
   bool get _isBuyer => UserRole.isBuyerRole(widget.role ?? _userRole);
 
@@ -354,6 +371,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
+      showDragHandle: false,
       backgroundColor: AppColors.transparent,
       builder: (context) => const VoiceCropAssistantSheet(),
     );
@@ -372,85 +390,46 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
   void _showPublishOptions() {
     final l10n = AppLocalizations.of(context)!;
 
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
-      backgroundColor: context.appSurface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+      isScrollControlled: true,
+      showDragHandle: false,
+      backgroundColor: AppColors.transparent,
+      builder: (sheetContext) {
+        return AppSheetFrame(
+          body: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  l10n.market_publish_options_title,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: context.appTextPrimary,
-                  ),
+              Text(
+                l10n.market_publish_options_title,
+                style: AppTextStyles.headlineMedium.copyWith(
+                  color: sheetContext.appTextPrimary,
                 ),
               ),
-              ListTile(
-                leading: CircleAvatar(
-                  backgroundColor:
-                      (context.appPrimary)
-                          .withValues(alpha: 0.15),
-                  child: Icon(
-                    Icons.edit_document,
-                    color: context.appPrimary,
-                  ),
-                ),
-                title: Text(
-                  l10n.market_publish_manual,
-                  style: TextStyle(
-                    color: context.appTextPrimary,
-                  ),
-                ),
-                subtitle: Text(
-                  l10n.market_publish_manual_desc,
-                  style: TextStyle(
-                    color: context.appTextSecondary,
-                  ),
-                ),
+              const SizedBox(height: AppDimensions.space16),
+              _PublishOptionTile(
+                icon: LucideIcons.squarePen,
+                triad: sheetContext.appBrandTriad,
+                title: l10n.market_publish_manual,
+                subtitle: l10n.market_publish_manual_desc,
                 onTap: () {
-                  Navigator.pop(context);
+                  Navigator.pop(sheetContext);
                   _navigateToPublish();
                 },
               ),
-              ListTile(
-                leading: CircleAvatar(
-                  backgroundColor:
-                      (context.appPrimary)
-                          .withValues(alpha: 0.15),
-                  child: Icon(
-                    Icons.mic,
-                    color: context.appPrimary,
-                  ),
-                ),
-                title: Text(
-                  l10n.market_publish_voice,
-                  style: TextStyle(
-                    color: context.appTextPrimary,
-                  ),
-                ),
-                subtitle: Text(
-                  l10n.market_publish_voice_desc,
-                  style: TextStyle(
-                    color: context.appTextSecondary,
-                  ),
-                ),
+              const SizedBox(height: AppDimensions.space12),
+              _PublishOptionTile(
+                icon: LucideIcons.mic,
+                triad: sheetContext.appInfoTriad,
+                title: l10n.market_publish_voice,
+                subtitle: l10n.market_publish_voice_desc,
                 onTap: () {
-                  Navigator.pop(context);
+                  Navigator.pop(sheetContext);
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     if (mounted) _openVoiceAssistant();
                   });
                 },
               ),
-              const SizedBox(height: 16),
             ],
           ),
         );
@@ -485,17 +464,15 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    final title = _isBuyer
-        ? (l10n.market_title)
-        : (l10n.market_title_farmer);
-
     return Scaffold(
       backgroundColor: context.appBackground,
       appBar: AppBar(
-        title: Text(title),
+        centerTitle: false,
+        titleSpacing: AppDimensions.space16,
+        title: const KusBrandLogo.compact(),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 16.0),
+            padding: const EdgeInsets.only(right: AppDimensions.space16),
             child: Center(
               child: ValueListenableBuilder<String?>(
                 valueListenable: _profileService.profilePathNotifier,
@@ -524,12 +501,24 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
           ),
         ],
       ),
-      body: _buildBody(l10n),
+      body: RefreshIndicator(
+        onRefresh: _loadCrops,
+        color: context.appPrimary,
+        backgroundColor: context.appSurface,
+        strokeWidth: 2.5,
+        child: CustomScrollView(
+          physics: AppMotion.scrollPhysics,
+          slivers: [
+            SliverToBoxAdapter(child: _buildHeader(l10n)),
+            ..._buildContentSlivers(l10n),
+          ],
+        ),
+      ),
       floatingActionButton: _isBuyer
           ? null
           : FloatingActionButton.extended(
               onPressed: _showPublishOptions,
-              icon: const Icon(Icons.add),
+              icon: const Icon(LucideIcons.plus, size: 20),
               label: Text(l10n.market_publish_btn),
               backgroundColor: context.appPrimary,
               foregroundColor: context.appOnPrimary,
@@ -537,137 +526,237 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
     );
   }
 
-  Widget _buildBody(AppLocalizations l10n) {
+  /// Large title in the iOS manner: the section name carries the hierarchy,
+  /// a live count of lots sits under it, and farmers get a one-tap voice
+  /// publish action beside it.
+  Widget _buildHeader(AppLocalizations l10n) {
+    final title = _isBuyer ? l10n.market_title : l10n.market_title_farmer;
+    final showCount = !_isLoading && _errorMessage == null && _crops.isNotEmpty;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: AppTextStyles.displayMedium.copyWith(
+                    fontSize: 30,
+                    color: context.appTextPrimary,
+                  ),
+                ),
+                AnimatedSwitcher(
+                  duration: AppMotion.of(context, AppMotion.standard),
+                  switchInCurve: AppMotion.easeOut,
+                  switchOutCurve: AppMotion.easeOut,
+                  child: showCount
+                      ? Padding(
+                          key: const ValueKey('market_count'),
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            _isBuyer
+                                ? l10n.market_buyer_lot_count(_crops.length)
+                                : l10n.market_farmer_lot_count(_crops.length),
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: context.appTextSecondary,
+                              fontFeatures: AppTextStyles.tabularFigures,
+                            ),
+                          ),
+                        )
+                      : const SizedBox(
+                          key: ValueKey('market_count_empty'),
+                          width: double.infinity,
+                        ),
+                ),
+              ],
+            ),
+          ),
+          if (!_isBuyer) ...[
+            const SizedBox(width: AppDimensions.space12),
+            Tooltip(
+              message: l10n.market_voice_quick_action,
+              child: PressableScale(
+                child: Material(
+                  color: context.appPrimarySoft,
+                  shape: const CircleBorder(),
+                  child: InkWell(
+                    key: const ValueKey('marketplace_voice_quick_action'),
+                    customBorder: const CircleBorder(),
+                    onTap: _openVoiceAssistant,
+                    child: SizedBox.square(
+                      dimension: 44,
+                      child: Icon(
+                        LucideIcons.mic,
+                        size: 20,
+                        color: context.appOnPrimarySoft,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildContentSlivers(AppLocalizations l10n) {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const [
+        SliverToBoxAdapter(
+          child: SectionSkeleton(
+            kind: SectionSkeletonKind.cropCards,
+            itemCount: 2,
+            padding: EdgeInsets.fromLTRB(16, 4, 16, 24),
+          ),
+        ),
+      ];
     }
 
     if (_errorMessage != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error_outline, size: 48, color: context.appError),
-              const SizedBox(height: 16),
-              Text(
-                l10n.common_error_prefix(_errorMessage ?? ''),
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: context.appTextPrimary,
-                ),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _loadCrops,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: context.appPrimary,
-                  foregroundColor: context.appOnPrimary,
-                ),
-                child: Text(l10n.market_retry),
-              ),
-            ],
+      return [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: AppEmptyState(
+            icon: LucideIcons.cloudOff,
+            title: l10n.common_error_prefix(_errorMessage ?? ''),
+            action: ElevatedButton.icon(
+              onPressed: _loadCrops,
+              icon: const Icon(LucideIcons.refreshCw, size: 18),
+              label: Text(l10n.market_retry),
+            ),
           ),
         ),
-      );
+      ];
     }
 
     if (_crops.isEmpty) {
-      return _buildEmptyState(l10n);
+      return [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: _buildEmptyState(l10n),
+        ),
+      ];
     }
 
     final visibleCrops = _visibleCrops;
+    final animateEntrance = !_entrancePlayed;
+    if (animateEntrance) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _entrancePlayed = true;
+      });
+    }
 
-    return Column(
-      children: [
-        if (_isBuyer) _buildCatalogTools(l10n),
-        Expanded(
-          child: visibleCrops.isEmpty
-              ? _buildNoResultsState(l10n)
-              : RefreshIndicator(
-                  onRefresh: _loadCrops,
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(16.0).copyWith(
-                      bottom: _isBuyer
-                          ? 24
-                          : 80, // Espacio para el FAB solo si es agricultor
-                    ),
-                    itemCount: visibleCrops.length,
-                    itemBuilder: (context, index) {
-                      final crop = visibleCrops[index];
-                      final distanceEval = _getDistanceForCrop(crop);
-                      return CropCard(
-                        crop: crop,
-                        distanceEvaluation: distanceEval,
-                        reputation: _farmerReputations[crop.farmerId],
-                        onTap: () => _navigateToDetail(crop, distanceEval),
-                      );
-                    },
-                  ),
+    return [
+      if (_isBuyer) SliverToBoxAdapter(child: _buildCatalogTools(l10n)),
+      if (visibleCrops.isEmpty)
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: _buildNoResultsState(l10n),
+        )
+      else
+        SliverPadding(
+          padding: EdgeInsets.fromLTRB(16, 4, 16, _isBuyer ? 24 : 96),
+          sliver: SliverList.builder(
+            itemCount: visibleCrops.length,
+            itemBuilder: (context, index) {
+              final crop = visibleCrops[index];
+              final distanceEval = _getDistanceForCrop(crop);
+              return StaggeredEntrance(
+                index: index,
+                enabled: animateEntrance,
+                child: CropCard(
+                  crop: crop,
+                  distanceEvaluation: distanceEval,
+                  reputation: _farmerReputations[crop.farmerId],
+                  onTap: () => _navigateToDetail(crop, distanceEval),
                 ),
+              );
+            },
+          ),
         ),
-      ],
-    );
+    ];
   }
 
   Widget _buildCatalogTools(AppLocalizations l10n) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      padding: const EdgeInsets.only(bottom: AppDimensions.space12),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          TextField(
-            key: const ValueKey('marketplace_search_field'),
-            controller: _searchController,
-            onChanged: (value) {
-              setState(() {
-                _searchQuery = value;
-              });
-            },
-            textInputAction: TextInputAction.search,
-            style: TextStyle(color: context.appTextPrimary),
-            decoration: InputDecoration(
-              hintText:
-                  l10n.market_search_hint,
-              hintStyle: TextStyle(
-                color: context.appTextDisabled,
+          Padding(
+            padding: AppDimensions.paddingScreenHorizontal,
+            child: TextField(
+              key: const ValueKey('marketplace_search_field'),
+              controller: _searchController,
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value;
+                });
+              },
+              textInputAction: TextInputAction.search,
+              style: AppTextStyles.bodyLarge.copyWith(
+                color: context.appTextPrimary,
               ),
-              prefixIcon: Icon(
-                Icons.search,
-                color: context.appTextDisabled,
-              ),
-              suffixIcon: _searchQuery.isEmpty
-                  ? null
-                  : IconButton(
-                      key: const ValueKey('marketplace_search_clear'),
-                      tooltip: l10n.market_search_clear,
-                      icon: const Icon(Icons.close),
-                      color: context.appTextSecondary,
-                      onPressed: _clearSearch,
-                    ),
-              filled: true,
-              fillColor: context.appSurface,
-              contentPadding: const EdgeInsets.symmetric(vertical: 12),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide(color: context.appBorder),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide(color: context.appBorder),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide(
-                  color: context.appPrimary,
+              cursorColor: context.appPrimary,
+              decoration: InputDecoration(
+                hintText: l10n.market_search_hint,
+                hintStyle: AppTextStyles.bodyLarge.copyWith(
+                  color: context.appTextSecondary,
+                ),
+                isDense: true,
+                filled: true,
+                fillColor: context.appSurfaceVariant,
+                contentPadding: const EdgeInsets.symmetric(vertical: 11),
+                prefixIcon: Icon(
+                  LucideIcons.search,
+                  size: 18,
+                  color: context.appTextSecondary,
+                ),
+                prefixIconConstraints: const BoxConstraints(
+                  minWidth: 40,
+                  minHeight: 40,
+                ),
+                suffixIcon: _searchQuery.isEmpty
+                    ? null
+                    : IconButton(
+                        key: const ValueKey('marketplace_search_clear'),
+                        tooltip: l10n.market_search_clear,
+                        icon: const Icon(
+                          CupertinoIcons.xmark_circle_fill,
+                          size: 18,
+                        ),
+                        color: context.appTextMuted,
+                        onPressed: _clearSearch,
+                      ),
+                border: OutlineInputBorder(
+                  borderRadius: AppDimensions.borderRadiusMD,
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: AppDimensions.borderRadiusMD,
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: AppDimensions.borderRadiusMD,
+                  borderSide: BorderSide(
+                    color: context.appPrimary,
+                    width: AppDimensions.borderWidthMedium,
+                  ),
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppDimensions.space12),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            padding: AppDimensions.paddingScreenHorizontal,
             child: Row(
               children: [
                 _buildSortChip(
@@ -688,8 +777,8 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                 _buildSortChip(
                   value: _MarketplaceSortOption.reputation,
                   keyName: 'reputation',
-                  label:
-                      l10n.market_sort_reputation,
+                  label: l10n.market_sort_reputation,
+                  icon: LucideIcons.star,
                 ),
               ],
             ),
@@ -699,196 +788,162 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
     );
   }
 
+  /// Sort pill: `surface` with a hairline at rest, solid `primary` with
+  /// `onPrimary` text when active.
   Widget _buildSortChip({
     required _MarketplaceSortOption value,
     required String keyName,
     required String label,
+    IconData? icon,
   }) {
     final isSelected = _sortOption == value;
+    final foreground = isSelected
+        ? context.appOnPrimary
+        : context.appTextSecondary;
 
     return Padding(
-      padding: const EdgeInsets.only(right: 8),
+      padding: const EdgeInsets.only(right: AppDimensions.space8),
       child: ChoiceChip(
         key: ValueKey('marketplace_sort_$keyName'),
-        label: Text(label),
+        label: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(label),
+            if (icon != null) ...[
+              const SizedBox(width: 4),
+              Icon(icon, size: 13, color: foreground),
+            ],
+          ],
+        ),
         selected: isSelected,
         showCheckmark: false,
         onSelected: (_) {
           if (_sortOption == value) return;
+          HapticFeedback.selectionClick();
           setState(() {
             _sortOption = value;
           });
         },
-        labelStyle: TextStyle(
-          fontSize: 12,
-          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-          color: isSelected
-              ? (context.appOnPrimary)
-              : (context.appTextSecondary),
+        labelStyle: AppTextStyles.labelMedium.copyWith(
+          fontSize: 13,
+          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+          color: foreground,
         ),
+        labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         selectedColor: context.appPrimary,
         backgroundColor: context.appSurface,
         side: BorderSide(
-          color: context.appBorder,
+          color: isSelected ? context.appPrimary : context.appBorder,
         ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: const StadiumBorder(),
+        materialTapTargetSize: MaterialTapTargetSize.padded,
       ),
     );
   }
 
   Widget _buildNoResultsState(AppLocalizations l10n) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.search_off,
-              size: 64,
-              color: context.appTextDisabled,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              l10n.market_no_results,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: context.appTextPrimary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 20),
-            OutlinedButton.icon(
-              key: const ValueKey('marketplace_clear_filters'),
-              onPressed: _clearFilters,
-              icon: const Icon(Icons.filter_alt_off_outlined),
-              label: Text(l10n.market_clear_filters),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: context.appPrimary,
-                side: BorderSide(
-                  color: context.appBorder,
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ],
-        ),
+    return AppEmptyState(
+      icon: LucideIcons.searchX,
+      title: l10n.market_no_results,
+      message: l10n.market_no_results_desc,
+      action: OutlinedButton.icon(
+        key: const ValueKey('marketplace_clear_filters'),
+        onPressed: _clearFilters,
+        icon: const Icon(LucideIcons.listRestart, size: 18),
+        label: Text(l10n.market_clear_filters),
       ),
     );
   }
 
   Widget _buildEmptyState(AppLocalizations l10n) {
     if (_isBuyer) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.storefront_outlined,
-                size: 80,
-                color: context.appTextDisabled,
-              ),
-              const SizedBox(height: 24),
-              Text(
-                l10n.market_empty_buyer_title,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: context.appTextPrimary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                l10n.market_empty_buyer_desc,
-                style: TextStyle(
-                  fontSize: 15,
-                  color: context.appTextSecondary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 32),
-              ElevatedButton.icon(
-                onPressed: _loadCrops,
-                icon: const Icon(Icons.refresh),
-                label: Text(l10n.market_refresh),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: context.appPrimary,
-                  foregroundColor: context.appOnPrimary,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ],
-          ),
+      return AppEmptyState(
+        icon: LucideIcons.wheatOff,
+        title: l10n.market_empty_buyer_title,
+        message: l10n.market_empty_buyer_desc,
+        action: ElevatedButton.icon(
+          onPressed: _loadCrops,
+          icon: const Icon(LucideIcons.refreshCw, size: 18),
+          label: Text(l10n.market_refresh),
         ),
       );
     }
 
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.storefront_outlined,
-              size: 80,
-              color: context.appTextDisabled,
-            ),
-            const SizedBox(height: 24),
-            Text(
-              l10n.market_empty_farmer_title,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: context.appTextPrimary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              l10n.market_empty_farmer_desc,
-              style: TextStyle(
-                fontSize: 15,
-                color: context.appTextSecondary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 32),
-            ElevatedButton.icon(
-              onPressed: _navigateToPublish,
-              icon: const Icon(Icons.add),
-              label: Text(
-                l10n.market_publish_first,
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: context.appPrimary,
-                foregroundColor: context.appOnPrimary,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
+    return AppEmptyState(
+      icon: LucideIcons.sprout,
+      tone: AppEmptyStateTone.brand,
+      title: l10n.market_empty_farmer_title,
+      message: l10n.market_empty_farmer_desc,
+      action: ElevatedButton.icon(
+        onPressed: _navigateToPublish,
+        icon: const Icon(LucideIcons.plus, size: 18),
+        label: Text(l10n.market_publish_first),
+      ),
+    );
+  }
+}
+
+/// One way to publish, as an iOS inset row: tinted squircle, title,
+/// one-line explanation and a chevron.
+class _PublishOptionTile extends StatelessWidget {
+  final IconData icon;
+  final AppSemanticTriad triad;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _PublishOptionTile({
+    required this.icon,
+    required this.triad,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return PressableScale(
+      child: Material(
+        color: context.appSurfaceVariant,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              children: [
+                IconSquircle(icon: icon, triad: triad),
+                const SizedBox(width: AppDimensions.space12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: AppTextStyles.titleMedium.copyWith(
+                          color: context.appTextPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: context.appTextSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                Icon(
+                  LucideIcons.chevronRight,
+                  size: 18,
+                  color: context.appTextMuted,
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

@@ -1,20 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/widgets/buttons/primary_action_button.dart';
+import '../../../../core/widgets/cards/inset_group_card.dart';
+import '../../../../core/widgets/feedback/status_banner.dart';
 import '../../../../core/widgets/inputs/custom_text_field.dart';
 import '../../login/widgets/topo_header.dart';
+import '../../widgets/auth_layout.dart';
 import '../services/recovery_service.dart';
 
 /// Pantalla para solicitar la recuperación de contraseña por correo electrónico.
 class ForgotPasswordScreen extends StatefulWidget {
   final RecoveryService? recoveryService;
 
-  const ForgotPasswordScreen({
-    super.key,
-    this.recoveryService,
-  });
+  const ForgotPasswordScreen({super.key, this.recoveryService});
 
   @override
   State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
@@ -84,24 +86,28 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
 
     return Scaffold(
       backgroundColor: context.appBackground,
       body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         child: Column(
           children: [
             Stack(
               children: [
-                const SizedBox(
-                  height: 220,
+                SizedBox(
+                  height: TopoHeader.compactHeight(context),
                   width: double.infinity,
-                  child: TopoHeader(),
+                  child: const TopoHeader(compact: true),
                 ),
                 SafeArea(
                   child: Padding(
-                    padding: const EdgeInsets.only(left: 8.0, top: 8.0),
-                    child: IconButton(
-                      icon: Icon(Icons.arrow_back, color: context.appSuccess),
+                    padding: const EdgeInsets.all(AppDimensions.space12),
+                    child: AuthHeaderButton(
+                      icon: Icons.arrow_back,
+                      tooltip: l10n.common_back,
                       onPressed: () => Navigator.of(context).maybePop(),
                     ),
                   ),
@@ -109,120 +115,79 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               ],
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      l10n.recovery_title,
-                      style: AppTextStyles.headlineMedium.copyWith(
-                        color: context.appTextPrimary,
-                        fontWeight: FontWeight.bold,
+              padding: EdgeInsets.fromLTRB(
+                AppDimensions.space20,
+                AppDimensions.space8,
+                AppDimensions.space20,
+                AppDimensions.space24 + bottomInset,
+              ),
+              child: AuthFormEntrance(
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      AuthTaskHeader(
+                        icon: LucideIcons.keyRound,
+                        title: l10n.recovery_title,
+                        subtitle: l10n.recovery_subtitle,
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      l10n.recovery_subtitle,
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: context.appTextSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-
-                    // Campo de correo
-                    CustomTextField(
-                      label: l10n.recovery_email_label,
-                      hint: l10n.recovery_email_hint,
-                      icon: Icons.email_outlined,
-                      controller: _contactController,
-                      keyboardType: TextInputType.emailAddress,
-                      validator: (value) {
-                        final val = value?.trim() ?? '';
-                        if (val.isEmpty) {
-                          return l10n.recovery_email_required;
-                        }
-                        if (!val.contains('@')) {
-                          return l10n.recovery_phone_not_supported;
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Mensaje de estado (éxito o error)
-                    if (_statusMessage != null) ...[
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: _isSuccess
-                              ? context.appSuccess.withValues(alpha: 0.1)
-                              : context.appError.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: _isSuccess
-                                ? context.appSuccess
-                                : context.appError,
-                            width: 1,
-                          ),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(
-                              _isSuccess
-                                  ? Icons.check_circle_outline
-                                  : Icons.error_outline,
-                              color: _isSuccess
-                                  ? context.appSuccess
-                                  : context.appError,
-                              size: 24,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                _statusMessage!,
-                                style: AppTextStyles.bodyMedium.copyWith(
-                                  color: _isSuccess
-                                      ? context.appSuccess
-                                      : context.appError,
-                                ),
-                              ),
-                            ),
-                          ],
+                      const SizedBox(height: AppDimensions.space20),
+                      InsetGroupCard(
+                        child: CustomTextField(
+                          label: l10n.recovery_email_label,
+                          hint: l10n.recovery_email_hint,
+                          icon: LucideIcons.mail,
+                          controller: _contactController,
+                          keyboardType: TextInputType.emailAddress,
+                          textInputAction: TextInputAction.send,
+                          autofillHints: const [AutofillHints.email],
+                          validator: (value) {
+                            final val = value?.trim() ?? '';
+                            if (val.isEmpty) {
+                              return l10n.recovery_email_required;
+                            }
+                            if (!val.contains('@')) {
+                              return l10n.recovery_phone_not_supported;
+                            }
+                            return null;
+                          },
                         ),
                       ),
-                      const SizedBox(height: 24),
+
+                      // Resultado del envío (confirmación o error)
+                      if (_statusMessage != null) ...[
+                        const SizedBox(height: AppDimensions.space16),
+                        StatusBanner(
+                          key: ValueKey('recovery_status_$_isSuccess'),
+                          tone: _isSuccess
+                              ? StatusTone.success
+                              : StatusTone.error,
+                          icon: _isSuccess
+                              ? Icons.check_circle_outline
+                              : Icons.error_outline,
+                          message: _statusMessage!,
+                        ),
+                      ],
+                      const SizedBox(height: AppDimensions.space20),
+                      PrimaryActionButton(
+                        onPressed: _isLoading ? null : _handleRequestReset,
+                        text: _isLoading
+                            ? l10n.recovery_sending
+                            : l10n.recovery_send_button,
+                        isLoading: _isLoading,
+                      ),
+                      const SizedBox(height: AppDimensions.space8),
+                      Center(
+                        child: TextButton(
+                          onPressed: _isLoading
+                              ? null
+                              : () => Navigator.of(context).maybePop(),
+                          child: Text(l10n.recovery_back_to_login),
+                        ),
+                      ),
                     ],
-
-                    // Botón de envío
-                    PrimaryActionButton(
-                      onPressed: _isLoading ? null : _handleRequestReset,
-                      text: _isLoading
-                          ? (l10n.recovery_sending)
-                          : (l10n.recovery_send_button),
-                      isLoading: _isLoading,
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Botón volver a inicio de sesión
-                    TextButton(
-                      onPressed: _isLoading
-                          ? null
-                          : () {
-                              Navigator.of(context).maybePop();
-                            },
-                      child: Text(
-                        l10n.recovery_back_to_login,
-                        style: AppTextStyles.labelMedium.copyWith(
-                          color: context.appSuccess,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                  ],
+                  ),
                 ),
               ),
             ),

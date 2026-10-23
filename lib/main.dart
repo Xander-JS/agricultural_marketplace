@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'core/config/supabase_client.dart';
+import 'core/localization/app_localizations.dart';
 import 'core/localization/localization_config.dart';
 import 'core/services/app_preferences_service.dart';
 import 'core/theme/app_theme.dart';
@@ -7,6 +9,10 @@ import 'features/auth/widgets/auth_gate.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Plus Jakarta Sans viene empaquetada en assets/google_fonts/: la tipografía
+  // nunca depende de descargas en tiempo de ejecución (zonas rurales).
+  GoogleFonts.config.allowRuntimeFetching = false;
 
   // Inicialización de preferencias globales de la app (Modo oscuro e Idioma)
   try {
@@ -47,7 +53,8 @@ class AgriculturalMarketplaceApp extends StatelessWidget {
       listenable: prefs,
       builder: (context, _) {
         return MaterialApp(
-          title: 'Agricultural Marketplace',
+          onGenerateTitle: (context) =>
+              AppLocalizations.of(context)?.app_title ?? '',
           debugShowCheckedModeBanner: false,
 
           // ---------------------------------------------------------

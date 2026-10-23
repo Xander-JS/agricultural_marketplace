@@ -1,181 +1,224 @@
 import 'package:flutter/material.dart';
 
-/// Centralized typographic styles using Playfair Display, Montserrat, and Poppins.
+/// KUS typography: one family, Plus Jakarta Sans, bundled in
+/// `assets/google_fonts/` and declared in `pubspec.yaml`.
 ///
-/// Fonts used:
-/// - Playfair Display: Titles and principal headlines.
-/// - Montserrat: General body copy, forms, and informational content.
-/// - Poppins: Buttons, tags, subheadings, and interactive elements.
+/// Hierarchy comes from weight and tracking rather than mixing families:
+/// - Display (800): screen heroes and brand moments, tight negative tracking.
+/// - Headline / Title (600-700): section and card headers.
+/// - Body (400-500): reading text, inputs and lists.
+/// - Figures: prices, costs and quantities use tabular numerals so columns of
+///   COP amounts align digit by digit.
 abstract final class AppTextStyles {
   // ---------------------------------------------------------
   // Font Family Names
   // ---------------------------------------------------------
-  static const String fontFamilyPlayfair = 'Playfair Display';
-  static const String fontFamilyMontserrat = 'Montserrat';
-  static const String fontFamilyPoppins = 'Poppins';
+  static const String fontFamilyJakarta = 'Plus Jakarta Sans';
+
+  /// Legacy names kept for compatibility; all resolve to Plus Jakarta Sans.
+  static const String fontFamilyPlayfair = fontFamilyJakarta;
+  static const String fontFamilyMontserrat = fontFamilyJakarta;
+  static const String fontFamilyPoppins = fontFamilyJakarta;
+
+  static const List<FontFeature> tabularFigures = <FontFeature>[
+    FontFeature.tabularFigures(),
+  ];
 
   // ---------------------------------------------------------
-  // Titles & Headlines (Playfair Display)
+  // Display & Headlines
   // ---------------------------------------------------------
-  /// Large main display titles (e.g., Hero headers, onboarding welcome)
+  /// Large hero titles (onboarding, auth screens).
   static const TextStyle displayLarge = TextStyle(
-    fontFamily: fontFamilyPlayfair,
+    fontFamily: fontFamilyJakarta,
     fontSize: 32.0,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -0.8,
+    height: 1.15,
+  );
+
+  /// Screen titles.
+  static const TextStyle displayMedium = TextStyle(
+    fontFamily: fontFamilyJakarta,
+    fontSize: 26.0,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -0.6,
+    height: 1.2,
+  );
+
+  /// Subsection titles and main card headers.
+  static const TextStyle displaySmall = TextStyle(
+    fontFamily: fontFamilyJakarta,
+    fontSize: 22.0,
     fontWeight: FontWeight.w700,
-    letterSpacing: -0.5,
+    letterSpacing: -0.4,
     height: 1.25,
   );
 
-  /// Section headers and screen titles
-  static const TextStyle displayMedium = TextStyle(
-    fontFamily: fontFamilyPlayfair,
-    fontSize: 26.0,
+  /// Navigation bar titles, modal titles and compact group headings.
+  static const TextStyle headlineMedium = TextStyle(
+    fontFamily: fontFamilyJakarta,
+    fontSize: 19.0,
     fontWeight: FontWeight.w700,
-    letterSpacing: -0.25,
+    letterSpacing: -0.3,
     height: 1.3,
   );
 
-  /// Subsection titles and main card headers
-  static const TextStyle displaySmall = TextStyle(
-    fontFamily: fontFamilyPlayfair,
-    fontSize: 22.0,
-    fontWeight: FontWeight.w600,
-    height: 1.35,
-  );
-
-  /// Modal titles and compact group headings
-  static const TextStyle headlineMedium = TextStyle(
-    fontFamily: fontFamilyPlayfair,
-    fontSize: 19.0,
-    fontWeight: FontWeight.w600,
-    height: 1.35,
-  );
-
   // ---------------------------------------------------------
-  // Subtitles & Interactive Highlights (Poppins)
+  // Titles
   // ---------------------------------------------------------
-  /// Primary subtitle or featured lead text
+  /// Primary subtitle or featured lead text.
   static const TextStyle titleLarge = TextStyle(
-    fontFamily: fontFamilyPoppins,
+    fontFamily: fontFamilyJakarta,
     fontSize: 17.0,
     fontWeight: FontWeight.w600,
-    letterSpacing: 0.1,
-    height: 1.4,
+    letterSpacing: -0.2,
+    height: 1.35,
   );
 
-  /// Medium card titles and list section headers
+  /// Card titles and list section headers.
   static const TextStyle titleMedium = TextStyle(
-    fontFamily: fontFamilyPoppins,
+    fontFamily: fontFamilyJakarta,
     fontSize: 15.0,
     fontWeight: FontWeight.w600,
-    letterSpacing: 0.1,
-    height: 1.4,
+    letterSpacing: -0.1,
+    height: 1.35,
   );
 
-  /// Small subtitle and emphasis metadata
+  /// Small subtitle and emphasised metadata.
   static const TextStyle titleSmall = TextStyle(
-    fontFamily: fontFamilyPoppins,
+    fontFamily: fontFamilyJakarta,
     fontSize: 13.0,
-    fontWeight: FontWeight.w500,
-    letterSpacing: 0.1,
-    height: 1.4,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0,
+    height: 1.35,
   );
 
   // ---------------------------------------------------------
-  // Body & General Content (Montserrat)
+  // Body
   // ---------------------------------------------------------
-  /// Main readable body text (articles, detailed descriptions)
+  /// Main reading text (descriptions, long-form content).
   static const TextStyle bodyLarge = TextStyle(
-    fontFamily: fontFamilyMontserrat,
+    fontFamily: fontFamilyJakarta,
     fontSize: 15.0,
     fontWeight: FontWeight.w400,
-    letterSpacing: 0.15,
+    letterSpacing: 0,
     height: 1.5,
   );
 
-  /// Default text for interface, inputs, and listings
+  /// Default interface text for inputs and lists.
   static const TextStyle bodyMedium = TextStyle(
-    fontFamily: fontFamilyMontserrat,
+    fontFamily: fontFamilyJakarta,
     fontSize: 14.0,
     fontWeight: FontWeight.w400,
-    letterSpacing: 0.2,
+    letterSpacing: 0,
     height: 1.45,
   );
 
-  /// Secondary info, captions, and hint text
+  /// Secondary info and helper copy.
   static const TextStyle bodySmall = TextStyle(
-    fontFamily: fontFamilyMontserrat,
+    fontFamily: fontFamilyJakarta,
     fontSize: 12.0,
-    fontWeight: FontWeight.w400,
-    letterSpacing: 0.25,
+    fontWeight: FontWeight.w500,
+    letterSpacing: 0,
     height: 1.4,
   );
 
   // ---------------------------------------------------------
-  // Buttons & Interactive Elements (Poppins)
+  // Buttons & Interactive Elements
   // ---------------------------------------------------------
-  /// Large CTA buttons
   static const TextStyle buttonLarge = TextStyle(
-    fontFamily: fontFamilyPoppins,
+    fontFamily: fontFamilyJakarta,
     fontSize: 15.0,
-    fontWeight: FontWeight.w600,
-    letterSpacing: 0.3,
+    fontWeight: FontWeight.w700,
+    letterSpacing: -0.1,
   );
 
-  /// Standard buttons
   static const TextStyle buttonMedium = TextStyle(
-    fontFamily: fontFamilyPoppins,
+    fontFamily: fontFamilyJakarta,
     fontSize: 14.0,
     fontWeight: FontWeight.w600,
-    letterSpacing: 0.25,
+    letterSpacing: -0.1,
   );
 
-  /// Small action buttons and text buttons
   static const TextStyle buttonSmall = TextStyle(
-    fontFamily: fontFamilyPoppins,
+    fontFamily: fontFamilyJakarta,
     fontSize: 12.0,
     fontWeight: FontWeight.w600,
-    letterSpacing: 0.2,
+    letterSpacing: 0,
   );
 
   // ---------------------------------------------------------
-  // Badges, Chips & Auxiliary Text (Poppins / Montserrat)
+  // Labels, Badges & Captions
   // ---------------------------------------------------------
-  /// Tags, badges, and pill indicators
   static const TextStyle labelMedium = TextStyle(
-    fontFamily: fontFamilyPoppins,
+    fontFamily: fontFamilyJakarta,
     fontSize: 12.0,
-    fontWeight: FontWeight.w500,
-    letterSpacing: 0.3,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0,
   );
 
-  /// Smallest status chips, timestamps, or footnote indicators
   static const TextStyle labelSmall = TextStyle(
-    fontFamily: fontFamilyPoppins,
+    fontFamily: fontFamilyJakarta,
     fontSize: 11.0,
-    fontWeight: FontWeight.w500,
-    letterSpacing: 0.2,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.1,
   );
 
-  /// Auxiliary helper text, errors, or captions
   static const TextStyle caption = TextStyle(
-    fontFamily: fontFamilyMontserrat,
+    fontFamily: fontFamilyJakarta,
     fontSize: 11.0,
-    fontWeight: FontWeight.w400,
-    letterSpacing: 0.2,
+    fontWeight: FontWeight.w500,
+    letterSpacing: 0.1,
     height: 1.35,
+  );
+
+  // ---------------------------------------------------------
+  // Figures (tabular numerals for COP prices, costs and quantities)
+  // ---------------------------------------------------------
+  /// Hero amounts: the headline price of a crop or a deal total.
+  static const TextStyle figureLarge = TextStyle(
+    fontFamily: fontFamilyJakarta,
+    fontSize: 22.0,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -0.5,
+    height: 1.2,
+    fontFeatures: tabularFigures,
+  );
+
+  /// Prices inside cards and list rows.
+  static const TextStyle figureMedium = TextStyle(
+    fontFamily: fontFamilyJakarta,
+    fontSize: 17.0,
+    fontWeight: FontWeight.w700,
+    letterSpacing: -0.3,
+    height: 1.3,
+    fontFeatures: tabularFigures,
+  );
+
+  /// Quantities and secondary amounts in tables.
+  static const TextStyle figureSmall = TextStyle(
+    fontFamily: fontFamilyJakarta,
+    fontSize: 14.0,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0,
+    height: 1.4,
+    fontFeatures: tabularFigures,
   );
 
   // ---------------------------------------------------------
   // TextTheme Builder for Material Theme integration
   // ---------------------------------------------------------
-  /// Creates a [TextTheme] bound to the given base [textColor].
-  static TextTheme createTextTheme({required Color textColor, required Color secondaryTextColor}) {
+  /// Creates a [TextTheme] bound to the given text colors.
+  static TextTheme createTextTheme({
+    required Color textColor,
+    required Color secondaryTextColor,
+  }) {
     return TextTheme(
       displayLarge: displayLarge.copyWith(color: textColor),
       displayMedium: displayMedium.copyWith(color: textColor),
       displaySmall: displaySmall.copyWith(color: textColor),
       headlineMedium: headlineMedium.copyWith(color: textColor),
+      headlineSmall: titleLarge.copyWith(color: textColor),
       titleLarge: titleLarge.copyWith(color: textColor),
       titleMedium: titleMedium.copyWith(color: textColor),
       titleSmall: titleSmall.copyWith(color: secondaryTextColor),

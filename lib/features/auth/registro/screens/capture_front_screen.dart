@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import '../../../../core/theme/app_icons.dart';
 import 'package:agricultural_marketplace/core/localization/app_localizations.dart';
 import 'package:image_picker/image_picker.dart';
 

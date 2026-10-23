@@ -132,6 +132,18 @@ class _AuthGateState extends State<AuthGate> {
     }
   }
 
+  /// Indica si la pantalla actual ya corresponde a la resolución vigente de
+  /// [userId]. Un `signedIn` repetido del mismo usuario (por ejemplo, al volver
+  /// de la cámara) no debe pasar por la carga: desmontaría el formulario de
+  /// registro con las imágenes elegidas o un envío en curso. La pantalla de
+  /// verificación ya consulta su estado por sí misma.
+  bool _isAlreadyResolvedFor(String userId) {
+    if (_activeUserId != userId) return false;
+    return _status == _AuthGateStatus.authenticatedApproved ||
+        _status == _AuthGateStatus.authenticatedPendingVerification ||
+        _status == _AuthGateStatus.profileNotFound;
+  }
+
   void _handleAuthStateChange(AuthState data) {
     final event = data.event;
     final session = data.session;
@@ -139,8 +151,7 @@ class _AuthGateState extends State<AuthGate> {
     switch (event) {
       case AuthChangeEvent.initialSession:
         if (session != null) {
-          if (_activeUserId != session.user.id ||
-              _status != _AuthGateStatus.authenticatedApproved) {
+          if (!_isAlreadyResolvedFor(session.user.id)) {
             _activeUserId = session.user.id;
             _resolveProfile(session.user.id, ++_resolutionEpoch);
           }
@@ -158,8 +169,7 @@ class _AuthGateState extends State<AuthGate> {
 
       case AuthChangeEvent.signedIn:
         if (session != null) {
-          if (_activeUserId != session.user.id ||
-              _status != _AuthGateStatus.authenticatedApproved) {
+          if (!_isAlreadyResolvedFor(session.user.id)) {
             _activeUserId = session.user.id;
             _resolveProfile(session.user.id, ++_resolutionEpoch);
           }
@@ -213,12 +223,16 @@ class _AuthGateState extends State<AuthGate> {
     final client = _client;
     if (client == null) return null;
 
-    final res = await client
-        .from('profiles')
-        .select('role, verification_status')
-        .eq('id', userId)
-        .maybeSingle();
+    final res =
+        await client
+            .from('profiles')
+            .select('role, verification_status')
+            .eq('id', userId)
+            .maybeSingle() ??
+        await fetchOwnProfileViaRpc(client);
 
+    // Sin perfil real se ofrece "Completa tu registro". Un usuario rechazado
+    // sí tiene perfil: nunca debe caer aquí por un fallo de visibilidad.
     if (res == null) return null;
 
     try {
@@ -232,6 +246,10 @@ class _AuthGateState extends State<AuthGate> {
           .limit(1)
           .maybeSingle();
       if (attempt != null) {
+        res['verification_status'] = resolveEffectiveVerificationStatus(
+          profileStatus: res['verification_status'] as String?,
+          attemptStatus: attempt['status'] as String?,
+        );
         res['has_verification_attempt'] = true;
         res['has_all_documents'] = [
           attempt['document_front_path'],

@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import '../../../core/theme/app_icons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/localization/app_localizations.dart';
@@ -360,27 +360,41 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
+        // Two equal-width actions: the destructive one carries the color,
+        // cancel stays quiet but just as easy to reach.
+        const buttonSize = Size(0, AppDimensions.buttonHeightMedium);
         return AlertDialog(
-          icon: IconSquircle(
-            icon: LucideIcons.logOut,
-            triad: dialogContext.appErrorTriad,
-            size: 48,
+          title: Text(
+            l10n.profile_logout_confirm_title,
+            textAlign: TextAlign.center,
           ),
-          title: Text(l10n.profile_logout_confirm_title),
-          content: Text(l10n.profile_logout_confirm_desc),
+          content: Text(
+            l10n.profile_logout_confirm_desc,
+            textAlign: TextAlign.center,
+          ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: Text(l10n.profile_cancel),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(dialogContext, true),
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(0, AppDimensions.buttonHeightMedium),
-                backgroundColor: dialogContext.appError,
-                foregroundColor: dialogContext.appOverlayText,
-              ),
-              child: Text(l10n.profile_logout),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(dialogContext, false),
+                    style: OutlinedButton.styleFrom(minimumSize: buttonSize),
+                    child: Text(l10n.profile_cancel),
+                  ),
+                ),
+                const SizedBox(width: AppDimensions.space12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(dialogContext, true),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: buttonSize,
+                      backgroundColor: dialogContext.appError,
+                      foregroundColor: dialogContext.appOverlayText,
+                    ),
+                    child: Text(l10n.profile_logout),
+                  ),
+                ),
+              ],
             ),
           ],
         );
@@ -800,15 +814,24 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
         ],
       );
     } else {
-      Widget figure(String value, String label, {Color? color}) {
+      Widget figure(String value, String label, {bool rated = false}) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              value,
+            Text.rich(
+              TextSpan(
+                children: [
+                  if (rated)
+                    TextSpan(
+                      text: '★ ',
+                      style: TextStyle(color: context.appRatingGold),
+                    ),
+                  TextSpan(text: value),
+                ],
+              ),
               style: AppTextStyles.figureLarge.copyWith(
                 fontSize: 26,
-                color: color ?? context.appTextPrimary,
+                color: context.appTextPrimary,
               ),
             ),
             const SizedBox(height: 2),
@@ -827,9 +850,9 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
           children: [
             Expanded(
               child: figure(
-                '★ ${summary.averageRating.toStringAsFixed(1)}',
+                summary.averageRating.toStringAsFixed(1),
                 l10n.reputation_average_label,
-                color: context.appWarningText,
+                rated: true,
               ),
             ),
             VerticalDivider(width: 32, color: context.appDivider),
@@ -869,7 +892,7 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
       children: [
         _EditableContactRow(
           icon: LucideIcons.mail,
-          triad: context.appInfoTriad,
+          triad: context.appIconTriad,
           label: l10n.profile_email,
           controller: _emailController,
           focusNode: _emailFocusNode,
@@ -879,7 +902,7 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
         ),
         _EditableContactRow(
           icon: LucideIcons.phone,
-          triad: context.appSuccessTriad,
+          triad: context.appIconTriad,
           label: l10n.profile_phone,
           controller: _phoneController,
           focusNode: _phoneFocusNode,
@@ -910,7 +933,7 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
             InsetGroupRow(
               leading: IconSquircle(
                 icon: LucideIcons.calendarClock,
-                triad: context.appWarningTriad,
+                triad: context.appIconTriad,
                 size: 30,
               ),
               title: l10n.profile_enable_early_sale,
@@ -934,7 +957,7 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
             InsetGroupRow(
               leading: IconSquircle(
                 icon: LucideIcons.phone,
-                triad: context.appSuccessTriad,
+                triad: context.appIconTriad,
                 size: 30,
               ),
               title: l10n.profile_visibility_phone,
@@ -952,7 +975,7 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
             InsetGroupRow(
               leading: IconSquircle(
                 icon: LucideIcons.messageCircle,
-                triad: context.appBrandTriad,
+                triad: context.appIconTriad,
                 size: 30,
               ),
               title: l10n.profile_visibility_whatsapp,
@@ -970,7 +993,7 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
             InsetGroupRow(
               leading: IconSquircle(
                 icon: LucideIcons.mapPin,
-                triad: context.appInfoTriad,
+                triad: context.appIconTriad,
                 size: 30,
               ),
               title: l10n.profile_visibility_location,
@@ -1000,7 +1023,7 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
         InsetGroupRow(
           leading: IconSquircle(
             icon: _isDarkMode ? LucideIcons.moon : LucideIcons.sun,
-            triad: context.appNeutralTriad,
+            triad: context.appIconTriad,
             size: 30,
           ),
           title: l10n.profile_appearance,
@@ -1022,7 +1045,7 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
         InsetGroupRow(
           leading: IconSquircle(
             icon: LucideIcons.globe,
-            triad: context.appInfoTriad,
+            triad: context.appIconTriad,
             size: 30,
           ),
           title: l10n.profile_language,

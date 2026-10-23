@@ -776,6 +776,10 @@ void main() {
         );
         await tester.pumpAndSettle();
 
+        // La evidencia vive en la pestaña "Evidencia" del detalle.
+        await tester.tap(find.text('Evidencia'));
+        await tester.pumpAndSettle();
+
         expect(
           find.byKey(const ValueKey('moderation_document_front')),
           findsOneWidget,
@@ -796,6 +800,11 @@ void main() {
           find.text('Documento disponible para revisión'),
           findsNWidgets(3),
         );
+
+        // El informe KUS Vision vive en la pestaña "Análisis IA".
+        await tester.tap(find.text('Análisis IA'));
+        await tester.pumpAndSettle();
+
         expect(
           find.byKey(const ValueKey('moderation_diagnosis_simulated_badge')),
           findsOneWidget,
@@ -837,11 +846,18 @@ void main() {
         );
         await tester.pumpAndSettle();
 
+        await tester.tap(find.text('Evidencia'));
+        await tester.pumpAndSettle();
+
         expect(find.text('Documento no proporcionado'), findsWidgets);
         expect(
           find.text('Ruta de documento no válida o no disponible'),
           findsWidgets,
         );
+
+        await tester.tap(find.text('Análisis IA'));
+        await tester.pumpAndSettle();
+
         expect(find.text('Faltante'), findsNWidgets(2));
       },
     );

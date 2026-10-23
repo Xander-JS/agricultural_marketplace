@@ -8,7 +8,7 @@ class LoginService {
       final cleanInput = phone.trim().replaceAll(RegExp(r'\s+'), '');
       final isEmail = cleanInput.contains('@');
       final emailToUse = isEmail ? cleanInput : '$cleanInput@agromarket.com';
-      
+
       final response = await _supabase.auth.signInWithPassword(
         email: emailToUse,
         password: password,

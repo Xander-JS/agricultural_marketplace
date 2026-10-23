@@ -1,15 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/constants/user_roles.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/app_bar/custom_app_bar.dart';
+import '../../../../core/widgets/avatars/user_avatar.dart';
+import '../../../../core/widgets/cards/inset_group_card.dart';
+import '../../../../core/widgets/feedback/app_snack_bar.dart';
+import '../../../../core/widgets/feedback/status_banner.dart';
 import '../models/moderation_request.dart';
 import '../services/document_diagnosis_service.dart';
 import '../services/document_image_service.dart';
 import '../services/moderation_service.dart';
 import '../widgets/document_image_preview.dart';
 import '../widgets/simulated_document_diagnosis_card.dart';
+import '../widgets/verification_status_badge.dart';
 
 /// Pantalla de detalle de una solicitud de verificación para revisión por parte de un moderador.
 class ModerationDetailScreen extends StatefulWidget {
@@ -40,6 +48,14 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
   late DocumentImageUrlService _documentImageService;
   late DocumentDiagnosisService _diagnosisService;
   bool _isSubmitting = false;
+  DiagnosisDecision? _busyDecision;
+
+  void _setBusy(DiagnosisDecision? decision) {
+    setState(() {
+      _busyDecision = decision;
+      _isSubmitting = decision != null;
+    });
+  }
 
   @override
   void initState() {
@@ -59,26 +75,19 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(
-          l10n.moderation_confirm_approve_title,
-        ),
-        content: Text(
-          l10n.moderation_confirm_approve_desc,
-        ),
+        title: Text(l10n.moderation_confirm_approve_title),
+        content: Text(l10n.moderation_confirm_approve_desc),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(
-              l10n.common_cancel,
-            ),
+            child: Text(l10n.common_cancel),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: context.appSuccess),
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(
-              l10n.moderation_btn_approve,
-              style: TextStyle(color: context.appOnPrimary),
+            style: ElevatedButton.styleFrom(
+              minimumSize: const Size(0, AppDimensions.buttonHeightMedium),
             ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.moderation_btn_approve),
           ),
         ],
       ),
@@ -86,7 +95,7 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
 
     if (confirmed != true || !mounted) return;
 
-    setState(() => _isSubmitting = true);
+    _setBusy(DiagnosisDecision.approve);
 
     try {
       final result = await _service.approveRequest(
@@ -107,35 +116,28 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
         });
         widget.onRequestUpdated?.call(updated);
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              l10n.moderation_approved_success,
-            ),
-            backgroundColor: context.appSuccess,
-          ),
+        showAppSnackBar(
+          context,
+          l10n.moderation_approved_success,
+          tone: StatusTone.success,
         );
         Navigator.of(context).pop(updated);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              result.errorMessage ?? l10n.moderation_error_processing,
-            ),
-            backgroundColor: context.appError,
-          ),
+        showAppSnackBar(
+          context,
+          result.errorMessage ?? l10n.moderation_error_processing,
+          tone: StatusTone.error,
         );
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.common_unexpected_error(e.toString())),
-          backgroundColor: context.appError,
-        ),
+      showAppSnackBar(
+        context,
+        l10n.common_unexpected_error(e.toString()),
+        tone: StatusTone.error,
       );
     } finally {
-      if (mounted) setState(() => _isSubmitting = false);
+      if (mounted) _setBusy(null);
     }
   }
 
@@ -149,25 +151,22 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(
-          l10n.moderation_confirm_reject_title,
-        ),
+        title: Text(l10n.moderation_confirm_reject_title),
         content: Form(
           key: formKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                l10n.moderation_reject_reason_prompt,
-              ),
+              Text(l10n.moderation_reject_reason_prompt),
               const SizedBox(height: 12),
               TextFormField(
                 controller: reasonController,
                 maxLines: 3,
+                autofocus: true,
+                textCapitalization: TextCapitalization.sentences,
                 decoration: InputDecoration(
                   hintText: l10n.moderation_reject_reason_hint,
-                  border: const OutlineInputBorder(),
                 ),
                 validator: (val) {
                   if (val == null || val.trim().isEmpty) {
@@ -182,21 +181,20 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(
-              l10n.common_cancel,
-            ),
+            child: Text(l10n.common_cancel),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: context.appError),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: context.appError,
+              foregroundColor: context.appColorScheme.onError,
+              minimumSize: const Size(0, AppDimensions.buttonHeightMedium),
+            ),
             onPressed: () {
               if (formKey.currentState?.validate() == true) {
                 Navigator.of(ctx).pop(true);
               }
             },
-            child: Text(
-              l10n.moderation_btn_reject,
-              style: TextStyle(color: context.appOnPrimary),
-            ),
+            child: Text(l10n.moderation_btn_reject),
           ),
         ],
       ),
@@ -205,7 +203,7 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
     if (confirmed != true || !mounted) return;
 
     final reason = reasonController.text.trim();
-    setState(() => _isSubmitting = true);
+    _setBusy(DiagnosisDecision.reject);
 
     try {
       final result = await _service.rejectRequest(
@@ -228,35 +226,28 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
         });
         widget.onRequestUpdated?.call(updated);
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              l10n.moderation_rejected_success,
-            ),
-            backgroundColor: context.appError,
-          ),
+        showAppSnackBar(
+          context,
+          l10n.moderation_rejected_success,
+          tone: StatusTone.error,
         );
         Navigator.of(context).pop(updated);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              result.errorMessage ?? l10n.moderation_error_rejecting,
-            ),
-            backgroundColor: context.appError,
-          ),
+        showAppSnackBar(
+          context,
+          result.errorMessage ?? l10n.moderation_error_rejecting,
+          tone: StatusTone.error,
         );
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.common_unexpected_error(e.toString())),
-          backgroundColor: context.appError,
-        ),
+      showAppSnackBar(
+        context,
+        l10n.common_unexpected_error(e.toString()),
+        tone: StatusTone.error,
       );
     } finally {
-      if (mounted) setState(() => _isSubmitting = false);
+      if (mounted) _setBusy(null);
     }
   }
 
@@ -264,7 +255,7 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
     if (_isSubmitting) return;
 
     final l10n = AppLocalizations.of(context)!;
-    setState(() => _isSubmitting = true);
+    _setBusy(DiagnosisDecision.markInReview);
 
     try {
       final result = await _service.markInReview(
@@ -284,314 +275,198 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
         });
         widget.onRequestUpdated?.call(updated);
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              l10n.moderation_in_review_success,
-            ),
-            backgroundColor: context.appInfo,
-          ),
+        showAppSnackBar(
+          context,
+          l10n.moderation_in_review_success,
+          tone: StatusTone.info,
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              result.errorMessage ?? l10n.moderation_error_updating,
-            ),
-            backgroundColor: context.appError,
-          ),
+        showAppSnackBar(
+          context,
+          result.errorMessage ?? l10n.moderation_error_updating,
+          tone: StatusTone.error,
         );
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.common_unexpected_error(e.toString())),
-          backgroundColor: context.appError,
-        ),
+      showAppSnackBar(
+        context,
+        l10n.common_unexpected_error(e.toString()),
+        tone: StatusTone.error,
       );
     } finally {
-      if (mounted) setState(() => _isSubmitting = false);
+      if (mounted) _setBusy(null);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    
+    final request = _currentRequest;
+    final rejection = request.rejectionReason;
+    final hasEmail = request.email != null && request.email!.isNotEmpty;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.moderation_detail_title),
-      ),
+      backgroundColor: context.appBackground,
+      appBar: CustomAppBar(title: l10n.moderation_detail_title),
+      // Non-lazy on purpose: the decision sits after all the evidence and
+      // must exist in the tree even before it is scrolled into view.
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        physics: const BouncingScrollPhysics(),
+        padding: EdgeInsets.fromLTRB(
+          AppDimensions.space16,
+          AppDimensions.space8,
+          AppDimensions.space16,
+          AppDimensions.space32 + MediaQuery.paddingOf(context).bottom,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Tarjeta de Identidad del Usuario
-            Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: context.appPrimary,
-                          child: Text(
-                            _currentRequest.fullName.isNotEmpty
-                                ? _currentRequest.fullName[0].toUpperCase()
-                                : '?',
-                            style: TextStyle(
-                              color: context.appOnPrimary,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _currentRequest.fullName,
-                                style: AppTextStyles.titleMedium.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: context.appTextPrimary,
-                                ),
-                              ),
-                              Text(
-                                _currentRequest.phone,
-                                style: AppTextStyles.bodyMedium.copyWith(
-                                  color: context.appTextSecondary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        _buildStatusBadge(_currentRequest.status),
-                      ],
-                    ),
-                    const Divider(height: 24),
-                    _buildInfoRow(
-                      l10n.moderation_lbl_role,
-                      _currentRequest.userRole.displayName,
-                    ),
-                    if (_currentRequest.email != null &&
-                        _currentRequest.email!.isNotEmpty)
-                      _buildInfoRow(l10n.moderation_lbl_email, _currentRequest.email!),
-                    _buildInfoRow(l10n.moderation_lbl_user_id, _currentRequest.userId),
-                    _buildInfoRow(
-                      l10n.moderation_lbl_submitted,
-                      _currentRequest.createdAt.toLocal().toString().split(
-                        '.',
-                      )[0],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Tarjeta de Documentos Adjuntos
-            Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.description_outlined,
-                          color: context.appPrimary,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          l10n.moderation_documents_title,
-                          style: AppTextStyles.titleMedium.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: context.appWarningContainer,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: context.appWarning,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.lock_outline,
-                            size: 20,
-                            color: context.appWarning,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              l10n.moderation_storage_notice,
-                              style: AppTextStyles.bodySmall.copyWith(
-                                color: context.appWarning,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    DocumentImagePreview(
-                      key: const ValueKey('moderation_document_front'),
-                      title: l10n.moderation_doc_front,
-                      path: _currentRequest.documentFrontPath,
-                      imageUrlService: _documentImageService,
-                      imageBuilder: widget.documentImageBuilder,
-                    ),
-                    const SizedBox(height: 10),
-                    DocumentImagePreview(
-                      key: const ValueKey('moderation_document_back'),
-                      title: l10n.moderation_doc_back,
-                      path: _currentRequest.documentBackPath,
-                      imageUrlService: _documentImageService,
-                      imageBuilder: widget.documentImageBuilder,
-                    ),
-                    const SizedBox(height: 10),
-                    DocumentImagePreview(
-                      key: const ValueKey('moderation_document_selfie'),
-                      title: l10n.moderation_doc_selfie,
-                      path: _currentRequest.selfiePath,
-                      imageUrlService: _documentImageService,
-                      imageBuilder: widget.documentImageBuilder,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            SimulatedDocumentDiagnosisCard(
-              report: _diagnosisService.build(_currentRequest),
-            ),
-            const SizedBox(height: 16),
-
-            // Motivo de Rechazo (si existe)
-            if (_currentRequest.rejectionReason != null &&
-                _currentRequest.rejectionReason!.isNotEmpty)
-              Card(
-                color: context.appErrorContainer,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(color: context.appError),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            // Identidad del solicitante
+            InsetGroupCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
                     children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.warning_amber_rounded,
-                            color: context.appError,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            l10n.moderation_previous_rejection,
-                            style: AppTextStyles.titleSmall.copyWith(
-                              color: context.appError,
-                              fontWeight: FontWeight.bold,
+                      const UserAvatar(radius: 26),
+                      const SizedBox(width: AppDimensions.space12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              request.fullName,
+                              style: AppTextStyles.titleLarge.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: context.appTextPrimary,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        _currentRequest.rejectionReason!,
-                        style: AppTextStyles.bodyMedium,
+                            const SizedBox(height: 2),
+                            Text(
+                              request.phone,
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                color: context.appTextSecondary,
+                                fontFeatures: AppTextStyles.tabularFigures,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
+                  const SizedBox(height: AppDimensions.space12),
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: _buildStatusBadge(request.status),
+                  ),
+                  const SizedBox(height: AppDimensions.space12),
+                  Divider(height: 1, color: context.appDivider),
+                  _buildInfoRow(
+                    l10n.moderation_lbl_role,
+                    request.userRole.displayName,
+                  ),
+                  if (hasEmail)
+                    _buildInfoRow(l10n.moderation_lbl_email, request.email!),
+                  _buildInfoRow(l10n.moderation_lbl_user_id, request.userId),
+                  _buildInfoRow(
+                    l10n.moderation_lbl_submitted,
+                    formatModerationDate(context, request.createdAt),
+                    last: true,
+                  ),
+                ],
+              ),
+            ),
+
+            // Motivo de rechazo previo (si existe)
+            if (rejection != null && rejection.isNotEmpty) ...[
+              const SizedBox(height: AppDimensions.space16),
+              StatusBanner(
+                tone: StatusTone.error,
+                icon: LucideIcons.fileWarning,
+                title: l10n.moderation_previous_rejection,
+                message: rejection,
+              ),
+            ],
+
+            // Documentos adjuntos
+            const SizedBox(height: AppDimensions.space24),
+            Padding(
+              padding: const EdgeInsets.only(
+                left: AppDimensions.space4,
+                bottom: AppDimensions.space12,
+              ),
+              child: Text(
+                l10n.moderation_documents_title,
+                style: AppTextStyles.headlineMedium.copyWith(
+                  color: context.appTextPrimary,
                 ),
               ),
+            ),
+            StatusBanner(
+              tone: StatusTone.info,
+              icon: LucideIcons.lockKeyhole,
+              message: l10n.moderation_storage_notice,
+            ),
+            const SizedBox(height: AppDimensions.space12),
+            DocumentImagePreview(
+              key: const ValueKey('moderation_document_front'),
+              title: l10n.moderation_doc_front,
+              path: request.documentFrontPath,
+              imageUrlService: _documentImageService,
+              imageBuilder: widget.documentImageBuilder,
+            ),
+            const SizedBox(height: AppDimensions.space12),
+            DocumentImagePreview(
+              key: const ValueKey('moderation_document_back'),
+              title: l10n.moderation_doc_back,
+              path: request.documentBackPath,
+              imageUrlService: _documentImageService,
+              imageBuilder: widget.documentImageBuilder,
+            ),
+            const SizedBox(height: AppDimensions.space12),
+            DocumentImagePreview(
+              key: const ValueKey('moderation_document_selfie'),
+              title: l10n.moderation_doc_selfie,
+              path: request.selfiePath,
+              imageUrlService: _documentImageService,
+              imageBuilder: widget.documentImageBuilder,
+            ),
 
-            const SizedBox(height: 24),
+            // Panel KUS Vision con la decisión del moderador al final de la
+            // evidencia (solo mientras la solicitud sigue abierta).
+            const SizedBox(height: AppDimensions.space24),
+            SimulatedDocumentDiagnosisCard(
+              report: _diagnosisService.build(request),
+              busyDecision: _busyDecision,
+              onApprove: request.isPending ? _handleApprove : null,
+              onReject: request.isPending ? _handleReject : null,
+              onMarkInReview: request.status == UserVerificationStatus.pendiente
+                  ? _handleMarkInReview
+                  : null,
+            ),
 
-            // Botones de Decisión (solo si sigue pendiente o revisable)
-            if (_currentRequest.isPending) ...[
-              if (_currentRequest.status == UserVerificationStatus.pendiente) ...[
-                OutlinedButton.icon(
-                  key: const ValueKey('moderation_btn_mark_in_review'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: context.appInfo,
-                    side: BorderSide(color: context.appInfo),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  onPressed: _isSubmitting ? null : _handleMarkInReview,
-                  icon: const Icon(Icons.analytics_outlined),
-                  label: Text(
-                    l10n.moderation_btn_mark_in_review,
-                  ),
-                ),
-                const SizedBox(height: 12),
-              ],
+            if (!request.isPending) ...[
+              const SizedBox(height: AppDimensions.space16),
               Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      key: const ValueKey('moderation_btn_reject'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: context.appError,
-                        side: BorderSide(color: context.appError),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      onPressed: _isSubmitting ? null : _handleReject,
-                      icon: const Icon(Icons.close),
-                      label: Text(l10n.moderation_btn_reject),
-                    ),
+                  Icon(
+                    LucideIcons.lockKeyhole,
+                    size: 15,
+                    color: context.appTextSecondary,
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      key: const ValueKey('moderation_btn_approve'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: context.appSuccess,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      onPressed: _isSubmitting ? null : _handleApprove,
-                      icon: Icon(Icons.check, color: context.appOnPrimary),
-                      label: Text(
-                        l10n.moderation_btn_approve,
-                        style: TextStyle(color: context.appOnPrimary),
+                  const SizedBox(width: AppDimensions.space8),
+                  Flexible(
+                    child: Text(
+                      l10n.moderation_already_resolved,
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: context.appTextSecondary,
                       ),
                     ),
                   ),
                 ],
-              ),
-            ] else ...[
-              Center(
-                child: Text(
-                  l10n.moderation_already_resolved,
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: context.appTextSecondary,
-                  ),
-                ),
               ),
             ],
           ],
@@ -600,28 +475,36 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
     );
   }
 
-  Widget _buildInfoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+  Widget _buildInfoRow(String label, String value, {bool last = false}) {
+    return Container(
+      constraints: const BoxConstraints(minHeight: 44),
+      padding: const EdgeInsets.symmetric(vertical: AppDimensions.space12),
+      decoration: BoxDecoration(
+        border: last
+            ? null
+            : Border(bottom: BorderSide(color: context.appDivider)),
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 100,
+            width: 96,
             child: Text(
               label,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
+              style: AppTextStyles.bodyMedium.copyWith(
                 color: context.appTextSecondary,
               ),
             ),
           ),
+          const SizedBox(width: AppDimensions.space8),
           Expanded(
             child: Text(
               value,
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
+              textAlign: TextAlign.end,
+              style: AppTextStyles.bodyMedium.copyWith(
+                fontWeight: FontWeight.w600,
                 color: context.appTextPrimary,
+                fontFeatures: AppTextStyles.tabularFigures,
               ),
             ),
           ),
@@ -631,55 +514,21 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
   }
 
   Widget _buildStatusBadge(UserVerificationStatus status) {
-    Color bg;
-    Color fg;
-    String label;
-
     final l10n = AppLocalizations.of(context)!;
-    switch (status) {
-      case UserVerificationStatus.pendiente:
-        bg = context.appWarningContainer;
-        fg = context.appWarning;
-        label = l10n.moderation_status_pending;
-        break;
-      case UserVerificationStatus.enRevisionIa:
-        bg = context.appInfoContainer;
-        fg = context.appInfo;
-        label = status.displayName;
-        break;
-      case UserVerificationStatus.aprobado:
-        bg = context.appSuccessContainer;
-        fg = context.appSuccess;
-        label = l10n.moderation_status_approved;
-        break;
-      case UserVerificationStatus.rechazado:
-        bg = context.appErrorContainer;
-        fg = context.appError;
-        label = l10n.moderation_status_rejected;
-        break;
-      case UserVerificationStatus.suspendido:
-        bg = context.appPrimaryContainer;
-        fg = context.appOnPrimaryContainer;
-        label = l10n.moderation_status_suspended;
-        break;
-      case UserVerificationStatus.desconocido:
-        bg = context.appSurfaceVariant;
-        fg = context.appTextSecondary;
-        label = l10n.moderation_status_unknown;
-        break;
-    }
+    final label = switch (status) {
+      UserVerificationStatus.pendiente => l10n.moderation_status_pending,
+      UserVerificationStatus.enRevisionIa => status.displayName,
+      UserVerificationStatus.aprobado => l10n.moderation_status_approved,
+      UserVerificationStatus.rechazado => l10n.moderation_status_rejected,
+      UserVerificationStatus.suspendido => l10n.moderation_status_suspended,
+      UserVerificationStatus.desconocido => l10n.moderation_status_unknown,
+    };
 
-    return Container(
+    return verificationStatusBadge(
+      context,
+      status,
       key: const ValueKey('moderation_detail_status_badge'),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(color: fg, fontWeight: FontWeight.bold, fontSize: 12),
-      ),
+      label: label,
     );
   }
 }

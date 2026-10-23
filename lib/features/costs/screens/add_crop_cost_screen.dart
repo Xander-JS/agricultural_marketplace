@@ -1,7 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+
+import '../../../core/theme/app_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
@@ -246,8 +247,9 @@ class _AddCropCostScreenState extends State<AddCropCostScreen> {
   }
 }
 
-/// Selectable expense category: its squircle icon and name, outlined in
-/// the category tint when chosen.
+/// Selectable expense category: a neutral editorial squircle and its name.
+/// Every category shares one selected state — a brand-green hairline over
+/// a faint brand wash — so the grid reads as a single control.
 class _CategoryTile extends StatelessWidget {
   final CostCategory category;
   final bool selected;
@@ -261,7 +263,7 @@ class _CategoryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final triad = category.triad(context);
+    final primary = context.appPrimary;
 
     return Semantics(
       button: true,
@@ -275,18 +277,25 @@ class _CategoryTile extends StatelessWidget {
             curve: AppMotion.easeOut,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: context.appSurface,
+              color: selected
+                  ? Color.alphaBlend(
+                      primary.withValues(
+                        alpha: context.appIsDark ? 0.12 : 0.06,
+                      ),
+                      context.appSurface,
+                    )
+                  : context.appSurface,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: selected ? triad.foreground : context.appBorder,
+                color: selected ? primary : context.appBorder,
                 width: selected
-                    ? AppDimensions.borderWidthThick
+                    ? AppDimensions.borderWidthMedium
                     : AppDimensions.borderWidthThin,
               ),
             ),
             child: Row(
               children: [
-                IconSquircle(icon: category.icon, triad: triad, size: 36),
+                IconSquircle(icon: category.icon, size: 36),
                 const SizedBox(width: AppDimensions.space8),
                 Expanded(
                   child: Text(
@@ -299,11 +308,7 @@ class _CategoryTile extends StatelessWidget {
                   ),
                 ),
                 if (selected)
-                  Icon(
-                    LucideIcons.circleCheck,
-                    size: 18,
-                    color: triad.foreground,
-                  ),
+                  Icon(LucideIcons.circleCheck, size: 18, color: primary),
               ],
             ),
           ),

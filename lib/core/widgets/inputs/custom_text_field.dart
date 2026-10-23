@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
+
 import '../../theme/app_colors.dart';
 import '../../theme/app_dimensions.dart';
 import '../../theme/app_text_styles.dart';
 
+/// iOS grouped-style form field with its label above.
+///
+/// Rests on a `surfaceVariant` fill with no visible border; focus draws a
+/// 1.5px primary outline and errors use the error triad. The [icon] always
+/// leads the field so trailing controls (show password) never replace it.
 class CustomTextField extends StatelessWidget {
   final String label;
   final String hint;
@@ -15,6 +21,8 @@ class CustomTextField extends StatelessWidget {
   final bool isRequired;
   final bool filled;
   final bool isUnderlineBorder;
+  final TextInputAction? textInputAction;
+  final Iterable<String>? autofillHints;
 
   const CustomTextField({
     super.key,
@@ -29,30 +37,42 @@ class CustomTextField extends StatelessWidget {
     this.isRequired = true,
     this.filled = true,
     this.isUnderlineBorder = false,
+    this.textInputAction,
+    this.autofillHints,
   });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
+    final iconWidget = Icon(
+      icon,
+      size: AppDimensions.iconSM,
+      color: context.appTextSecondary,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(bottom: AppDimensions.space8),
+          padding: const EdgeInsets.only(
+            left: AppDimensions.space4,
+            bottom: AppDimensions.space8,
+          ),
           child: Row(
             children: [
-              Text(
-                label,
-                style: AppTextStyles.labelMedium.copyWith(
-                  color: colors.onSurface,
+              Flexible(
+                child: Text(
+                  label,
+                  style: AppTextStyles.labelMedium.copyWith(
+                    color: context.appTextPrimary,
+                  ),
                 ),
               ),
               if (isRequired)
                 Text(
                   ' *',
-                  style: TextStyle(color: context.appSuccess),
+                  style: AppTextStyles.labelMedium.copyWith(
+                    color: context.appPrimary,
+                  ),
                 ),
             ],
           ),
@@ -62,42 +82,69 @@ class CustomTextField extends StatelessWidget {
           keyboardType: keyboardType,
           obscureText: obscureText,
           validator: validator,
+          textInputAction: textInputAction,
+          autofillHints: autofillHints,
+          style: AppTextStyles.bodyLarge.copyWith(
+            color: context.appTextPrimary,
+            fontWeight: FontWeight.w500,
+          ),
+          cursorColor: context.appPrimary,
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: AppTextStyles.bodyMedium.copyWith(
-              color: colors.onSurfaceVariant.withValues(alpha: 0.7),
+              color: context.appTextSecondary,
             ),
-            prefixIcon: isUnderlineBorder
-                ? Icon(icon, color: colors.onSurfaceVariant)
-                : null,
-            suffixIcon: isUnderlineBorder
-                ? suffixIcon
-                : (suffixIcon ?? Icon(icon, color: colors.onSurfaceVariant)),
-            filled: filled,
-            fillColor: filled ? colors.surface : null,
-            border: _getBorder(context),
-            enabledBorder: _getBorder(context),
-            focusedBorder: _getBorder(context, focused: true),
+            prefixIcon: iconWidget,
+            prefixIconConstraints: const BoxConstraints(
+              minWidth: AppDimensions.minTouchTarget,
+              minHeight: AppDimensions.minTouchTarget,
+            ),
+            suffixIcon: suffixIcon,
+            filled: filled && !isUnderlineBorder,
+            fillColor: context.appSurfaceVariant,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: AppDimensions.space16,
+              vertical: AppDimensions.space16,
+            ),
+            border: _border(context, _FieldState.rest),
+            enabledBorder: _border(context, _FieldState.rest),
+            focusedBorder: _border(context, _FieldState.focused),
+            errorBorder: _border(context, _FieldState.error),
+            focusedErrorBorder: _border(context, _FieldState.focusedError),
+            errorStyle: AppTextStyles.bodySmall.copyWith(
+              color: context.appError,
+            ),
           ),
         ),
       ],
     );
   }
 
-  InputBorder _getBorder(BuildContext context, {bool focused = false}) {
-    final colors = Theme.of(context).colorScheme;
+  InputBorder _border(BuildContext context, _FieldState state) {
+    final BorderSide side = switch (state) {
+      _FieldState.rest =>
+        isUnderlineBorder
+            ? BorderSide(color: context.appBorder)
+            : BorderSide.none,
+      _FieldState.focused => BorderSide(
+        color: context.appPrimary,
+        width: AppDimensions.borderWidthMedium,
+      ),
+      _FieldState.error => BorderSide(color: context.appErrorBorder),
+      _FieldState.focusedError => BorderSide(
+        color: context.appError,
+        width: AppDimensions.borderWidthMedium,
+      ),
+    };
+
     if (isUnderlineBorder) {
-      return UnderlineInputBorder(
-        borderSide: BorderSide(
-          color: focused ? context.appSuccess : colors.outline,
-        ),
-      );
+      return UnderlineInputBorder(borderSide: side);
     }
     return OutlineInputBorder(
-      borderRadius: AppDimensions.borderRadiusLG,
-      borderSide: BorderSide(
-        color: focused ? context.appSuccess : colors.outline,
-      ),
+      borderRadius: AppDimensions.borderRadiusControl,
+      borderSide: side,
     );
   }
 }
+
+enum _FieldState { rest, focused, error, focusedError }

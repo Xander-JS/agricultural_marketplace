@@ -279,6 +279,11 @@ void main() {
       expect(find.text('Productor'), findsWidgets);
       expect(find.text('Hacienda La Fortuna'), findsOneWidget);
       expect(find.text('Aceptar oferta'), findsOneWidget);
+
+      await tester.tap(
+        find.byKey(const ValueKey('deal_detail_more_actions_button')),
+      );
+      await tester.pumpAndSettle();
       expect(find.text('Contraofertar'), findsOneWidget);
       expect(find.text('Rechazar trato'), findsOneWidget);
     });

@@ -4,7 +4,9 @@ import 'dart:ui' show ImageFilter;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+
+import '../../../core/theme/app_icons.dart';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/negotiation_model.dart';
@@ -23,6 +25,7 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/constants/user_roles.dart';
 import '../../../core/utils/app_formatters.dart';
+import '../../../core/widgets/avatars/user_avatar.dart';
 import '../../../core/widgets/buttons/primary_action_button.dart';
 import '../../../core/widgets/buttons/secondary_action_button.dart';
 import '../../../core/widgets/cards/inset_group_card.dart';
@@ -334,6 +337,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                   offer: offers[i],
                   previous: i > 0 ? offers[i - 1] : null,
                   isMine: _isMine(offers[i], n),
+                  sentByFarmer: offers[i].senderId != n.buyerId,
                   senderLabel: _isMine(offers[i], n)
                       ? l10n.deal_detail_you
                       : (_isBuyer
@@ -391,6 +395,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
         ? l10n.deal_counterpart_farmer
         : l10n.deal_counterpart_buyer;
 
+    final counterpartProfile = _isBuyer ? n.farmerProfile : n.buyerProfile;
     final counterpartName = _isBuyer
         ? (n.farmerProfile?['full_name'] ??
               l10n.deals_producer_with_location(n.crop?.municipality ?? ''))
@@ -454,14 +459,10 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
             child: Row(
               children: [
-                IconSquircle(
-                  icon: _isBuyer
-                      ? LucideIcons.sprout
-                      : LucideIcons.briefcaseBusiness,
-                  triad: _isBuyer
-                      ? context.appBrandTriad
-                      : context.appInfoTriad,
-                  size: 36,
+                UserAvatar(
+                  key: const ValueKey('deal_detail_counterpart_avatar'),
+                  imageUrl: counterpartProfile?['profile_path'] as String?,
+                  radius: 18,
                 ),
                 const SizedBox(width: AppDimensions.space12),
                 Expanded(
@@ -626,34 +627,25 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
           ],
         ),
         const SizedBox(height: 10),
-        PrimaryActionButton(
-          onPressed: _isActionInProgress
-              ? null
-              : () => _acceptOffer(n, latestOffer),
-          text: l10n.deal_accept_offer,
-        ),
-        const SizedBox(height: 10),
+        // Accepting is the one decision the bar leads with; countering and
+        // rejecting live one tap away so they never compete with it.
         Row(
           children: [
             Expanded(
-              child: SecondaryActionButton(
-                onPressed: (_isActionInProgress || latestOffer == null)
+              child: PrimaryActionButton(
+                onPressed: _isActionInProgress
                     ? null
-                    : () => _navigateToCounterOffer(n, latestOffer),
-                text: l10n.deal_counter_offer,
-                icon: LucideIcons.arrowLeftRight,
-                height: AppDimensions.buttonHeightMedium,
+                    : () => _acceptOffer(n, latestOffer),
+                text: l10n.deal_accept_offer,
               ),
             ),
             const SizedBox(width: 10),
-            Expanded(
-              child: SecondaryActionButton(
-                onPressed: _isActionInProgress ? null : () => _rejectOffer(n),
-                text: l10n.deal_reject_deal,
-                icon: LucideIcons.x,
-                tone: SecondaryActionTone.destructive,
-                height: AppDimensions.buttonHeightMedium,
-              ),
+            _DealMoreActionsButton(
+              enabled: !_isActionInProgress,
+              onCounterOffer: latestOffer == null
+                  ? null
+                  : () => _navigateToCounterOffer(n, latestOffer),
+              onReject: () => _rejectOffer(n),
             ),
           ],
         ),
@@ -726,7 +718,13 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                 icon: _hasReviewed == true
                     ? CupertinoIcons.star_fill
                     : CupertinoIcons.star,
-                triad: context.appWarningTriad,
+                triad: _hasReviewed == true
+                    ? AppSemanticTriad(
+                        background: context.appIconTriad.background,
+                        border: AppColors.transparent,
+                        foreground: context.appRatingGold,
+                      )
+                    : null,
                 size: 40,
               ),
               const SizedBox(width: AppDimensions.space12),
@@ -857,11 +855,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
             contact.counterpartLongitude != null;
         rows.add(
           InsetGroupRow(
-            leading: IconSquircle(
-              icon: LucideIcons.mapPin,
-              triad: context.appInfoTriad,
-              size: 30,
-            ),
+            leading: IconSquircle(icon: LucideIcons.mapPin, size: 30),
             title: place.isEmpty ? l10n.deal_detail_view_location : place,
             subtitle: hasCoordinates
                 ? l10n.deal_detail_coordinates(
@@ -891,11 +885,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
         : l10n.deal_detail_location_private_status;
     rows.add(
       InsetGroupRow(
-        leading: IconSquircle(
-          icon: LucideIcons.shieldCheck,
-          triad: context.appBrandTriad,
-          size: 30,
-        ),
+        leading: IconSquircle(icon: LucideIcons.shieldCheck, size: 30),
         title: l10n.deal_detail_my_permissions_title,
         subtitle:
             '${l10n.deal_detail_phone_permission(phoneStatus)} · '
@@ -1050,11 +1040,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
             contact.counterpartLongitude != null;
 
         return AlertDialog(
-          icon: IconSquircle(
-            icon: LucideIcons.mapPin,
-            triad: ctx.appInfoTriad,
-            size: 48,
-          ),
+          icon: IconSquircle(icon: LucideIcons.mapPin, size: 48),
           title: Text(l10n.deal_detail_location_authorized.replaceAll(':', '')),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1503,29 +1489,35 @@ class _TermFigure extends StatelessWidget {
 }
 
 /// One offer in the negotiation thread, iMessage style: the user's own
-/// offers sit right on the brand soft tone, the other party's sit left on
-/// the surface. The price per kg leads in large tabular figures; the move
-/// against the previous offer is spelled out beneath it.
+/// offers sit right, the other party's sit left. The tone follows the
+/// sender's role, emerald for the farmer and sapphire for the buyer, so the
+/// thread reads at a glance. The price per kg leads in large tabular
+/// figures; the move against the previous offer is spelled out beneath it.
 class _OfferBubble extends StatelessWidget {
   final NegotiationOfferModel offer;
   final NegotiationOfferModel? previous;
   final bool isMine;
+  final bool sentByFarmer;
   final String senderLabel;
 
   const _OfferBubble({
     required this.offer,
     required this.previous,
     required this.isMine,
+    required this.sentByFarmer,
     required this.senderLabel,
   });
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final brand = context.appBrandTriad;
+    final dark = context.appIsDark;
+    final hue = sentByFarmer ? context.appPrimary : context.appInfo;
+    final fill = hue.withValues(alpha: dark ? 0.16 : 0.10);
+    final outline = hue.withValues(alpha: dark ? 0.45 : 0.32);
     final ink = context.appTextPrimary;
-    // Secondary text on the brand bubble is tinted from its hue, never grey.
-    final soft = isMine ? brand.foreground : context.appTextSecondary;
+    // Secondary text is tinted from the bubble's hue, never grey.
+    final soft = sentByFarmer ? context.appOnPrimarySoft : context.appInfoText;
     final delivery = deliveryPresentation(l10n, offer.deliveryMethod);
     final subtotal = offer.quantityKg * offer.proposedPricePerKg;
 
@@ -1561,16 +1553,14 @@ class _OfferBubble extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
             decoration: BoxDecoration(
-              color: isMine ? brand.background : context.appSurface,
+              color: fill,
               borderRadius: BorderRadius.only(
                 topLeft: big,
                 topRight: big,
                 bottomLeft: isMine ? big : tail,
                 bottomRight: isMine ? tail : big,
               ),
-              border: Border.all(
-                color: isMine ? brand.border : context.appBorder,
-              ),
+              border: Border.all(color: outline),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1582,7 +1572,7 @@ class _OfferBubble extends StatelessWidget {
                     Text(
                       senderLabel,
                       style: AppTextStyles.labelMedium.copyWith(
-                        color: isMine ? brand.foreground : ink,
+                        color: soft,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -1621,7 +1611,13 @@ class _OfferBubble extends StatelessWidget {
                   TextSpan(
                     style: AppTextStyles.figureSmall.copyWith(color: soft),
                     children: [
-                      TextSpan(text: UnitFormatters.formatKg(offer.quantityKg)),
+                      TextSpan(
+                        text: UnitFormatters.formatKg(offer.quantityKg),
+                        style: TextStyle(
+                          color: ink,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                       const TextSpan(text: '  ·  '),
                       TextSpan(text: '${l10n.deal_detail_total} '),
                       TextSpan(
@@ -1678,9 +1674,7 @@ class _OfferBubble extends StatelessWidget {
                       vertical: 9,
                     ),
                     decoration: BoxDecoration(
-                      color: isMine
-                          ? context.appSurface
-                          : context.appSurfaceVariant,
+                      color: context.appSurface,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -1779,6 +1773,122 @@ class _FrostedActionBar extends StatelessWidget {
   }
 }
 
+enum _DealSecondaryAction { counterOffer, reject }
+
+/// Squircle trigger beside the primary button that opens the secondary
+/// deal actions (counteroffer, reject) in an anchored menu.
+class _DealMoreActionsButton extends StatelessWidget {
+  final bool enabled;
+  final VoidCallback? onCounterOffer;
+  final VoidCallback onReject;
+
+  const _DealMoreActionsButton({
+    required this.enabled,
+    required this.onCounterOffer,
+    required this.onReject,
+  });
+
+  static const double _size = AppDimensions.buttonHeightPrimary;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final radius = BorderRadius.circular(AppDimensions.radiusControl);
+    final destructive = context.appErrorText;
+
+    PopupMenuItem<_DealSecondaryAction> item({
+      required _DealSecondaryAction value,
+      required IconData icon,
+      required String label,
+      required Color color,
+      bool enabled = true,
+      Key? key,
+    }) {
+      return PopupMenuItem<_DealSecondaryAction>(
+        key: key,
+        value: value,
+        enabled: enabled,
+        height: AppDimensions.buttonHeightMedium,
+        child: Row(
+          children: [
+            Icon(icon, size: AppDimensions.iconSM - 2, color: color),
+            const SizedBox(width: AppDimensions.space12),
+            Text(
+              label,
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: color,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return PopupMenuButton<_DealSecondaryAction>(
+      key: const ValueKey('deal_detail_more_actions_button'),
+      enabled: enabled,
+      tooltip: l10n.deal_detail_more_actions,
+      position: PopupMenuPosition.over,
+      offset: const Offset(0, -AppDimensions.space8),
+      color: context.appSurface,
+      surfaceTintColor: AppColors.transparent,
+      elevation: 8,
+      shadowColor: context.appShadow,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppDimensions.radiusLG),
+        side: BorderSide(color: context.appBorder),
+      ),
+      onOpened: HapticFeedback.selectionClick,
+      onSelected: (action) {
+        switch (action) {
+          case _DealSecondaryAction.counterOffer:
+            onCounterOffer?.call();
+          case _DealSecondaryAction.reject:
+            onReject();
+        }
+      },
+      itemBuilder: (context) => [
+        item(
+          key: const ValueKey('deal_detail_counter_offer_action'),
+          value: _DealSecondaryAction.counterOffer,
+          icon: LucideIcons.arrowLeftRight,
+          label: l10n.deal_counter_offer,
+          color: onCounterOffer == null
+              ? context.appTextDisabled
+              : context.appTextPrimary,
+          enabled: onCounterOffer != null,
+        ),
+        item(
+          key: const ValueKey('deal_detail_reject_action'),
+          value: _DealSecondaryAction.reject,
+          icon: LucideIcons.circleX,
+          label: l10n.deal_reject_deal,
+          color: destructive,
+        ),
+      ],
+      child: SizedBox.square(
+        dimension: _size,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: context.appSurfaceVariant,
+            borderRadius: radius,
+            border: Border.all(
+              color: context.appBorder,
+              width: AppDimensions.borderWidthThin,
+            ),
+          ),
+          child: Icon(
+            LucideIcons.ellipsis,
+            size: AppDimensions.iconSM,
+            color: enabled ? context.appTextSecondary : context.appTextDisabled,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Contacts-style action tile: icon over a short label.
 class _ContactAction extends StatelessWidget {
   final IconData icon;
@@ -1804,7 +1914,7 @@ class _ContactAction extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 10),
             child: Column(
               children: [
-                Icon(icon, size: 20, color: context.appPrimary),
+                Icon(icon, size: 20, color: context.appTextSecondary),
                 const SizedBox(height: 4),
                 Text(
                   label,
@@ -1834,11 +1944,7 @@ class _LockedRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InsetGroupRow(
-      leading: IconSquircle(
-        icon: icon,
-        triad: context.appNeutralTriad,
-        size: 30,
-      ),
+      leading: IconSquircle(icon: icon, size: 30),
       title: text,
     );
   }
@@ -1970,13 +2076,7 @@ class _RatingSheetState extends State<_RatingSheet> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const SizedBox(height: AppDimensions.space8),
-          Center(
-            child: IconSquircle(
-              icon: LucideIcons.handshake,
-              triad: context.appWarningTriad,
-              size: 60,
-            ),
-          ),
+          Center(child: IconSquircle(icon: LucideIcons.handshake, size: 56)),
           const SizedBox(height: AppDimensions.space16),
           Text(
             l10n.deal_detail_rate_title,
@@ -2050,7 +2150,7 @@ class _RatingSheetState extends State<_RatingSheet> {
                         color: context.appTextSecondary,
                       )
                     : AppTextStyles.titleSmall.copyWith(
-                        color: context.appWarningText,
+                        color: context.appTextPrimary,
                         fontWeight: FontWeight.w700,
                       ),
               ),
@@ -2158,7 +2258,9 @@ class _RatingStarState extends State<_RatingStar>
 
   @override
   Widget build(BuildContext context) {
-    final color = widget.filled ? context.appWarning : context.appTextMuted;
+    final color = widget.filled
+        ? context.appRatingGold
+        : context.appTextMuted.withValues(alpha: 0.7);
 
     return Semantics(
       button: true,
@@ -2187,29 +2289,25 @@ class _RatingStarState extends State<_RatingStar>
   }
 }
 
-/// Shared anatomy of the two consent sheets: shield header, the two
-/// sharing switches as an iOS grouped list, and the privacy note.
+/// Shared anatomy of the two consent sheets, laid out like an iOS
+/// Settings page: a shield and title, the optional terms being accepted,
+/// then the two sharing switches as one inset grouped list with a single
+/// footnote.
 class _ConsentBody extends StatelessWidget {
   final String title;
-  final String description;
   final Widget? summary;
   final bool isBuyer;
   final bool sharePhone;
   final bool shareLocation;
-  final String phoneDescription;
-  final String locationDescription;
   final ValueChanged<bool> onPhoneChanged;
   final ValueChanged<bool> onLocationChanged;
 
   const _ConsentBody({
     required this.title,
-    required this.description,
     this.summary,
     required this.isBuyer,
     required this.sharePhone,
     required this.shareLocation,
-    required this.phoneDescription,
-    required this.locationDescription,
     required this.onPhoneChanged,
     required this.onLocationChanged,
   });
@@ -2232,34 +2330,19 @@ class _ConsentBody extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            IconSquircle(
-              icon: LucideIcons.shieldCheck,
-              triad: context.appBrandTriad,
-              size: 48,
-            ),
+            const IconSquircle(icon: LucideIcons.shieldCheck, size: 36),
             const SizedBox(width: AppDimensions.space12),
             Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 2),
-                child: Text(
-                  title,
-                  style: AppTextStyles.headlineMedium.copyWith(
-                    fontSize: 20,
-                    color: context.appTextPrimary,
-                  ),
+              child: Text(
+                title,
+                style: AppTextStyles.titleLarge.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: context.appTextPrimary,
                 ),
               ),
             ),
           ],
-        ),
-        const SizedBox(height: AppDimensions.space12),
-        Text(
-          description,
-          style: AppTextStyles.bodyMedium.copyWith(
-            color: context.appTextSecondary,
-          ),
         ),
         if (summary != null) ...[
           const SizedBox(height: AppDimensions.space16),
@@ -2268,27 +2351,21 @@ class _ConsentBody extends StatelessWidget {
         const SizedBox(height: AppDimensions.space20),
         InsetGroupSection(
           footer: l10n.deal_detail_privacy_note,
+          dividerIndent: 58,
           children: [
             InsetGroupRow(
-              leading: IconSquircle(
+              leading: const IconSquircle(
                 icon: LucideIcons.messageCircle,
-                triad: context.appSuccessTriad,
                 size: 30,
               ),
-              title: l10n.deal_detail_share_phone,
-              subtitle: phoneDescription,
+              title: l10n.deal_detail_share_whatsapp,
               trailing: toggle(sharePhone, onPhoneChanged),
             ),
             InsetGroupRow(
-              leading: IconSquircle(
-                icon: LucideIcons.mapPin,
-                triad: context.appInfoTriad,
-                size: 30,
-              ),
+              leading: const IconSquircle(icon: LucideIcons.mapPin, size: 30),
               title: isBuyer
-                  ? l10n.deal_detail_share_location
-                  : l10n.deal_detail_share_farm_location,
-              subtitle: locationDescription,
+                  ? l10n.deal_detail_share_delivery_location_short
+                  : l10n.deal_detail_share_farm_location_short,
               trailing: toggle(shareLocation, onLocationChanged),
             ),
           ],
@@ -2329,13 +2406,10 @@ class _AcceptOfferConsentSheetState extends State<_AcceptOfferConsentSheet> {
     return AppSheetFrame(
       body: _ConsentBody(
         title: l10n.deal_detail_accept_terms_title,
-        description: l10n.deal_detail_accept_terms_desc,
         summary: offer == null ? null : _AcceptedTermsStrip(offer: offer),
         isBuyer: widget.isBuyer,
         sharePhone: _sharePhone,
         shareLocation: _shareLocation,
-        phoneDescription: l10n.deal_detail_share_phone_desc,
-        locationDescription: l10n.deal_detail_share_location_desc,
         onPhoneChanged: (val) => setState(() => _sharePhone = val),
         onLocationChanged: (val) => setState(() => _shareLocation = val),
       ),
@@ -2447,12 +2521,9 @@ class _EditConsentSheetState extends State<_EditConsentSheet> {
     return AppSheetFrame(
       body: _ConsentBody(
         title: l10n.deal_detail_my_permissions_title,
-        description: l10n.deal_detail_my_permissions_desc,
         isBuyer: widget.isBuyer,
         sharePhone: _sharePhone,
         shareLocation: _shareLocation,
-        phoneDescription: l10n.deal_detail_share_phone_desc_permission,
-        locationDescription: l10n.deal_detail_share_location_desc_permission,
         onPhoneChanged: (val) => setState(() => _sharePhone = val),
         onLocationChanged: (val) => setState(() => _shareLocation = val),
       ),

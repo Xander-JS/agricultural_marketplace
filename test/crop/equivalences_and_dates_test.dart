@@ -473,7 +473,7 @@ void main() {
           find.byKey(const Key('crop_detail_equivalences_button')),
           findsOneWidget,
         );
-        expect(find.text('View equivalences'), findsWidgets);
+        expect(find.text('View equivalencies'), findsWidgets);
 
         // Abrir modal en inglés y tema oscuro
         await tester.tap(

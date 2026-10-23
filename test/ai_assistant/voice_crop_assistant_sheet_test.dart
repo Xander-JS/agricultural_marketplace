@@ -338,7 +338,7 @@ void main() {
   );
 
   testWidgets(
-    '7. Cancelar cierra sin devolver un borrador y detiene la captura',
+    '7. Cerrar (X) cierra sin devolver un borrador y detiene la captura',
     (tester) async {
       final speech = FakeSpeechRecognitionService();
       final ai = FakeAiCropExtractionService();
@@ -362,7 +362,7 @@ void main() {
       );
       await tapVisible(
         tester,
-        find.byKey(const Key('voice_crop_cancel_button')),
+        find.byKey(const Key('voice_crop_close_button')),
       );
 
       expect(completed, isTrue);

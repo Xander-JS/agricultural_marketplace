@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+
+import '../../../core/theme/app_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
@@ -383,9 +384,15 @@ class _CropCostsDetailScreenState extends State<CropCostsDetailScreen> {
           padding: const EdgeInsets.all(14),
           child: Row(
             children: [
+              // Brand-tinted mark: the one entry here that points forward,
+              // to margin and price, so it carries the emerald.
               IconSquircle(
                 icon: LucideIcons.trendingUp,
-                triad: context.appInfoTriad,
+                triad: AppSemanticTriad(
+                  background: context.appPrimarySoft,
+                  border: context.appPrimary.withValues(alpha: 0.4),
+                  foreground: context.appPrimary,
+                ),
               ),
               const SizedBox(width: AppDimensions.space12),
               Expanded(
@@ -454,11 +461,13 @@ class _CropCostsDetailScreenState extends State<CropCostsDetailScreen> {
       padding: const EdgeInsets.only(bottom: AppDimensions.space8),
       child: InsetGroupCard(
         padding: const EdgeInsets.fromLTRB(14, 12, 4, 12),
+        borderColor: cost.category.outlineTriad(context).border,
+        borderWidth: AppDimensions.borderWidthThin * 1.25,
         child: Row(
           children: [
             IconSquircle(
               icon: cost.category.icon,
-              triad: cost.category.triad(context),
+              triad: cost.category.outlineTriad(context),
             ),
             const SizedBox(width: AppDimensions.space12),
             Expanded(
@@ -509,7 +518,11 @@ class _CropCostsDetailScreenState extends State<CropCostsDetailScreen> {
                   value: 'edit',
                   child: Row(
                     children: [
-                      const Icon(LucideIcons.pencil, size: 18),
+                      Icon(
+                        LucideIcons.pencil,
+                        size: 18,
+                        color: context.appTextSecondary,
+                      ),
                       const SizedBox(width: AppDimensions.space12),
                       Text(l10n.common_edit),
                     ],
@@ -519,7 +532,11 @@ class _CropCostsDetailScreenState extends State<CropCostsDetailScreen> {
                   value: 'delete',
                   child: Row(
                     children: [
-                      Icon(LucideIcons.trash2, size: 18, color: error),
+                      Icon(
+                        LucideIcons.trash2,
+                        size: 18,
+                        color: context.appTextSecondary,
+                      ),
                       const SizedBox(width: AppDimensions.space12),
                       Text(l10n.common_delete, style: TextStyle(color: error)),
                     ],

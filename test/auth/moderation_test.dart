@@ -520,6 +520,10 @@ void main() {
 
       expect(find.text('Motivo de Rechazo Registrado'), findsOneWidget);
       expect(find.text('Firma en cédula no concuerda con registro civil'), findsOneWidget);
+
+      // Documentos y análisis se consultan en sus pestañas.
+      await tester.tap(find.text('Evidencia'));
+      await tester.pumpAndSettle();
       expect(find.text('Documentos Presentados'), findsOneWidget);
       expect(
         find.text(
@@ -527,6 +531,9 @@ void main() {
         ),
         findsOneWidget,
       );
+
+      await tester.tap(find.text('Análisis IA'));
+      await tester.pumpAndSettle();
       expect(find.text('Análisis biométrico y documental con IA'), findsOneWidget);
       expect(find.text('KUS Vision'), findsOneWidget);
     });

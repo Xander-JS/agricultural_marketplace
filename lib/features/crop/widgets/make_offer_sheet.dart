@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import '../../../core/theme/app_icons.dart';
 
 import '../models/crop_model.dart';
 import '../../deals/services/negotiation_service.dart';
@@ -9,6 +9,8 @@ import '../../deals/widgets/delivery_presentation.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/feedback/app_snack_bar.dart';
+import '../../../core/widgets/feedback/status_banner.dart';
 import '../../../core/widgets/inputs/choice_tile.dart';
 import '../../../core/widgets/sheets/app_sheet_frame.dart';
 import '../../../core/localization/app_localizations.dart';
@@ -101,11 +103,10 @@ class _MakeOfferSheetState extends State<MakeOfferSheet> {
 
       if (mounted) {
         Navigator.pop(context, true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.offer_sheet_success),
-            backgroundColor: context.appSuccess,
-          ),
+        showAppSnackBar(
+          context,
+          l10n.offer_sheet_success,
+          tone: StatusTone.success,
         );
       }
     } catch (e) {
@@ -291,9 +292,7 @@ class _MakeOfferSheetState extends State<MakeOfferSheet> {
               children: [
                 for (var i = 0; i < _deliveryOptions.length; i++) ...[
                   if (i > 0) const SizedBox(width: AppDimensions.space8),
-                  Expanded(
-                    child: _deliveryTile(l10n, _deliveryOptions[i]),
-                  ),
+                  Expanded(child: _deliveryTile(l10n, _deliveryOptions[i])),
                 ],
               ],
             ),

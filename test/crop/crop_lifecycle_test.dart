@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:agricultural_marketplace/core/theme/app_icons.dart';
 import 'package:agricultural_marketplace/core/localization/localization_config.dart';
 import 'package:agricultural_marketplace/core/theme/app_theme.dart';
 import 'package:agricultural_marketplace/core/utils/app_formatters.dart';
@@ -656,8 +657,8 @@ void main() {
         expect(find.text('1 / 2'), findsOneWidget);
 
         // No debe mostrar botón de editar o borrar a un comprador
-        expect(find.byIcon(Icons.edit), findsNothing);
-        expect(find.byIcon(Icons.delete), findsNothing);
+        expect(find.byIcon(LucideIcons.pencil), findsNothing);
+        expect(find.byIcon(LucideIcons.trash2), findsNothing);
       },
     );
 
@@ -683,7 +684,7 @@ void main() {
         await tester.pumpAndSettle();
 
         // Botón de borrar debe ser visible para el propietario en la barra superior
-        final deleteBtn = find.byIcon(Icons.delete);
+        final deleteBtn = find.byIcon(LucideIcons.trash2);
         expect(deleteBtn, findsOneWidget);
 
         // Presionar botón de borrar
@@ -761,7 +762,7 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        await tester.tap(find.byIcon(Icons.delete));
+        await tester.tap(find.byIcon(LucideIcons.trash2));
         await tester.pumpAndSettle();
 
         await tester.tap(find.text('Borrar'));

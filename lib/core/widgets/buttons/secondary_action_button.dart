@@ -11,7 +11,8 @@ enum SecondaryActionTone {
   /// Surface fill, hairline border, primary label.
   neutral,
 
-  /// Error triad: soft red fill, red hairline, strong red label.
+  /// Formal destructive: surface fill and neutral hairline, with only the
+  /// label and icon in the error ink.
   destructive,
 
   /// AI triad: soft sapphire fill and label.
@@ -52,8 +53,8 @@ class SecondaryActionButton extends StatelessWidget {
         context.appPrimary,
       ),
       SecondaryActionTone.destructive => (
-        context.appErrorContainer,
-        context.appErrorBorder,
+        context.appSurface,
+        context.appBorder,
         context.appErrorText,
       ),
       SecondaryActionTone.ai => (

@@ -17,7 +17,7 @@ class PurchasesService {
           .from('negotiations')
           .select('''
             *,
-            crops(*, profiles:farmer_id(id, full_name, role, profile_path, verification_status, department, municipality)),
+            crops(*, crop_images(image_path, is_primary), profiles:farmer_id(id, full_name, role, profile_path, verification_status, department, municipality)),
             profiles:buyer_id(id, full_name, role, profile_path, verification_status, department, municipality),
             negotiation_offers(*)
           ''')

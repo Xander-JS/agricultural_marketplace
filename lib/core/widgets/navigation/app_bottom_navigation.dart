@@ -2,7 +2,7 @@ import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import '../../theme/app_icons.dart';
 
 import '../../constants/user_roles.dart';
 import '../../localization/app_localizations.dart';

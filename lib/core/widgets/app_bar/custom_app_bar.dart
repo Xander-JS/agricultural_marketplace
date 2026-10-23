@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import '../../theme/app_icons.dart';
 
 import '../../localization/app_localizations.dart';
 import '../../theme/app_colors.dart';
@@ -39,7 +39,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         icon: Icon(
           LucideIcons.chevronLeft,
           size: 26,
-          color: context.appPrimary,
+          color: context.appTextSecondary,
         ),
         onPressed: onBackPressed ?? () => Navigator.of(context).pop(),
       ),

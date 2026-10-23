@@ -144,7 +144,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Índice de referencia regional (Nariño)'), findsOneWidget);
-      expect(find.text(SimulatedRegionalPriceReferences.notice), findsWidgets);
+      expect(find.text(SimulatedRegionalPriceReferences.notice), findsNothing);
       expect(find.text('PROYECCIÓN IA'), findsOneWidget);
     });
 
@@ -169,8 +169,13 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('crop_detail_regional_reference_card')), findsOneWidget);
-      expect(find.text(SimulatedRegionalPriceReferences.notice), findsOneWidget);
       expect(find.text('PROYECCIÓN IA'), findsOneWidget);
+
+      await tester.ensureVisible(find.byKey(const Key('crop_detail_regional_reference_card')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('crop_detail_regional_reference_card')));
+      await tester.pumpAndSettle();
+      expect(find.text(SimulatedRegionalPriceReferences.notice), findsOneWidget);
     });
   });
 

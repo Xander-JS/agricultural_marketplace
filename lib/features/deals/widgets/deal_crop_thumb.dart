@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import '../../../core/theme/app_icons.dart';
 
-import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_motion.dart';
 import '../../../core/widgets/loading/app_skeleton.dart';
 import '../../../core/widgets/misc/icon_squircle.dart';
@@ -21,7 +20,6 @@ class DealCropThumb extends StatelessWidget {
   Widget build(BuildContext context) {
     final fallback = IconSquircle(
       icon: LucideIcons.sprout,
-      triad: context.appBrandTriad,
       size: size,
     );
 

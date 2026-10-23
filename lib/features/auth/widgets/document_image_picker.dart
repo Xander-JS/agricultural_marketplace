@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import '../../../core/theme/app_icons.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../../core/localization/app_localizations.dart';
@@ -107,7 +107,7 @@ Future<File?> showDocumentImageSourceSheet(
           contentPadding: const EdgeInsets.symmetric(
             horizontal: AppDimensions.space16,
           ),
-          leading: Icon(icon, size: 22, color: ctx.appPrimary),
+          leading: Icon(icon, size: 22, color: ctx.appTextSecondary),
           title: Text(
             label,
             style: AppTextStyles.bodyLarge.copyWith(

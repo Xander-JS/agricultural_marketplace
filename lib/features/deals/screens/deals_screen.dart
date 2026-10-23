@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import '../../../core/theme/app_icons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/negotiation_model.dart';
@@ -17,6 +17,7 @@ import '../../../core/localization/app_localizations.dart';
 import '../../../core/constants/user_roles.dart';
 import '../../../core/utils/app_formatters.dart';
 import '../../../core/theme/app_motion.dart';
+import '../../../core/widgets/avatars/user_avatar.dart';
 import '../../../core/widgets/brand/kus_brand_logo.dart';
 import '../../../core/widgets/feedback/app_empty_state.dart';
 import '../../../core/widgets/inputs/app_segmented_control.dart';
@@ -428,14 +429,14 @@ class _DealCard extends StatelessWidget {
         ? l10n.deal_counterpart_farmer
         : l10n.deal_counterpart_buyer;
 
+    // A buyer reads the farmer as a person: photo plus first name and first
+    // surname. Without a profile the label stands alone instead of pointing
+    // at the lot's municipality, which says nothing about who sells it.
+    final farmer = negotiation.farmerProfile;
     final counterpartName = isBuyer
-        ? (negotiation.farmerProfile?['full_name'] ??
-              (negotiation.crop?.municipality != null
-                  ? l10n.deals_producer_with_location(
-                      negotiation.crop!.municipality,
-                    )
-                  : l10n.deals_producer))
-        : (negotiation.buyerProfile?['full_name'] ?? l10n.deals_buyer);
+        ? NameFormatters.firstNameAndSurname(farmer?['full_name'] as String?)
+        : (negotiation.buyerProfile?['full_name'] as String? ??
+              l10n.deals_buyer);
 
     // A deal waiting on this user lifts its hairline to the brand tone.
     final borderColor = isMyTurn
@@ -477,18 +478,31 @@ class _DealCard extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 3),
-                          Text(
-                            l10n.deals_counterpart_name(
-                              counterpartLabel,
-                              counterpartName,
+                          if (isBuyer)
+                            Row(
+                              children: [
+                                UserAvatar(
+                                  key: ValueKey(
+                                    'deal_farmer_avatar_${negotiation.id}',
+                                  ),
+                                  imageUrl: farmer?['profile_path'] as String?,
+                                  radius: 10,
+                                  borderWidth: 1,
+                                ),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: _CounterpartLine(
+                                    label: counterpartLabel,
+                                    name: counterpartName,
+                                  ),
+                                ),
+                              ],
+                            )
+                          else
+                            _CounterpartLine(
+                              label: counterpartLabel,
+                              name: counterpartName,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTextStyles.bodySmall.copyWith(
-                              fontSize: 13,
-                              color: context.appTextSecondary,
-                            ),
-                          ),
                         ],
                       ),
                     ),
@@ -598,6 +612,58 @@ class _DealCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// "Productor: Jaime Pérez" under the lot title. The role recedes in
+/// secondary ink and the name carries the line, so the eye lands on who
+/// is on the other side of the deal.
+class _CounterpartLine extends StatelessWidget {
+  final String label;
+  final String name;
+
+  const _CounterpartLine({required this.label, required this.name});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final base = AppTextStyles.bodySmall.copyWith(
+      fontSize: 13,
+      color: context.appTextSecondary,
+    );
+
+    if (name.trim().isEmpty) {
+      return Text(
+        label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: base,
+      );
+    }
+
+    // Split the localized line around the name so word order stays with
+    // the translation.
+    final line = l10n.deals_counterpart_name(label, name);
+    final at = line.lastIndexOf(name);
+    final nameStyle = base.copyWith(
+      color: context.appTextPrimary,
+      fontWeight: FontWeight.w600,
+    );
+
+    return Text.rich(
+      at < 0
+          ? TextSpan(text: line)
+          : TextSpan(
+              children: [
+                TextSpan(text: line.substring(0, at)),
+                TextSpan(text: name, style: nameStyle),
+                TextSpan(text: line.substring(at + name.length)),
+              ],
+            ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: base,
     );
   }
 }

@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:agricultural_marketplace/core/theme/app_icons.dart';
 import 'package:agricultural_marketplace/core/localization/localization_config.dart';
 import 'package:agricultural_marketplace/core/theme/app_theme.dart';
 import 'package:agricultural_marketplace/features/crop/models/crop_model.dart';
@@ -252,8 +253,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // El agricultor dueño tiene el botón de borrar en el AppBar (Icon Icons.delete)
-      final deleteIcon = find.byIcon(Icons.delete);
+      // El agricultor dueño tiene el botón de borrar en el AppBar (icono LucideIcons.trash2)
+      final deleteIcon = find.byIcon(LucideIcons.trash2);
       expect(deleteIcon, findsOneWidget);
 
       await tester.tap(deleteIcon);
@@ -293,7 +294,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final deleteIcon = find.byIcon(Icons.delete);
+      final deleteIcon = find.byIcon(LucideIcons.trash2);
       await tester.tap(deleteIcon);
       await tester.pumpAndSettle();
 
@@ -322,7 +323,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Tocar el botón de editar en el AppBar
-      final editIcon = find.byIcon(Icons.edit);
+      final editIcon = find.byIcon(LucideIcons.pencil);
       expect(editIcon, findsOneWidget);
 
       await tester.tap(editIcon);

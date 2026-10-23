@@ -5,6 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_motion.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/misc/icon_squircle.dart';
 
 /// Entrance for auth form bodies: a 220ms fade with a 3% rise.
 ///
@@ -49,15 +50,7 @@ class AuthTaskHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: context.appPrimarySoft,
-            borderRadius: AppDimensions.borderRadiusControl,
-          ),
-          child: Icon(icon, size: 24, color: context.appOnPrimarySoft),
-        ),
+        IconSquircle(icon: icon, size: 48, iconSize: 24),
         const SizedBox(height: AppDimensions.space16),
         Text(
           title,

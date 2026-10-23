@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import '../../../core/theme/app_icons.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -558,7 +558,7 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
             ),
             child: Row(
               children: [
-                Icon(icon, size: 16, color: context.appPrimary),
+                Icon(icon, size: 16, color: context.appTextSecondary),
                 const SizedBox(width: AppDimensions.space8),
                 Text(
                   title,

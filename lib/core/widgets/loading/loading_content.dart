@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import '../../theme/app_icons.dart';
 
 import '../../localization/app_localizations.dart';
 import '../../theme/app_colors.dart';

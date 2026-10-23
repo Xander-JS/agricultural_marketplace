@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import '../../../core/theme/app_icons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -378,7 +378,7 @@ class _CostsScreenState extends State<CostsScreen> {
                     Icon(
                       LucideIcons.receiptText,
                       size: 18,
-                      color: context.appPrimary,
+                      color: context.appTextSecondary,
                     ),
                     const SizedBox(width: AppDimensions.space8),
                     Expanded(
@@ -416,7 +416,6 @@ class _CropThumb extends StatelessWidget {
   Widget build(BuildContext context) {
     final placeholder = IconSquircle(
       icon: LucideIcons.sprout,
-      triad: context.appBrandTriad,
       size: 52,
     );
     if (imageUrl == null) return placeholder;

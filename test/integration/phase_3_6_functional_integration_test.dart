@@ -193,8 +193,8 @@ void main() {
       expect(find.text('Hacer oferta / Negociar'), findsOneWidget);
 
       // NO debe mostrar los botones exclusivos del productor dueño
-      expect(find.text('Pausar Publicación'), findsNothing);
-      expect(find.text('Activar Publicación'), findsNothing);
+      expect(find.text('Publicación activa'), findsNothing);
+      expect(find.byKey(const Key('crop_detail_listing_switch')), findsNothing);
       expect(find.text('Ver Negociaciones'), findsNothing);
       expect(find.byIcon(Icons.edit_outlined), findsNothing);
       expect(find.byIcon(Icons.delete_outline), findsNothing);
@@ -213,8 +213,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Debe mostrar botón de Pausar Publicación y Ver Negociaciones
-      expect(find.text('Pausar Publicación'), findsOneWidget);
+      // Debe mostrar el interruptor de publicación y Ver Negociaciones
+      expect(find.byKey(const Key('crop_detail_listing_switch')), findsOneWidget);
       final negotiationsBtn = find.byKey(const Key('crop_detail_farmer_negotiations_button'));
       expect(negotiationsBtn, findsOneWidget);
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:agricultural_marketplace/core/theme/app_icons.dart';
 import 'package:agricultural_marketplace/core/localization/localization_config.dart';
 import 'package:agricultural_marketplace/core/theme/app_theme.dart';
 import 'package:agricultural_marketplace/features/crop/models/crop_model.dart';
@@ -275,11 +276,14 @@ void main() {
         expect(find.text('Detalle de Cosecha'), findsOneWidget);
 
         // NO debe tener acciones de edición o borrado
-        expect(find.byIcon(Icons.edit), findsNothing);
-        expect(find.byIcon(Icons.delete), findsNothing);
+        expect(find.byIcon(LucideIcons.pencil), findsNothing);
+        expect(find.byIcon(LucideIcons.trash2), findsNothing);
 
         // NO debe tener acciones de pausar cultivo
-        expect(find.text('Pausar Publicación'), findsNothing);
+        expect(
+          find.byKey(const Key('crop_detail_listing_switch')),
+          findsNothing,
+        );
         expect(find.text('Ver Negociaciones'), findsNothing);
 
         // SÍ debe mostrar el botón para hacer oferta / negociar
@@ -307,11 +311,15 @@ void main() {
         await tester.pumpAndSettle();
 
         // SÍ debe tener acciones de edición y borrado
-        expect(find.byIcon(Icons.edit), findsOneWidget);
-        expect(find.byIcon(Icons.delete), findsOneWidget);
+        expect(find.byIcon(LucideIcons.pencil), findsOneWidget);
+        expect(find.byIcon(LucideIcons.trash2), findsOneWidget);
 
-        // SÍ debe tener acción para pausar
-        expect(find.text('Pausar Publicación'), findsOneWidget);
+        // SÍ debe tener el interruptor para pausar la publicación
+        expect(find.text('Publicación activa'), findsOneWidget);
+        expect(
+          find.byKey(const Key('crop_detail_listing_switch')),
+          findsOneWidget,
+        );
         expect(find.text('Ver Negociaciones'), findsOneWidget);
 
         // NO debe tener botón de hacer oferta

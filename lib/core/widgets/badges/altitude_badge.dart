@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import '../../theme/app_icons.dart';
 
 import '../../theme/app_colors.dart';
 import '../../theme/app_dimensions.dart';
@@ -29,7 +29,11 @@ class AltitudeBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(LucideIcons.mountain, size: 13, color: context.appPrimary),
+          Icon(
+            LucideIcons.mountain,
+            size: 13,
+            color: context.appTextSecondary,
+          ),
           const SizedBox(width: AppDimensions.space4 + 1),
           Text(
             text,

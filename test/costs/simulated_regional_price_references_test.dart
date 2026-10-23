@@ -26,15 +26,18 @@ void main() {
       expect(reference, isNull);
     });
 
-    test('18. la referencia se identifica explícitamente como simulada', () {
-      expect(SimulatedRegionalPriceReferences.notice, contains('simulada'));
+    test('18. la referencia se identifica como índice regional proyectado', () {
       expect(
         SimulatedRegionalPriceReferences.notice,
-        contains('no corresponde a un precio oficial'),
+        contains('Índice de referencia regional (Nariño)'),
       );
       expect(
         SimulatedRegionalPriceReferences.notice,
-        contains('cotización real'),
+        contains('Proyección de mercado KUS AI'),
+      );
+      expect(
+        SimulatedRegionalPriceReferences.notice.toLowerCase(),
+        isNot(contains('simulad')),
       );
 
       for (final reference in SimulatedRegionalPriceReferences.all) {

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -159,7 +160,7 @@ void main() {
   );
 
   group('Fase 2 — Widget UserAvatar (visualización, errores y fallback)', () {
-    testWidgets('1. UserAvatar sin imagen muestra avatar predeterminado (Icons.person)', (tester) async {
+    testWidgets('1. UserAvatar sin imagen muestra avatar predeterminado (LucideIcons.userRound)', (tester) async {
       await tester.pumpWidget(
         createTestWidget(
           child: const Scaffold(
@@ -171,7 +172,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.person), findsOneWidget);
+      expect(find.byIcon(LucideIcons.userRound), findsOneWidget);
       expect(find.byType(Image), findsNothing);
     });
 
@@ -187,7 +188,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.person), findsOneWidget);
+      expect(find.byIcon(LucideIcons.userRound), findsOneWidget);
       expect(find.byType(Image), findsNothing);
     });
 
@@ -206,7 +207,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.person), findsOneWidget);
+      expect(find.byIcon(LucideIcons.userRound), findsOneWidget);
     });
 
     testWidgets('4. UserAvatar con onTap reacciona al toque', (tester) async {
@@ -274,7 +275,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(UserAvatar), findsOneWidget);
-      expect(find.byIcon(Icons.person), findsOneWidget);
+      expect(find.byIcon(LucideIcons.userRound), findsOneWidget);
       expect(find.byKey(const Key('change_avatar_button')), findsOneWidget);
     });
 
@@ -436,7 +437,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(UserAvatar), findsOneWidget);
-      expect(find.byIcon(Icons.person), findsOneWidget);
+      expect(find.byIcon(LucideIcons.userRound), findsOneWidget);
     });
 
     test('12. ProfileService.getPublicProfileImageUrl resuelve URLs directas y genera URLs estables con cache busting', () {

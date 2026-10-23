@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -412,7 +413,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Debe mostrar icono predeterminado sin arrojar errores
-      expect(find.byIcon(Icons.person), findsNWidgets(3));
+      expect(find.byIcon(LucideIcons.userRound), findsNWidgets(3));
     });
   });
 }

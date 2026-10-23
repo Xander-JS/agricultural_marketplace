@@ -1,41 +1,51 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 import '../../deals/models/negotiation_model.dart';
 import '../../deals/models/negotiation_status.dart';
 import '../../deals/screens/deal_detail_screen.dart';
+import '../../deals/widgets/deal_crop_thumb.dart';
+import '../../deals/widgets/delivery_presentation.dart';
+import '../../deals/widgets/negotiation_status_badge.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_dimensions.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/utils/app_formatters.dart';
+import '../../../../core/widgets/misc/pressable_scale.dart';
 
+/// One purchase agreed with a farmer: the lot, who sells it, the figures
+/// of the agreement and how it will be delivered.
 class PurchaseCard extends StatelessWidget {
   final NegotiationModel purchase;
   final VoidCallback? onRefresh;
 
-  const PurchaseCard({
-    super.key,
-    required this.purchase,
-    this.onRefresh,
-  });
+  const PurchaseCard({super.key, required this.purchase, this.onRefresh});
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     // Obtener la última oferta acordada
     final latestOffer = (purchase.offers != null && purchase.offers!.isNotEmpty)
-        ? purchase.offers!.reduce((a, b) => a.createdAt.isAfter(b.createdAt) ? a : b)
+        ? purchase.offers!.reduce(
+            (a, b) => a.createdAt.isAfter(b.createdAt) ? a : b,
+          )
         : null;
 
     final quantity = latestOffer?.quantityKg ?? 0.0;
     final price = latestOffer?.proposedPricePerKg ?? 0.0;
     final total = quantity * price;
 
-    final producerName = purchase.farmerProfile?['full_name'] ??
+    final producerName =
+        purchase.farmerProfile?['full_name'] ??
         (purchase.crop?.municipality != null
             ? l10n.purchase_card_producer_municipality(
                 purchase.crop!.municipality,
               )
             : l10n.purchase_card_producer_local);
 
-    final location = purchase.crop != null && purchase.crop!.municipality.isNotEmpty
+    final location =
+        purchase.crop != null && purchase.crop!.municipality.isNotEmpty
         ? '${purchase.crop!.municipality}, ${purchase.crop!.department}'
         : null;
 
@@ -43,261 +53,268 @@ class PurchaseCard extends StatelessWidget {
 
     final isAgreed = purchase.status == NegotiationStatus.acordada;
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      elevation: 0,
-      color: context.appSurface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: context.appBorder),
-      ),
-      child: InkWell(
-        onTap: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => DealDetailScreen(
-                negotiationId: purchase.id,
-                role: 'comprador',
+    return PressableScale(
+      pressedScale: 0.985,
+      child: Material(
+        color: context.appSurface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: context.appBorder),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => DealDetailScreen(
+                  negotiationId: purchase.id,
+                  role: 'comprador',
+                ),
               ),
-            ),
-          );
-          if (result == true) {
-            onRefresh?.call();
-          }
-        },
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Encabezado: Título del cultivo y Badge de Estado
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          purchase.crop?.title ?? l10n.purchase_card_agreed_crop,
-                          style: TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.bold,
-                            color: context.appTextPrimary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        if (purchase.crop?.cropType != null) ...[
-                          const SizedBox(height: 2),
+            );
+            if (result == true) {
+              onRefresh?.call();
+            }
+          },
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Encabezado: cosecha, tipo y estado
+                Row(
+                  children: [
+                    DealCropThumb(crop: purchase.crop, size: 48),
+                    const SizedBox(width: AppDimensions.space12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                           Text(
-                            purchase.crop!.cropType,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: context.appTextSecondary,
+                            purchase.crop?.title ??
+                                l10n.purchase_card_agreed_crop,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyles.titleMedium.copyWith(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: context.appTextPrimary,
                             ),
                           ),
+                          if (purchase.crop?.cropType != null) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              purchase.crop!.cropType,
+                              style: AppTextStyles.bodySmall.copyWith(
+                                fontSize: 13,
+                                color: context.appTextSecondary,
+                              ),
+                            ),
+                          ],
                         ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: AppDimensions.space12),
+
+                // Productor y procedencia
+                Row(
+                  children: [
+                    Icon(
+                      LucideIcons.userRound,
+                      size: 15,
+                      color: context.appTextSecondary,
+                    ),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        producerName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.titleSmall.copyWith(
+                          color: context.appTextPrimary,
+                        ),
+                      ),
+                    ),
+                    if (location != null) ...[
+                      const SizedBox(width: AppDimensions.space12),
+                      Icon(
+                        LucideIcons.mapPin,
+                        size: 14,
+                        color: context.appTextSecondary,
+                      ),
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          location,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.caption.copyWith(
+                            fontSize: 12,
+                            color: context.appTextSecondary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+
+                const SizedBox(height: AppDimensions.space12),
+
+                // Precio, cantidad y total del acuerdo
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: context.appSurfaceVariant,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: IntrinsicHeight(
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 4,
+                          child: _Figure(
+                            label: l10n.purchase_card_price_per_kg,
+                            value: CurrencyFormatters.formatCop(price),
+                          ),
+                        ),
+                        VerticalDivider(width: 20, color: context.appBorder),
+                        Expanded(
+                          flex: 3,
+                          child: _Figure(
+                            label: l10n.purchase_card_quantity,
+                            value: UnitFormatters.formatKg(quantity),
+                          ),
+                        ),
+                        VerticalDivider(width: 20, color: context.appBorder),
+                        Expanded(
+                          flex: 5,
+                          child: _Figure(
+                            label: l10n.purchase_card_total_agreed,
+                            value: CurrencyFormatters.formatCop(total),
+                            emphasized: true,
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  _buildStatusBadge(context, isAgreed, l10n),
-                ],
-              ),
-
-              const SizedBox(height: 12),
-
-              // Información del Productor
-              Row(
-                children: [
-                  CircleAvatar(
-                    radius: 14,
-                    backgroundColor: context.appPrimaryContainer,
-                    child: Icon(
-                      Icons.person,
-                      size: 16,
-                      color: context.appPrimary,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      producerName,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: context.appTextPrimary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  if (location != null) ...[
-                    const SizedBox(width: 6),
-                    Icon(
-                      Icons.location_on_outlined,
-                      size: 14,
-                      color: context.appTextDisabled,
-                    ),
-                    Text(
-                      location,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: context.appTextDisabled,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-
-              const SizedBox(height: 14),
-
-              // Contenedor de detalles del acuerdo: Cantidad, Precio y Total
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                decoration: BoxDecoration(
-                  color: context.appSurfaceVariant,
-                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+                const SizedBox(height: AppDimensions.space12),
+
+                // Entrega y fecha
+                Row(
                   children: [
-                    _buildMetricColumn(
-                      context,
-                      label: l10n.purchase_card_quantity,
-                      value: UnitFormatters.formatKg(quantity),
-                                          ),
-                    _buildMetricColumn(
-                      context,
-                      label: l10n.purchase_card_price_per_kg,
-                      value: CurrencyFormatters.formatCop(price),
-                                          ),
-                    _buildMetricColumn(
-                      context,
-                      label: l10n.purchase_card_total_agreed,
-                      value: CurrencyFormatters.formatCop(total),
-                                            isHighlighted: true,
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              // Entrega y Fecha
-              Row(
-                children: [
-                  if (latestOffer != null && latestOffer.deliveryMethod.isNotEmpty) ...[
-                    Icon(
-                      Icons.local_shipping_outlined,
-                      size: 15,
-                      color: context.appPrimary,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${l10n.purchases_delivery_method}: ${latestOffer.deliveryMethod}',
-                      style: TextStyle(
-                        fontSize: 12,
+                    if (latestOffer != null &&
+                        latestOffer.deliveryMethod.isNotEmpty) ...[
+                      Icon(
+                        deliveryPresentation(
+                          l10n,
+                          latestOffer.deliveryMethod,
+                        ).icon,
+                        size: 15,
                         color: context.appTextSecondary,
                       ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          '${l10n.purchases_delivery_method}: ${deliveryDisplayLabel(l10n, latestOffer.deliveryMethod)}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: context.appTextSecondary,
+                          ),
+                        ),
+                      ),
+                    ] else
+                      const Spacer(),
+                    const SizedBox(width: AppDimensions.space8),
+                    Text(
+                      formattedDate,
+                      style: AppTextStyles.caption.copyWith(
+                        color: context.appTextSecondary,
+                        fontFeatures: AppTextStyles.tabularFigures,
+                      ),
                     ),
                   ],
-                  const Spacer(),
-                  Icon(
-                    Icons.calendar_today_outlined,
-                    size: 13,
-                    color: context.appTextDisabled,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    formattedDate,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: context.appTextDisabled,
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 12),
-
-              // Enlace al detalle del acuerdo
-              Align(
-                alignment: Alignment.centerRight,
-                child: Text(
-                  l10n.purchases_view_detail,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: context.appPrimary,
-                  ),
                 ),
-              ),
-            ],
+
+                const SizedBox(height: AppDimensions.space12),
+                Divider(height: 1, thickness: 1, color: context.appDivider),
+                const SizedBox(height: 10),
+
+                // Estado del acuerdo y enlace al detalle
+                Row(
+                  children: [
+                    NegotiationStatusBadge(
+                      status: purchase.status,
+                      label: isAgreed
+                          ? l10n.purchases_status_agreed
+                          : l10n.purchases_status_completed,
+                    ),
+                    const Spacer(),
+                    const SizedBox(width: AppDimensions.space8),
+                    Text(
+                      l10n.purchases_view_detail,
+                      style: AppTextStyles.labelMedium.copyWith(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: context.appPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildStatusBadge(
-    BuildContext context,
-    bool isAgreed,
-    AppLocalizations l10n,
-  ) {
-    final label = isAgreed
-        ? l10n.purchases_status_agreed
-        : l10n.purchases_status_completed;
+/// A label over its tabular figure inside the agreement strip.
+class _Figure extends StatelessWidget {
+  final String label;
+  final String value;
+  final bool emphasized;
 
-    final color = isAgreed ? context.appSuccess : context.appInfo;
+  const _Figure({
+    required this.label,
+    required this.value,
+    this.emphasized = false,
+  });
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.35)),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: color,
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMetricColumn(
-    BuildContext context, {
-    required String label,
-    required String value,
-    bool isHighlighted = false,
-  }) {
+  @override
+  Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
           label,
-          style: TextStyle(
-            fontSize: 11,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: AppTextStyles.caption.copyWith(
             color: context.appTextSecondary,
           ),
         ),
         const SizedBox(height: 2),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: isHighlighted ? 15 : 13,
-            fontWeight: FontWeight.bold,
-            color: isHighlighted
-                ? context.appPrimary
-                : context.appTextPrimary,
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            value,
+            style: AppTextStyles.figureSmall.copyWith(
+              fontWeight: emphasized ? FontWeight.w800 : FontWeight.w700,
+              color: emphasized ? context.appPrimary : context.appTextPrimary,
+            ),
           ),
         ),
       ],

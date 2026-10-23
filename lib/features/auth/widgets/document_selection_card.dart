@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import '../../../core/theme/app_icons.dart';
 
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
@@ -150,14 +150,14 @@ class DocumentSelectionCard extends StatelessWidget {
                   onPressed: enabled ? onRemove : null,
                   icon: const Icon(LucideIcons.trash2, size: 20),
                   style: IconButton.styleFrom(
-                    foregroundColor: context.appErrorText,
-                    backgroundColor: context.appErrorContainer,
+                    foregroundColor: context.appTextSecondary,
+                    backgroundColor: context.appIconTriad.background,
                     fixedSize: const Size.square(
                       AppDimensions.buttonHeightMedium,
                     ),
                     shape: RoundedRectangleBorder(
                       borderRadius: AppDimensions.borderRadiusControl,
-                      side: BorderSide(color: context.appErrorBorder),
+                      side: BorderSide.none,
                     ),
                   ),
                 ),

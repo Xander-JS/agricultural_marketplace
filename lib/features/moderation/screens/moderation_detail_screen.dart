@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+
+import '../../../core/theme/app_icons.dart';
 
 import '../../../../core/constants/user_roles.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
+import '../../../../core/theme/app_motion.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/app_bar/custom_app_bar.dart';
 import '../../../../core/widgets/avatars/user_avatar.dart';
+import '../../../../core/widgets/badges/status_badge.dart';
+import '../../../../core/widgets/buttons/primary_action_button.dart';
+import '../../../../core/widgets/buttons/secondary_action_button.dart';
 import '../../../../core/widgets/cards/inset_group_card.dart';
 import '../../../../core/widgets/feedback/app_snack_bar.dart';
 import '../../../../core/widgets/feedback/status_banner.dart';
+import '../../../../core/widgets/inputs/app_segmented_control.dart';
 import '../models/moderation_request.dart';
 import '../services/document_diagnosis_service.dart';
 import '../services/document_image_service.dart';
@@ -49,6 +55,7 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
   late DocumentDiagnosisService _diagnosisService;
   bool _isSubmitting = false;
   DiagnosisDecision? _busyDecision;
+  _DetailTab _tab = _DetailTab.user;
 
   void _setBusy(DiagnosisDecision? decision) {
     setState(() {
@@ -302,180 +309,367 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final request = _currentRequest;
-    final rejection = request.rejectionReason;
-    final hasEmail = request.email != null && request.email!.isNotEmpty;
 
     return Scaffold(
       backgroundColor: context.appBackground,
       appBar: CustomAppBar(title: l10n.moderation_detail_title),
-      // Non-lazy on purpose: the decision sits after all the evidence and
-      // must exist in the tree even before it is scrolled into view.
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        padding: EdgeInsets.fromLTRB(
-          AppDimensions.space16,
-          AppDimensions.space8,
-          AppDimensions.space16,
-          AppDimensions.space32 + MediaQuery.paddingOf(context).bottom,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Identidad del solicitante
-            InsetGroupCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    children: [
-                      const UserAvatar(radius: 26),
-                      const SizedBox(width: AppDimensions.space12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              request.fullName,
-                              style: AppTextStyles.titleLarge.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: context.appTextPrimary,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              request.phone,
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                color: context.appTextSecondary,
-                                fontFeatures: AppTextStyles.tabularFigures,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppDimensions.space12),
-                  Align(
-                    alignment: AlignmentDirectional.centerStart,
-                    child: _buildStatusBadge(request.status),
-                  ),
-                  const SizedBox(height: AppDimensions.space12),
-                  Divider(height: 1, color: context.appDivider),
-                  _buildInfoRow(
-                    l10n.moderation_lbl_role,
-                    request.userRole.displayName,
-                  ),
-                  if (hasEmail)
-                    _buildInfoRow(l10n.moderation_lbl_email, request.email!),
-                  _buildInfoRow(l10n.moderation_lbl_user_id, request.userId),
-                  _buildInfoRow(
-                    l10n.moderation_lbl_submitted,
-                    formatModerationDate(context, request.createdAt),
-                    last: true,
-                  ),
-                ],
-              ),
+      bottomNavigationBar: _buildActionBar(context, l10n),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppDimensions.space16,
+              AppDimensions.space4,
+              AppDimensions.space16,
+              AppDimensions.space12,
             ),
-
-            // Motivo de rechazo previo (si existe)
-            if (rejection != null && rejection.isNotEmpty) ...[
-              const SizedBox(height: AppDimensions.space16),
-              StatusBanner(
-                tone: StatusTone.error,
-                icon: LucideIcons.fileWarning,
-                title: l10n.moderation_previous_rejection,
-                message: rejection,
+            child: AppSegmentedControl<_DetailTab>(
+              key: const ValueKey('moderation_detail_tabs'),
+              value: _tab,
+              onChanged: (tab) => setState(() => _tab = tab),
+              segments: {
+                _DetailTab.user: AppSegment(
+                  label: l10n.moderation_tab_user,
+                  icon: LucideIcons.userRound,
+                ),
+                _DetailTab.evidence: AppSegment(
+                  label: l10n.moderation_tab_evidence,
+                  icon: LucideIcons.idCard,
+                ),
+                _DetailTab.ai: AppSegment(
+                  label: l10n.moderation_tab_ai,
+                  icon: LucideIcons.scanFace,
+                ),
+              },
+            ),
+          ),
+          Expanded(
+            // Each tab keeps its own scroll; a short crossfade marks the
+            // switch without sliding content the moderator is reading.
+            child: AnimatedSwitcher(
+              duration: AppMotion.of(context, AppMotion.quick),
+              switchInCurve: AppMotion.easeOut,
+              switchOutCurve: AppMotion.easeOut,
+              layoutBuilder: (current, previous) => Stack(
+                alignment: Alignment.topCenter,
+                children: [...previous, ?current],
               ),
-            ],
-
-            // Documentos adjuntos
-            const SizedBox(height: AppDimensions.space24),
-            Padding(
-              padding: const EdgeInsets.only(
-                left: AppDimensions.space4,
-                bottom: AppDimensions.space12,
-              ),
-              child: Text(
-                l10n.moderation_documents_title,
-                style: AppTextStyles.headlineMedium.copyWith(
-                  color: context.appTextPrimary,
+              child: KeyedSubtree(
+                key: ValueKey(_tab),
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppDimensions.space16,
+                    AppDimensions.space4,
+                    AppDimensions.space16,
+                    AppDimensions.space24,
+                  ),
+                  child: switch (_tab) {
+                    _DetailTab.user => _buildUserTab(context, l10n),
+                    _DetailTab.evidence => _buildEvidenceTab(context, l10n),
+                    _DetailTab.ai => SimulatedDocumentDiagnosisCard(
+                      report: _diagnosisService.build(_currentRequest),
+                    ),
+                  },
                 ),
               ),
             ),
-            StatusBanner(
-              tone: StatusTone.info,
-              icon: LucideIcons.lockKeyhole,
-              message: l10n.moderation_storage_notice,
-            ),
-            const SizedBox(height: AppDimensions.space12),
-            DocumentImagePreview(
-              key: const ValueKey('moderation_document_front'),
-              title: l10n.moderation_doc_front,
-              path: request.documentFrontPath,
-              imageUrlService: _documentImageService,
-              imageBuilder: widget.documentImageBuilder,
-            ),
-            const SizedBox(height: AppDimensions.space12),
-            DocumentImagePreview(
-              key: const ValueKey('moderation_document_back'),
-              title: l10n.moderation_doc_back,
-              path: request.documentBackPath,
-              imageUrlService: _documentImageService,
-              imageBuilder: widget.documentImageBuilder,
-            ),
-            const SizedBox(height: AppDimensions.space12),
-            DocumentImagePreview(
-              key: const ValueKey('moderation_document_selfie'),
-              title: l10n.moderation_doc_selfie,
-              path: request.selfiePath,
-              imageUrlService: _documentImageService,
-              imageBuilder: widget.documentImageBuilder,
-            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-            // Panel KUS Vision con la decisión del moderador al final de la
-            // evidencia (solo mientras la solicitud sigue abierta).
-            const SizedBox(height: AppDimensions.space24),
-            SimulatedDocumentDiagnosisCard(
-              report: _diagnosisService.build(request),
-              busyDecision: _busyDecision,
-              onApprove: request.isPending ? _handleApprove : null,
-              onReject: request.isPending ? _handleReject : null,
-              onMarkInReview: request.status == UserVerificationStatus.pendiente
-                  ? _handleMarkInReview
-                  : null,
-            ),
+  /// Tab 1: who is asking, for which role, and where the request stands.
+  Widget _buildUserTab(BuildContext context, AppLocalizations l10n) {
+    final request = _currentRequest;
+    final rejection = request.rejectionReason;
+    final hasEmail = request.email != null && request.email!.isNotEmpty;
 
-            if (!request.isPending) ...[
-              const SizedBox(height: AppDimensions.space16),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        InsetGroupCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
               Row(
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    LucideIcons.lockKeyhole,
-                    size: 15,
-                    color: context.appTextSecondary,
-                  ),
-                  const SizedBox(width: AppDimensions.space8),
-                  Flexible(
-                    child: Text(
-                      l10n.moderation_already_resolved,
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: context.appTextSecondary,
-                      ),
+                  const UserAvatar(radius: 26),
+                  const SizedBox(width: AppDimensions.space12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          request.fullName,
+                          style: AppTextStyles.titleLarge.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: context.appTextPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          request.phone,
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: context.appTextSecondary,
+                            fontFeatures: AppTextStyles.tabularFigures,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
+              const SizedBox(height: AppDimensions.space12),
+              Divider(height: 1, color: context.appDivider),
+              _buildInfoRow(
+                l10n.moderation_lbl_role,
+                trailing: StatusBadge(
+                  key: const ValueKey('moderation_detail_role_badge'),
+                  text: request.userRole.displayName,
+                  icon: LucideIcons.briefcase,
+                  tone: StatusBadgeTone.brand,
+                  backgroundColor: context.appPrimarySoft,
+                  textColor: context.appOnPrimarySoft,
+                ),
+              ),
+              _buildInfoRow(
+                l10n.moderation_lbl_status,
+                trailing: _buildStatusBadge(request.status),
+              ),
+              if (hasEmail)
+                _buildInfoRow(l10n.moderation_lbl_email, value: request.email!),
+              _buildInfoRow(l10n.moderation_lbl_user_id, value: request.userId),
+              _buildInfoRow(
+                l10n.moderation_lbl_submitted,
+                value: formatModerationDate(context, request.createdAt),
+                last: true,
+              ),
             ],
-          ],
+          ),
+        ),
+        if (rejection != null && rejection.isNotEmpty) ...[
+          const SizedBox(height: AppDimensions.space16),
+          StatusBanner(
+            tone: StatusTone.error,
+            icon: LucideIcons.fileWarning,
+            title: l10n.moderation_previous_rejection,
+            message: rejection,
+          ),
+        ],
+      ],
+    );
+  }
+
+  /// Tab 2: the three documents side by side in a swipeable row; a tap
+  /// opens one full screen with pinch zoom.
+  Widget _buildEvidenceTab(BuildContext context, AppLocalizations l10n) {
+    final request = _currentRequest;
+    final documents = [
+      (
+        key: const ValueKey('moderation_document_front'),
+        title: l10n.moderation_doc_front,
+        path: request.documentFrontPath,
+      ),
+      (
+        key: const ValueKey('moderation_document_back'),
+        title: l10n.moderation_doc_back,
+        path: request.documentBackPath,
+      ),
+      (
+        key: const ValueKey('moderation_document_selfie'),
+        title: l10n.moderation_doc_selfie,
+        path: request.selfiePath,
+      ),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(
+            left: AppDimensions.space4,
+            bottom: AppDimensions.space12,
+          ),
+          child: Text(
+            l10n.moderation_documents_title,
+            style: AppTextStyles.titleMedium.copyWith(
+              fontWeight: FontWeight.w700,
+              color: context.appTextPrimary,
+            ),
+          ),
+        ),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            // About one and a half cards in view, so the row reads as
+            // scrollable at a glance.
+            final cardWidth = (constraints.maxWidth * 0.78).clamp(220.0, 320.0);
+            return SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              clipBehavior: Clip.none,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (var i = 0; i < documents.length; i++) ...[
+                    if (i > 0) const SizedBox(width: AppDimensions.space12),
+                    SizedBox(
+                      width: cardWidth,
+                      child: DocumentImagePreview(
+                        key: documents[i].key,
+                        title: documents[i].title,
+                        path: documents[i].path,
+                        imageUrlService: _documentImageService,
+                        imageBuilder: widget.documentImageBuilder,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: AppDimensions.space16),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppDimensions.space4),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 1),
+                child: Icon(
+                  LucideIcons.lockKeyhole,
+                  size: 14,
+                  color: context.appTextSecondary,
+                ),
+              ),
+              const SizedBox(width: AppDimensions.space8),
+              Expanded(
+                child: Text(
+                  l10n.moderation_storage_notice,
+                  style: AppTextStyles.caption.copyWith(
+                    color: context.appTextSecondary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Fixed decision bar. Approve carries the institutional green; review
+  /// is a neutral outline; reject is formal red ink on the surface. Once
+  /// the request is resolved the bar states that instead.
+  Widget _buildActionBar(BuildContext context, AppLocalizations l10n) {
+    final request = _currentRequest;
+    final idle = _busyDecision == null;
+    final canMarkInReview = request.status == UserVerificationStatus.pendiente;
+
+    final Widget content;
+    if (!request.isPending) {
+      content = Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            LucideIcons.lockKeyhole,
+            size: 15,
+            color: context.appTextSecondary,
+          ),
+          const SizedBox(width: AppDimensions.space8),
+          Flexible(
+            child: Text(
+              l10n.moderation_already_resolved,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.bodySmall.copyWith(
+                color: context.appTextSecondary,
+              ),
+            ),
+          ),
+        ],
+      );
+    } else {
+      final reject = SecondaryActionButton(
+        key: const ValueKey('moderation_btn_reject'),
+        tone: SecondaryActionTone.destructive,
+        height: AppDimensions.buttonHeightMedium,
+        onPressed: idle ? _handleReject : null,
+        isLoading: _busyDecision == DiagnosisDecision.reject,
+        icon: LucideIcons.x,
+        text: l10n.moderation_btn_reject,
+      );
+      final approve = PrimaryActionButton(
+        key: const ValueKey('moderation_btn_approve'),
+        onPressed: idle ? _handleApprove : null,
+        isLoading: _busyDecision == DiagnosisDecision.approve,
+        text: l10n.moderation_btn_approve,
+      );
+
+      content = Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (canMarkInReview) ...[
+            Row(
+              children: [
+                Expanded(child: reject),
+                const SizedBox(width: AppDimensions.space8),
+                Expanded(
+                  child: SecondaryActionButton(
+                    key: const ValueKey('moderation_btn_mark_in_review'),
+                    height: AppDimensions.buttonHeightMedium,
+                    onPressed: idle ? _handleMarkInReview : null,
+                    isLoading: _busyDecision == DiagnosisDecision.markInReview,
+                    icon: LucideIcons.scanEye,
+                    text: l10n.moderation_btn_mark_in_review,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppDimensions.space8),
+            approve,
+          ] else
+            Row(
+              children: [
+                Expanded(child: reject),
+                const SizedBox(width: AppDimensions.space8),
+                Expanded(child: approve),
+              ],
+            ),
+        ],
+      );
+    }
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: context.appSurface,
+        border: Border(top: BorderSide(color: context.appDivider)),
+      ),
+      child: SafeArea(
+        top: false,
+        minimum: const EdgeInsets.only(bottom: AppDimensions.space8),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppDimensions.space16,
+            AppDimensions.space12,
+            AppDimensions.space16,
+            AppDimensions.space4,
+          ),
+          child: content,
         ),
       ),
     );
   }
 
-  Widget _buildInfoRow(String label, String value, {bool last = false}) {
+  Widget _buildInfoRow(
+    String label, {
+    String? value,
+    Widget? trailing,
+    bool last = false,
+  }) {
     return Container(
       constraints: const BoxConstraints(minHeight: 44),
       padding: const EdgeInsets.symmetric(vertical: AppDimensions.space12),
@@ -485,7 +679,9 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
             : Border(bottom: BorderSide(color: context.appDivider)),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: trailing != null
+            ? CrossAxisAlignment.center
+            : CrossAxisAlignment.start,
         children: [
           SizedBox(
             width: 96,
@@ -498,15 +694,20 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
           ),
           const SizedBox(width: AppDimensions.space8),
           Expanded(
-            child: Text(
-              value,
-              textAlign: TextAlign.end,
-              style: AppTextStyles.bodyMedium.copyWith(
-                fontWeight: FontWeight.w600,
-                color: context.appTextPrimary,
-                fontFeatures: AppTextStyles.tabularFigures,
-              ),
-            ),
+            child: trailing != null
+                ? Align(
+                    alignment: AlignmentDirectional.centerEnd,
+                    child: trailing,
+                  )
+                : Text(
+                    value ?? '',
+                    textAlign: TextAlign.end,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: context.appTextPrimary,
+                      fontFeatures: AppTextStyles.tabularFigures,
+                    ),
+                  ),
           ),
         ],
       ),
@@ -532,3 +733,6 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
     );
   }
 }
+
+/// The three views of a request.
+enum _DetailTab { user, evidence, ai }

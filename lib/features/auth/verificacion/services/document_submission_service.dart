@@ -1,5 +1,6 @@
 // ignore_for_file: prefer_initializing_formals
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -78,6 +79,7 @@ class DocumentSubmissionService {
   final PendingVerificationAttemptFetcher? _pendingAttemptFetcher;
   final String? Function()? _userIdFetcher;
   final DateTime Function()? _now;
+  final UploadRetryPolicy _retryPolicy;
 
   bool _isSubmitting = false;
 
@@ -89,13 +91,15 @@ class DocumentSubmissionService {
     PendingVerificationAttemptFetcher? pendingAttemptFetcher,
     String? Function()? userIdFetcher,
     DateTime Function()? now,
+    UploadRetryPolicy uploadRetryPolicy = UploadRetryPolicy.standard,
   }) : _clientOverride = client,
        _uploader = uploader,
        _remover = remover,
        _attemptInserter = attemptInserter,
        _pendingAttemptFetcher = pendingAttemptFetcher,
        _userIdFetcher = userIdFetcher,
-       _now = now;
+       _now = now,
+       _retryPolicy = uploadRetryPolicy;
 
   SupabaseClient? get _client {
     if (_clientOverride != null) return _clientOverride;
@@ -190,6 +194,10 @@ class DocumentSubmissionService {
       }
 
       final files = [documentFront, documentBack, selfie];
+      // Con el almacenamiento real los bytes se leen antes de cualquier carga:
+      // así se detecta un archivo perdido sin dejar cargas parciales y la
+      // subida no depende de que el archivo siga existiendo durante la red.
+      final fileBytes = <Uint8List?>[];
       for (final file in files) {
         try {
           if (!file.existsSync() || file.lengthSync() <= 0) {
@@ -199,6 +207,7 @@ class DocumentSubmissionService {
               'stage=file_validation; reason=file_missing_or_empty',
             );
           }
+          fileBytes.add(_uploader == null ? await file.readAsBytes() : null);
         } on FileSystemException catch (error) {
           await _cleanupNewUploads(uploadedPaths);
           return _failure(
@@ -225,17 +234,19 @@ class DocumentSubmissionService {
         for (var i = 0; i < paths.length; i++) {
           final path = paths[i];
           final file = files[i];
-          if (uploader != null) {
-            await uploader(bucket, path, file);
-          } else {
-            await client!.storage
-                .from(bucket)
-                .upload(
-                  path,
-                  file,
-                  fileOptions: documentUploadFileOptions(file.path),
-                );
-          }
+          await uploadWithRetry(() async {
+            if (uploader != null) {
+              await uploader(bucket, path, file);
+            } else {
+              await client!.storage
+                  .from(bucket)
+                  .uploadBinary(
+                    path,
+                    fileBytes[i]!,
+                    fileOptions: documentUploadFileOptions(file.path),
+                  );
+            }
+          }, policy: _retryPolicy);
           uploadedPaths.add(path);
         }
       } catch (error) {

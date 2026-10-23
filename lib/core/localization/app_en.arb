@@ -112,7 +112,9 @@
   "verification_status_suspended_desc": "Your account has been temporarily suspended by an administrative action. Commercial features are restricted.",
   "verification_status_unknown_title": "Unknown Status",
   "verification_status_unknown_desc": "We could not determine the verification status. Please contact support.",
-  "verification_status_success_msg": "Your registration was successful and we are reviewing your information...",
+  "verification_status_success_msg": "Your registration application has been submitted and is being reviewed by our moderation teams.",
+  "verification_status_submitted_title": "Request submitted",
+  "verification_status_submitted_desc": "Your account is pending approval. Commercial features unlock as soon as a moderator approves it; pull down to check progress.",
   "verification_status_upload_docs": "Upload Documents",
   "verification_status_enter_app": "Enter application",
   "verification_status_update_status": "Update status",
@@ -1144,8 +1146,8 @@
   "facial_verification_guide_chip": "Center your face",
   "facial_verification_captured": "Selfie captured",
   "facial_verification_capture_button": "Take selfie",
-  "verification_status_track_received": "Documents received",
-  "verification_status_track_ai": "KUS Vision analysis",
+  "verification_status_track_received": "Application received",
+  "verification_status_track_ai": "Document & biometric validation",
   "verification_status_track_moderator": "Moderator decision",
   "verification_status_reason_label": "Reason for rejection",
   "verification_status_resubmit": "Fix and resubmit documents",
@@ -1269,5 +1271,9 @@
   "profile_language": "Language",
   "profile_language_es": "Español",
   "profile_language_en": "English",
-  "profile_change_photo": "Change profile photo"
+  "profile_change_photo": "Change profile photo",
+  "verification_status_support_line": "Biometric and document validation in progress — We will notify you as soon as the decision is ready.",
+  "verification_status_track_current": "In progress",
+  "verification_status_ring_semantics": "Review progress. Current stage: {stage}",
+  "verification_status_rejected_empathy": "Don't worry: you can correct the flagged documents and send them again. Your application goes back to review as soon as we receive them."
 }

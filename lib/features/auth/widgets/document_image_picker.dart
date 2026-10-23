@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
@@ -20,6 +21,11 @@ typedef DocumentImageSelector = Future<File?> Function(
 /// Selector por defecto basado en `image_picker`.
 ///
 /// La cámara trasera se usa para documentos y la frontal para la selfie.
+///
+/// `image_picker` entrega la captura en el directorio de caché del sistema,
+/// que el dispositivo puede vaciar mientras el usuario completa los demás
+/// pasos. Por eso los bytes se leen de inmediato y se copian a un directorio
+/// propio de la aplicación; el archivo devuelto sigue disponible al subirlo.
 Future<File?> defaultDocumentImageSelector(
   ImageSource source, {
   CameraDevice preferredCameraDevice = CameraDevice.rear,
@@ -27,9 +33,53 @@ Future<File?> defaultDocumentImageSelector(
   final photo = await ImagePicker().pickImage(
     source: source,
     preferredCameraDevice: preferredCameraDevice,
+    // Mantiene el documento legible y evita cargas de varios MB que fallan
+    // con conexiones rurales inestables.
+    maxWidth: 2048,
+    maxHeight: 2048,
+    imageQuality: 85,
   );
   if (photo == null) return null;
-  return File(photo.path);
+
+  final bytes = await photo.readAsBytes();
+  if (bytes.isEmpty) {
+    throw const FileSystemException('La imagen seleccionada está vacía.');
+  }
+  return persistDocumentImageBytes(bytes, photo.name);
+}
+
+const String _persistedDocumentsFolder = 'pending_verification_documents';
+
+Future<Directory> _persistedDocumentsDirectory() async {
+  final base = await getApplicationSupportDirectory();
+  return Directory('${base.path}/$_persistedDocumentsFolder');
+}
+
+/// Copia los bytes de una imagen de verificación a un archivo que no depende
+/// de la caché temporal del sistema.
+Future<File> persistDocumentImageBytes(List<int> bytes, String name) async {
+  final dot = name.lastIndexOf('.');
+  final extension = dot >= 0 && dot < name.length - 1
+      ? name.substring(dot + 1).toLowerCase()
+      : 'jpg';
+  final directory = await _persistedDocumentsDirectory();
+  await directory.create(recursive: true);
+  final file = File(
+    '${directory.path}/doc_${DateTime.now().microsecondsSinceEpoch}.$extension',
+  );
+  await file.writeAsBytes(bytes, flush: true);
+  return file;
+}
+
+/// Elimina las copias locales de los documentos una vez enviados, para no
+/// conservar imágenes de identidad en el dispositivo. Es de mejor esfuerzo.
+Future<void> clearPersistedDocumentImages() async {
+  try {
+    final directory = await _persistedDocumentsDirectory();
+    if (await directory.exists()) {
+      await directory.delete(recursive: true);
+    }
+  } catch (_) {}
 }
 
 /// Abre una hoja inferior para elegir cámara o galería y devuelve el archivo

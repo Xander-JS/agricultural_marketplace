@@ -378,7 +378,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get verification_status_success_msg =>
-      'Your registration was successful and we are reviewing your information...';
+      'Your registration application has been submitted and is being reviewed by our moderation teams.';
+
+  @override
+  String get verification_status_submitted_title => 'Request submitted';
+
+  @override
+  String get verification_status_submitted_desc =>
+      'Your account is pending approval. Commercial features unlock as soon as a moderator approves it; pull down to check progress.';
 
   @override
   String get verification_status_upload_docs => 'Upload Documents';
@@ -2777,10 +2784,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get facial_verification_capture_button => 'Take selfie';
 
   @override
-  String get verification_status_track_received => 'Documents received';
+  String get verification_status_track_received => 'Application received';
 
   @override
-  String get verification_status_track_ai => 'KUS Vision analysis';
+  String get verification_status_track_ai => 'Document & biometric validation';
 
   @override
   String get verification_status_track_moderator => 'Moderator decision';
@@ -3019,4 +3026,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profile_change_photo => 'Change profile photo';
+
+  @override
+  String get verification_status_support_line =>
+      'Biometric and document validation in progress — We will notify you as soon as the decision is ready.';
+
+  @override
+  String get verification_status_track_current => 'In progress';
+
+  @override
+  String verification_status_ring_semantics(String stage) {
+    return 'Review progress. Current stage: $stage';
+  }
+
+  @override
+  String get verification_status_rejected_empathy =>
+      'Don\'t worry: you can correct the flagged documents and send them again. Your application goes back to review as soon as we receive them.';
 }

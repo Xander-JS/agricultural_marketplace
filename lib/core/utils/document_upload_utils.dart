@@ -5,6 +5,9 @@
 /// almacenamiento entregue el archivo con el `Content-Type` correcto.
 library;
 
+import 'dart:async';
+import 'dart:io';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 const Set<String> _allowedExtensions = {
@@ -60,4 +63,91 @@ String documentContentType(String path) {
 /// hace fallar la carga aunque el objeto todavía no exista.
 FileOptions documentUploadFileOptions(String path) {
   return FileOptions(upsert: false, contentType: documentContentType(path));
+}
+
+/// Reintentos con espera exponencial para cada documento.
+///
+/// En zonas rurales la red cae a mitad de una carga con frecuencia; sin
+/// reintentos un solo corte abortaba el registro completo.
+class UploadRetryPolicy {
+  /// Intentos totales por archivo, incluido el primero.
+  final int maxAttempts;
+
+  /// Espera antes del segundo intento; se duplica en cada reintento.
+  final Duration initialDelay;
+
+  /// Permite sustituir la espera en pruebas.
+  final Future<void> Function(Duration delay) wait;
+
+  const UploadRetryPolicy({
+    this.maxAttempts = 3,
+    this.initialDelay = const Duration(milliseconds: 600),
+    this.wait = _delay,
+  });
+
+  static Future<void> _delay(Duration delay) => Future<void>.delayed(delay);
+
+  static const UploadRetryPolicy standard = UploadRetryPolicy();
+}
+
+/// Ejecuta [upload] y lo reintenta solo ante fallos transitorios (red, tiempo
+/// de espera, 408/429/5xx). Un error definitivo (permisos, bucket, tipo de
+/// archivo) se propaga de inmediato porque repetirlo no cambia el resultado.
+Future<void> uploadWithRetry(
+  Future<void> Function() upload, {
+  UploadRetryPolicy policy = UploadRetryPolicy.standard,
+}) async {
+  var delay = policy.initialDelay;
+  var hadTransientFailure = false;
+  for (var attempt = 1; ; attempt++) {
+    try {
+      await upload();
+      return;
+    } catch (error) {
+      // Si la respuesta del intento anterior se perdió pero el objeto sí se
+      // guardó, Storage responde 409 al repetir la misma ruta: ya está arriba.
+      if (hadTransientFailure && isStorageObjectAlreadyExists(error)) return;
+      if (attempt >= policy.maxAttempts || !isTransientUploadError(error)) {
+        rethrow;
+      }
+      hadTransientFailure = true;
+      await policy.wait(delay);
+      delay *= 2;
+    }
+  }
+}
+
+const Set<String> _transientStatusCodes = {
+  '408',
+  '429',
+  '500',
+  '502',
+  '503',
+  '504',
+};
+
+/// Fallos de red o del servidor que pueden resolverse con solo repetir.
+bool isTransientUploadError(Object error) {
+  if (error is SocketException ||
+      error is TimeoutException ||
+      error is HttpException) {
+    return true;
+  }
+  if (error is StorageException) {
+    return _transientStatusCodes.contains(error.statusCode);
+  }
+  final description = error.toString().toLowerCase();
+  return description.contains('clientexception') ||
+      description.contains('connection closed') ||
+      description.contains('connection reset') ||
+      description.contains('failed host lookup') ||
+      description.contains('timed out');
+}
+
+bool isStorageObjectAlreadyExists(Object error) {
+  if (error is! StorageException) return false;
+  final message = error.message.toLowerCase();
+  return error.statusCode == '409' ||
+      message.contains('already exists') ||
+      message.contains('duplicate');
 }

@@ -8,8 +8,8 @@ import '../brand/topo_contours_painter.dart';
 /// Full-bleed brand stage for blocking states (session check, account
 /// processing, verification status).
 ///
-/// Forest green in light mode and deep forest in dark mode, with faint
-/// contour lines. Content placed here uses [AppColors.onBrand] tones, which
+/// Forest green falling into deep emerald (deep forest in dark mode), with
+/// faint contour lines. Content placed here uses [AppColors.onBrand] tones, which
 /// keep AAA contrast on both stages.
 class AppLoading extends StatelessWidget {
   final Widget child;
@@ -26,6 +26,19 @@ class AppLoading extends StatelessWidget {
         backgroundColor: context.appBrandStage,
         body: Stack(
           children: [
+            // Ambient depth: the auth header's forest-to-deep-emerald field,
+            // so blocking states are never a flat slab of green.
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: context.appAuthHeaderGradient,
+                  ),
+                ),
+              ),
+            ),
             const Positioned.fill(
               child: IgnorePointer(
                 child: CustomPaint(

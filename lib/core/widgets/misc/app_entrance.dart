@@ -13,6 +13,7 @@ class AppEntrance extends StatefulWidget {
   final Duration duration;
   final double offsetY;
   final double beginScale;
+  final Curve curve;
 
   const AppEntrance({
     super.key,
@@ -21,6 +22,7 @@ class AppEntrance extends StatefulWidget {
     this.duration = AppMotion.entrance,
     this.offsetY = 8,
     this.beginScale = 1,
+    this.curve = AppMotion.easeOut,
   });
 
   @override
@@ -40,7 +42,7 @@ class _AppEntranceState extends State<AppEntrance>
           ? 0
           : widget.delay.inMicroseconds / _controller.duration!.inMicroseconds,
       1,
-      curve: AppMotion.easeOut,
+      curve: widget.curve,
     ),
   );
 

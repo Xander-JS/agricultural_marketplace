@@ -12,6 +12,7 @@ import 'package:agricultural_marketplace/features/auth/registro/models/registrat
 import 'package:agricultural_marketplace/features/auth/registro/screens/processing_screen.dart';
 import 'package:agricultural_marketplace/features/auth/registro/services/registration_service.dart';
 import 'package:agricultural_marketplace/features/auth/verificacion/screens/verification_status_screen.dart';
+import 'package:agricultural_marketplace/features/auth/verificacion/services/verification_service.dart';
 import 'package:agricultural_marketplace/features/auth/widgets/auth_gate.dart';
 
 Session createMockSession({
@@ -823,7 +824,7 @@ void main() {
 
     // 11. Ausencia de rutas duplicadas al completar registro
     testWidgets(
-      '11. ProcessingScreen regresa limpiamente a la raíz con popUntil tras registro',
+      '11. ProcessingScreen reemplaza la pila por la pantalla de espera tras registro',
       (tester) async {
         final regData = RegistrationData()
           ..phone = '3151234567'
@@ -859,6 +860,14 @@ void main() {
                           builder: (_) => ProcessingScreen(
                             data: regData,
                             registrationService: service,
+                            verificationService: VerificationService(
+                              statusFetcher: () async => VerificationStatusData(
+                                status: 'pendiente',
+                                role: 'agricultor',
+                                hasVerificationAttempt: true,
+                                hasAllDocuments: true,
+                              ),
+                            ),
                           ),
                         ),
                       );
@@ -878,13 +887,28 @@ void main() {
 
         expect(find.byType(ProcessingScreen), findsOneWidget);
 
-        // Esperar a que la operación asíncrona de registro y el delay de pop se completen
+        // Esperar a que la operación asíncrona de registro y el delay se completen
         await tester.pump(const Duration(milliseconds: 1200));
-        await tester.pumpAndSettle();
+        await tester.pump(const Duration(milliseconds: 500));
+        await tester.pump(const Duration(milliseconds: 100));
 
-        // ProcessingScreen debe haberse desapilado limpiamente, volviendo a la pantalla raíz
-        expect(find.text('Abrir Registro'), findsOneWidget);
+        // La pila se reemplazó: ni el formulario ni la raíz anterior quedan
+        // detrás, y el usuario ve la pantalla de espera de verificación.
         expect(find.byType(ProcessingScreen), findsNothing);
+        expect(find.text('Abrir Registro'), findsNothing);
+        expect(find.byType(VerificationStatusScreen), findsOneWidget);
+        expect(find.text('Solicitud enviada'), findsOneWidget);
+        expect(
+          find.text(
+            'Tu solicitud de registro fue enviada y está siendo revisada por nuestros equipos de moderación.',
+          ),
+          findsOneWidget,
+        );
+        expect(
+          Navigator.of(tester.element(find.byType(VerificationStatusScreen)))
+              .canPop(),
+          isFalse,
+        );
       },
     );
 

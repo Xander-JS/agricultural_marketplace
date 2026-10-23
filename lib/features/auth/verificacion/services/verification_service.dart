@@ -1,4 +1,5 @@
 // ignore_for_file: prefer_initializing_formals
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/constants/user_roles.dart';
@@ -27,6 +28,60 @@ class VerificationStatusData {
   bool get isRejected => verificationStatus.isRejected;
   bool get isSuspended => verificationStatus.isSuspended;
   bool get isUnknown => verificationStatus.isUnknown;
+}
+
+/// Estado que debe ver el usuario combinando su perfil con su última
+/// solicitud.
+///
+/// `profiles.verification_status` decide el acceso, pero tras un rechazo el
+/// perfil sigue en `rechazado` hasta que el servidor procese la nueva
+/// solicitud. Si la última solicitud ya está pendiente o en revisión, el
+/// usuario reenvió sus documentos y debe ver la espera, no otra vez el
+/// rechazo.
+String resolveEffectiveVerificationStatus({
+  required String? profileStatus,
+  required String? attemptStatus,
+}) {
+  const reviewStates = {'pendiente', 'en_revision_ia'};
+  if (profileStatus == 'aprobado' || profileStatus == 'suspendido') {
+    return profileStatus!;
+  }
+  if (attemptStatus == null) return profileStatus ?? 'desconocido';
+  if (reviewStates.contains(attemptStatus) &&
+      profileStatus == 'en_revision_ia') {
+    return 'en_revision_ia';
+  }
+  return attemptStatus;
+}
+
+/// Lee el perfil propio mediante la RPC `get_my_profile` (SECURITY DEFINER).
+///
+/// Se usa como respaldo cuando la consulta directa a `profiles` no devuelve
+/// filas: si la RPC sí encuentra el perfil, el usuario existe y el problema es
+/// de visibilidad (RLS o privilegios de columna), no un registro incompleto.
+/// Devuelve `null` solo cuando el perfil realmente no existe.
+Future<Map<String, dynamic>?> fetchOwnProfileViaRpc(
+  SupabaseClient client,
+) async {
+  try {
+    final result = await client.rpc('get_my_profile');
+    if (result is Map) {
+      debugPrint(
+        '[auth][profile] profiles SELECT returned no row but get_my_profile '
+        'found it; review RLS on public.profiles.',
+      );
+      return Map<String, dynamic>.from(result);
+    }
+    return null;
+  } on PostgrestException catch (error) {
+    // P0002: el perfil no existe. PGRST202/42883: la RPC no está desplegada.
+    if (error.code == 'P0002' ||
+        error.code == 'PGRST202' ||
+        error.code == '42883') {
+      return null;
+    }
+    rethrow;
+  }
 }
 
 class VerificationService {
@@ -58,11 +113,13 @@ class VerificationService {
 
     try {
       // 1. Get profile status and role
-      final profileRes = await _supabase
-          .from('profiles')
-          .select('verification_status, role')
-          .eq('id', user.id)
-          .maybeSingle();
+      final profileRes =
+          await _supabase
+              .from('profiles')
+              .select('verification_status, role')
+              .eq('id', user.id)
+              .maybeSingle() ??
+          await fetchOwnProfileViaRpc(_supabase);
 
       if (profileRes == null) {
         throw Exception('Perfil inexistente');
@@ -94,22 +151,14 @@ class VerificationService {
       final rejectionReason = attemptRes['rejection_reason'] as String?;
       final hasAllDocuments = _hasAllDocuments(attemptRes);
 
-      // According to the logic, we can return the attempt status or profile status.
-      // Usually, profile status is the source of truth for the app access,
-      // but attempt status might have the specific rejection reason.
-      // If profile is approved but attempt is rejected (unlikely), profile wins.
-      if (profileStatus == 'aprobado' || profileStatus == 'suspendido') {
-        return VerificationStatusData(
-          status: profileStatus!,
-          role: role,
-          hasVerificationAttempt: true,
-          hasAllDocuments: hasAllDocuments,
-        );
-      }
+      final status = resolveEffectiveVerificationStatus(
+        profileStatus: profileStatus,
+        attemptStatus: attemptStatus,
+      );
 
       return VerificationStatusData(
-        status: attemptStatus ?? profileStatus ?? 'desconocido',
-        rejectionReason: rejectionReason,
+        status: status,
+        rejectionReason: status == 'rechazado' ? rejectionReason : null,
         role: role,
         hasVerificationAttempt: true,
         hasAllDocuments: hasAllDocuments,

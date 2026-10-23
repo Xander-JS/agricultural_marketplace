@@ -112,7 +112,9 @@
   "verification_status_suspended_desc": "Tu cuenta ha sido suspendida mediante una acción administrativa temporalmente. Se restringen las funcionalidades comerciales.",
   "verification_status_unknown_title": "Estado Desconocido",
   "verification_status_unknown_desc": "No pudimos determinar el estado de verificación. Por favor, contacta a soporte.",
-  "verification_status_success_msg": "Tu registro fue exitoso y estamos revisando tu información...",
+  "verification_status_success_msg": "Tu solicitud de registro fue enviada y está siendo revisada por nuestros equipos de moderación.",
+  "verification_status_submitted_title": "Solicitud enviada",
+  "verification_status_submitted_desc": "Tu cuenta queda pendiente de aprobación. Las funciones comerciales se habilitan en cuanto un moderador la apruebe; desliza hacia abajo para consultar el avance.",
   "verification_status_upload_docs": "Subir Documentos",
   "verification_status_enter_app": "Entrar a la aplicación",
   "verification_status_update_status": "Actualizar estado",
@@ -1179,9 +1181,9 @@
   "facial_verification_guide_chip": "Centra tu rostro",
   "facial_verification_captured": "Selfie capturada",
   "facial_verification_capture_button": "Tomar selfie",
-  "verification_status_track_received": "Documentos recibidos",
-  "verification_status_track_ai": "Análisis KUS Vision",
-  "verification_status_track_moderator": "Dictamen del moderador",
+  "verification_status_track_received": "Solicitud recibida",
+  "verification_status_track_ai": "Validación biométrica y documental",
+  "verification_status_track_moderator": "Decisión del moderador",
   "verification_status_reason_label": "Motivo del rechazo",
   "verification_status_resubmit": "Corregir y reenviar documentos",
   "moderation_queue_count": "{count, plural, =0{Sin solicitudes} =1{1 solicitud} other{{count} solicitudes}}",
@@ -1304,5 +1306,16 @@
   "profile_language": "Idioma",
   "profile_language_es": "Español",
   "profile_language_en": "English",
-  "profile_change_photo": "Cambiar foto de perfil"
+  "profile_change_photo": "Cambiar foto de perfil",
+  "verification_status_support_line": "Validación biométrica y documental en curso — Te avisaremos en cuanto la decisión esté lista.",
+  "verification_status_track_current": "En curso",
+  "verification_status_ring_semantics": "Progreso de la revisión. Etapa actual: {stage}",
+  "verification_status_rejected_empathy": "No te preocupes: puedes corregir los documentos señalados y enviarlos de nuevo. Tu solicitud volverá a revisión en cuanto los recibamos.",
+  "@verification_status_ring_semantics": {
+    "placeholders": {
+      "stage": {
+        "type": "String"
+      }
+    }
+  }
 }

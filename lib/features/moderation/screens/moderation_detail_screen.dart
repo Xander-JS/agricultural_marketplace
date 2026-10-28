@@ -428,7 +428,7 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
                 l10n.moderation_lbl_role,
                 trailing: StatusBadge(
                   key: const ValueKey('moderation_detail_role_badge'),
-                  text: request.userRole.displayName,
+                  text: request.userRole.localizedName(l10n),
                   icon: LucideIcons.briefcase,
                   tone: StatusBadgeTone.brand,
                   backgroundColor: context.appPrimarySoft,
@@ -718,7 +718,7 @@ class _ModerationDetailScreenState extends State<ModerationDetailScreen> {
     final l10n = AppLocalizations.of(context)!;
     final label = switch (status) {
       UserVerificationStatus.pendiente => l10n.moderation_status_pending,
-      UserVerificationStatus.enRevisionIa => status.displayName,
+      UserVerificationStatus.enRevisionIa => status.localizedName(l10n),
       UserVerificationStatus.aprobado => l10n.moderation_status_approved,
       UserVerificationStatus.rechazado => l10n.moderation_status_rejected,
       UserVerificationStatus.suspendido => l10n.moderation_status_suspended,

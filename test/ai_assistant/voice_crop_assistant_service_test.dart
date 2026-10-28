@@ -163,5 +163,27 @@ void main() {
         equals('Tengo 10 bultos de papa a 2000 pesos el kilo'),
       );
     });
+
+    test('7. Endpoint y modelo toman valores predeterminados de DeepSeek', () {
+      final service = OpenAiCropExtractionService(apiKey: 'key');
+
+      expect(
+        service.endpoint,
+        equals('https://api.deepseek.com/chat/completions'),
+      );
+      expect(service.model, equals('deepseek-chat'));
+    });
+
+    test('8. Endpoint y modelo permiten sobreescritura manual', () {
+      final service = OpenAiCropExtractionService(
+        apiKey: 'key',
+        endpoint: 'https://custom-endpoint.com/v1',
+        model: 'custom-model',
+      );
+
+      expect(service.endpoint, equals('https://custom-endpoint.com/v1'));
+      expect(service.model, equals('custom-model'));
+    });
   });
 }
+

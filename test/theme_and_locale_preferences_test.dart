@@ -32,6 +32,20 @@ void main() {
       expect(service.isEnglish, isFalse);
     });
 
+    test('Tamaño de texto inicia en Mediano y persiste el cambio', () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final service = AppPreferencesService.withPreferences(prefs);
+      expect(service.textSize, AppTextSize.medium);
+
+      await service.setTextSize(AppTextSize.large);
+      expect(prefs.getString(AppPreferencesService.keyTextSize), 'large');
+      expect(
+        AppPreferencesService.withPreferences(prefs).textSize,
+        AppTextSize.large,
+      );
+    });
+
     test('toggleDarkMode cambia reactivamente y persiste en SharedPreferences', () async {
       SharedPreferences.setMockInitialValues({});
       final prefs = await SharedPreferences.getInstance();

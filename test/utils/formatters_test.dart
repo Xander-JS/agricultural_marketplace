@@ -276,7 +276,9 @@ void main() {
       expect(find.text(r'$ 2.500'), findsOneWidget);
 
       // Stock con equivalencia tradicional: 1.000 kg (≈ 1 tonelada)
-      expect(find.text('1.000 kg (≈ 1 tonelada)'), findsOneWidget);
+      // Stock y equivalencia en líneas separadas.
+      expect(find.text('1.000 kg'), findsOneWidget);
+      expect(find.text('≈ 1 tonelada'), findsOneWidget);
 
       // Pedido mínimo: 50 kg
       expect(find.text('50 kg'), findsOneWidget);

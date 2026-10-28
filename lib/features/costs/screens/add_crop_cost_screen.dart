@@ -16,6 +16,7 @@ import '../../../core/utils/unit_formatters.dart';
 import '../models/crop_cost_model.dart';
 import '../services/crop_cost_calculator.dart';
 import '../services/crop_cost_service.dart';
+import '../../../core/constants/input_limits.dart';
 
 class AddCropCostScreen extends StatefulWidget {
   final String cropId;
@@ -186,6 +187,7 @@ class _AddCropCostScreenState extends State<AddCropCostScreen> {
                         return null;
                       },
                       maxLines: 2,
+                      maxLength: InputLimits.costConcept,
                       textCapitalization: TextCapitalization.sentences,
                     ),
                     const SizedBox(height: AppDimensions.space24),
@@ -205,6 +207,10 @@ class _AddCropCostScreenState extends State<AddCropCostScreen> {
                       ),
                       inputFormatters: [
                         FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                        // Room for the digits plus thousands/decimal marks.
+                        LengthLimitingTextInputFormatter(
+                          InputLimits.amountDigits + 6,
+                        ),
                       ],
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
@@ -297,13 +303,17 @@ class _CategoryTile extends StatelessWidget {
               children: [
                 IconSquircle(icon: category.icon, size: 36),
                 const SizedBox(width: AppDimensions.space8),
+                // One-word names: shrink to fit rather than cut the word.
                 Expanded(
-                  child: Text(
-                    category.toDisplayName(),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTextStyles.titleSmall.copyWith(
-                      color: context.appTextPrimary,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      category.localizedName(AppLocalizations.of(context)!),
+                      maxLines: 1,
+                      style: AppTextStyles.titleSmall.copyWith(
+                        color: context.appTextPrimary,
+                      ),
                     ),
                   ),
                 ),

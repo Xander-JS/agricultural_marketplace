@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/theme/app_icons.dart';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -21,6 +23,7 @@ import '../../crop/screens/publish_crop_screen.dart';
 import '../services/crop_cost_calculator.dart';
 import '../services/crop_cost_service.dart';
 import 'crop_costs_detail_screen.dart';
+import '../widgets/cost_result_messages.dart';
 
 class CostsScreen extends StatefulWidget {
   final CropService? cropService;
@@ -352,7 +355,7 @@ class _CostsScreenState extends State<CostsScreen> {
                     Padding(
                       padding: const EdgeInsets.only(top: 2),
                       child: Text(
-                        '${UnitFormatters.formatKg(perKg.denominator)} · ${perKg.denominatorSource.displayName}',
+                        '${UnitFormatters.formatKg(perKg.denominator)} · ${perKg.denominatorSource.localizedName(l10n)}',
                         style: AppTextStyles.caption.copyWith(
                           color: context.appTextSecondary,
                           fontFeatures: AppTextStyles.tabularFigures,

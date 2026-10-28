@@ -23,6 +23,7 @@ import '../services/crop_cost_calculator.dart';
 import '../services/crop_cost_service.dart';
 import 'add_crop_cost_screen.dart';
 import 'crop_profitability_screen.dart';
+import '../widgets/cost_result_messages.dart';
 
 class CropCostsDetailScreen extends StatefulWidget {
   final CropModel crop;
@@ -333,7 +334,7 @@ class _CropCostsDetailScreenState extends State<CropCostsDetailScreen> {
           )
         else
           Text(
-            result.message,
+            result.localizedMessage(l10n),
             key: const Key('crop_cost_per_kg_message'),
             style: AppTextStyles.bodySmall.copyWith(color: AppColors.onBrand),
           ),
@@ -356,7 +357,7 @@ class _CropCostsDetailScreenState extends State<CropCostsDetailScreen> {
         Text(
           l10n.costs_quantity_used(
             denominatorText,
-            result.denominatorSource.displayName,
+            result.denominatorSource.localizedName(l10n),
           ),
           style: AppTextStyles.bodySmall.copyWith(
             color: AppColors.onBrand,
@@ -475,7 +476,7 @@ class _CropCostsDetailScreenState extends State<CropCostsDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    cost.category.toDisplayName(),
+                    cost.category.localizedName(l10n),
                     style: AppTextStyles.titleMedium.copyWith(
                       color: context.appTextPrimary,
                     ),

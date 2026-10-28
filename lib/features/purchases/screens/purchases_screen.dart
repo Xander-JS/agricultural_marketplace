@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/theme/app_icons.dart';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../deals/models/negotiation_model.dart';
@@ -494,10 +496,11 @@ class _KpiLabel extends StatelessWidget {
       children: [
         Icon(icon, size: 15, color: context.appTextSecondary),
         const SizedBox(width: 6),
+        // Two lines: "Acuerdos vigentes" wraps between words at large sizes.
         Flexible(
           child: Text(
             label,
-            maxLines: 1,
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: AppTextStyles.labelMedium.copyWith(
               fontSize: 13,

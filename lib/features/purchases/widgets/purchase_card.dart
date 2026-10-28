@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/theme/app_icons.dart';
 
 import '../../deals/models/negotiation_model.dart';
@@ -120,45 +121,57 @@ class PurchaseCard extends StatelessWidget {
 
                 const SizedBox(height: AppDimensions.space12),
 
-                // Productor y procedencia
-                Row(
+                // Productor y procedencia: la procedencia baja a otra línea
+                // cuando no cabe, en lugar de recortar ambos nombres.
+                Wrap(
+                  spacing: AppDimensions.space12,
+                  runSpacing: 4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    Icon(
-                      LucideIcons.userRound,
-                      size: 15,
-                      color: context.appTextSecondary,
-                    ),
-                    const SizedBox(width: 6),
-                    Flexible(
-                      child: Text(
-                        producerName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.titleSmall.copyWith(
-                          color: context.appTextPrimary,
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          LucideIcons.userRound,
+                          size: 15,
+                          color: context.appTextSecondary,
                         ),
-                      ),
-                    ),
-                    if (location != null) ...[
-                      const SizedBox(width: AppDimensions.space12),
-                      Icon(
-                        LucideIcons.mapPin,
-                        size: 14,
-                        color: context.appTextSecondary,
-                      ),
-                      const SizedBox(width: 4),
-                      Flexible(
-                        child: Text(
-                          location,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTextStyles.caption.copyWith(
-                            fontSize: 12,
-                            color: context.appTextSecondary,
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            producerName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyles.titleSmall.copyWith(
+                              color: context.appTextPrimary,
+                            ),
                           ),
                         ),
+                      ],
+                    ),
+                    if (location != null)
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            LucideIcons.mapPin,
+                            size: 14,
+                            color: context.appTextSecondary,
+                          ),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              location,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTextStyles.caption.copyWith(
+                                fontSize: 12,
+                                color: context.appTextSecondary,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
                   ],
                 ),
 
@@ -208,33 +221,39 @@ class PurchaseCard extends StatelessWidget {
 
                 const SizedBox(height: AppDimensions.space12),
 
-                // Entrega y fecha
-                Row(
+                // Entrega y fecha: la fecha baja a otra línea si no cabe.
+                Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: AppDimensions.space8,
+                  runSpacing: 4,
                   children: [
                     if (latestOffer != null &&
-                        latestOffer.deliveryMethod.isNotEmpty) ...[
-                      Icon(
-                        deliveryPresentation(
-                          l10n,
-                          latestOffer.deliveryMethod,
-                        ).icon,
-                        size: 15,
-                        color: context.appTextSecondary,
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          '${l10n.purchases_delivery_method}: ${deliveryDisplayLabel(l10n, latestOffer.deliveryMethod)}',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTextStyles.bodySmall.copyWith(
+                        latestOffer.deliveryMethod.isNotEmpty)
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            deliveryPresentation(
+                              l10n,
+                              latestOffer.deliveryMethod,
+                            ).icon,
+                            size: 15,
                             color: context.appTextSecondary,
                           ),
-                        ),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              '${l10n.purchases_delivery_method}: ${deliveryDisplayLabel(l10n, latestOffer.deliveryMethod)}',
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: context.appTextSecondary,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ] else
-                      const Spacer(),
-                    const SizedBox(width: AppDimensions.space8),
                     Text(
                       formattedDate,
                       style: AppTextStyles.caption.copyWith(
@@ -250,7 +269,11 @@ class PurchaseCard extends StatelessWidget {
                 const SizedBox(height: 10),
 
                 // Estado del acuerdo y enlace al detalle
-                Row(
+                Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: AppDimensions.space8,
+                  runSpacing: AppDimensions.space8,
                   children: [
                     NegotiationStatusBadge(
                       status: purchase.status,
@@ -258,8 +281,6 @@ class PurchaseCard extends StatelessWidget {
                           ? l10n.purchases_status_agreed
                           : l10n.purchases_status_completed,
                     ),
-                    const Spacer(),
-                    const SizedBox(width: AppDimensions.space8),
                     Text(
                       l10n.purchases_view_detail,
                       style: AppTextStyles.labelMedium.copyWith(
@@ -297,12 +318,16 @@ class _Figure extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: AppTextStyles.caption.copyWith(
-            color: context.appTextSecondary,
+        // Shrinks to fit its column instead of cutting the word.
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            label,
+            maxLines: 1,
+            style: AppTextStyles.caption.copyWith(
+              color: context.appTextSecondary,
+            ),
           ),
         ),
         const SizedBox(height: 2),

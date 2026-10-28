@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import '../../../core/theme/app_icons.dart';
 
 import '../models/crop_model.dart';
@@ -16,6 +17,8 @@ import '../../../core/widgets/sheets/app_sheet_frame.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/constants/delivery_methods.dart';
 import '../../../core/utils/app_formatters.dart';
+import '../../../core/constants/input_limits.dart';
+import '../../../core/widgets/inputs/field_pair.dart';
 
 class MakeOfferSheet extends StatefulWidget {
   final CropModel crop;
@@ -209,73 +212,63 @@ class _MakeOfferSheetState extends State<MakeOfferSheet> {
             ),
             const SizedBox(height: AppDimensions.space16),
 
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _quantityController,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
-                    ],
-                    style: figureStyle,
-                    decoration: InputDecoration(
-                      labelText: l10n.offer_sheet_quantity_label,
-                      suffixText: 'kg',
-                      prefixIcon: const Icon(LucideIcons.weight, size: 18),
-                    ),
-                    onChanged: (_) => setState(() {}),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return l10n.offer_sheet_val_required;
-                      }
-                      final parsed = double.tryParse(value.trim());
-                      if (parsed == null || parsed <= 0) {
-                        return l10n.offer_sheet_val_positive;
-                      }
-                      if (parsed < widget.crop.minOrderKg) {
-                        return l10n.offer_sheet_val_min_order;
-                      }
-                      if (parsed > widget.crop.availableStock) {
-                        return l10n.offer_sheet_val_max_stock;
-                      }
-                      return null;
-                    },
-                  ),
+            FieldPair(
+              first: TextFormField(
+                controller: _quantityController,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
                 ),
-                const SizedBox(width: AppDimensions.space12),
-                Expanded(
-                  child: TextFormField(
-                    controller: _priceController,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
-                    ],
-                    style: figureStyle,
-                    decoration: InputDecoration(
-                      labelText: l10n.offer_sheet_price_label,
-                      prefixText: '\$ ',
-                      suffixText: '/ kg',
-                    ),
-                    onChanged: (_) => setState(() {}),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return l10n.offer_sheet_val_required;
-                      }
-                      final parsed = double.tryParse(value.trim());
-                      if (parsed == null || parsed <= 0) {
-                        return l10n.offer_sheet_val_positive;
-                      }
-                      return null;
-                    },
-                  ),
+                inputFormatters: InputLimits.decimal(InputLimits.kgDigits),
+                style: figureStyle,
+                decoration: InputDecoration(
+                  labelText: l10n.offer_sheet_quantity_label,
+                  suffixText: 'kg',
+                  prefixIcon: const Icon(LucideIcons.weight, size: 18),
                 ),
-              ],
+                onChanged: (_) => setState(() {}),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return l10n.offer_sheet_val_required;
+                  }
+                  final parsed = double.tryParse(value.trim());
+                  if (parsed == null || parsed <= 0) {
+                    return l10n.offer_sheet_val_positive;
+                  }
+                  if (parsed < widget.crop.minOrderKg) {
+                    return l10n.offer_sheet_val_min_order;
+                  }
+                  if (parsed > widget.crop.availableStock) {
+                    return l10n.offer_sheet_val_max_stock;
+                  }
+                  return null;
+                },
+              ),
+              second: TextFormField(
+                controller: _priceController,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                inputFormatters: InputLimits.decimal(
+                  InputLimits.pricePerKgDigits,
+                ),
+                style: figureStyle,
+                decoration: InputDecoration(
+                  labelText: l10n.offer_sheet_price_label,
+                  prefixText: '\$ ',
+                  suffixText: '/ kg',
+                ),
+                onChanged: (_) => setState(() {}),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return l10n.offer_sheet_val_required;
+                  }
+                  final parsed = double.tryParse(value.trim());
+                  if (parsed == null || parsed <= 0) {
+                    return l10n.offer_sheet_val_positive;
+                  }
+                  return null;
+                },
+              ),
             ),
             const SizedBox(height: AppDimensions.space20),
 
@@ -301,6 +294,7 @@ class _MakeOfferSheetState extends State<MakeOfferSheet> {
             TextFormField(
               controller: _messageController,
               maxLines: 2,
+              maxLength: InputLimits.message,
               textCapitalization: TextCapitalization.sentences,
               decoration: InputDecoration(
                 labelText: l10n.offer_sheet_message_label,

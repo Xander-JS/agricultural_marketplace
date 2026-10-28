@@ -31,6 +31,7 @@ import '../../../core/localization/app_localizations.dart';
 import '../../../core/constants/user_roles.dart';
 import '../../ai_assistant/models/voice_crop_draft.dart';
 import '../../ai_assistant/widgets/voice_crop_assistant_sheet.dart';
+import '../../../core/constants/input_limits.dart';
 
 enum _MarketplaceSortOption {
   recent,
@@ -694,6 +695,10 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
             child: TextField(
               key: const ValueKey('marketplace_search_field'),
               controller: _searchController,
+              maxLength: InputLimits.search,
+              buildCounter:
+                  (_, {required currentLength, required isFocused, maxLength}) =>
+                      null,
               onChanged: (value) {
                 setState(() {
                   _searchQuery = value;

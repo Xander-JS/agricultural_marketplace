@@ -25,6 +25,15 @@ class ChoiceTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final triad = context.appBrandTriad;
+    final labelText = Text(
+      label,
+      textAlign: TextAlign.center,
+      maxLines: 2,
+      style: AppTextStyles.labelMedium.copyWith(
+        color: selected ? triad.foreground : context.appTextPrimary,
+        fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+      ),
+    );
     final duration = AppMotion.of(context, AppMotion.standard);
     final foreground = selected ? triad.foreground : context.appTextSecondary;
 
@@ -53,15 +62,12 @@ class ChoiceTile extends StatelessWidget {
               children: [
                 Icon(icon, size: 20, color: foreground),
                 const SizedBox(height: 6),
-                Text(
-                  label,
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  style: AppTextStyles.labelMedium.copyWith(
-                    color: selected ? triad.foreground : context.appTextPrimary,
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-                  ),
-                ),
+                // A single long word (e.g. "Transportadora") shrinks to fit
+                // instead of breaking mid-word at large text sizes.
+                if (label.contains(' '))
+                  labelText
+                else
+                  FittedBox(fit: BoxFit.scaleDown, child: labelText),
               ],
             ),
           ),

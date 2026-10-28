@@ -39,8 +39,9 @@ class PrimaryActionButton extends StatelessWidget {
     final Widget label = text != null
         ? Text(
             text!,
-            maxLines: 1,
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
             style: AppTextStyles.buttonLarge,
           )
         : Icon(icon, size: AppDimensions.iconMD);
@@ -71,9 +72,13 @@ class PrimaryActionButton extends StatelessWidget {
 
     return PressableScale(
       enabled: enabled,
-      child: SizedBox(
-        width: double.infinity,
-        height: AppDimensions.buttonHeightPrimary,
+      // A minimum, not a fixed, height: a long label at a large text size
+      // takes a second line instead of being cut.
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(
+          minWidth: double.infinity,
+          minHeight: AppDimensions.buttonHeightPrimary,
+        ),
         child: ElevatedButton(
           onPressed: enabled ? _handlePressed : null,
           style: ElevatedButton.styleFrom(
@@ -86,6 +91,10 @@ class PrimaryActionButton extends StatelessWidget {
             disabledForegroundColor: isLoading
                 ? foreground
                 : context.appTextMuted,
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppDimensions.space16,
+              vertical: AppDimensions.space8,
+            ),
             shape: RoundedRectangleBorder(
               borderRadius: AppDimensions.borderRadiusControl,
             ),

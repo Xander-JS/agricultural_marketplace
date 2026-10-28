@@ -38,14 +38,16 @@ class MediaCapsule extends StatelessWidget {
               Icon(icon, size: 12, color: AppColors.onBrand),
               const SizedBox(width: 4),
             ],
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTextStyles.labelSmall.copyWith(
-                color: AppColors.onBrand,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.1,
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.labelSmall.copyWith(
+                  color: AppColors.onBrand,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.1,
+                ),
               ),
             ),
           ],

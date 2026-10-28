@@ -92,14 +92,18 @@ class _SegmentLabel extends StatelessWidget {
             Icon(segment.icon, size: 14, color: color),
             const SizedBox(width: 5),
           ],
+          // Segments share the width equally: at large text sizes a label
+          // shrinks to fit its segment instead of losing its ending.
           Flexible(
-            child: Text(
-              segment.label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTextStyles.labelMedium.copyWith(
-                color: color,
-                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                segment.label,
+                maxLines: 1,
+                style: AppTextStyles.labelMedium.copyWith(
+                  color: color,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                ),
               ),
             ),
           ),

@@ -3596,16 +3596,6 @@ abstract class AppLocalizations {
   /// **'Costo de producción por kg'**
   String get profitability_cost_per_kg;
 
-  /// No description provided for @profitability_used_quantity.
-  ///
-  /// In es, this message translates to:
-  /// **'Cantidad usada: {quantity} ({source}) · {field}'**
-  String profitability_used_quantity(
-    String quantity,
-    String source,
-    String field,
-  );
-
   /// No description provided for @profitability_current_price.
   ///
   /// In es, this message translates to:
@@ -5602,6 +5592,264 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Estado:'**
   String get moderation_lbl_status;
+
+  /// No description provided for @profile_text_size.
+  ///
+  /// In es, this message translates to:
+  /// **'Tamaño de texto e iconos'**
+  String get profile_text_size;
+
+  /// No description provided for @profile_text_size_small.
+  ///
+  /// In es, this message translates to:
+  /// **'Pequeño'**
+  String get profile_text_size_small;
+
+  /// No description provided for @profile_text_size_medium.
+  ///
+  /// In es, this message translates to:
+  /// **'Mediano'**
+  String get profile_text_size_medium;
+
+  /// No description provided for @profile_text_size_large.
+  ///
+  /// In es, this message translates to:
+  /// **'Grande'**
+  String get profile_text_size_large;
+
+  /// No description provided for @crop_card_per_kg.
+  ///
+  /// In es, this message translates to:
+  /// **'/kg'**
+  String get crop_card_per_kg;
+
+  /// No description provided for @role_label_farmer.
+  ///
+  /// In es, this message translates to:
+  /// **'Agricultor'**
+  String get role_label_farmer;
+
+  /// No description provided for @role_label_buyer.
+  ///
+  /// In es, this message translates to:
+  /// **'Comprador'**
+  String get role_label_buyer;
+
+  /// No description provided for @role_label_moderator.
+  ///
+  /// In es, this message translates to:
+  /// **'Moderador'**
+  String get role_label_moderator;
+
+  /// No description provided for @cost_source_stock_total.
+  ///
+  /// In es, this message translates to:
+  /// **'stock total'**
+  String get cost_source_stock_total;
+
+  /// No description provided for @cost_source_estimated_yield.
+  ///
+  /// In es, this message translates to:
+  /// **'rendimiento estimado'**
+  String get cost_source_estimated_yield;
+
+  /// No description provided for @cost_msg_calculated.
+  ///
+  /// In es, this message translates to:
+  /// **'Costo estimado por kg'**
+  String get cost_msg_calculated;
+
+  /// No description provided for @cost_msg_no_costs.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún no hay costos registrados. Agrega un costo para calcular el costo por kg.'**
+  String get cost_msg_no_costs;
+
+  /// No description provided for @cost_msg_invalid_total.
+  ///
+  /// In es, this message translates to:
+  /// **'No se puede calcular el costo por kg porque el total de costos no es válido.'**
+  String get cost_msg_invalid_total;
+
+  /// No description provided for @cost_msg_invalid_quantity.
+  ///
+  /// In es, this message translates to:
+  /// **'No se puede calcular el costo por kg porque la cantidad usada como denominador no es válida. Debe ser mayor que cero.'**
+  String get cost_msg_invalid_quantity;
+
+  /// No description provided for @cost_msg_yield_pending.
+  ///
+  /// In es, this message translates to:
+  /// **'No se puede calcular el costo por kg: la venta anticipada no tiene rendimiento estimado registrado.'**
+  String get cost_msg_yield_pending;
+
+  /// No description provided for @margin_msg_calculated.
+  ///
+  /// In es, this message translates to:
+  /// **'Margen calculado sobre el precio de venta.'**
+  String get margin_msg_calculated;
+
+  /// No description provided for @margin_msg_below_cost.
+  ///
+  /// In es, this message translates to:
+  /// **'El precio de venta está por debajo del costo de producción.'**
+  String get margin_msg_below_cost;
+
+  /// No description provided for @margin_msg_cost_unavailable.
+  ///
+  /// In es, this message translates to:
+  /// **'No se puede calcular el margen porque el costo por kg no está disponible.'**
+  String get margin_msg_cost_unavailable;
+
+  /// No description provided for @margin_msg_invalid_cost.
+  ///
+  /// In es, this message translates to:
+  /// **'No se puede calcular el margen porque el costo por kg no es válido.'**
+  String get margin_msg_invalid_cost;
+
+  /// No description provided for @margin_msg_missing_price.
+  ///
+  /// In es, this message translates to:
+  /// **'No se puede calcular el margen porque falta un precio de venta válido.'**
+  String get margin_msg_missing_price;
+
+  /// No description provided for @margin_msg_price_not_positive.
+  ///
+  /// In es, this message translates to:
+  /// **'No se puede calcular el margen porque el precio de venta debe ser mayor que cero.'**
+  String get margin_msg_price_not_positive;
+
+  /// No description provided for @margin_msg_invalid_calc.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo calcular el margen con los valores ingresados.'**
+  String get margin_msg_invalid_calc;
+
+  /// No description provided for @suggested_msg_calculated.
+  ///
+  /// In es, this message translates to:
+  /// **'Precio sugerido según el margen objetivo.'**
+  String get suggested_msg_calculated;
+
+  /// No description provided for @suggested_msg_cost_unavailable.
+  ///
+  /// In es, this message translates to:
+  /// **'No se puede calcular el precio sugerido porque el costo por kg no está disponible.'**
+  String get suggested_msg_cost_unavailable;
+
+  /// No description provided for @suggested_msg_invalid_cost.
+  ///
+  /// In es, this message translates to:
+  /// **'No se puede calcular el precio sugerido porque el costo por kg debe ser mayor que cero.'**
+  String get suggested_msg_invalid_cost;
+
+  /// No description provided for @suggested_msg_missing_margin.
+  ///
+  /// In es, this message translates to:
+  /// **'No se puede calcular el precio sugerido porque falta el margen objetivo.'**
+  String get suggested_msg_missing_margin;
+
+  /// No description provided for @suggested_msg_margin_range.
+  ///
+  /// In es, this message translates to:
+  /// **'El margen objetivo debe ser mayor o igual que 0 % y menor que 100 %.'**
+  String get suggested_msg_margin_range;
+
+  /// No description provided for @suggested_msg_invalid_calc.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo calcular un precio sugerido válido con los valores ingresados.'**
+  String get suggested_msg_invalid_calc;
+
+  /// No description provided for @compare_msg_above.
+  ///
+  /// In es, this message translates to:
+  /// **'El precio evaluado está por encima del índice regional.'**
+  String get compare_msg_above;
+
+  /// No description provided for @compare_msg_below.
+  ///
+  /// In es, this message translates to:
+  /// **'El precio evaluado está por debajo del índice regional.'**
+  String get compare_msg_below;
+
+  /// No description provided for @compare_msg_invalid_evaluated.
+  ///
+  /// In es, this message translates to:
+  /// **'No hay un precio evaluado válido para comparar con la referencia.'**
+  String get compare_msg_invalid_evaluated;
+
+  /// No description provided for @compare_msg_invalid_reference.
+  ///
+  /// In es, this message translates to:
+  /// **'La referencia de precio no es válida para realizar la comparación.'**
+  String get compare_msg_invalid_reference;
+
+  /// No description provided for @compare_msg_invalid_calc.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo calcular la diferencia con los valores ingresados.'**
+  String get compare_msg_invalid_calc;
+
+  /// No description provided for @unit_name_bulto.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{bulto} other{bultos}}'**
+  String unit_name_bulto(int count);
+
+  /// No description provided for @unit_name_arroba.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{arroba} other{arrobas}}'**
+  String unit_name_arroba(int count);
+
+  /// No description provided for @unit_name_canastilla.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{canastilla} other{canastillas}}'**
+  String unit_name_canastilla(int count);
+
+  /// No description provided for @unit_name_caja.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{caja} other{cajas}}'**
+  String unit_name_caja(int count);
+
+  /// No description provided for @unit_name_tonelada.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{tonelada} other{toneladas}}'**
+  String unit_name_tonelada(int count);
+
+  /// No description provided for @cost_category_labor.
+  ///
+  /// In es, this message translates to:
+  /// **'Jornales'**
+  String get cost_category_labor;
+
+  /// No description provided for @cost_category_fertilizers.
+  ///
+  /// In es, this message translates to:
+  /// **'Fertilizantes'**
+  String get cost_category_fertilizers;
+
+  /// No description provided for @cost_category_transport.
+  ///
+  /// In es, this message translates to:
+  /// **'Transporte'**
+  String get cost_category_transport;
+
+  /// No description provided for @cost_category_other.
+  ///
+  /// In es, this message translates to:
+  /// **'Otros'**
+  String get cost_category_other;
+
+  /// No description provided for @profile_view_photo.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver foto de perfil'**
+  String get profile_view_photo;
 }
 
 class _AppLocalizationsDelegate

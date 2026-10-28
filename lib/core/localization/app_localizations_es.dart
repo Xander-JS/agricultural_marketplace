@@ -1926,15 +1926,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get profitability_cost_per_kg => 'Costo de producción por kg';
 
   @override
-  String profitability_used_quantity(
-    String quantity,
-    String source,
-    String field,
-  ) {
-    return 'Cantidad usada: $quantity ($source) · $field';
-  }
-
-  @override
   String get profitability_current_price => 'Precio actual publicado';
 
   @override
@@ -3143,4 +3134,195 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get moderation_lbl_status => 'Estado:';
+
+  @override
+  String get profile_text_size => 'Tamaño de texto e iconos';
+
+  @override
+  String get profile_text_size_small => 'Pequeño';
+
+  @override
+  String get profile_text_size_medium => 'Mediano';
+
+  @override
+  String get profile_text_size_large => 'Grande';
+
+  @override
+  String get crop_card_per_kg => '/kg';
+
+  @override
+  String get role_label_farmer => 'Agricultor';
+
+  @override
+  String get role_label_buyer => 'Comprador';
+
+  @override
+  String get role_label_moderator => 'Moderador';
+
+  @override
+  String get cost_source_stock_total => 'stock total';
+
+  @override
+  String get cost_source_estimated_yield => 'rendimiento estimado';
+
+  @override
+  String get cost_msg_calculated => 'Costo estimado por kg';
+
+  @override
+  String get cost_msg_no_costs =>
+      'Aún no hay costos registrados. Agrega un costo para calcular el costo por kg.';
+
+  @override
+  String get cost_msg_invalid_total =>
+      'No se puede calcular el costo por kg porque el total de costos no es válido.';
+
+  @override
+  String get cost_msg_invalid_quantity =>
+      'No se puede calcular el costo por kg porque la cantidad usada como denominador no es válida. Debe ser mayor que cero.';
+
+  @override
+  String get cost_msg_yield_pending =>
+      'No se puede calcular el costo por kg: la venta anticipada no tiene rendimiento estimado registrado.';
+
+  @override
+  String get margin_msg_calculated =>
+      'Margen calculado sobre el precio de venta.';
+
+  @override
+  String get margin_msg_below_cost =>
+      'El precio de venta está por debajo del costo de producción.';
+
+  @override
+  String get margin_msg_cost_unavailable =>
+      'No se puede calcular el margen porque el costo por kg no está disponible.';
+
+  @override
+  String get margin_msg_invalid_cost =>
+      'No se puede calcular el margen porque el costo por kg no es válido.';
+
+  @override
+  String get margin_msg_missing_price =>
+      'No se puede calcular el margen porque falta un precio de venta válido.';
+
+  @override
+  String get margin_msg_price_not_positive =>
+      'No se puede calcular el margen porque el precio de venta debe ser mayor que cero.';
+
+  @override
+  String get margin_msg_invalid_calc =>
+      'No se pudo calcular el margen con los valores ingresados.';
+
+  @override
+  String get suggested_msg_calculated =>
+      'Precio sugerido según el margen objetivo.';
+
+  @override
+  String get suggested_msg_cost_unavailable =>
+      'No se puede calcular el precio sugerido porque el costo por kg no está disponible.';
+
+  @override
+  String get suggested_msg_invalid_cost =>
+      'No se puede calcular el precio sugerido porque el costo por kg debe ser mayor que cero.';
+
+  @override
+  String get suggested_msg_missing_margin =>
+      'No se puede calcular el precio sugerido porque falta el margen objetivo.';
+
+  @override
+  String get suggested_msg_margin_range =>
+      'El margen objetivo debe ser mayor o igual que 0 % y menor que 100 %.';
+
+  @override
+  String get suggested_msg_invalid_calc =>
+      'No se pudo calcular un precio sugerido válido con los valores ingresados.';
+
+  @override
+  String get compare_msg_above =>
+      'El precio evaluado está por encima del índice regional.';
+
+  @override
+  String get compare_msg_below =>
+      'El precio evaluado está por debajo del índice regional.';
+
+  @override
+  String get compare_msg_invalid_evaluated =>
+      'No hay un precio evaluado válido para comparar con la referencia.';
+
+  @override
+  String get compare_msg_invalid_reference =>
+      'La referencia de precio no es válida para realizar la comparación.';
+
+  @override
+  String get compare_msg_invalid_calc =>
+      'No se pudo calcular la diferencia con los valores ingresados.';
+
+  @override
+  String unit_name_bulto(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'bultos',
+      one: 'bulto',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String unit_name_arroba(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'arrobas',
+      one: 'arroba',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String unit_name_canastilla(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'canastillas',
+      one: 'canastilla',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String unit_name_caja(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'cajas',
+      one: 'caja',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String unit_name_tonelada(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'toneladas',
+      one: 'tonelada',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get cost_category_labor => 'Jornales';
+
+  @override
+  String get cost_category_fertilizers => 'Fertilizantes';
+
+  @override
+  String get cost_category_transport => 'Transporte';
+
+  @override
+  String get cost_category_other => 'Otros';
+
+  @override
+  String get profile_view_photo => 'Ver foto de perfil';
 }

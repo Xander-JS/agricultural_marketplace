@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+
 import '../../../../core/theme/app_icons.dart';
+
 import 'package:agricultural_marketplace/core/localization/app_localizations.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -18,6 +20,7 @@ import '../services/login_service.dart';
 import '../widgets/topo_header.dart';
 import '../../recovery/screens/forgot_password_screen.dart';
 import '../../recovery/services/recovery_service.dart';
+import '../../../../core/constants/input_limits.dart';
 
 class LoginScreen extends StatefulWidget {
   final RecoveryService? recoveryService;
@@ -105,6 +108,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   hint: l10n.login_phone_hint,
                   icon: LucideIcons.phone,
                   controller: _phoneController,
+                  maxLength: InputLimits.email,
+                  showCounter: false,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
                   autofillHints: const [
@@ -122,6 +127,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   hint: l10n.login_password_hint,
                   icon: LucideIcons.lockKeyhole,
                   controller: _passwordController,
+                  maxLength: InputLimits.password,
+                  showCounter: false,
                   obscureText: !_isPasswordVisible,
                   textInputAction: TextInputAction.done,
                   autofillHints: const [AutofillHints.password],
@@ -146,15 +153,17 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
           const SizedBox(height: AppDimensions.space8),
-          Row(
+          // Wraps the link under the toggle when both don't fit on one line,
+          // instead of squeezing "Recuérdame" into a one-letter column.
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              Expanded(
-                child: _RememberToggle(
-                  value: _rememberMe,
-                  label: l10n.login_remember_me,
-                  semanticsLabel: l10n.auth_remember_me_semantics,
-                  onChanged: (value) => setState(() => _rememberMe = value),
-                ),
+              _RememberToggle(
+                value: _rememberMe,
+                label: l10n.login_remember_me,
+                semanticsLabel: l10n.auth_remember_me_semantics,
+                onChanged: (value) => setState(() => _rememberMe = value),
               ),
               TextButton(
                 onPressed: () {

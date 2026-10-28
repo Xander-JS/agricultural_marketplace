@@ -12,6 +12,7 @@ import '../../../../core/widgets/inputs/custom_text_field.dart';
 import '../../login/widgets/topo_header.dart';
 import '../../widgets/auth_layout.dart';
 import '../services/recovery_service.dart';
+import '../../../../core/constants/input_limits.dart';
 
 /// Pantalla para establecer una nueva contraseña tras abrir un enlace de recuperación.
 class ResetPasswordScreen extends StatefulWidget {
@@ -174,6 +175,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                               hint: l10n.reset_password_new_hint,
                               icon: LucideIcons.lockKeyhole,
                               controller: _passwordController,
+                              maxLength: InputLimits.password,
+                              showCounter: false,
                               obscureText: _obscurePassword,
                               textInputAction: TextInputAction.next,
                               autofillHints: const [AutofillHints.newPassword],
@@ -200,6 +203,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                               hint: l10n.reset_password_confirm_hint,
                               icon: LucideIcons.keyRound,
                               controller: _confirmPasswordController,
+                              maxLength: InputLimits.password,
+                              showCounter: false,
                               obscureText: _obscureConfirmPassword,
                               textInputAction: TextInputAction.done,
                               autofillHints: const [AutofillHints.newPassword],

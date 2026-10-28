@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import '../../../core/theme/app_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -22,6 +23,8 @@ import '../models/regional_price_reference.dart';
 import '../services/crop_cost_calculator.dart';
 import '../services/profit_margin_calculator.dart';
 import '../services/regional_price_reference_service.dart';
+import '../../../core/constants/input_limits.dart';
+import '../widgets/cost_result_messages.dart';
 
 /// Calculadora orientativa de margen y precio sugerido para un cultivo.
 ///
@@ -286,7 +289,7 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
             )
           else
             Text(
-              result.message,
+              result.localizedMessage(l10n),
               key: const Key('profit_cost_unavailable_message'),
               style: AppTextStyles.bodyMedium.copyWith(
                 color: AppColors.onBrand,
@@ -295,10 +298,9 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
           if (result.denominator != null) ...[
             const SizedBox(height: 4),
             Text(
-              l10n.profitability_used_quantity(
+              l10n.costs_quantity_used(
                 UnitFormatters.formatKg(result.denominator),
-                result.denominatorSource.displayName,
-                result.denominatorSource.fieldName,
+                result.denominatorSource.localizedName(l10n),
               ),
               style: AppTextStyles.caption.copyWith(
                 color: secondary,
@@ -320,6 +322,7 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
                   style: AppTextStyles.bodySmall.copyWith(color: secondary),
                 ),
               ),
+              const SizedBox(width: AppDimensions.space12),
               Text(
                 _hasCurrentPrice
                     ? CurrencyFormatters.formatPricePerKg(
@@ -372,7 +375,7 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  widget.costPerKgResult.message,
+                  widget.costPerKgResult.localizedMessage(l10n),
                   style: AppTextStyles.bodyMedium.copyWith(
                     color: context.appTextPrimary,
                   ),
@@ -418,6 +421,10 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+              // Room for the digits plus thousands/decimal marks.
+              LengthLimitingTextInputFormatter(
+                InputLimits.pricePerKgDigits + 5,
+              ),
             ],
             style: AppTextStyles.figureMedium.copyWith(
               color: context.appTextPrimary,
@@ -543,7 +550,7 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
             )
           else
             Text(
-              marginResult.message,
+              marginResult.localizedMessage(l10n),
               key: const Key('profit_margin_message'),
               style: AppTextStyles.bodyMedium.copyWith(
                 color: context.appTextSecondary,
@@ -575,6 +582,7 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+              LengthLimitingTextInputFormatter(InputLimits.percentChars),
             ],
             style: AppTextStyles.figureMedium.copyWith(
               color: context.appTextPrimary,
@@ -668,7 +676,7 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
             )
           else
             Text(
-              suggestedResult.message,
+              suggestedResult.localizedMessage(l10n),
               key: const Key('profit_suggested_message'),
               style: AppTextStyles.bodyMedium.copyWith(
                 color: context.appTextSecondary,
@@ -804,7 +812,7 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
             valueColor: differenceColor,
           ),
           Text(
-            comparison.message,
+            comparison.localizedMessage(l10n),
             style: AppTextStyles.bodySmall.copyWith(
               color: context.appTextPrimary,
               fontWeight: FontWeight.w600,
@@ -819,7 +827,7 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
           ),
         ] else
           Text(
-            comparison.message,
+            comparison.localizedMessage(l10n),
             key: const Key('simulated_reference_difference_unavailable'),
             style: AppTextStyles.bodySmall.copyWith(
               color: context.appTextSecondary,

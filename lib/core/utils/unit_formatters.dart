@@ -132,19 +132,19 @@ abstract final class UnitFormatters {
     return '≈ $formatted $unitLabel';
   }
 
+  /// Unidad tradicional más representativa para la cantidad dada.
+  static TraditionalUnit? bestTraditionalUnit(num? quantityKg) {
+    if (quantityKg == null || quantityKg <= 0) return null;
+    if (quantityKg >= 1000) return TraditionalUnit.tonelada;
+    if (quantityKg >= 50) return TraditionalUnit.bulto;
+    if (quantityKg >= 12.5) return TraditionalUnit.arroba;
+    return null;
+  }
+
   /// Determina la unidad tradicional más representativa para la cantidad dada.
   static String? formatBestTraditionalEquivalence(num? quantityKg) {
-    if (quantityKg == null || quantityKg <= 0) return null;
-    if (quantityKg >= 1000) {
-      return formatEquivalence(quantityKg, TraditionalUnit.tonelada);
-    }
-    if (quantityKg >= 50) {
-      return formatEquivalence(quantityKg, TraditionalUnit.bulto);
-    }
-    if (quantityKg >= 12.5) {
-      return formatEquivalence(quantityKg, TraditionalUnit.arroba);
-    }
-    return null;
+    final unit = bestTraditionalUnit(quantityKg);
+    return unit == null ? null : formatEquivalence(quantityKg, unit);
   }
 
   /// Retorna la cantidad en kg acompañada de su equivalencia tradicional aproximada entre paréntesis.

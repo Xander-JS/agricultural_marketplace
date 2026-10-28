@@ -38,6 +38,7 @@ import '../../../core/widgets/loading/app_skeleton.dart';
 import '../../../core/widgets/misc/icon_squircle.dart';
 import '../../../core/widgets/misc/pressable_scale.dart';
 import '../../../core/widgets/sheets/app_sheet_frame.dart';
+import '../../../core/constants/input_limits.dart';
 
 class DealDetailScreen extends StatefulWidget {
   final String negotiationId;
@@ -546,14 +547,18 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
             color: context.appTextSecondary,
           ),
           const SizedBox(width: AppDimensions.space12),
-          Text(
-            l10n.deal_detail_delivery_method,
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: context.appTextSecondary,
+          // Label and value share the line, so neither is squeezed into
+          // breaking a word.
+          Flexible(
+            child: Text(
+              l10n.deal_detail_delivery_method,
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: context.appTextSecondary,
+              ),
             ),
           ),
           const SizedBox(width: AppDimensions.space12),
-          Expanded(
+          Flexible(
             child: Text(
               deliveryDisplayLabel(l10n, offer.deliveryMethod),
               textAlign: TextAlign.right,
@@ -1463,9 +1468,10 @@ class _TermFigure extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
+        // Two lines so "Precio por kg" wraps between words at large sizes.
         Text(
           label,
-          maxLines: 1,
+          maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: AppTextStyles.caption.copyWith(
             color: context.appTextSecondary,
@@ -2166,7 +2172,7 @@ class _RatingSheetState extends State<_RatingSheet> {
             isRequired: false,
             enabled: !_isSubmitting,
             maxLines: 3,
-            maxLength: 500,
+            maxLength: InputLimits.review,
             keyboardType: TextInputType.multiline,
             textInputAction: TextInputAction.newline,
             textCapitalization: TextCapitalization.sentences,

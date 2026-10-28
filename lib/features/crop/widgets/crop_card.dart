@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/theme/app_icons.dart';
 
 import '../models/crop_model.dart';
@@ -20,12 +21,11 @@ import '../../../core/widgets/misc/pressable_scale.dart';
 /// Catalog card for a harvest lot.
 ///
 /// Flat `surface` card with an 18px radius and a single hairline: depth
-/// comes from the photo, not from shadows. The photo shimmers while it
-/// loads and carries its badges in dark blurred capsules, so they stay
-/// legible over any image. Below it, a fixed reading order: lot title,
-/// crop, where and who (location chip, reputation), then the two numbers a
-/// buyer compares, available kilograms and price per kilogram, set in
-/// tabular figures.
+/// comes from the photo, not from shadows. The photo carries everything
+/// that describes the lot: status top-left, crop type top-right, and where
+/// and who (location, reputation) bottom-left in light translucent pills.
+/// Below it, one compact row: title and available kilograms on the left,
+/// price per kilogram on the right, set in tabular figures.
 class CropCard extends StatelessWidget {
   final CropModel crop;
   final VoidCallback onTap;
@@ -45,7 +45,7 @@ class CropCard extends StatelessWidget {
   });
 
   static const double _radius = 18;
-  static const double _photoHeight = 156;
+  static const double _photoHeight = 140;
 
   @override
   Widget build(BuildContext context) {
@@ -78,7 +78,7 @@ class CropCard extends StatelessWidget {
                   children: [
                     _buildPhoto(context, l10n, primaryImageUrl),
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                      padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
                       child: _buildDetails(context, l10n),
                     ),
                   ],
@@ -105,9 +105,18 @@ class CropCard extends StatelessWidget {
           icon: LucideIcons.calendarClock,
         ),
     ];
+    final cropType = crop.cropType.trim();
+    final location = _buildLocationChip(context);
+    final placeChips = <Widget>[
+      ?location,
+      if (reputation != null) _buildReputationChip(context, l10n),
+    ];
+
+    // The photo grows with the text size so the overlay pills keep room.
+    final photoHeight = MediaQuery.textScalerOf(context).scale(_photoHeight);
 
     return SizedBox(
-      height: _photoHeight,
+      height: photoHeight,
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -117,8 +126,8 @@ class CropCard extends StatelessWidget {
               fit: BoxFit.cover,
               loadingBuilder: (context, child, progress) {
                 if (progress == null) return child;
-                return const AppShimmer(
-                  child: AppSkeletonBlock(height: _photoHeight, radius: 0),
+                return AppShimmer(
+                  child: AppSkeletonBlock(height: photoHeight, radius: 0),
                 );
               },
               frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
@@ -135,99 +144,131 @@ class CropCard extends StatelessWidget {
             )
           else
             _buildImagePlaceholder(context),
-          if (badges.isNotEmpty)
+          if (badges.isNotEmpty || cropType.isNotEmpty)
             Positioned(
               top: 10,
               left: 10,
               right: 10,
-              child: Wrap(spacing: 6, runSpacing: 6, children: badges),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: Wrap(spacing: 6, runSpacing: 6, children: badges),
+                  ),
+                  if (cropType.isNotEmpty) ...[
+                    const SizedBox(width: 6),
+                    Flexible(flex: 2, child: _buildCropTypeBadge(cropType)),
+                  ],
+                ],
+              ),
+            ),
+          if (placeChips.isNotEmpty)
+            Positioned(
+              left: 10,
+              right: 10,
+              bottom: 10,
+              child: Wrap(spacing: 6, runSpacing: 6, children: placeChips),
             ),
         ],
       ),
     );
   }
 
-  Widget _buildDetails(BuildContext context, AppLocalizations l10n) {
-    final location = _buildLocationChip(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          crop.title,
+  /// Crop type on a solid white pill: always over the photo, so it keeps
+  /// the light palette in both themes.
+  Widget _buildCropTypeBadge(String cropType) {
+    return Align(
+      alignment: Alignment.topRight,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+        decoration: BoxDecoration(
+          color: AppColors.lightSurface,
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Text(
+          cropType,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: AppTextStyles.titleLarge.copyWith(
+          style: AppTextStyles.labelSmall.copyWith(
+            color: AppColors.lightBrandPrimary,
             fontWeight: FontWeight.w700,
-            color: context.appTextPrimary,
           ),
         ),
-        const SizedBox(height: 2),
-        Text(
-          crop.cropType,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: AppTextStyles.bodyMedium.copyWith(
-            color: context.appTextSecondary,
-          ),
-        ),
-        if (location != null || reputation != null) ...[
-          const SizedBox(height: AppDimensions.space12),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
+      ),
+    );
+  }
+
+  Widget _buildDetails(BuildContext context, AppLocalizations l10n) {
+    final available = crop.availableStock;
+    final availableColor = available <= 0
+        ? context.appErrorText
+        : context.appTextSecondary;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ?location,
-              if (reputation != null) _buildReputationChip(context, l10n),
-            ],
-          ),
-        ],
-        const SizedBox(height: AppDimensions.space16),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              Text(
+                crop.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.titleMedium.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: context.appTextPrimary,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Row(
                 children: [
                   Text(
                     l10n.crop_card_available,
-                    style: AppTextStyles.caption.copyWith(
-                      color: context.appTextSecondary,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: availableColor,
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    UnitFormatters.formatKg(crop.availableStock),
-                    style: AppTextStyles.figureSmall.copyWith(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: context.appTextPrimary,
+                  const SizedBox(width: 4),
+                  Flexible(
+                    child: Text(
+                      UnitFormatters.formatKg(available),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.figureSmall.copyWith(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: available <= 0
+                            ? availableColor
+                            : context.appTextPrimary,
+                      ),
                     ),
                   ),
                 ],
               ),
+            ],
+          ),
+        ),
+        const SizedBox(width: AppDimensions.space12),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          children: [
+            Text(
+              CurrencyFormatters.formatCop(crop.pricePerKg),
+              style: AppTextStyles.figureMedium.copyWith(
+                fontWeight: FontWeight.w700,
+                color: context.appPrimary,
+              ),
             ),
-            const SizedBox(width: AppDimensions.space12),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.baseline,
-              textBaseline: TextBaseline.alphabetic,
-              children: [
-                Text(
-                  CurrencyFormatters.formatCop(crop.pricePerKg),
-                  style: AppTextStyles.figureLarge.copyWith(
-                    color: context.appPrimary,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  '/ kg',
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: context.appTextSecondary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
+            const SizedBox(width: 3),
+            Text(
+              l10n.crop_card_per_kg,
+              style: AppTextStyles.bodySmall.copyWith(
+                color: context.appPrimary,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),
@@ -247,22 +288,27 @@ class CropCard extends StatelessWidget {
     if (locationName.isEmpty && !hasValidDistance) return null;
 
     final textStyle = AppTextStyles.labelMedium.copyWith(
-      color: context.appTextSecondary,
-      fontWeight: FontWeight.w500,
+      color: AppColors.lightTextPrimary,
+      fontWeight: FontWeight.w600,
     );
 
     return _Chip(
-      background: context.appSurfaceVariant,
-      border: context.appSurfaceVariant,
       children: [
         Icon(
           hasValidDistance ? LucideIcons.navigation : LucideIcons.mapPin,
           size: 13,
-          color: context.appTextSecondary,
+          color: AppColors.lightTextPrimary,
         ),
         const SizedBox(width: 4),
         if (locationName.isNotEmpty) ...[
-          Text(locationName, style: textStyle),
+          Flexible(
+            child: Text(
+              locationName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: textStyle,
+            ),
+          ),
           if (hasValidDistance) Text(' · ', style: textStyle),
         ],
         if (hasValidDistance)
@@ -270,7 +316,6 @@ class CropCard extends StatelessWidget {
             distanceEvaluation!.formatted,
             style: textStyle.copyWith(
               fontWeight: FontWeight.w700,
-              color: context.appTextPrimary,
               fontFeatures: AppTextStyles.tabularFigures,
             ),
           ),
@@ -285,21 +330,19 @@ class CropCard extends StatelessWidget {
         : l10n.reputation_new;
     return _Chip(
       key: ValueKey('crop_reputation_${crop.id}'),
-      background: context.appSurfaceVariant,
-      border: context.appSurfaceVariant,
       children: [
         Text.rich(
           TextSpan(
             children: [
               TextSpan(
                 text: '★ ',
-                style: TextStyle(color: context.appRatingGold),
+                style: const TextStyle(color: AppColors.ratingGoldLight),
               ),
               TextSpan(text: value),
             ],
           ),
           style: AppTextStyles.labelMedium.copyWith(
-            color: context.appTextPrimary,
+            color: AppColors.lightTextPrimary,
             fontWeight: FontWeight.w700,
             fontFeatures: AppTextStyles.tabularFigures,
           ),
@@ -313,26 +356,22 @@ class CropCard extends StatelessWidget {
   }
 }
 
+/// Pill drawn over the photo: white at 88% so it reads over any image,
+/// with no border.
 class _Chip extends StatelessWidget {
-  final Color background;
-  final Color border;
   final List<Widget> children;
 
-  const _Chip({
-    super.key,
-    required this.background,
-    required this.border,
-    required this.children,
-  });
+  const _Chip({super.key, required this.children});
+
+  static const Color _background = Color(0xE0FFFFFF);
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: background,
+        color: _background,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: border),
       ),
       child: Row(mainAxisSize: MainAxisSize.min, children: children),
     );

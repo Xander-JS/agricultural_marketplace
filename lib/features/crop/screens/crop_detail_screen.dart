@@ -647,7 +647,8 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
             context,
             LucideIcons.package,
             l10n.crop_detail_available_stock,
-            UnitFormatters.formatKgWithEquivalence(_crop.availableStock),
+            UnitFormatters.formatKg(_crop.availableStock),
+            secondary: _stockEquivalence(l10n),
             onTap: _isBuyer ? () => _showEquivalencesModal(context) : null,
             footer: _isBuyer ? _buildEquivalencesPill(context, l10n) : null,
           ),
@@ -1469,11 +1470,24 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
     );
   }
 
+  /// "≈ 1,5 toneladas" in the active language, or null below 12.5 kg.
+  String? _stockEquivalence(AppLocalizations l10n) {
+    final kg = _crop.availableStock;
+    final unit = UnitFormatters.bestTraditionalUnit(kg);
+    if (unit == null) return null;
+    final converted = kg / unit.kgEquivalent;
+    return l10n.units_approx(
+      UnitFormatters.formatCleanValue(converted, maxDecimals: 1),
+      traditionalUnitName(l10n, unit, converted == 1 ? 1 : 2),
+    );
+  }
+
   Widget _buildInfoRow(
     BuildContext context,
     IconData icon,
     String label,
     String value, {
+    String? secondary,
     VoidCallback? onTap,
     Widget? footer,
   }) {
@@ -1498,13 +1512,26 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
               ),
               const SizedBox(width: AppDimensions.space12),
               Expanded(
-                child: Text(
-                  value,
-                  textAlign: TextAlign.right,
-                  style: AppTextStyles.figureSmall.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: context.appTextPrimary,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      value,
+                      textAlign: TextAlign.right,
+                      style: AppTextStyles.figureSmall.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: context.appTextPrimary,
+                      ),
+                    ),
+                    if (secondary != null)
+                      Text(
+                        secondary,
+                        textAlign: TextAlign.right,
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: context.appTextSecondary,
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ],

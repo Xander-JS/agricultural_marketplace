@@ -2,15 +2,21 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+
 import '../../../core/theme/app_icons.dart';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/constants/input_limits.dart';
+import '../../../core/constants/user_roles.dart';
 import '../../../core/services/app_preferences_service.dart';
+import '../../../core/widgets/avatars/photo_preview.dart';
 import '../../../core/widgets/avatars/user_avatar.dart';
 import '../../../core/widgets/badges/status_badge.dart';
 import '../../../core/widgets/brand/kus_brand_logo.dart';
@@ -360,9 +366,9 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
-        // Two equal-width actions: the destructive one carries the color,
-        // cancel stays quiet but just as easy to reach.
-        const buttonSize = Size(0, AppDimensions.buttonHeightMedium);
+        // Actions stacked full width: the destructive one first, cancel
+        // below. Side by side, "Cerrar sesión" wrapped at large text sizes.
+        const buttonSize = Size.fromHeight(AppDimensions.buttonHeightMedium);
         return AlertDialog(
           title: Text(
             l10n.profile_logout_confirm_title,
@@ -373,26 +379,23 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
             textAlign: TextAlign.center,
           ),
           actions: [
-            Row(
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.pop(dialogContext, false),
-                    style: OutlinedButton.styleFrom(minimumSize: buttonSize),
-                    child: Text(l10n.profile_cancel),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(dialogContext, true),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: buttonSize,
+                    backgroundColor: dialogContext.appError,
+                    foregroundColor: dialogContext.appOverlayText,
                   ),
+                  child: Text(l10n.profile_logout),
                 ),
-                const SizedBox(width: AppDimensions.space12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pop(dialogContext, true),
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: buttonSize,
-                      backgroundColor: dialogContext.appError,
-                      foregroundColor: dialogContext.appOverlayText,
-                    ),
-                    child: Text(l10n.profile_logout),
-                  ),
+                const SizedBox(height: AppDimensions.space8),
+                OutlinedButton(
+                  onPressed: () => Navigator.pop(dialogContext, false),
+                  style: OutlinedButton.styleFrom(minimumSize: buttonSize),
+                  child: Text(l10n.profile_cancel),
                 ),
               ],
             ),
@@ -597,13 +600,28 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
                                     currentPath,
                                   )
                                 : imageUrl;
-                            return UserAvatar(
-                              imageUrl: resolvedImageUrl,
-                              radius: 50,
-                              backgroundColor: context.appSurfaceVariant,
-                              borderColor: AppColors.transparent,
-                              borderWidth: 0,
-                              iconColor: context.appTextMuted,
+                            final hasPhoto =
+                                resolvedImageUrl != null &&
+                                resolvedImageUrl.isNotEmpty;
+                            // No photo, no preview: the placeholder has
+                            // nothing more to show.
+                            return Semantics(
+                              hint: hasPhoto ? l10n.profile_view_photo : null,
+                              child: UserAvatar(
+                                key: const Key('profile_avatar_photo'),
+                                imageUrl: resolvedImageUrl,
+                                onTap: hasPhoto
+                                    ? () => PhotoPreview.show(
+                                        context,
+                                        resolvedImageUrl,
+                                      )
+                                    : null,
+                                radius: 50,
+                                backgroundColor: context.appSurfaceVariant,
+                                borderColor: AppColors.transparent,
+                                borderWidth: 0,
+                                iconColor: context.appTextMuted,
+                              ),
                             );
                           },
                         ),
@@ -665,7 +683,11 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
                   runSpacing: AppDimensions.space8,
                   children: [
                     StatusBadge(
-                      text: _profileData!.role.toUpperCase(),
+                      text:
+                          (UserRole.tryParse(_profileData!.role)
+                                      ?.localizedName(l10n) ??
+                                  _profileData!.role)
+                              .toUpperCase(),
                       icon: _isBuyer
                           ? LucideIcons.briefcaseBusiness
                           : LucideIcons.sprout,
@@ -897,6 +919,7 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
           controller: _emailController,
           focusNode: _emailFocusNode,
           keyboardType: TextInputType.emailAddress,
+          maxLength: InputLimits.email,
           isSaving: _savingField == 'email',
           isSaved: _emailSaved,
         ),
@@ -907,6 +930,7 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
           controller: _phoneController,
           focusNode: _phoneFocusNode,
           keyboardType: TextInputType.phone,
+          maxLength: InputLimits.phone,
           isSaving: _savingField == 'phone',
           isSaved: _phoneSaved,
         ),
@@ -1014,21 +1038,16 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
     );
   }
 
-  /// Apariencia e idioma: común para ambos roles. Cada control aplica el
-  /// cambio al instante en toda la app.
+  /// Apariencia, idioma y tamaño de texto: común para ambos roles. Cada
+  /// control aplica el cambio al instante en toda la app.
   Widget _buildPreferencesSection(AppLocalizations l10n) {
     return InsetGroupSection(
       header: l10n.profile_accessibility,
       children: [
-        InsetGroupRow(
-          leading: IconSquircle(
-            icon: _isDarkMode ? LucideIcons.moon : LucideIcons.sun,
-            triad: context.appIconTriad,
-            size: 30,
-          ),
+        _buildPreferenceRow(
+          icon: _isDarkMode ? LucideIcons.moon : LucideIcons.sun,
           title: l10n.profile_appearance,
-          trailing: AppSegmentedControl<bool>(
-            compact: true,
+          control: AppSegmentedControl<bool>(
             value: _isDarkMode,
             onChanged: (val) async {
               setState(() {
@@ -1042,15 +1061,10 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
             },
           ),
         ),
-        InsetGroupRow(
-          leading: IconSquircle(
-            icon: LucideIcons.globe,
-            triad: context.appIconTriad,
-            size: 30,
-          ),
+        _buildPreferenceRow(
+          icon: LucideIcons.globe,
           title: l10n.profile_language,
-          trailing: AppSegmentedControl<bool>(
-            compact: true,
+          control: AppSegmentedControl<bool>(
             value: _isEnglish,
             onChanged: (val) async {
               setState(() {
@@ -1063,6 +1077,60 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
               true: AppSegment(label: l10n.profile_language_en),
             },
           ),
+        ),
+        _buildPreferenceRow(
+          icon: LucideIcons.aLargeSmall,
+          title: l10n.profile_text_size,
+          control: AppSegmentedControl<AppTextSize>(
+            key: const Key('profile_text_size_control'),
+            value: AppPreferencesService.instance.textSize,
+            onChanged: (size) async {
+              await AppPreferencesService.instance.setTextSize(size);
+              if (mounted) setState(() {});
+            },
+            segments: {
+              AppTextSize.small: AppSegment(
+                label: l10n.profile_text_size_small,
+              ),
+              AppTextSize.medium: AppSegment(
+                label: l10n.profile_text_size_medium,
+              ),
+              AppTextSize.large: AppSegment(
+                label: l10n.profile_text_size_large,
+              ),
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Title row with the control on its own full-width line below, so the
+  /// title never wraps mid-word at the large text size.
+  Widget _buildPreferenceRow({
+    required IconData icon,
+    required String title,
+    required Widget control,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        InsetGroupRow(
+          leading: IconSquircle(
+            icon: icon,
+            triad: context.appIconTriad,
+            size: 30,
+          ),
+          title: title,
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppDimensions.space16,
+            0,
+            AppDimensions.space16,
+            AppDimensions.space12,
+          ),
+          child: control,
         ),
       ],
     );
@@ -1103,12 +1171,16 @@ class _StatTile extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 2),
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppTextStyles.bodySmall.copyWith(
-              color: context.appTextSecondary,
+          // One-word labels: shrink to fit rather than cut the word.
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              label,
+              maxLines: 1,
+              style: AppTextStyles.bodySmall.copyWith(
+                color: context.appTextSecondary,
+              ),
             ),
           ),
         ],
@@ -1126,6 +1198,7 @@ class _EditableContactRow extends StatelessWidget {
   final TextEditingController controller;
   final FocusNode focusNode;
   final TextInputType keyboardType;
+  final int maxLength;
   final bool isSaving;
   final bool isSaved;
 
@@ -1136,6 +1209,7 @@ class _EditableContactRow extends StatelessWidget {
     required this.controller,
     required this.focusNode,
     required this.keyboardType,
+    required this.maxLength,
     required this.isSaving,
     required this.isSaved,
   });
@@ -1188,6 +1262,9 @@ class _EditableContactRow extends StatelessWidget {
                     controller: controller,
                     focusNode: focusNode,
                     keyboardType: keyboardType,
+                    inputFormatters: [
+                      LengthLimitingTextInputFormatter(maxLength),
+                    ],
                     style: AppTextStyles.bodyLarge.copyWith(
                       color: context.appTextPrimary,
                       fontWeight: FontWeight.w500,

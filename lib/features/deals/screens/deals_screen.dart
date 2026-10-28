@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+
 import '../../../core/theme/app_icons.dart';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/negotiation_model.dart';
@@ -511,53 +513,49 @@ class _DealCard extends StatelessWidget {
                 // The latest figures on the table, with the deal's status at
                 // the end of the same line so the title keeps its full width.
                 const SizedBox(height: AppDimensions.space16),
-                Row(
+                // Wraps the badge under the figures when they don't share a
+                // line: a price is never cut short.
+                Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: AppDimensions.space8,
+                  runSpacing: AppDimensions.space8,
                   children: [
-                    Expanded(
-                      child: latestOffer == null
-                          ? const SizedBox.shrink()
-                          : Row(
+                    if (latestOffer != null)
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text.rich(
+                            TextSpan(
                               children: [
-                                Flexible(
-                                  child: Text.rich(
-                                    TextSpan(
-                                      children: [
-                                        TextSpan(
-                                          text: CurrencyFormatters.formatCop(
-                                            latestOffer.proposedPricePerKg,
-                                          ),
-                                          style: AppTextStyles.figureMedium
-                                              .copyWith(
-                                                fontSize: 20,
-                                                color: context.appTextPrimary,
-                                              ),
-                                        ),
-                                        TextSpan(
-                                          text: ' /kg',
-                                          style: AppTextStyles.bodySmall
-                                              .copyWith(
-                                                color: context.appTextSecondary,
-                                              ),
-                                        ),
-                                      ],
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
+                                TextSpan(
+                                  text: CurrencyFormatters.formatCop(
+                                    latestOffer.proposedPricePerKg,
+                                  ),
+                                  style: AppTextStyles.figureMedium.copyWith(
+                                    fontSize: 20,
+                                    color: context.appTextPrimary,
                                   ),
                                 ),
-                                const SizedBox(width: 10),
-                                Text(
-                                  UnitFormatters.formatKg(
-                                    latestOffer.quantityKg,
-                                  ),
-                                  style: AppTextStyles.figureSmall.copyWith(
+                                TextSpan(
+                                  text: ' /kg',
+                                  style: AppTextStyles.bodySmall.copyWith(
                                     color: context.appTextSecondary,
                                   ),
                                 ),
                               ],
                             ),
-                    ),
-                    const SizedBox(width: AppDimensions.space8),
+                            maxLines: 1,
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            UnitFormatters.formatKg(latestOffer.quantityKg),
+                            style: AppTextStyles.figureSmall.copyWith(
+                              color: context.appTextSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
                     NegotiationStatusBadge(status: negotiation.status),
                   ],
                 ),

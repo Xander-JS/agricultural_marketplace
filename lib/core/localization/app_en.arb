@@ -642,20 +642,6 @@
   "costs_empty_detail_desc": "Add the expenses related to this crop for better control.",
   "profitability_title": "Margin and suggested price",
   "profitability_cost_per_kg": "Production cost per kg",
-  "profitability_used_quantity": "Quantity used: {quantity} ({source}) · {field}",
-  "@profitability_used_quantity": {
-    "placeholders": {
-      "quantity": {
-        "type": "String"
-      },
-      "source": {
-        "type": "String"
-      },
-      "field": {
-        "type": "String"
-      }
-    }
-  },
   "profitability_current_price": "Current published price",
   "profitability_invalid_current_price": "The current price is invalid. You can enter a temporary price for this calculation.",
   "profitability_unavailable_title": "Margin and suggested price cannot be calculated",
@@ -1312,5 +1298,48 @@
   "moderation_tab_user": "User",
   "moderation_tab_evidence": "Evidence",
   "moderation_tab_ai": "AI analysis",
-  "moderation_lbl_status": "Status:"
+  "moderation_lbl_status": "Status:",
+  "profile_text_size": "Text and icon size",
+  "profile_text_size_small": "Small",
+  "profile_text_size_medium": "Medium",
+  "profile_text_size_large": "Large",
+  "crop_card_per_kg": "/kg",
+  "role_label_farmer": "Farmer",
+  "role_label_buyer": "Buyer",
+  "role_label_moderator": "Moderator",
+  "cost_source_stock_total": "total stock",
+  "cost_source_estimated_yield": "estimated yield",
+  "cost_msg_calculated": "Estimated cost per kg",
+  "cost_msg_no_costs": "No costs recorded yet. Add a cost to calculate the cost per kg.",
+  "cost_msg_invalid_total": "The cost per kg can't be calculated because the cost total isn't valid.",
+  "cost_msg_invalid_quantity": "The cost per kg can't be calculated because the quantity used isn't valid. It must be greater than zero.",
+  "cost_msg_yield_pending": "The cost per kg can't be calculated: this pre-sale has no estimated yield recorded.",
+  "margin_msg_calculated": "Margin calculated on the selling price.",
+  "margin_msg_below_cost": "The selling price is below the production cost.",
+  "margin_msg_cost_unavailable": "The margin can't be calculated because the cost per kg isn't available.",
+  "margin_msg_invalid_cost": "The margin can't be calculated because the cost per kg isn't valid.",
+  "margin_msg_missing_price": "The margin can't be calculated without a valid selling price.",
+  "margin_msg_price_not_positive": "The margin can't be calculated because the selling price must be greater than zero.",
+  "margin_msg_invalid_calc": "The margin couldn't be calculated with the values entered.",
+  "suggested_msg_calculated": "Suggested price for the target margin.",
+  "suggested_msg_cost_unavailable": "The suggested price can't be calculated because the cost per kg isn't available.",
+  "suggested_msg_invalid_cost": "The suggested price can't be calculated because the cost per kg must be greater than zero.",
+  "suggested_msg_missing_margin": "The suggested price can't be calculated without a target margin.",
+  "suggested_msg_margin_range": "The target margin must be at least 0% and less than 100%.",
+  "suggested_msg_invalid_calc": "A valid suggested price couldn't be calculated with the values entered.",
+  "compare_msg_above": "The evaluated price is above the regional index.",
+  "compare_msg_below": "The evaluated price is below the regional index.",
+  "compare_msg_invalid_evaluated": "There's no valid evaluated price to compare with the reference.",
+  "compare_msg_invalid_reference": "The price reference isn't valid for the comparison.",
+  "compare_msg_invalid_calc": "The difference couldn't be calculated with the values entered.",
+  "unit_name_bulto": "{count, plural, =1{sack} other{sacks}}",
+  "unit_name_arroba": "{count, plural, =1{arroba} other{arrobas}}",
+  "unit_name_canastilla": "{count, plural, =1{crate} other{crates}}",
+  "unit_name_caja": "{count, plural, =1{box} other{boxes}}",
+  "unit_name_tonelada": "{count, plural, =1{ton} other{tons}}",
+  "cost_category_labor": "Labor",
+  "cost_category_fertilizers": "Fertilizers",
+  "cost_category_transport": "Transport",
+  "cost_category_other": "Other",
+  "profile_view_photo": "View profile photo"
 }

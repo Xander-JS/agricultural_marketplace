@@ -147,6 +147,8 @@ abstract final class AppTheme {
       brightness: colors.brightness,
       colorScheme: colors,
       scaffoldBackgroundColor: background,
+      // Icons follow the user's text-size preference (MediaQuery.textScaler).
+      iconTheme: const IconThemeData(applyTextScaling: true),
       canvasColor: background,
       fontFamily: AppTextStyles.fontFamilyJakarta,
       textTheme: textTheme,
@@ -178,7 +180,11 @@ abstract final class AppTheme {
         backgroundColor: background,
         surfaceTintColor: AppColors.transparent,
         foregroundColor: colors.onSurface,
-        iconTheme: IconThemeData(color: colors.onSurface, size: 22),
+        iconTheme: IconThemeData(
+          color: colors.onSurface,
+          size: 22,
+          applyTextScaling: true,
+        ),
         titleTextStyle: AppTextStyles.headlineMedium.copyWith(
           fontSize: 17,
           color: colors.onSurface,

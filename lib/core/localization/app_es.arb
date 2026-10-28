@@ -670,20 +670,6 @@
   "costs_empty_detail_desc": "Agrega los gastos relacionados con esta cosecha para llevar un mejor control.",
   "profitability_title": "Margen y precio sugerido",
   "profitability_cost_per_kg": "Costo de producción por kg",
-  "profitability_used_quantity": "Cantidad usada: {quantity} ({source}) · {field}",
-  "@profitability_used_quantity": {
-    "placeholders": {
-      "quantity": {
-        "type": "String"
-      },
-      "source": {
-        "type": "String"
-      },
-      "field": {
-        "type": "String"
-      }
-    }
-  },
   "profitability_current_price": "Precio actual publicado",
   "profitability_invalid_current_price": "El precio actual no es válido. Puedes introducir un precio temporal para este cálculo.",
   "profitability_unavailable_title": "No se puede calcular el margen ni el precio sugerido",
@@ -1354,5 +1340,83 @@
   "moderation_tab_user": "Usuario",
   "moderation_tab_evidence": "Evidencia",
   "moderation_tab_ai": "Análisis IA",
-  "moderation_lbl_status": "Estado:"
+  "moderation_lbl_status": "Estado:",
+  "profile_text_size": "Tamaño de texto e iconos",
+  "profile_text_size_small": "Pequeño",
+  "profile_text_size_medium": "Mediano",
+  "profile_text_size_large": "Grande",
+  "crop_card_per_kg": "/kg",
+  "role_label_farmer": "Agricultor",
+  "role_label_buyer": "Comprador",
+  "role_label_moderator": "Moderador",
+  "cost_source_stock_total": "stock total",
+  "cost_source_estimated_yield": "rendimiento estimado",
+  "cost_msg_calculated": "Costo estimado por kg",
+  "cost_msg_no_costs": "Aún no hay costos registrados. Agrega un costo para calcular el costo por kg.",
+  "cost_msg_invalid_total": "No se puede calcular el costo por kg porque el total de costos no es válido.",
+  "cost_msg_invalid_quantity": "No se puede calcular el costo por kg porque la cantidad usada como denominador no es válida. Debe ser mayor que cero.",
+  "cost_msg_yield_pending": "No se puede calcular el costo por kg: la venta anticipada no tiene rendimiento estimado registrado.",
+  "margin_msg_calculated": "Margen calculado sobre el precio de venta.",
+  "margin_msg_below_cost": "El precio de venta está por debajo del costo de producción.",
+  "margin_msg_cost_unavailable": "No se puede calcular el margen porque el costo por kg no está disponible.",
+  "margin_msg_invalid_cost": "No se puede calcular el margen porque el costo por kg no es válido.",
+  "margin_msg_missing_price": "No se puede calcular el margen porque falta un precio de venta válido.",
+  "margin_msg_price_not_positive": "No se puede calcular el margen porque el precio de venta debe ser mayor que cero.",
+  "margin_msg_invalid_calc": "No se pudo calcular el margen con los valores ingresados.",
+  "suggested_msg_calculated": "Precio sugerido según el margen objetivo.",
+  "suggested_msg_cost_unavailable": "No se puede calcular el precio sugerido porque el costo por kg no está disponible.",
+  "suggested_msg_invalid_cost": "No se puede calcular el precio sugerido porque el costo por kg debe ser mayor que cero.",
+  "suggested_msg_missing_margin": "No se puede calcular el precio sugerido porque falta el margen objetivo.",
+  "suggested_msg_margin_range": "El margen objetivo debe ser mayor o igual que 0 % y menor que 100 %.",
+  "suggested_msg_invalid_calc": "No se pudo calcular un precio sugerido válido con los valores ingresados.",
+  "compare_msg_above": "El precio evaluado está por encima del índice regional.",
+  "compare_msg_below": "El precio evaluado está por debajo del índice regional.",
+  "compare_msg_invalid_evaluated": "No hay un precio evaluado válido para comparar con la referencia.",
+  "compare_msg_invalid_reference": "La referencia de precio no es válida para realizar la comparación.",
+  "compare_msg_invalid_calc": "No se pudo calcular la diferencia con los valores ingresados.",
+  "unit_name_bulto": "{count, plural, =1{bulto} other{bultos}}",
+  "@unit_name_bulto": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "unit_name_arroba": "{count, plural, =1{arroba} other{arrobas}}",
+  "@unit_name_arroba": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "unit_name_canastilla": "{count, plural, =1{canastilla} other{canastillas}}",
+  "@unit_name_canastilla": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "unit_name_caja": "{count, plural, =1{caja} other{cajas}}",
+  "@unit_name_caja": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "unit_name_tonelada": "{count, plural, =1{tonelada} other{toneladas}}",
+  "@unit_name_tonelada": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cost_category_labor": "Jornales",
+  "cost_category_fertilizers": "Fertilizantes",
+  "cost_category_transport": "Transporte",
+  "cost_category_other": "Otros",
+  "profile_view_photo": "Ver foto de perfil"
 }

@@ -650,4 +650,55 @@ void main() {
       expect(find.byType(FarmerProfileScreen), findsOneWidget);
     });
   });
+
+  group('Vista previa de la foto de perfil', () {
+    Future<void> pumpProfile(WidgetTester tester, String? path) async {
+      await tester.pumpWidget(
+        createTestWidget(
+          child: FarmerProfileScreen(
+            initialProfileData: FarmerProfileData(
+              id: baseProfileData.id,
+              fullName: baseProfileData.fullName,
+              role: baseProfileData.role,
+              email: baseProfileData.email,
+              phone: baseProfileData.phone,
+              profilePath: path,
+              settings: baseProfileData.settings,
+              stats: baseProfileData.stats,
+            ),
+            profileService: MockProfileServiceForAvatar(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('abre la foto y se cierra con el botón o tocando fuera', (
+      tester,
+    ) async {
+      await pumpProfile(tester, 'farmer-test-1/avatar.jpg');
+
+      await tester.tap(find.byKey(const Key('profile_avatar_photo')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('photo_preview_image')), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('photo_preview_close')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('photo_preview_image')), findsNothing);
+
+      await tester.tap(find.byKey(const Key('profile_avatar_photo')));
+      await tester.pumpAndSettle();
+      await tester.tapAt(const Offset(20, 400));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('photo_preview_image')), findsNothing);
+    });
+
+    testWidgets('sin foto no abre vista previa', (tester) async {
+      await pumpProfile(tester, null);
+
+      await tester.tap(find.byKey(const Key('profile_avatar_photo')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('photo_preview_image')), findsNothing);
+    });
+  });
 }

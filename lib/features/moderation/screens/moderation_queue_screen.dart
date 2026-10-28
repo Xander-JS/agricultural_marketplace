@@ -504,7 +504,9 @@ class _RequestCard extends StatelessWidget {
                                 ),
                                 const SizedBox(width: AppDimensions.space4),
                                 Text(
-                                  request.userRole.displayName,
+                                  request.userRole.localizedName(
+                                    AppLocalizations.of(context)!,
+                                  ),
                                   style: AppTextStyles.labelSmall.copyWith(
                                     color: roleTriad.text,
                                     fontWeight: FontWeight.w700,

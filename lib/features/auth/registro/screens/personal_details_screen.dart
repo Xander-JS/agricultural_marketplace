@@ -11,6 +11,7 @@ import '../../../../core/widgets/buttons/primary_action_button.dart';
 import '../../widgets/registration_step_scaffold.dart';
 import '../models/registration_data.dart';
 import 'role_selection_screen.dart';
+import '../../../../core/constants/input_limits.dart';
 
 // Nota: OtpVerificationScreen eliminado del flujo de registro por defecto.
 // El proveedor SMS de Supabase está desactivado (enable_signup = false en [auth.sms]).
@@ -92,6 +93,8 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
                   hint: l10n.personal_info_phone_hint,
                   icon: LucideIcons.phone,
                   controller: _phoneController,
+                  maxLength: InputLimits.phone,
+                  showCounter: false,
                   keyboardType: TextInputType.phone,
                   textInputAction: TextInputAction.next,
                   autofillHints: const [AutofillHints.telephoneNumber],
@@ -112,6 +115,8 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
                   hint: l10n.personal_info_first_name_hint,
                   icon: LucideIcons.userRound,
                   controller: _firstNameController,
+                  maxLength: InputLimits.personName,
+                  showCounter: false,
                   textInputAction: TextInputAction.next,
                   autofillHints: const [AutofillHints.givenName],
                   validator: (value) => value == null || value.trim().isEmpty
@@ -124,6 +129,8 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
                   hint: l10n.personal_info_last_name_hint,
                   icon: LucideIcons.userRound,
                   controller: _lastNameController,
+                  maxLength: InputLimits.personName,
+                  showCounter: false,
                   textInputAction: TextInputAction.next,
                   autofillHints: const [AutofillHints.familyName],
                   validator: (value) => value == null || value.trim().isEmpty
@@ -136,6 +143,8 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
                   hint: l10n.login_password_hint,
                   icon: LucideIcons.lockKeyhole,
                   controller: _passwordController,
+                  maxLength: InputLimits.password,
+                  showCounter: false,
                   obscureText: !_isPasswordVisible,
                   textInputAction: TextInputAction.done,
                   autofillHints: const [AutofillHints.newPassword],

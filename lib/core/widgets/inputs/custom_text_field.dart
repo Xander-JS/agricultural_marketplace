@@ -25,6 +25,9 @@ class CustomTextField extends StatelessWidget {
   final Iterable<String>? autofillHints;
   final int maxLines;
   final int? maxLength;
+
+  /// Hides the "n/max" counter while still enforcing [maxLength].
+  final bool showCounter;
   final bool enabled;
   final TextCapitalization textCapitalization;
 
@@ -45,6 +48,7 @@ class CustomTextField extends StatelessWidget {
     this.autofillHints,
     this.maxLines = 1,
     this.maxLength,
+    this.showCounter = true,
     this.enabled = true,
     this.textCapitalization = TextCapitalization.none,
   });
@@ -94,6 +98,10 @@ class CustomTextField extends StatelessWidget {
           autofillHints: autofillHints,
           maxLines: maxLines,
           maxLength: maxLength,
+          buildCounter: showCounter
+              ? null
+              : (_, {required currentLength, required isFocused, maxLength}) =>
+                    null,
           enabled: enabled,
           textCapitalization: textCapitalization,
           style: AppTextStyles.bodyLarge.copyWith(

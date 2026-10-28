@@ -2,7 +2,10 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
 import '../../../core/theme/app_icons.dart';
+
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -20,6 +23,8 @@ import '../../../core/widgets/misc/icon_squircle.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/utils/app_formatters.dart';
 import '../../../core/constants/user_roles.dart';
+import '../../../core/constants/input_limits.dart';
+import '../../../core/widgets/inputs/field_pair.dart';
 
 class PublishCropScreen extends StatefulWidget {
   final CropModel? cropToEdit;
@@ -345,6 +350,7 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
                       children: [
                         _buildTextField(
                           controller: _titleController,
+                          maxLength: InputLimits.cropTitle,
                           label: l10n.publish_field_title,
                           validator: (val) => val == null || val.isEmpty
                               ? l10n.publish_validation_required
@@ -352,6 +358,7 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
                         ),
                         _buildTextField(
                           controller: _cropTypeController,
+                          maxLength: InputLimits.cropType,
                           label: l10n.publish_field_crop_type,
                           validator: (val) => val == null || val.isEmpty
                               ? l10n.publish_validation_required
@@ -359,6 +366,7 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
                         ),
                         _buildTextField(
                           controller: _descriptionController,
+                          maxLength: InputLimits.description,
                           label: l10n.publish_field_description,
                           maxLines: 3,
                           validator: (val) => val == null || val.isEmpty
@@ -371,50 +379,51 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
                       icon: LucideIcons.coins,
                       title: l10n.publish_section_prices,
                       children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: _buildTextField(
-                                controller: _priceController,
-                                label: l10n.publish_field_price,
-                                keyboardType: TextInputType.number,
-                                figures: true,
-                                validator: (val) {
-                                  if (val == null || val.isEmpty) {
-                                    return l10n.publish_validation_required;
-                                  }
-                                  final num = double.tryParse(val);
-                                  if (num == null || num <= 0) {
-                                    return l10n.publish_validation_greater_zero;
-                                  }
-                                  return null;
-                                },
-                              ),
+                        FieldPair(
+                          first: _buildTextField(
+                            controller: _priceController,
+                            inputFormatters: InputLimits.decimal(
+                              InputLimits.pricePerKgDigits,
                             ),
-                            const SizedBox(width: AppDimensions.space12),
-                            Expanded(
-                              child: _buildTextField(
-                                controller: _stockController,
-                                label: l10n.publish_field_stock,
-                                keyboardType: TextInputType.number,
-                                figures: true,
-                                validator: (val) {
-                                  if (val == null || val.isEmpty) {
-                                    return l10n.publish_validation_required;
-                                  }
-                                  final num = double.tryParse(val);
-                                  if (num == null || num < 0) {
-                                    return l10n.publish_validation_non_negative;
-                                  }
-                                  return null;
-                                },
-                              ),
+                            label: l10n.publish_field_price,
+                            keyboardType: TextInputType.number,
+                            figures: true,
+                            validator: (val) {
+                              if (val == null || val.isEmpty) {
+                                return l10n.publish_validation_required;
+                              }
+                              final num = double.tryParse(val);
+                              if (num == null || num <= 0) {
+                                return l10n.publish_validation_greater_zero;
+                              }
+                              return null;
+                            },
+                          ),
+                          second: _buildTextField(
+                            controller: _stockController,
+                            inputFormatters: InputLimits.decimal(
+                              InputLimits.kgDigits,
                             ),
-                          ],
+                            label: l10n.publish_field_stock,
+                            keyboardType: TextInputType.number,
+                            figures: true,
+                            validator: (val) {
+                              if (val == null || val.isEmpty) {
+                                return l10n.publish_validation_required;
+                              }
+                              final num = double.tryParse(val);
+                              if (num == null || num < 0) {
+                                return l10n.publish_validation_non_negative;
+                              }
+                              return null;
+                            },
+                          ),
                         ),
                         _buildTextField(
                           controller: _minOrderController,
+                          inputFormatters: InputLimits.decimal(
+                            InputLimits.kgDigits,
+                          ),
                           label: l10n.publish_field_min_order,
                           keyboardType: TextInputType.number,
                           figures: true,
@@ -441,6 +450,7 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
                             Expanded(
                               child: _buildTextField(
                                 controller: _departmentController,
+                                maxLength: InputLimits.place,
                                 label: l10n.publish_field_department,
                                 validator: (val) => val == null || val.isEmpty
                                     ? l10n.publish_validation_required
@@ -451,6 +461,7 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
                             Expanded(
                               child: _buildTextField(
                                 controller: _municipalityController,
+                                maxLength: InputLimits.place,
                                 label: l10n.publish_field_municipality,
                                 validator: (val) => val == null || val.isEmpty
                                     ? l10n.publish_validation_required
@@ -473,6 +484,9 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
                               Expanded(
                                 child: _buildTextField(
                                   controller: _estimatedYieldController,
+                                  inputFormatters: InputLimits.decimal(
+                                    InputLimits.kgDigits,
+                                  ),
                                   label: l10n.publish_field_estimated_yield,
                                   keyboardType: TextInputType.number,
                                   figures: true,
@@ -854,10 +868,14 @@ class _PublishCropScreenState extends State<PublishCropScreen> {
     TextInputType? keyboardType,
     String? Function(String?)? validator,
     bool figures = false,
+    int? maxLength,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return TextFormField(
       controller: controller,
       decoration: InputDecoration(labelText: label),
+      maxLength: maxLength,
+      inputFormatters: inputFormatters,
       style: (figures ? AppTextStyles.figureSmall : AppTextStyles.bodyLarge)
           .copyWith(color: context.appTextPrimary),
       maxLines: maxLines,

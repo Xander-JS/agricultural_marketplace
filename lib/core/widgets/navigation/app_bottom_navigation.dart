@@ -2,6 +2,7 @@ import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
+
 import '../../theme/app_icons.dart';
 
 import '../../constants/user_roles.dart';
@@ -70,8 +71,9 @@ class AppBottomNavigation extends StatelessWidget {
           ),
           child: SafeArea(
             top: false,
+            // Grows with the text size so icon and label keep their margins.
             child: SizedBox(
-              height: _barHeight,
+              height: MediaQuery.textScalerOf(context).scale(_barHeight),
               child: Row(
                 children: [
                   for (var i = 0; i < items.length; i++)
@@ -161,25 +163,28 @@ class _TabButtonState extends State<_TabButton>
           tween: ColorTween(end: color),
           duration: duration,
           curve: AppMotion.easeOut,
-          builder: (context, tint, _) => Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ScaleTransition(
-                scale: _scale,
-                child: Icon(widget.data.icon, size: 24, color: tint),
-              ),
-              const SizedBox(height: 3),
-              Text(
-                widget.data.label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.labelSmall.copyWith(
-                  color: tint,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                  letterSpacing: 0,
+          builder: (context, tint, _) => Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ScaleTransition(
+                  scale: _scale,
+                  child: Icon(widget.data.icon, size: 24, color: tint),
                 ),
-              ),
-            ],
+                const SizedBox(height: 3),
+                Text(
+                  widget.data.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: tint,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                    letterSpacing: 0,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

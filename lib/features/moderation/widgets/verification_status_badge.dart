@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_icons.dart';
 
 import '../../../core/constants/user_roles.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/date_formatters.dart';
 import '../../../core/widgets/badges/status_badge.dart';
@@ -37,7 +38,7 @@ StatusBadge verificationStatusBadge(
   };
   return StatusBadge(
     key: key,
-    text: label ?? status.displayName,
+    text: label ?? status.localizedName(AppLocalizations.of(context)!),
     icon: icon,
     tone: tone,
     backgroundColor: context.appSurfaceVariant,

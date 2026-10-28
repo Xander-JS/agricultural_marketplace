@@ -1,7 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import '../../../core/theme/app_icons.dart';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/negotiation_model.dart';
@@ -20,6 +22,8 @@ import '../../../core/widgets/cards/inset_group_card.dart';
 import '../../../core/widgets/feedback/app_snack_bar.dart';
 import '../../../core/widgets/feedback/status_banner.dart';
 import '../../../core/widgets/inputs/choice_tile.dart';
+import '../../../core/constants/input_limits.dart';
+import '../../../core/widgets/inputs/field_pair.dart';
 
 class CounterOfferScreen extends StatefulWidget {
   final NegotiationModel negotiation;
@@ -176,10 +180,6 @@ class _CounterOfferScreenState extends State<CounterOfferScreen> {
       fontSize: 16,
       color: context.appTextPrimary,
     );
-    final numberFormatters = [
-      FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
-    ];
-
     return Scaffold(
       backgroundColor: context.appBackground,
       appBar: AppBar(title: Text(l10n.counter_offer_title)),
@@ -209,50 +209,41 @@ class _CounterOfferScreenState extends State<CounterOfferScreen> {
                     _CurrentOfferCard(offer: widget.latestOffer),
                     const SizedBox(height: AppDimensions.space24),
 
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: TextFormField(
-                            controller: _quantityController,
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            inputFormatters: numberFormatters,
-                            style: figureStyle,
-                            decoration: InputDecoration(
-                              labelText: l10n.counter_offer_quantity_label,
-                              suffixText: 'kg',
-                              prefixIcon: const Icon(
-                                LucideIcons.weight,
-                                size: 18,
-                              ),
-                            ),
-                            onChanged: (_) => setState(() {}),
-                            validator: (value) =>
-                                _validatePositive(value, l10n),
-                          ),
+                    FieldPair(
+                      first: TextFormField(
+                        controller: _quantityController,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
                         ),
-                        const SizedBox(width: AppDimensions.space12),
-                        Expanded(
-                          child: TextFormField(
-                            controller: _priceController,
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            inputFormatters: numberFormatters,
-                            style: figureStyle,
-                            decoration: InputDecoration(
-                              labelText: l10n.counter_offer_price_label,
-                              prefixText: '\$ ',
-                              suffixText: '/ kg',
-                            ),
-                            onChanged: (_) => setState(() {}),
-                            validator: (value) =>
-                                _validatePositive(value, l10n),
-                          ),
+                        inputFormatters: InputLimits.decimal(
+                          InputLimits.kgDigits,
                         ),
-                      ],
+                        style: figureStyle,
+                        decoration: InputDecoration(
+                          labelText: l10n.counter_offer_quantity_label,
+                          suffixText: 'kg',
+                          prefixIcon: const Icon(LucideIcons.weight, size: 18),
+                        ),
+                        onChanged: (_) => setState(() {}),
+                        validator: (value) => _validatePositive(value, l10n),
+                      ),
+                      second: TextFormField(
+                        controller: _priceController,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        inputFormatters: InputLimits.decimal(
+                          InputLimits.pricePerKgDigits,
+                        ),
+                        style: figureStyle,
+                        decoration: InputDecoration(
+                          labelText: l10n.counter_offer_price_label,
+                          prefixText: '\$ ',
+                          suffixText: '/ kg',
+                        ),
+                        onChanged: (_) => setState(() {}),
+                        validator: (value) => _validatePositive(value, l10n),
+                      ),
                     ),
                     _buildPriceDelta(l10n),
                     const SizedBox(height: AppDimensions.space20),
@@ -282,6 +273,7 @@ class _CounterOfferScreenState extends State<CounterOfferScreen> {
                     TextFormField(
                       controller: _messageController,
                       maxLines: 3,
+                      maxLength: InputLimits.message,
                       textCapitalization: TextCapitalization.sentences,
                       decoration: InputDecoration(
                         labelText: l10n.counter_offer_message_label,
@@ -391,7 +383,8 @@ class _CounterOfferScreenState extends State<CounterOfferScreen> {
                             UnitFormatters.formatKg(_currentQuantity),
                             CurrencyFormatters.formatCop(_currentPrice),
                           ),
-                          maxLines: 1,
+                          // Wraps like the offer sheet; the figures stay whole.
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: AppTextStyles.caption.copyWith(
                             color: context.appTextSecondary,

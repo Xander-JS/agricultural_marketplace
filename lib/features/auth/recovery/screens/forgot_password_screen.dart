@@ -11,6 +11,7 @@ import '../../../../core/widgets/inputs/custom_text_field.dart';
 import '../../login/widgets/topo_header.dart';
 import '../../widgets/auth_layout.dart';
 import '../services/recovery_service.dart';
+import '../../../../core/constants/input_limits.dart';
 
 /// Pantalla para solicitar la recuperación de contraseña por correo electrónico.
 class ForgotPasswordScreen extends StatefulWidget {
@@ -139,6 +140,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           hint: l10n.recovery_email_hint,
                           icon: LucideIcons.mail,
                           controller: _contactController,
+                          maxLength: InputLimits.email,
+                          showCounter: false,
                           keyboardType: TextInputType.emailAddress,
                           textInputAction: TextInputAction.send,
                           autofillHints: const [AutofillHints.email],

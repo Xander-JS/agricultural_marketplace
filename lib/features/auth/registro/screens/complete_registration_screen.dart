@@ -21,6 +21,7 @@ import '../../widgets/document_selection_card.dart';
 import '../../widgets/registration_step_scaffold.dart';
 import '../../widgets/upload_progress_note.dart';
 import '../services/account_completion_service.dart';
+import '../../../../core/constants/input_limits.dart';
 
 /// Pantalla de recuperación para cuentas que existen en Supabase Auth pero no
 /// tienen perfil en `public.profiles`.
@@ -249,6 +250,8 @@ class _CompleteRegistrationScreenState
                   hint: l10n.complete_registration_contact_hint,
                   icon: LucideIcons.phone,
                   controller: _contactController,
+                  maxLength: InputLimits.email,
+                  showCounter: false,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
                   validator: (value) {
@@ -272,6 +275,8 @@ class _CompleteRegistrationScreenState
                   hint: l10n.complete_registration_full_name_hint,
                   icon: LucideIcons.userRound,
                   controller: _fullNameController,
+                  maxLength: InputLimits.personName,
+                  showCounter: false,
                   textInputAction: TextInputAction.done,
                   validator: (value) => value == null || value.trim().isEmpty
                       ? l10n.personal_info_required
@@ -305,14 +310,14 @@ class _CompleteRegistrationScreenState
                         'complete_registration_role_agricultor',
                       ),
                       icon: LucideIcons.sprout,
-                      label: UserRole.agricultor.displayName,
+                      label: UserRole.agricultor.localizedName(l10n),
                     ),
                     'comprador': _RoleSegment(
                       key: const ValueKey(
                         'complete_registration_role_comprador',
                       ),
                       icon: LucideIcons.briefcaseBusiness,
-                      label: UserRole.comprador.displayName,
+                      label: UserRole.comprador.localizedName(l10n),
                     ),
                   },
                 ),

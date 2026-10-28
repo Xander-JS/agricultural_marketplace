@@ -9,6 +9,20 @@ import '../../../core/widgets/misc/icon_squircle.dart';
 import '../../../core/widgets/sheets/app_sheet_frame.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/utils/app_formatters.dart';
+import '../../../core/constants/input_limits.dart';
+
+/// Localized name of [unit]; [count] picks singular or plural.
+String traditionalUnitName(
+  AppLocalizations l10n,
+  TraditionalUnit unit,
+  int count,
+) => switch (unit) {
+  TraditionalUnit.bulto => l10n.unit_name_bulto(count),
+  TraditionalUnit.arroba => l10n.unit_name_arroba(count),
+  TraditionalUnit.canastilla => l10n.unit_name_canastilla(count),
+  TraditionalUnit.caja => l10n.unit_name_caja(count),
+  TraditionalUnit.tonelada => l10n.unit_name_tonelada(count),
+};
 
 /// Modal informativo de equivalencias aproximadas de unidades agrícolas,
 /// en una cuadrícula compacta de tarjetas.
@@ -73,14 +87,14 @@ class _UnitEquivalencesSheetState extends State<UnitEquivalencesSheet> {
     TraditionalUnit unit,
   ) {
     if (qtyKg <= 0 || unit.kgEquivalent <= 0) {
-      return l10n.units_empty(unit.pluralName);
+      return l10n.units_empty(traditionalUnitName(l10n, unit, 2));
     }
     final converted = qtyKg / unit.kgEquivalent;
     final formatted = UnitFormatters.formatCleanValue(
       converted,
       maxDecimals: 1,
     );
-    final label = (converted == 1.0) ? unit.displayName : unit.pluralName;
+    final label = traditionalUnitName(l10n, unit, converted == 1.0 ? 1 : 2);
     return l10n.units_approx(formatted, label);
   }
 
@@ -152,6 +166,7 @@ class _UnitEquivalencesSheetState extends State<UnitEquivalencesSheet> {
             key: const Key('unit_equivalences_input'),
             controller: _calculatorController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: InputLimits.decimal(InputLimits.kgDigits),
             onChanged: _onInputChanged,
             style: AppTextStyles.figureSmall.copyWith(
               fontSize: 16,
@@ -242,8 +257,8 @@ class _UnitEquivalencesSheetState extends State<UnitEquivalencesSheet> {
     bool wide = false,
   }) {
     final equivalenceText = _formatEquivalence(l10n, _currentKg, unit);
-    final name =
-        unit.pluralName[0].toUpperCase() + unit.pluralName.substring(1);
+    final plural = traditionalUnitName(l10n, unit, 2);
+    final name = plural[0].toUpperCase() + plural.substring(1);
 
     final figure = _figureSpans(context, equivalenceText);
     final value = FittedBox(

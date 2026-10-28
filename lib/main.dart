@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import 'core/config/supabase_client.dart';
 import 'core/localization/app_localizations.dart';
 import 'core/localization/localization_config.dart';
 import 'core/services/app_preferences_service.dart';
 import 'core/theme/app_theme.dart';
+import 'core/utils/date_formatters.dart';
 import 'features/auth/widgets/auth_gate.dart';
 
 void main() async {
@@ -52,6 +54,7 @@ class AgriculturalMarketplaceApp extends StatelessWidget {
     return ListenableBuilder(
       listenable: prefs,
       builder: (context, _) {
+        DateFormatters.languageCode = prefs.locale.languageCode;
         return MaterialApp(
           onGenerateTitle: (context) =>
               AppLocalizations.of(context)?.app_title ?? '',
@@ -71,6 +74,19 @@ class AgriculturalMarketplaceApp extends StatelessWidget {
           supportedLocales: LocalizationConfig.supportedLocales,
           localizationsDelegates: LocalizationConfig.localizationsDelegates,
           localeResolutionCallback: LocalizationConfig.localeResolutionCallback,
+
+          // Tamaño de texto e iconos: multiplica la escala del sistema.
+          builder: (context, child) {
+            final media = MediaQuery.of(context);
+            return MediaQuery(
+              data: media.copyWith(
+                textScaler: TextScaler.linear(
+                  media.textScaler.scale(1) * prefs.textSize.factor,
+                ),
+              ),
+              child: child!,
+            );
+          },
 
           // ---------------------------------------------------------
           // Punto de entrada de la app

@@ -20,6 +20,7 @@ import '../../../core/widgets/sheets/app_sheet_frame.dart';
 import '../../../core/utils/app_formatters.dart';
 import '../models/voice_crop_draft.dart';
 import '../services/voice_crop_assistant_service.dart';
+import '../../../core/constants/input_limits.dart';
 
 enum _VoicePhase {
   ready,
@@ -662,6 +663,7 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
           controller: _transcriptController,
           minLines: 3,
           maxLines: 5,
+          maxLength: InputLimits.voiceTranscript,
           textCapitalization: TextCapitalization.sentences,
           style: AppTextStyles.bodyLarge.copyWith(
             color: context.appTextPrimary,

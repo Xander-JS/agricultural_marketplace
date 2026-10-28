@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../../core/theme/app_icons.dart';
 
 import '../../../../core/localization/app_localizations.dart';
@@ -148,6 +149,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     controller: _controllers[index],
                     focusNode: _focusNodes[index],
                     keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     textAlign: TextAlign.center,
                     textAlignVertical: TextAlignVertical.center,
                     maxLength: 1,

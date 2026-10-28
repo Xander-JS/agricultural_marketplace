@@ -483,7 +483,7 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
                           const SizedBox(width: AppDimensions.space12),
                           _StagePill(
                             key: const ValueKey('verification_status_badge'),
-                            label: data.verificationStatus.displayName,
+                            label: data.verificationStatus.localizedName(l10n),
                           ),
                         ],
                       ),
@@ -574,7 +574,7 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
                       ),
                       _StatusBadge(
                         key: const ValueKey('verification_status_badge'),
-                        label: data.verificationStatus.displayName,
+                        label: data.verificationStatus.localizedName(l10n),
                         triad: visual.triad,
                       ),
                     ],
@@ -691,7 +691,7 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
               const Spacer(),
               _StatusBadge(
                 key: const ValueKey('verification_status_badge'),
-                label: data.verificationStatus.displayName,
+                label: data.verificationStatus.localizedName(l10n),
                 triad: visual.triad,
               ),
             ],

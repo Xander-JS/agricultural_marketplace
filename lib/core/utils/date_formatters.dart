@@ -7,18 +7,24 @@ abstract final class DateFormatters {
   static const String defaultLocale = 'es_CO';
   static bool _initialized = false;
 
+  /// Idioma de la app; lo fija la raíz de la app al cambiar de idioma.
+  static String languageCode = 'es';
+
+  static bool get _isEnglish => languageCode == 'en';
+
   /// Asegura que los símbolos de fecha para `es_CO` y `es` estén inicializados.
   static void ensureInitialized() {
     if (!_initialized) {
       initializeDateFormatting(defaultLocale, null);
       initializeDateFormatting('es', null);
+      initializeDateFormatting('en', null);
       _initialized = true;
     }
   }
 
   static DateFormat _getFormatter(String pattern) {
     ensureInitialized();
-    return DateFormat(pattern, defaultLocale);
+    return DateFormat(pattern, _isEnglish ? 'en' : defaultLocale);
   }
 
   /// Parsea una fecha de tipo calendario (como `estimated_harvest_date`) de manera segura,
@@ -61,7 +67,9 @@ abstract final class DateFormatters {
   static String formatHarvestDateLong(dynamic date, {String fallback = '--'}) {
     final parsed = parseCalendarDate(date);
     if (parsed == null) return fallback;
-    final formatter = _getFormatter("d 'de' MMMM, yyyy");
+    final formatter = _isEnglish
+        ? _getFormatter('MMMM d, yyyy')
+        : _getFormatter("d 'de' MMMM, yyyy");
     return formatter.format(parsed);
   }
 

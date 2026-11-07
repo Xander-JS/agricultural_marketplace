@@ -67,6 +67,22 @@ void main() {
       expect(unknown, isNull);
     });
 
+    test('vincula estrictamente por cropType ignorando el título de la publicación', () {
+      final ref = SimulatedRegionalPriceReferences.findForCrop(
+        cropType: 'Zanahoria',
+        title: 'Gran cosecha de Tomate Chonto',
+      );
+      expect(ref, isNotNull);
+      expect(ref!.cropName, 'Zanahoria');
+
+      final cafe = SimulatedRegionalPriceReferences.findForCrop(
+        cropType: 'Café',
+        title: 'Cosecha de la Finca El Paraíso Lote 4',
+      );
+      expect(cafe, isNotNull);
+      expect(cafe!.cropName, 'Café');
+    });
+
     test('el conjunto no atribuye fuentes o fechas de observación reales', () {
       expect(
         SimulatedRegionalPriceReferences.notice,

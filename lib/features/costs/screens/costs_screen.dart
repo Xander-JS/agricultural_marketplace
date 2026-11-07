@@ -283,6 +283,8 @@ class _CostsScreenState extends State<CostsScreen> {
       child: InsetGroupCard(
         padding: EdgeInsets.zero,
         showMosaic: true,
+        borderColor: context.appSmokedMocha,
+        borderWidth: 1.5,
         child: InkWell(
           onTap: () => _navigateToDetail(crop),
           borderRadius: BorderRadius.circular(InsetGroupCard.radius),

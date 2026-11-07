@@ -21,9 +21,10 @@ class AppSegment {
 /// iOS sliding segmented control on the KUS tokens.
 ///
 /// The thumb slides on Cupertino's own spring, so a rapid second tap
-/// retargets it mid-flight instead of restarting. The selected label gains
-/// weight and ink; the rest stay on secondary text, which keeps every
-/// segment legible in both modes.
+/// retargets it mid-flight instead of restarting. The selected segment uses
+/// the corporate green (`appPrimary`) thumb with high-contrast (`appOnPrimary`)
+/// text and icon; unselected segments stay on secondary text over
+/// `appSurfaceVariant`.
 class AppSegmentedControl<T extends Object> extends StatelessWidget {
   final T value;
   final Map<T, AppSegment> segments;
@@ -45,7 +46,7 @@ class AppSegmentedControl<T extends Object> extends StatelessWidget {
     return CupertinoSlidingSegmentedControl<T>(
       groupValue: value,
       backgroundColor: context.appSurfaceVariant,
-      thumbColor: context.appSegmentThumb,
+      thumbColor: context.appPrimary,
       padding: const EdgeInsets.all(3),
       onValueChanged: (next) {
         if (next == null || next == value) return;
@@ -77,7 +78,7 @@ class _SegmentLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = selected ? context.appTextPrimary : context.appTextSecondary;
+    final color = selected ? context.appOnPrimary : context.appTextSecondary;
 
     return Padding(
       padding: EdgeInsets.symmetric(

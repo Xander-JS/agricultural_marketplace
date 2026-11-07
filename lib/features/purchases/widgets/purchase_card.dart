@@ -66,8 +66,7 @@ class PurchaseCard extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         child: CustomPaint(
           painter: TopoContoursPainter.card(
-            color: context.appPrimarySoft,
-            intensity: context.appIsDark ? 0.45 : 0.85,
+            isDark: context.appIsDark,
           ),
           child: InkWell(
             onTap: () async {

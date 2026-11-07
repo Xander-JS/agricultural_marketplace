@@ -417,6 +417,7 @@ class _SummaryCard extends StatelessWidget {
 
     return InsetGroupCard(
       padding: EdgeInsets.zero,
+      showMosaic: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -494,7 +495,7 @@ class _KpiLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 15, color: context.appTextSecondary),
+        Icon(icon, size: 15, color: context.appIconMocha),
         const SizedBox(width: 6),
         // Two lines: "Acuerdos vigentes" wraps between words at large sizes.
         Flexible(

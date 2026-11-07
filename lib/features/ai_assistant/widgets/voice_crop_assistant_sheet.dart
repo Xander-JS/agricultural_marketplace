@@ -368,10 +368,16 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
                 color: context.appTextPrimary,
                 style: IconButton.styleFrom(
                   backgroundColor: context.appSurfaceVariant,
+                  foregroundColor: context.appTextPrimary,
                 ),
                 // A heavier stroke than the app's 300 weight keeps the close
                 // mark legible on the neutral chip without borrowing red.
-                icon: const Icon(LucideIcons600.x, size: 20),
+                icon: Icon(
+                  LucideIcons600.x,
+                  size: 22,
+                  color: context.appTextPrimary,
+                  weight: 700,
+                ),
               ),
             ],
           ),
@@ -518,34 +524,47 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
     );
   }
 
-  /// The manual path out of the ready state: a full-width outlined control
-  /// on the neutral fill, brand hairline and label, so it reads as a real
-  /// alternative to speaking rather than a footnote.
-  Widget _buildManualEntryButton() {
+  /// The manual path out of the voice assistant: a full-width tactile secondary
+  /// button on the subtle `surfaceVariant` fill, corporate green border and
+  /// bolder label, so it is immediately recognizable as a clickable action.
+  Widget _buildManualEntryButton({String? label, bool showIcon = true}) {
     final primary = context.appPrimary;
-    return PressableScale(
-      child: OutlinedButton.icon(
-        key: const Key('voice_crop_manual_button'),
-        onPressed: _continueManually,
-        style: OutlinedButton.styleFrom(
-          minimumSize: const Size.fromHeight(50),
-          backgroundColor: context.appSurfaceVariant,
-          foregroundColor: primary,
-          side: BorderSide(color: primary),
-          textStyle: AppTextStyles.bodyMedium.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppDimensions.space16,
-            vertical: AppDimensions.space12,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-        ),
-        icon: const Icon(LucideIcons.pencilLine, size: 18),
-        label: Text(_l10n.ai_manual, textAlign: TextAlign.center),
+    final buttonStyle = OutlinedButton.styleFrom(
+      minimumSize: const Size.fromHeight(50),
+      backgroundColor: context.appSurfaceVariant,
+      foregroundColor: primary,
+      side: BorderSide(color: primary, width: 1.5),
+      textStyle: AppTextStyles.bodyMedium.copyWith(
+        fontWeight: FontWeight.w700,
       ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.space16,
+        vertical: AppDimensions.space12,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+      ),
+    );
+    final textWidget = Text(
+      label ?? _l10n.ai_manual,
+      textAlign: TextAlign.center,
+    );
+
+    return PressableScale(
+      child: showIcon
+          ? OutlinedButton.icon(
+              key: const Key('voice_crop_manual_button'),
+              onPressed: _continueManually,
+              style: buttonStyle,
+              icon: Icon(LucideIcons.pencilLine, size: 18, color: primary),
+              label: textWidget,
+            )
+          : OutlinedButton(
+              key: const Key('voice_crop_manual_button'),
+              onPressed: _continueManually,
+              style: buttonStyle,
+              child: textWidget,
+            ),
     );
   }
 
@@ -593,11 +612,7 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
           label: Text(_l10n.ai_retry_mic),
         ),
         const SizedBox(height: AppDimensions.space8),
-        TextButton(
-          key: const Key('voice_crop_manual_button'),
-          onPressed: _continueManually,
-          child: Text(_l10n.ai_continue_manual),
-        ),
+        _buildManualEntryButton(label: _l10n.ai_continue_manual),
       ],
     );
   }
@@ -691,12 +706,8 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
           icon: const Icon(LucideIcons.mic, size: 18),
           label: Text(_l10n.ai_record_again),
         ),
-        const SizedBox(height: AppDimensions.space4),
-        TextButton(
-          key: const Key('voice_crop_manual_button'),
-          onPressed: _continueManually,
-          child: Text(_l10n.ai_continue_manual),
-        ),
+        const SizedBox(height: AppDimensions.space8),
+        _buildManualEntryButton(label: _l10n.ai_continue_manual),
       ],
     );
   }
@@ -842,7 +853,7 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
           icon: const Icon(LucideIcons.refreshCw, size: 18),
           label: Text(_l10n.ai_retry_interpret),
         ),
-        const SizedBox(height: AppDimensions.space4),
+        const SizedBox(height: AppDimensions.space8),
         Row(
           children: [
             Expanded(
@@ -852,14 +863,11 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
                 child: Text(_l10n.ai_record_again, textAlign: TextAlign.center),
               ),
             ),
+            const SizedBox(width: AppDimensions.space8),
             Expanded(
-              child: TextButton(
-                key: const Key('voice_crop_manual_button'),
-                onPressed: _continueManually,
-                child: Text(
-                  _l10n.ai_continue_manual,
-                  textAlign: TextAlign.center,
-                ),
+              child: _buildManualEntryButton(
+                label: _l10n.ai_continue_manual,
+                showIcon: false,
               ),
             ),
           ],
@@ -924,12 +932,8 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
           icon: const Icon(LucideIcons.mic, size: 18),
           label: Text(_l10n.ai_record_again),
         ),
-        const SizedBox(height: AppDimensions.space4),
-        TextButton(
-          key: const Key('voice_crop_manual_button'),
-          onPressed: _continueManually,
-          child: Text(_l10n.ai_continue_manual),
-        ),
+        const SizedBox(height: AppDimensions.space8),
+        _buildManualEntryButton(label: _l10n.ai_continue_manual),
       ],
     );
   }

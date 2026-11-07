@@ -244,7 +244,7 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
   Widget _buildCardHeader(String title, IconData icon, AppSemanticTriad triad) {
     return Row(
       children: [
-        IconSquircle(icon: icon, triad: triad, size: 32),
+        IconSquircle(icon: icon, triad: triad, size: 32, borderWidth: 1.35),
         const SizedBox(width: AppDimensions.space12),
         Expanded(
           child: Text(
@@ -255,6 +255,15 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  AppSemanticTriad _vitalBrandIconTriad(BuildContext context) {
+    final primary = context.appPrimary;
+    return AppSemanticTriad(
+      background: primary.withValues(alpha: context.appIsDark ? 0.16 : 0.10),
+      border: primary.withValues(alpha: context.appIsDark ? 0.48 : 0.36),
+      foreground: primary,
     );
   }
 
@@ -412,7 +421,7 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
           _buildCardHeader(
             l10n.profitability_evaluate_title,
             LucideIcons.coins,
-            context.appIconTriad,
+            _vitalBrandIconTriad(context),
           ),
           const SizedBox(height: AppDimensions.space16),
           TextFormField(
@@ -573,7 +582,7 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
           _buildCardHeader(
             l10n.profitability_suggested_title,
             LucideIcons300.target,
-            context.appIconTriad,
+            _vitalBrandIconTriad(context),
           ),
           const SizedBox(height: AppDimensions.space16),
           TextFormField(
@@ -710,12 +719,9 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
             children: [
               IconSquircle(
                 icon: LucideIcons300.trendingUp,
-                triad: AppSemanticTriad(
-                  background: context.appSurface,
-                  border: neutral.border,
-                  foreground: neutral.foreground,
-                ),
+                triad: _vitalBrandIconTriad(context),
                 size: 32,
+                borderWidth: 1.35,
               ),
               const SizedBox(width: AppDimensions.space12),
               Expanded(
@@ -1359,7 +1365,10 @@ class _ContourBackdropState extends State<_ContourBackdrop>
             );
           },
           child: CustomPaint(
-            painter: TopoContoursPainter(color: widget.color, intensity: 0.22),
+            painter: TopoContoursPainter.card(
+              color: context.appPrimarySoft,
+              intensity: context.appIsDark ? 0.45 : 0.85,
+            ),
           ),
         ),
       ),

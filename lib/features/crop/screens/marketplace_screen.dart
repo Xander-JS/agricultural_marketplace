@@ -721,7 +721,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                 prefixIcon: Icon(
                   LucideIcons.search,
                   size: 18,
-                  color: context.appTextSecondary,
+                  color: context.appIconMocha,
                 ),
                 prefixIconConstraints: const BoxConstraints(
                   minWidth: 40,

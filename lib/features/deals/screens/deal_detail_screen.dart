@@ -413,6 +413,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
 
     return InsetGroupCard(
       padding: EdgeInsets.zero,
+      showMosaic: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -544,7 +545,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
           Icon(
             presentation.icon,
             size: AppDimensions.iconSM,
-            color: context.appTextSecondary,
+            color: context.appIconMocha,
           ),
           const SizedBox(width: AppDimensions.space12),
           // Label and value share the line, so neither is squeezed into
@@ -930,7 +931,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
               Icon(
                 released ? LucideIcons.shieldCheck : LucideIcons.lockKeyhole,
                 size: 18,
-                color: released ? context.appSuccess : context.appTextSecondary,
+                color: released ? context.appSuccess : context.appIconMocha,
               ),
               const SizedBox(width: AppDimensions.space8),
               Expanded(
@@ -1519,10 +1520,17 @@ class _OfferBubble extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final dark = context.appIsDark;
     final hue = sentByFarmer ? context.appPrimary : context.appInfo;
-    final fill = hue.withValues(alpha: dark ? 0.16 : 0.10);
-    final outline = hue.withValues(alpha: dark ? 0.45 : 0.32);
-    final ink = context.appTextPrimary;
-    // Secondary text is tinted from the bubble's hue, never grey.
+    // Solid soft-green (Farmer) vs solid soft-blue (Buyer) wrapper at 14% tint
+    // over the surface so each role is immediately recognizable at a glance.
+    final fill = Color.alphaBlend(
+      hue.withValues(alpha: dark ? 0.18 : 0.14),
+      context.appSurface,
+    );
+    final outline = hue.withValues(alpha: dark ? 0.55 : 0.45);
+    final ink = sentByFarmer
+        ? (dark ? AppColors.darkOnPrimarySoft : AppColors.lightBrandPrimary)
+        : (dark ? AppColors.infoFgDark : AppColors.infoTextLight);
+    // Secondary text is tinted from the bubble's role hue, never grey.
     final soft = sentByFarmer ? context.appOnPrimarySoft : context.appInfoText;
     final delivery = deliveryPresentation(l10n, offer.deliveryMethod);
     final subtotal = offer.quantityKg * offer.proposedPricePerKg;
@@ -1566,7 +1574,7 @@ class _OfferBubble extends StatelessWidget {
                 bottomLeft: isMine ? big : tail,
                 bottomRight: isMine ? tail : big,
               ),
-              border: Border.all(color: outline),
+              border: Border.all(color: outline, width: 1.25),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1920,7 +1928,7 @@ class _ContactAction extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 10),
             child: Column(
               children: [
-                Icon(icon, size: 20, color: context.appTextSecondary),
+                Icon(icon, size: 20, color: context.appIconMocha),
                 const SizedBox(height: 4),
                 Text(
                   label,

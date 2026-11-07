@@ -341,7 +341,7 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
           textAlign: TextAlign.center,
           style: AppTextStyles.titleLarge.copyWith(
             color: context.appTextPrimary,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w800,
           ),
         ),
         content: Text(
@@ -375,7 +375,7 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
                   style: ElevatedButton.styleFrom(
                     elevation: 0,
                     backgroundColor: context.appError,
-                    foregroundColor: context.appColorScheme.onError,
+                    foregroundColor: AppColors.onBrand,
                     minimumSize: const Size(
                       0,
                       AppDimensions.buttonHeightMedium,
@@ -509,14 +509,14 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
                 IconButton(
                   key: const Key('crop_detail_edit_button'),
                   icon: const Icon(LucideIcons.pencil, size: 21),
-                  color: context.appTextSecondary,
+                  color: context.appIconMocha,
                   onPressed: _navigateToEdit,
                   tooltip: l10n.crop_detail_edit_tooltip,
                 ),
                 IconButton(
                   key: const Key('crop_detail_delete_button'),
                   icon: const Icon(LucideIcons.trash2, size: 21),
-                  color: context.appTextSecondary,
+                  color: context.appIconMocha,
                   onPressed: _confirmDelete,
                   tooltip: l10n.crop_detail_delete_tooltip,
                 ),
@@ -753,7 +753,7 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(LucideIcons.scale, size: 15, color: triad.foreground),
+                  Icon(LucideIcons.scale, size: 15, color: context.appIconMocha),
                   const SizedBox(width: 6),
                   Flexible(
                     child: Text(
@@ -791,7 +791,8 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
               triad: AppSemanticTriad(
                 background: context.appSurface,
                 border: context.appBorder,
-                foreground: context.appTextSecondary,
+                foreground: context.appIconMocha,
+                text: context.appTextSecondary,
               ),
             ),
           ),
@@ -805,7 +806,8 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
                 triad: AppSemanticTriad(
                   background: context.appSurface,
                   border: context.appBorder,
-                  foreground: context.appTextSecondary,
+                  foreground: context.appIconMocha,
+                  text: context.appTextSecondary,
                 ),
               ),
             ),
@@ -829,7 +831,7 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
         children: [
           Row(
             children: [
-              Icon(LucideIcons.sprout, size: 18, color: triad.foreground),
+              Icon(LucideIcons.sprout, size: 18, color: context.appIconMocha),
               const SizedBox(width: AppDimensions.space8),
               Text(
                 l10n.crop_detail_early_sale,
@@ -906,7 +908,7 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
       return OutlinedButton.icon(
         key: const Key('crop_detail_equivalences_action_button'),
         onPressed: () => _showEquivalencesModal(context),
-        icon: const Icon(LucideIcons.scale, size: 18),
+        icon: Icon(LucideIcons.scale, size: 18, color: context.appIconMocha),
         label: Text(l10n.crop_detail_view_equivalences),
       );
     }
@@ -980,7 +982,11 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
               child: ElevatedButton.icon(
                 onPressed: _openMakeOfferSheet,
-                icon: const Icon(LucideIcons.handshake, size: 20),
+                icon: const Icon(
+                  LucideIcons.handshake,
+                  size: 20,
+                  color: AppColors.onBrand,
+                ),
                 label: Text(l10n.crop_detail_make_offer),
               ),
             ),
@@ -1254,7 +1260,7 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
                 Icon(
                   LucideIcons.chevronRight,
                   size: 18,
-                  color: context.appTextSecondary,
+                  color: context.appIconMocha,
                 ),
               ],
             ),
@@ -1410,9 +1416,9 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
                 UserAvatar(
                   imageUrl: avatarUrl,
                   radius: 24,
-                  backgroundColor: context.appPrimarySoft,
-                  borderColor: context.appBrandTriad.border,
-                  iconColor: context.appOnPrimarySoft,
+                  backgroundColor: context.appIconTriad.background,
+                  borderColor: context.appBorder,
+                  iconColor: context.appIconMocha,
                 ),
                 const SizedBox(width: AppDimensions.space12),
                 Expanded(
@@ -1451,7 +1457,7 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
                   Icon(
                     LucideIcons.phone,
                     size: 16,
-                    color: context.appTextSecondary,
+                    color: context.appIconMocha,
                   ),
                   const SizedBox(width: AppDimensions.space12),
                   Text(
@@ -1501,7 +1507,7 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
             children: [
               Padding(
                 padding: const EdgeInsets.only(top: 1),
-                child: Icon(icon, size: 18, color: context.appTextSecondary),
+                child: Icon(icon, size: 18, color: context.appIconMocha),
               ),
               const SizedBox(width: 14),
               Text(

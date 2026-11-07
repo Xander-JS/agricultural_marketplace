@@ -1161,7 +1161,7 @@ class _StatTile extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 16, color: context.appTextSecondary),
+          Icon(icon, size: 16, color: context.appIconMocha),
           const SizedBox(height: AppDimensions.space12),
           Text(
             value,

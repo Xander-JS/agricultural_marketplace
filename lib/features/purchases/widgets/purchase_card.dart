@@ -13,6 +13,7 @@ import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/utils/app_formatters.dart';
+import '../../../../core/widgets/brand/topo_contours_painter.dart';
 import '../../../../core/widgets/misc/pressable_scale.dart';
 
 /// One purchase agreed with a farmer: the lot, who sells it, the figures
@@ -63,235 +64,241 @@ class PurchaseCard extends StatelessWidget {
           side: BorderSide(color: context.appBorder),
         ),
         clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () async {
-            final result = await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => DealDetailScreen(
-                  negotiationId: purchase.id,
-                  role: 'comprador',
+        child: CustomPaint(
+          painter: TopoContoursPainter.card(
+            color: context.appPrimarySoft,
+            intensity: context.appIsDark ? 0.45 : 0.85,
+          ),
+          child: InkWell(
+            onTap: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DealDetailScreen(
+                    negotiationId: purchase.id,
+                    role: 'comprador',
+                  ),
                 ),
-              ),
-            );
-            if (result == true) {
-              onRefresh?.call();
-            }
-          },
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Encabezado: cosecha, tipo y estado
-                Row(
-                  children: [
-                    DealCropThumb(crop: purchase.crop, size: 48),
-                    const SizedBox(width: AppDimensions.space12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            purchase.crop?.title ??
-                                l10n.purchase_card_agreed_crop,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTextStyles.titleMedium.copyWith(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: context.appTextPrimary,
-                            ),
-                          ),
-                          if (purchase.crop?.cropType != null) ...[
-                            const SizedBox(height: 2),
+              );
+              if (result == true) {
+                onRefresh?.call();
+              }
+            },
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Encabezado: cosecha, tipo y estado
+                  Row(
+                    children: [
+                      DealCropThumb(crop: purchase.crop, size: 48),
+                      const SizedBox(width: AppDimensions.space12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
                             Text(
-                              purchase.crop!.cropType,
-                              style: AppTextStyles.bodySmall.copyWith(
-                                fontSize: 13,
-                                color: context.appTextSecondary,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: AppDimensions.space12),
-
-                // Productor y procedencia: la procedencia baja a otra línea
-                // cuando no cabe, en lugar de recortar ambos nombres.
-                Wrap(
-                  spacing: AppDimensions.space12,
-                  runSpacing: 4,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          LucideIcons.userRound,
-                          size: 15,
-                          color: context.appTextSecondary,
-                        ),
-                        const SizedBox(width: 6),
-                        Flexible(
-                          child: Text(
-                            producerName,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTextStyles.titleSmall.copyWith(
-                              color: context.appTextPrimary,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (location != null)
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            LucideIcons.mapPin,
-                            size: 14,
-                            color: context.appTextSecondary,
-                          ),
-                          const SizedBox(width: 4),
-                          Flexible(
-                            child: Text(
-                              location,
+                              purchase.crop?.title ??
+                                  l10n.purchase_card_agreed_crop,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: AppTextStyles.caption.copyWith(
-                                fontSize: 12,
-                                color: context.appTextSecondary,
+                              style: AppTextStyles.titleMedium.copyWith(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: context.appTextPrimary,
                               ),
                             ),
-                          ),
-                        ],
+                            if (purchase.crop?.cropType != null) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                purchase.crop!.cropType,
+                                style: AppTextStyles.bodySmall.copyWith(
+                                  fontSize: 13,
+                                  color: context.appTextSecondary,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
                       ),
-                  ],
-                ),
-
-                const SizedBox(height: AppDimensions.space12),
-
-                // Precio, cantidad y total del acuerdo
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 12,
+                    ],
                   ),
-                  decoration: BoxDecoration(
-                    color: context.appSurfaceVariant,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: IntrinsicHeight(
-                    child: Row(
-                      children: [
-                        Expanded(
-                          flex: 4,
-                          child: _Figure(
-                            label: l10n.purchase_card_price_per_kg,
-                            value: CurrencyFormatters.formatCop(price),
-                          ),
-                        ),
-                        VerticalDivider(width: 20, color: context.appBorder),
-                        Expanded(
-                          flex: 3,
-                          child: _Figure(
-                            label: l10n.purchase_card_quantity,
-                            value: UnitFormatters.formatKg(quantity),
-                          ),
-                        ),
-                        VerticalDivider(width: 20, color: context.appBorder),
-                        Expanded(
-                          flex: 5,
-                          child: _Figure(
-                            label: l10n.purchase_card_total_agreed,
-                            value: CurrencyFormatters.formatCop(total),
-                            emphasized: true,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
 
-                const SizedBox(height: AppDimensions.space12),
+                  const SizedBox(height: AppDimensions.space12),
 
-                // Entrega y fecha: la fecha baja a otra línea si no cabe.
-                Wrap(
-                  alignment: WrapAlignment.spaceBetween,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  spacing: AppDimensions.space8,
-                  runSpacing: 4,
-                  children: [
-                    if (latestOffer != null &&
-                        latestOffer.deliveryMethod.isNotEmpty)
+                  // Productor y procedencia: la procedencia baja a otra línea
+                  // cuando no cabe, en lugar de recortar ambos nombres.
+                  Wrap(
+                    spacing: AppDimensions.space12,
+                    runSpacing: 4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            deliveryPresentation(
-                              l10n,
-                              latestOffer.deliveryMethod,
-                            ).icon,
+                            LucideIcons.userRound,
                             size: 15,
-                            color: context.appTextSecondary,
+                            color: context.appIconMocha,
                           ),
                           const SizedBox(width: 6),
                           Flexible(
                             child: Text(
-                              '${l10n.purchases_delivery_method}: ${deliveryDisplayLabel(l10n, latestOffer.deliveryMethod)}',
-                              maxLines: 2,
+                              producerName,
+                              maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: AppTextStyles.bodySmall.copyWith(
-                                color: context.appTextSecondary,
+                              style: AppTextStyles.titleSmall.copyWith(
+                                color: context.appTextPrimary,
                               ),
                             ),
                           ),
                         ],
                       ),
-                    Text(
-                      formattedDate,
-                      style: AppTextStyles.caption.copyWith(
-                        color: context.appTextSecondary,
-                        fontFeatures: AppTextStyles.tabularFigures,
+                      if (location != null)
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              LucideIcons.mapPin,
+                              size: 14,
+                              color: context.appIconMocha,
+                            ),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                location,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTextStyles.caption.copyWith(
+                                  fontSize: 12,
+                                  color: context.appTextSecondary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
+
+                  const SizedBox(height: AppDimensions.space12),
+
+                  // Precio, cantidad y total del acuerdo
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: context.appSurfaceVariant,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: IntrinsicHeight(
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 4,
+                            child: _Figure(
+                              label: l10n.purchase_card_price_per_kg,
+                              value: CurrencyFormatters.formatCop(price),
+                            ),
+                          ),
+                          VerticalDivider(width: 20, color: context.appBorder),
+                          Expanded(
+                            flex: 3,
+                            child: _Figure(
+                              label: l10n.purchase_card_quantity,
+                              value: UnitFormatters.formatKg(quantity),
+                            ),
+                          ),
+                          VerticalDivider(width: 20, color: context.appBorder),
+                          Expanded(
+                            flex: 5,
+                            child: _Figure(
+                              label: l10n.purchase_card_total_agreed,
+                              value: CurrencyFormatters.formatCop(total),
+                              emphasized: true,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
 
-                const SizedBox(height: AppDimensions.space12),
-                Divider(height: 1, thickness: 1, color: context.appDivider),
-                const SizedBox(height: 10),
+                  const SizedBox(height: AppDimensions.space12),
 
-                // Estado del acuerdo y enlace al detalle
-                Wrap(
-                  alignment: WrapAlignment.spaceBetween,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  spacing: AppDimensions.space8,
-                  runSpacing: AppDimensions.space8,
-                  children: [
-                    NegotiationStatusBadge(
-                      status: purchase.status,
-                      label: isAgreed
-                          ? l10n.purchases_status_agreed
-                          : l10n.purchases_status_completed,
-                    ),
-                    Text(
-                      l10n.purchases_view_detail,
-                      style: AppTextStyles.labelMedium.copyWith(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: context.appPrimary,
+                  // Entrega y fecha: la fecha baja a otra línea si no cabe.
+                  Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: AppDimensions.space8,
+                    runSpacing: 4,
+                    children: [
+                      if (latestOffer != null &&
+                          latestOffer.deliveryMethod.isNotEmpty)
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              deliveryPresentation(
+                                l10n,
+                                latestOffer.deliveryMethod,
+                              ).icon,
+                              size: 15,
+                              color: context.appIconMocha,
+                            ),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                '${l10n.purchases_delivery_method}: ${deliveryDisplayLabel(l10n, latestOffer.deliveryMethod)}',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTextStyles.bodySmall.copyWith(
+                                  color: context.appTextSecondary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      Text(
+                        formattedDate,
+                        style: AppTextStyles.caption.copyWith(
+                          color: context.appTextSecondary,
+                          fontFeatures: AppTextStyles.tabularFigures,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+
+                  const SizedBox(height: AppDimensions.space12),
+                  Divider(height: 1, thickness: 1, color: context.appDivider),
+                  const SizedBox(height: 10),
+
+                  // Estado del acuerdo y enlace al detalle
+                  Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: AppDimensions.space8,
+                    runSpacing: AppDimensions.space8,
+                    children: [
+                      NegotiationStatusBadge(
+                        status: purchase.status,
+                        label: isAgreed
+                            ? l10n.purchases_status_agreed
+                            : l10n.purchases_status_completed,
+                      ),
+                      Text(
+                        l10n.purchases_view_detail,
+                        style: AppTextStyles.labelMedium.copyWith(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: context.appPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),

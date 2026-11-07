@@ -584,7 +584,7 @@ class _DealCard extends StatelessWidget {
                       Icon(
                         LucideIcons.hourglass,
                         size: 13,
-                        color: context.appTextSecondary,
+                        color: context.appIconMocha,
                       ),
                       const SizedBox(width: 6),
                       Text(

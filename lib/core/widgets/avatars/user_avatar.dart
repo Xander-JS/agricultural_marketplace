@@ -37,7 +37,7 @@ class UserAvatar extends StatelessWidget {
 
     final effectiveBgColor = backgroundColor ?? context.appSurfaceVariant;
     final effectiveBorderColor = borderColor ?? context.appBorder;
-    final effectiveIconColor = iconColor ?? context.appTextMuted;
+    final effectiveIconColor = iconColor ?? context.appIconMocha;
 
     String? resolvedUrl = imageUrl?.trim();
     if (resolvedUrl != null && resolvedUrl.isNotEmpty) {

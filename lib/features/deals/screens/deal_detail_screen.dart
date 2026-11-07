@@ -857,19 +857,10 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
           contact.counterpartMunicipality,
           contact.counterpartDepartment,
         ].whereType<String>().where((s) => s.trim().isNotEmpty).join(', ');
-        final hasCoordinates =
-            contact.counterpartLatitude != null &&
-            contact.counterpartLongitude != null;
         rows.add(
           InsetGroupRow(
             leading: IconSquircle(icon: LucideIcons.mapPin, size: 30),
             title: place.isEmpty ? l10n.deal_detail_view_location : place,
-            subtitle: hasCoordinates
-                ? l10n.deal_detail_coordinates(
-                    contact.counterpartLatitude!.toStringAsFixed(6),
-                    contact.counterpartLongitude!.toStringAsFixed(6),
-                  )
-                : null,
             onTap: () => _showLocationDialog(contact),
           ),
         );

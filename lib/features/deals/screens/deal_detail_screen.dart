@@ -1074,16 +1074,29 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
           actions: [
             ElevatedButton.icon(
               onPressed: () async {
-                final query = hasCoordinates
-                    ? '${contact.counterpartLatitude},${contact.counterpartLongitude}'
-                    : place;
-                if (query.isNotEmpty) {
-                  final uri = Uri.parse(
-                    'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(query)}',
+                final Uri mapsUri;
+                if (hasCoordinates) {
+                  mapsUri = Uri.parse(
+                    'https://www.google.com/maps/search/?api=1&query=${contact.counterpartLatitude},${contact.counterpartLongitude}',
                   );
-                  if (await canLaunchUrl(uri)) {
-                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                } else if (place.isNotEmpty) {
+                  mapsUri = Uri.parse(
+                    'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent('$place, Colombia')}',
+                  );
+                } else {
+                  return;
+                }
+
+                try {
+                  if (await canLaunchUrl(mapsUri)) {
+                    await launchUrl(mapsUri, mode: LaunchMode.externalApplication);
+                  } else {
+                    await launchUrl(mapsUri, mode: LaunchMode.platformDefault);
                   }
+                } catch (_) {
+                  try {
+                    await launchUrl(mapsUri, mode: LaunchMode.platformDefault);
+                  } catch (_) {}
                 }
               },
               icon: const Icon(LucideIcons.mapPin, size: 16),

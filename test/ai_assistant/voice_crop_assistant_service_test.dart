@@ -185,5 +185,105 @@ void main() {
       expect(service.model, equals('custom-model'));
     });
   });
+
+  group('VoiceTranscriptBuffer — acumulación de voz ante pausas', () {
+    test('1. Acumula múltiples fragmentos separados por pausas sin perder datos', () {
+      final buffer = VoiceTranscriptBuffer();
+      expect(buffer.isEmpty, isTrue);
+
+      // Primer fragmento en progreso
+      buffer.onVoiceResult('Tengo 20 bultos', isFinal: false);
+      expect(buffer.fullTranscript, equals('Tengo 20 bultos'));
+      expect(buffer.committedText, isEmpty);
+      expect(buffer.currentPartial, equals('Tengo 20 bultos'));
+
+      // Pausa detectada: primer fragmento finalizado
+      buffer.onVoiceResult('Tengo 20 bultos de cebolla', isFinal: true);
+      expect(buffer.committedText, equals('Tengo 20 bultos de cebolla'));
+      expect(buffer.currentPartial, isEmpty);
+      expect(buffer.fullTranscript, equals('Tengo 20 bultos de cebolla'));
+
+      // Segundo fragmento tras la pausa
+      buffer.onVoiceResult('a 40000', isFinal: false);
+      expect(
+        buffer.fullTranscript,
+        equals('Tengo 20 bultos de cebolla a 40000'),
+      );
+
+      // Segundo fragmento finalizado
+      buffer.onVoiceResult('a 40000 la carga', isFinal: true);
+      expect(
+        buffer.committedText,
+        equals('Tengo 20 bultos de cebolla a 40000 la carga'),
+      );
+      expect(buffer.currentPartial, isEmpty);
+      expect(
+        buffer.fullTranscript,
+        equals('Tengo 20 bultos de cebolla a 40000 la carga'),
+      );
+    });
+
+    test('2. Deduplica emisiones acumulativas completas enviadas por el motor', () {
+      final buffer = VoiceTranscriptBuffer();
+
+      // Primer segmento finalizado
+      buffer.onVoiceResult('Tengo 20 bultos de cebolla', isFinal: true);
+      expect(buffer.committedText, equals('Tengo 20 bultos de cebolla'));
+
+      // Motor que reemite el acumulado completo con palabras nuevas
+      buffer.onVoiceResult(
+        'Tengo 20 bultos de cebolla a 40000 la carga',
+        isFinal: false,
+      );
+      expect(
+        buffer.fullTranscript,
+        equals('Tengo 20 bultos de cebolla a 40000 la carga'),
+      );
+
+      buffer.onVoiceResult(
+        'Tengo 20 bultos de cebolla a 40000 la carga',
+        isFinal: true,
+      );
+      expect(
+        buffer.committedText,
+        equals('Tengo 20 bultos de cebolla a 40000 la carga'),
+      );
+      expect(
+        buffer.fullTranscript,
+        equals('Tengo 20 bultos de cebolla a 40000 la carga'),
+      );
+    });
+
+    test('3. Ignora fragmentos vacíos o sólo con espacios sin borrar lo anterior', () {
+      final buffer = VoiceTranscriptBuffer();
+      buffer.onVoiceResult('Papa criolla', isFinal: true);
+
+      buffer.onVoiceResult('   ', isFinal: false);
+      expect(buffer.fullTranscript, equals('Papa criolla'));
+
+      buffer.onVoiceResult('   ', isFinal: true);
+      expect(buffer.committedText, equals('Papa criolla'));
+      expect(buffer.fullTranscript, equals('Papa criolla'));
+    });
+
+    test('4. setText y clear manipulan el estado del buffer correctamente', () {
+      final buffer = VoiceTranscriptBuffer(initialText: 'Texto inicial');
+      expect(buffer.fullTranscript, equals('Texto inicial'));
+
+      buffer.setText('Edición manual campesino');
+      expect(buffer.committedText, equals('Edición manual campesino'));
+      expect(buffer.fullTranscript, equals('Edición manual campesino'));
+
+      buffer.onVoiceResult('a 1500 el kilo', isFinal: true);
+      expect(
+        buffer.fullTranscript,
+        equals('Edición manual campesino a 1500 el kilo'),
+      );
+
+      buffer.clear();
+      expect(buffer.isEmpty, isTrue);
+      expect(buffer.fullTranscript, isEmpty);
+    });
+  });
 }
 

@@ -60,8 +60,7 @@ class CropCostPerKgResult {
 /// No accede a Supabase ni a la interfaz. Las pantallas y el servicio reutilizan
 /// estas funciones para evitar duplicar las fórmulas.
 abstract final class CropCostCalculator {
-  static const String noCostsMessage =
-      'Aún no hay costos registrados. Agrega un costo para calcular el costo por kg.';
+  static const String noCostsMessage = 'Aún no hay costos registrados';
 
   /// Suma los importes de una colección de costos sin contar dos veces un
   /// registro con el mismo identificador.

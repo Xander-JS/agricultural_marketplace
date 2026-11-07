@@ -1352,7 +1352,7 @@
   "cost_source_stock_total": "stock total",
   "cost_source_estimated_yield": "rendimiento estimado",
   "cost_msg_calculated": "Costo estimado por kg",
-  "cost_msg_no_costs": "Aún no hay costos registrados. Agrega un costo para calcular el costo por kg.",
+  "cost_msg_no_costs": "Aún no hay costos registrados",
   "cost_msg_invalid_total": "No se puede calcular el costo por kg porque el total de costos no es válido.",
   "cost_msg_invalid_quantity": "No se puede calcular el costo por kg porque la cantidad usada como denominador no es válida. Debe ser mayor que cero.",
   "cost_msg_yield_pending": "No se puede calcular el costo por kg: la venta anticipada no tiene rendimiento estimado registrado.",

@@ -506,15 +506,15 @@ class _CropCostsDetailScreenState extends State<CropCostsDetailScreen> {
       padding: const EdgeInsets.only(bottom: AppDimensions.space8),
       child: InsetGroupCard(
         padding: const EdgeInsets.fromLTRB(14, 12, 4, 12),
-        borderColor: categoryTriad.border,
+        borderColor: context.appPrimary,
         borderWidth: 1.35,
         showMosaic: false,
         child: Row(
           children: [
-            IconSquircle(
-              icon: cost.category.icon,
-              triad: categoryTriad,
-              borderWidth: 1.35,
+            Icon(
+              cost.category.icon,
+              size: 20,
+              color: categoryTriad.foreground,
             ),
             const SizedBox(width: AppDimensions.space12),
             Expanded(

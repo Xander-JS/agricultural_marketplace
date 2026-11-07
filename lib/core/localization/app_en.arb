@@ -1310,7 +1310,7 @@
   "cost_source_stock_total": "total stock",
   "cost_source_estimated_yield": "estimated yield",
   "cost_msg_calculated": "Estimated cost per kg",
-  "cost_msg_no_costs": "No costs recorded yet. Add a cost to calculate the cost per kg.",
+  "cost_msg_no_costs": "No costs recorded yet",
   "cost_msg_invalid_total": "The cost per kg can't be calculated because the cost total isn't valid.",
   "cost_msg_invalid_quantity": "The cost per kg can't be calculated because the quantity used isn't valid. It must be greater than zero.",
   "cost_msg_yield_pending": "The cost per kg can't be calculated: this pre-sale has no estimated yield recorded.",

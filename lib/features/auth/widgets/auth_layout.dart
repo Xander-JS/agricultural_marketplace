@@ -32,25 +32,42 @@ class AuthFormEntrance extends StatelessWidget {
 }
 
 /// Task header for focused auth screens (recover, reset): the task's icon in
-/// a soft brand squircle, then the title and one line of guidance.
+/// a neutral slate squircle, then the title and one line of guidance.
 class AuthTaskHeader extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
+  final AppSemanticTriad? triad;
 
   const AuthTaskHeader({
     super.key,
     required this.icon,
     required this.title,
     required this.subtitle,
+    this.triad,
   });
 
   @override
   Widget build(BuildContext context) {
+    final effectiveTriad =
+        triad ??
+        AppSemanticTriad(
+          background: context.appTextSecondary.withValues(
+            alpha: context.appIsDark ? 0.14 : 0.10,
+          ),
+          border: AppColors.transparent,
+          foreground: context.appTextSecondary,
+        );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        IconSquircle(icon: icon, size: 48, iconSize: 24),
+        IconSquircle(
+          icon: icon,
+          size: 48,
+          iconSize: 24,
+          triad: effectiveTriad,
+        ),
         const SizedBox(height: AppDimensions.space16),
         Text(
           title,

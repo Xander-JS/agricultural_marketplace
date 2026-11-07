@@ -9,7 +9,7 @@ import '../brand/topo_contours_painter.dart';
 /// shadow, so the card sits flat on the grouped background.
 ///
 /// When [showMosaic] is `true`, renders the subtle field-plots mosaic over
-/// the card surface using `primarySoft` at low opacity so text and figures
+/// the card surface using a strictly grayscale palette so text and figures
 /// retain full WCAG contrast.
 class InsetGroupCard extends StatelessWidget {
   final Widget child;
@@ -48,8 +48,7 @@ class InsetGroupCard extends StatelessWidget {
       child: showMosaic
           ? CustomPaint(
               painter: TopoContoursPainter.card(
-                color: context.appPrimarySoft,
-                intensity: context.appIsDark ? 0.45 : 0.85,
+                isDark: context.appIsDark,
               ),
               child: content,
             )

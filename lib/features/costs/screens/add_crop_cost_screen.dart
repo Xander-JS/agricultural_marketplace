@@ -8,7 +8,6 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_motion.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../core/widgets/misc/icon_squircle.dart';
 import '../../../core/widgets/misc/pressable_scale.dart';
 import '../widgets/cost_category_style.dart';
 import '../../../core/localization/app_localizations.dart';
@@ -301,11 +300,10 @@ class _CategoryTile extends StatelessWidget {
             ),
             child: Row(
               children: [
-                IconSquircle(
-                  icon: category.icon,
-                  size: 36,
-                  triad: category.outlineTriad(context),
-                  borderWidth: 1.35,
+                Icon(
+                  category.icon,
+                  size: 20,
+                  color: category.outlineTriad(context).foreground,
                 ),
                 const SizedBox(width: AppDimensions.space8),
                 // One-word names: shrink to fit rather than cut the word.

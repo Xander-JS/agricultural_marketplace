@@ -1366,8 +1366,7 @@ class _ContourBackdropState extends State<_ContourBackdrop>
           },
           child: CustomPaint(
             painter: TopoContoursPainter.card(
-              color: context.appPrimarySoft,
-              intensity: context.appIsDark ? 0.45 : 0.85,
+              isDark: context.appIsDark,
             ),
           ),
         ),

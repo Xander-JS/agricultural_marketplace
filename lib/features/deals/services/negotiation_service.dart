@@ -242,7 +242,7 @@ class NegotiationService {
     final Map<String, dynamic> rpcParams = {
       'p_negotiation_id': negotiationId,
       'p_target_status': 'rechazada',
-      if (cleanReason != null) 'p_reason': cleanReason,
+      'p_reason': ?cleanReason,
     };
 
     try {
@@ -283,7 +283,7 @@ class NegotiationService {
     final Map<String, dynamic> rpcParams = {
       'p_negotiation_id': negotiationId,
       'p_target_status': 'cancelada',
-      if (cleanReason != null) 'p_reason': cleanReason,
+      'p_reason': ?cleanReason,
     };
 
     try {

@@ -115,19 +115,55 @@ class _CropCostsDetailScreenState extends State<CropCostsDetailScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(l10n.costs_delete_title),
-        content: Text(l10n.costs_delete_desc),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.common_cancel),
+        title: Text(
+          l10n.costs_delete_title,
+          textAlign: TextAlign.center,
+          style: AppTextStyles.titleLarge.copyWith(
+            color: context.appTextPrimary,
+            fontWeight: FontWeight.w800,
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(
-              foregroundColor: Theme.of(context).colorScheme.error,
-            ),
-            child: Text(l10n.common_delete),
+        ),
+        content: Text(
+          l10n.costs_delete_desc,
+          textAlign: TextAlign.center,
+          style: AppTextStyles.bodyMedium.copyWith(
+            color: context.appTextSecondary,
+          ),
+        ),
+        actions: [
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: context.appTextPrimary,
+                    side: BorderSide(color: context.appBorder),
+                    minimumSize: const Size(
+                      0,
+                      AppDimensions.buttonHeightMedium,
+                    ),
+                  ),
+                  child: Text(l10n.common_cancel),
+                ),
+              ),
+              const SizedBox(width: AppDimensions.space12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  style: ElevatedButton.styleFrom(
+                    elevation: 0,
+                    backgroundColor: context.appError,
+                    foregroundColor: AppColors.onBrand,
+                    minimumSize: const Size(
+                      0,
+                      AppDimensions.buttonHeightMedium,
+                    ),
+                  ),
+                  child: Text(l10n.common_delete),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -375,9 +411,11 @@ class _CropCostsDetailScreenState extends State<CropCostsDetailScreen> {
   }
 
   Widget _buildProfitabilityEntryCard(AppLocalizations l10n) {
+    final primary = context.appPrimary;
     return InsetGroupCard(
       key: const Key('crop_profitability_button'),
       padding: EdgeInsets.zero,
+      showMosaic: true,
       child: InkWell(
         onTap: _openProfitability,
         borderRadius: BorderRadius.circular(InsetGroupCard.radius),
@@ -386,13 +424,18 @@ class _CropCostsDetailScreenState extends State<CropCostsDetailScreen> {
           child: Row(
             children: [
               // Brand-tinted mark: the one entry here that points forward,
-              // to margin and price, so it carries the emerald.
+              // to margin and price, so it carries the vibrant corporate green.
               IconSquircle(
                 icon: LucideIcons.trendingUp,
+                borderWidth: 1.35,
                 triad: AppSemanticTriad(
-                  background: context.appPrimarySoft,
-                  border: context.appPrimary.withValues(alpha: 0.4),
-                  foreground: context.appPrimary,
+                  background: primary.withValues(
+                    alpha: context.appIsDark ? 0.16 : 0.10,
+                  ),
+                  border: primary.withValues(
+                    alpha: context.appIsDark ? 0.48 : 0.36,
+                  ),
+                  foreground: primary,
                 ),
               ),
               const SizedBox(width: AppDimensions.space12),
@@ -457,18 +500,21 @@ class _CropCostsDetailScreenState extends State<CropCostsDetailScreen> {
 
   Widget _buildCostCard(CropCostModel cost, AppLocalizations l10n) {
     final error = Theme.of(context).colorScheme.error;
+    final categoryTriad = cost.category.outlineTriad(context);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AppDimensions.space8),
       child: InsetGroupCard(
         padding: const EdgeInsets.fromLTRB(14, 12, 4, 12),
-        borderColor: cost.category.outlineTriad(context).border,
-        borderWidth: AppDimensions.borderWidthThin * 1.25,
+        borderColor: categoryTriad.border,
+        borderWidth: 1.35,
+        showMosaic: false,
         child: Row(
           children: [
             IconSquircle(
               icon: cost.category.icon,
-              triad: cost.category.outlineTriad(context),
+              triad: categoryTriad,
+              borderWidth: 1.35,
             ),
             const SizedBox(width: AppDimensions.space12),
             Expanded(

@@ -297,7 +297,7 @@ class CropCard extends StatelessWidget {
         Icon(
           hasValidDistance ? LucideIcons.navigation : LucideIcons.mapPin,
           size: 13,
-          color: AppColors.lightTextPrimary,
+          color: AppColors.lightIconMocha,
         ),
         const SizedBox(width: 4),
         if (locationName.isNotEmpty) ...[

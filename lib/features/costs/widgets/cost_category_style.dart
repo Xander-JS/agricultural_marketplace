@@ -30,14 +30,19 @@ extension CostCategoryStyle on CostCategory {
     CostCategory.otros => context.appNeutralTriad,
   };
 
-  /// Outlined variant for the registered-expense rows: the category hue
-  /// lives in the hairline and the glyph, over a neutral glass wash, so a
-  /// long list never turns into stacked colour blocks.
+  /// Outlined variant for the registered-expense rows: no solid background fill,
+  /// leaving only a clean, colored outline (1.25px - 1.5px) and matching colored
+  /// icon on a transparent / plain surface background.
   AppSemanticTriad outlineTriad(BuildContext context) {
-    final hue = triad(context).foreground;
+    final Color hue = switch (this) {
+      CostCategory.transporte => context.appWarningTriad.foreground,
+      CostCategory.fertilizantes => context.appPrimary,
+      CostCategory.jornales => context.appInfoTriad.foreground,
+      CostCategory.otros => context.appTextSecondary,
+    };
     return AppSemanticTriad(
-      background: context.appSurfaceVariant.withValues(alpha: 0.55),
-      border: hue.withValues(alpha: context.appIsDark ? 0.5 : 0.4),
+      background: AppColors.transparent,
+      border: hue,
       foreground: hue,
     );
   }

@@ -301,7 +301,12 @@ class _CategoryTile extends StatelessWidget {
             ),
             child: Row(
               children: [
-                IconSquircle(icon: category.icon, size: 36),
+                IconSquircle(
+                  icon: category.icon,
+                  size: 36,
+                  triad: category.outlineTriad(context),
+                  borderWidth: 1.35,
+                ),
                 const SizedBox(width: AppDimensions.space8),
                 // One-word names: shrink to fit rather than cut the word.
                 Expanded(

@@ -13,6 +13,7 @@ class IconSquircle extends StatelessWidget {
   final AppSemanticTriad? triad;
   final double size;
   final double? iconSize;
+  final double borderWidth;
 
   const IconSquircle({
     super.key,
@@ -20,6 +21,7 @@ class IconSquircle extends StatelessWidget {
     this.triad,
     this.size = 44,
     this.iconSize,
+    this.borderWidth = 1.25,
   });
 
   static const double radius = 10;
@@ -37,7 +39,7 @@ class IconSquircle extends StatelessWidget {
           borderRadius: BorderRadius.circular(radius),
           side: colors.border.a == 0
               ? BorderSide.none
-              : BorderSide(color: colors.border),
+              : BorderSide(color: colors.border, width: borderWidth),
         ),
       ),
       alignment: Alignment.center,

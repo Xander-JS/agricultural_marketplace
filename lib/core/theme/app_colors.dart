@@ -28,6 +28,7 @@ abstract final class AppColors {
   static const Color lightTextSecondary = Color(0xFF4B5563);
   static const Color lightTextMuted = Color(0xFF6B7280);
   static const Color lightTextDisabled = lightTextMuted;
+  static const Color lightIconMocha = Color(0xFF523A2E); // Smoked Mocha (Light)
 
   // ---------------------------------------------------------
   // Dark Palette
@@ -53,6 +54,7 @@ abstract final class AppColors {
   static const Color darkTextSecondary = Color(0xFF9CA3AF);
   static const Color darkTextMuted = Color(0xFF6B7280);
   static const Color darkTextDisabled = darkTextMuted;
+  static const Color darkIconMocha = Color(0xFFB59A88); // Smoked Mocha (Dark)
 
   // ---------------------------------------------------------
   // Legacy aliases (kept so existing screens compile unchanged)
@@ -204,6 +206,8 @@ extension AppThemeColors on BuildContext {
   Color get appTextMuted =>
       appIsDark ? AppColors.darkTextMuted : AppColors.lightTextMuted;
   Color get appTextDisabled => appTextMuted;
+  Color get appIconMocha =>
+      appIsDark ? AppColors.darkIconMocha : AppColors.lightIconMocha;
   Color get appPrimary => appColorScheme.primary;
   Color get appOnPrimary => appColorScheme.onPrimary;
   Color get appPrimaryContainer => appColorScheme.primaryContainer;
@@ -230,13 +234,13 @@ extension AppThemeColors on BuildContext {
     foreground: appTextSecondary,
   );
 
-  /// Editorial icon container: slate glyph on a faint translucent wash of
-  /// the same slate, no hairline. The default for decorative icons, so only
+  /// Editorial icon container: Smoked Mocha glyph on a faint translucent wash
+  /// of the same mocha, no hairline. The default for decorative icons, so only
   /// real states (errors, outcomes) carry hue.
   AppSemanticTriad get appIconTriad => AppSemanticTriad(
-    background: appTextSecondary.withValues(alpha: appIsDark ? 0.14 : 0.10),
+    background: appIconMocha.withValues(alpha: appIsDark ? 0.14 : 0.10),
     border: AppColors.transparent,
-    foreground: appTextSecondary,
+    foreground: appIconMocha,
   );
 
   /// Filled rating stars.

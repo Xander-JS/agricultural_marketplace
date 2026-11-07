@@ -179,7 +179,7 @@ class _UnitEquivalencesSheetState extends State<UnitEquivalencesSheet> {
               prefixIcon: Icon(
                 LucideIcons.calculator,
                 size: 18,
-                color: context.appTextSecondary,
+                color: context.appIconMocha,
               ),
             ),
           ),
@@ -292,7 +292,7 @@ class _UnitEquivalencesSheetState extends State<UnitEquivalencesSheet> {
             triad: AppSemanticTriad(
               background: context.appSurface,
               border: AppColors.transparent,
-              foreground: context.appTextSecondary,
+              foreground: context.appIconMocha,
             ),
           ),
           const SizedBox(width: AppDimensions.space12 - 2),

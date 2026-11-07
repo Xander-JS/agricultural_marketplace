@@ -73,6 +73,7 @@ abstract final class AppColors {
   // ---------------------------------------------------------
   /// Full-bleed brand ground for splash and blocking loaders. White text and
   /// marks ([onBrand]) keep AAA contrast on both stages.
+  static const Color primary = lightBrandPrimary;
   static const Color brandEmerald = lightBrandPrimary;
   static const Color loadingBackground = lightBrandPrimary;
   static const Color darkBrandStage = Color(0xFF0F2A1C);

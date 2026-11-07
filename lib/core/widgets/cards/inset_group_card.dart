@@ -34,17 +34,18 @@ class InsetGroupCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final content = Padding(padding: padding, child: child);
+    final borderRadius = BorderRadius.circular(radius);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: color ?? context.appSurface,
-        borderRadius: BorderRadius.circular(radius),
-        border: Border.all(
+    return Material(
+      color: color ?? context.appSurface,
+      shape: RoundedRectangleBorder(
+        borderRadius: borderRadius,
+        side: BorderSide(
           color: borderColor ?? context.appBorder,
           width: borderWidth,
         ),
       ),
-      clipBehavior: showMosaic ? Clip.antiAlias : Clip.none,
+      clipBehavior: Clip.antiAlias,
       child: showMosaic
           ? CustomPaint(
               painter: TopoContoursPainter.card(

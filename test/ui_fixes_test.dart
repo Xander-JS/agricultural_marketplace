@@ -15,6 +15,12 @@ import 'package:agricultural_marketplace/features/geo/models/simulated_location.
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:agricultural_marketplace/core/theme/app_colors.dart';
+import 'package:agricultural_marketplace/core/theme/app_theme.dart';
+import 'package:agricultural_marketplace/core/widgets/cards/inset_group_card.dart';
+import 'package:agricultural_marketplace/features/deals/screens/deals_screen.dart';
+import 'package:agricultural_marketplace/features/purchases/screens/purchases_screen.dart';
+import 'package:agricultural_marketplace/features/purchases/widgets/purchase_card.dart';
 import 'package:agricultural_marketplace/core/theme/app_icons.dart';
 import 'package:agricultural_marketplace/features/costs/models/regional_price_reference.dart';
 import 'package:agricultural_marketplace/features/deals/models/negotiation_model.dart';
@@ -25,6 +31,8 @@ import 'package:agricultural_marketplace/features/deals/widgets/negotiation_stat
 
 Widget _wrapWithLocalization(Widget child) {
   return MaterialApp(
+    theme: AppTheme.lightTheme,
+    darkTheme: AppTheme.darkTheme,
     localizationsDelegates: const [
       AppLocalizations.delegate,
       GlobalMaterialLocalizations.delegate,
@@ -540,6 +548,195 @@ void main() {
       final sheetFinder = find.byKey(const Key('crop_detail_regional_reference_sheet'));
       expect(sheetFinder, findsOneWidget);
       expect(find.descendant(of: sheetFinder, matching: find.byType(RegionalIndexDumbbellChart)), findsOneWidget);
+    });
+  });
+
+  group('9. Bordes Smoked Mocha en Tratos y Costos', () {
+    testWidgets('Tarjeta de cultivo en CostsScreen usa InsetGroupCard con borde smokedMocha de 1.5px', (tester) async {
+      final crop = CropModel(
+        id: 'crop_costs_border_1',
+        farmerId: 'farmer_1',
+        title: 'Papa Pastusa',
+        description: 'Papa de altura',
+        cropType: 'Papa Pastusa',
+        pricePerKg: 2200,
+        stockTotal: 500,
+        minOrderKg: 20,
+        department: 'Nariño',
+        municipality: 'Ipiales',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      final cropService = _FakeCropService([crop]);
+      final costService = _FakeCropCostService();
+
+      await tester.pumpWidget(
+        _wrapWithLocalization(
+          CostsScreen(
+            cropService: cropService,
+            costService: costService,
+            currentUserIdForTesting: 'farmer_1',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final insetCardFinder = find.byType(InsetGroupCard);
+      expect(insetCardFinder, findsOneWidget);
+      final InsetGroupCard card = tester.widget(insetCardFinder);
+      expect(card.borderColor, AppColors.lightIconMocha);
+      expect(card.borderWidth, 1.5);
+    });
+
+    testWidgets('Tarjeta DealCard en DealsScreen usa borde smokedMocha de 1.5px', (tester) async {
+      final negotiation = NegotiationModel(
+        id: 'deal_border_1',
+        cropId: 'crop_1',
+        buyerId: 'buyer_1',
+        currentResponder: 'comprador',
+        status: NegotiationStatus.propuesta,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        crop: CropModel(
+          id: 'crop_1',
+          farmerId: 'farmer_1',
+          title: 'Cebolla Junca',
+          description: 'Cebolla fresca',
+          cropType: 'Cebolla',
+          pricePerKg: 1500,
+          stockTotal: 200,
+          minOrderKg: 10,
+          department: 'Nariño',
+          municipality: 'Pasto',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+      );
+
+      final service = _FakeNegotiationService(
+        negotiation: negotiation,
+        contactInfo: NegotiationContactInfo(
+          negotiationId: 'deal_border_1',
+          counterpartId: 'farmer_1',
+          counterpartName: 'Don Pedro',
+          counterpartRole: 'agricultor',
+          status: 'propuesta',
+          mySharePhone: false,
+          myShareLocation: false,
+          counterpartSharePhone: false,
+          counterpartShareLocation: false,
+        ),
+      );
+
+      await tester.pumpWidget(
+        _wrapWithLocalization(
+          DealsScreen(
+            service: service,
+            initialNegotiations: [negotiation],
+            role: 'comprador',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final materialFinder = find.byWidgetPredicate(
+        (w) => w is Material && w.shape is RoundedRectangleBorder && (w.shape as RoundedRectangleBorder).side.width == 1.5,
+      );
+      expect(materialFinder, findsOneWidget);
+      final Material mat = tester.widget(materialFinder);
+      final borderSide = (mat.shape as RoundedRectangleBorder).side;
+      expect(borderSide.color, AppColors.lightIconMocha);
+    });
+  });
+
+  group('10. Destacado y Bordes en Módulo de Compras (PurchasesScreen & PurchaseCard)', () {
+    testWidgets('Tarjeta de resumen usa fondo verde primario y textos en onPrimary', (tester) async {
+      final purchase = NegotiationModel(
+        id: 'purchase_kpi_1',
+        cropId: 'crop_1',
+        buyerId: 'buyer_1',
+        currentResponder: 'farmer',
+        status: NegotiationStatus.acordada,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        crop: CropModel(
+          id: 'crop_1',
+          farmerId: 'farmer_1',
+          title: 'Café Especial',
+          description: 'Café de altura',
+          cropType: 'Café',
+          pricePerKg: 12000,
+          stockTotal: 100,
+          minOrderKg: 10,
+          department: 'Huila',
+          municipality: 'Pitalito',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+      );
+
+      await tester.pumpWidget(
+        _wrapWithLocalization(
+          PurchasesScreen(
+            initialPurchases: [purchase],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final summaryCardFinder = find.byWidgetPredicate(
+        (w) => w is InsetGroupCard && w.color == AppColors.lightBrandPrimary,
+      );
+      expect(summaryCardFinder, findsOneWidget);
+
+      // Texto de Total pactado dentro de la tarjeta de resumen usa onPrimary
+      final textFinder = find.descendant(
+        of: summaryCardFinder,
+        matching: find.text('Total pactado'),
+      );
+      expect(textFinder, findsOneWidget);
+    });
+
+    testWidgets('PurchaseCard usa borde smokedMocha de 1.5px', (tester) async {
+      final purchase = NegotiationModel(
+        id: 'purchase_card_1',
+        cropId: 'crop_1',
+        buyerId: 'buyer_1',
+        currentResponder: 'farmer',
+        status: NegotiationStatus.acordada,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        crop: CropModel(
+          id: 'crop_1',
+          farmerId: 'farmer_1',
+          title: 'Café Especial',
+          description: 'Café de altura',
+          cropType: 'Café',
+          pricePerKg: 12000,
+          stockTotal: 100,
+          minOrderKg: 10,
+          department: 'Huila',
+          municipality: 'Pitalito',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+      );
+
+      await tester.pumpWidget(
+        _wrapWithLocalization(
+          PurchaseCard(purchase: purchase),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final materialFinder = find.byWidgetPredicate(
+        (w) => w is Material && w.shape is RoundedRectangleBorder && (w.shape as RoundedRectangleBorder).side.width == 1.5,
+      );
+      expect(materialFinder, findsOneWidget);
+      final Material mat = tester.widget(materialFinder);
+      final borderSide = (mat.shape as RoundedRectangleBorder).side;
+      expect(borderSide.color, AppColors.lightIconMocha);
     });
   });
 }

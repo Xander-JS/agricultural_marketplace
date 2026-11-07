@@ -412,9 +412,16 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
       place,
     ].whereType<String>().where((s) => s.trim().isNotEmpty).join(' · ');
 
+    final cardBg = context.appPrimary;
+    final onPrimary = context.appOnPrimary;
+    final onPrimarySecondary = onPrimary.withValues(alpha: 0.85);
+    final dividerColor = onPrimary.withValues(alpha: 0.20);
+
     return InsetGroupCard(
       padding: EdgeInsets.zero,
-      showMosaic: true,
+      color: cardBg,
+      borderColor: AppColors.transparent,
+      showMosaic: false,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -439,7 +446,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: AppTextStyles.headlineMedium.copyWith(
-                                color: context.appTextPrimary,
+                                color: onPrimary,
                               ),
                             ),
                           ),
@@ -455,7 +462,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                           overflow: TextOverflow.ellipsis,
                           style: AppTextStyles.bodySmall.copyWith(
                             fontSize: 13,
-                            color: context.appTextSecondary,
+                            color: onPrimarySecondary,
                           ),
                         ),
                       ],
@@ -465,7 +472,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
               ],
             ),
           ),
-          Divider(height: 1, thickness: 1, color: context.appDivider),
+          Divider(height: 1, thickness: 1, color: dividerColor),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
             child: Row(
@@ -483,7 +490,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                       Text(
                         counterpartLabel,
                         style: AppTextStyles.caption.copyWith(
-                          color: context.appTextSecondary,
+                          color: onPrimarySecondary,
                         ),
                       ),
                       Text(
@@ -491,7 +498,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: AppTextStyles.titleMedium.copyWith(
-                          color: context.appTextPrimary,
+                          color: onPrimary,
                         ),
                       ),
                     ],
@@ -501,7 +508,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
             ),
           ),
           if (latestOffer != null) ...[
-            Divider(height: 1, thickness: 1, color: context.appDivider),
+            Divider(height: 1, thickness: 1, color: dividerColor),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
               child: IntrinsicHeight(
@@ -514,16 +521,20 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                           latestOffer.proposedPricePerKg,
                         ),
                         emphasized: true,
+                        labelColor: onPrimarySecondary,
+                        valueColor: onPrimary,
                       ),
                     ),
-                    VerticalDivider(width: 24, color: context.appDivider),
+                    VerticalDivider(width: 24, color: dividerColor),
                     Expanded(
                       child: _TermFigure(
                         label: l10n.deal_detail_quantity,
                         value: UnitFormatters.formatKg(latestOffer.quantityKg),
+                        labelColor: onPrimarySecondary,
+                        valueColor: onPrimary,
                       ),
                     ),
-                    VerticalDivider(width: 24, color: context.appDivider),
+                    VerticalDivider(width: 24, color: dividerColor),
                     Expanded(
                       child: _TermFigure(
                         label: l10n.deal_detail_total,
@@ -531,21 +542,35 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                           latestOffer.quantityKg *
                               latestOffer.proposedPricePerKg,
                         ),
+                        labelColor: onPrimarySecondary,
+                        valueColor: onPrimary,
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-            Divider(height: 1, thickness: 1, color: context.appDivider),
-            _buildDeliveryRow(latestOffer, l10n),
+            Divider(height: 1, thickness: 1, color: dividerColor),
+            _buildDeliveryRow(
+              latestOffer,
+              l10n,
+              textColor: onPrimary,
+              secondaryColor: onPrimarySecondary,
+              iconColor: onPrimary,
+            ),
           ],
         ],
       ),
     );
   }
 
-  Widget _buildDeliveryRow(NegotiationOfferModel offer, AppLocalizations l10n) {
+  Widget _buildDeliveryRow(
+    NegotiationOfferModel offer,
+    AppLocalizations l10n, {
+    Color? textColor,
+    Color? secondaryColor,
+    Color? iconColor,
+  }) {
     final presentation = deliveryPresentation(l10n, offer.deliveryMethod);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
@@ -554,7 +579,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
           Icon(
             presentation.icon,
             size: AppDimensions.iconSM,
-            color: context.appIconMocha,
+            color: iconColor ?? context.appIconMocha,
           ),
           const SizedBox(width: AppDimensions.space12),
           // Label and value share the line, so neither is squeezed into
@@ -563,7 +588,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
             child: Text(
               l10n.deal_detail_delivery_method,
               style: AppTextStyles.bodyMedium.copyWith(
-                color: context.appTextSecondary,
+                color: secondaryColor ?? context.appTextSecondary,
               ),
             ),
           ),
@@ -575,7 +600,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: AppTextStyles.titleSmall.copyWith(
-                color: context.appTextPrimary,
+                color: textColor ?? context.appTextPrimary,
               ),
             ),
           ),
@@ -1464,11 +1489,15 @@ class _TermFigure extends StatelessWidget {
   final String label;
   final String value;
   final bool emphasized;
+  final Color? labelColor;
+  final Color? valueColor;
 
   const _TermFigure({
     required this.label,
     required this.value,
     this.emphasized = false,
+    this.labelColor,
+    this.valueColor,
   });
 
   @override
@@ -1483,7 +1512,7 @@ class _TermFigure extends StatelessWidget {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: AppTextStyles.caption.copyWith(
-            color: context.appTextSecondary,
+            color: labelColor ?? context.appTextSecondary,
           ),
         ),
         const SizedBox(height: 2),
@@ -1494,7 +1523,8 @@ class _TermFigure extends StatelessWidget {
             value,
             style: AppTextStyles.figureMedium.copyWith(
               fontSize: 16,
-              color: emphasized ? context.appPrimary : context.appTextPrimary,
+              color: valueColor ??
+                  (emphasized ? context.appPrimary : context.appTextPrimary),
             ),
           ),
         ),

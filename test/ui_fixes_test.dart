@@ -15,6 +15,8 @@ import 'package:agricultural_marketplace/features/geo/models/simulated_location.
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:agricultural_marketplace/core/theme/app_icons.dart';
+import 'package:agricultural_marketplace/features/costs/models/regional_price_reference.dart';
 import 'package:agricultural_marketplace/features/deals/models/negotiation_model.dart';
 import 'package:agricultural_marketplace/features/deals/models/negotiation_status.dart';
 import 'package:agricultural_marketplace/features/deals/services/negotiation_service.dart';
@@ -478,6 +480,66 @@ void main() {
       final titleTop = tester.getTopLeft(titleFinder).dy;
       final badgeTop = tester.getTopLeft(badgeFinder).dy;
       expect((titleTop - badgeTop).abs(), lessThan(8.0));
+    });
+  });
+
+  group('8. Simplificación de la Cápsula del Índice Regional Nariño (CropDetailScreen)', () {
+    testWidgets('Muestra únicamente icono, título, badge de proyección y chevron sin números de delta', (tester) async {
+      final crop = CropModel(
+        id: 'crop_regional_test',
+        farmerId: 'farmer_1',
+        title: 'Papa Pastusa Selecta',
+        description: 'Papa de primera',
+        cropType: 'Papa Pastusa',
+        pricePerKg: 2500,
+        stockTotal: 1000,
+        minOrderKg: 50,
+        department: 'Nariño',
+        municipality: 'Túquerres',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      await tester.pumpWidget(
+        _wrapWithLocalization(
+          CropDetailScreen(
+            crop: crop,
+            role: 'comprador',
+            initialRegionalReference: const RegionalPriceReference(
+              cropName: 'Papa Pastusa',
+              aliases: ['Papa Pastusa'],
+              region: 'Nariño, Colombia',
+              referencePricePerKg: 2200.0,
+              isSimulated: true,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final cardFinder = find.byKey(const Key('crop_detail_regional_reference_card'));
+      expect(cardFinder, findsOneWidget);
+
+      // Debe contener el título, el badge y el chevron
+      expect(find.descendant(of: cardFinder, matching: find.text('Índice regional Nariño')), findsOneWidget);
+      expect(find.descendant(of: cardFinder, matching: find.text('PROYECCIÓN IA')), findsOneWidget);
+      expect(find.descendant(of: cardFinder, matching: find.byIcon(LucideIcons.chevronRight)), findsOneWidget);
+      expect(find.descendant(of: cardFinder, matching: find.byIcon(LucideIcons.trendingUp)), findsOneWidget);
+
+      // La tarjeta previa NO debe mostrar valores de delta o porcentajes de diferencia
+      expect(find.descendant(of: cardFinder, matching: find.textContaining('%')), findsNothing);
+      expect(find.descendant(of: cardFinder, matching: find.textContaining('+')), findsNothing);
+      expect(find.descendant(of: cardFinder, matching: find.textContaining('-')), findsNothing);
+
+      // Al pulsar, se despliega la hoja flotante con la información comparativa profunda
+      await tester.ensureVisible(cardFinder);
+      await tester.pumpAndSettle();
+      await tester.tap(cardFinder);
+      await tester.pumpAndSettle();
+
+      final sheetFinder = find.byKey(const Key('crop_detail_regional_reference_sheet'));
+      expect(sheetFinder, findsOneWidget);
+      expect(find.descendant(of: sheetFinder, matching: find.byType(RegionalIndexDumbbellChart)), findsOneWidget);
     });
   });
 }

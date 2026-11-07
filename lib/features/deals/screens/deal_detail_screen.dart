@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import '../../../core/theme/app_icons.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../models/negotiation_model.dart';
 import '../models/negotiation_offer_model.dart';
@@ -882,20 +883,11 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
       }
     }
 
-    // 3. Mis permisos configurados
-    final phoneStatus = contact?.mySharePhone == true
-        ? l10n.deal_detail_authorized
-        : l10n.deal_detail_private;
-    final locationStatus = contact?.myShareLocation == true
-        ? l10n.deal_detail_location_authorized_status
-        : l10n.deal_detail_location_private_status;
+    // 3. Permisos de contacto
     rows.add(
       InsetGroupRow(
         leading: IconSquircle(icon: LucideIcons.shieldCheck, size: 30),
         title: l10n.deal_detail_my_permissions_title,
-        subtitle:
-            '${l10n.deal_detail_phone_permission(phoneStatus)} · '
-            '${l10n.deal_detail_location_permission(locationStatus)}',
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1044,6 +1036,11 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
         final hasCoordinates =
             contact.counterpartLatitude != null &&
             contact.counterpartLongitude != null;
+        final placeParts = [
+          contact.counterpartMunicipality,
+          contact.counterpartDepartment,
+        ].whereType<String>().where((s) => s.trim().isNotEmpty).toList();
+        final place = placeParts.join(', ');
 
         return AlertDialog(
           icon: IconSquircle(icon: LucideIcons.mapPin, size: 48),
@@ -1052,55 +1049,54 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (contact.counterpartMunicipality != null ||
-                  contact.counterpartDepartment != null) ...[
+              if (place.isNotEmpty) ...[
                 Text(
                   l10n.deal_detail_municipality_department,
                   style: labelStyle,
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${contact.counterpartMunicipality ?? ""}, ${contact.counterpartDepartment ?? ""}',
+                  place,
                   style: AppTextStyles.titleMedium.copyWith(
                     color: ctx.appTextPrimary,
                   ),
                 ),
                 const SizedBox(height: 12),
               ],
-              if (hasCoordinates) ...[
-                Text(l10n.deal_detail_geo_coordinates, style: labelStyle),
-                const SizedBox(height: 4),
-                SelectableText(
-                  l10n.deal_detail_lat_lon(
-                    contact.counterpartLatitude!.toStringAsFixed(6),
-                    contact.counterpartLongitude!.toStringAsFixed(6),
-                  ),
-                  style: AppTextStyles.figureSmall.copyWith(
-                    color: ctx.appTextPrimary,
-                  ),
+              Text(
+                l10n.deal_detail_location_verified,
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: ctx.appTextSecondary,
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.deal_detail_location_verified,
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: ctx.appTextSecondary,
-                  ),
-                ),
-              ],
+              ),
             ],
           ),
           actions: [
-            if (hasCoordinates)
-              TextButton.icon(
-                onPressed: () {
-                  final coords =
-                      '${contact.counterpartLatitude},${contact.counterpartLongitude}';
-                  _copyToClipboard(coords, l10n.deal_detail_coordinates_label);
-                  Navigator.pop(ctx);
-                },
-                icon: const Icon(LucideIcons.copy, size: 16),
-                label: Text(l10n.deal_detail_copy_coordinates),
+            ElevatedButton.icon(
+              onPressed: () async {
+                final query = hasCoordinates
+                    ? '${contact.counterpartLatitude},${contact.counterpartLongitude}'
+                    : place;
+                if (query.isNotEmpty) {
+                  final uri = Uri.parse(
+                    'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(query)}',
+                  );
+                  if (await canLaunchUrl(uri)) {
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  }
+                }
+              },
+              icon: const Icon(LucideIcons.mapPin, size: 16),
+              label: Text(l10n.deal_detail_open_google_maps),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.onBrand,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusControl),
+                ),
               ),
+            ),
             TextButton(
               onPressed: () => Navigator.pop(ctx),
               child: Text(l10n.common_close),

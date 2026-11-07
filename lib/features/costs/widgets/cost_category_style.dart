@@ -42,7 +42,7 @@ extension CostCategoryStyle on CostCategory {
     };
     return AppSemanticTriad(
       background: AppColors.transparent,
-      border: hue,
+      border: AppColors.transparent,
       foreground: hue,
     );
   }

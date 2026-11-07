@@ -115,6 +115,21 @@ class _MakeOfferSheetState extends State<MakeOfferSheet> {
     } catch (e) {
       if (mounted) {
         final message = e.toString().replaceFirst('Exception: ', '');
+        final isDuplicateActiveDeal =
+            e is DuplicateNegotiationException ||
+            message.toLowerCase().contains('ya tienes una negociación activa') ||
+            message.toLowerCase().contains(
+              l10n.offer_sheet_existing_negotiation.toLowerCase(),
+            );
+
+        if (isDuplicateActiveDeal) {
+          showAppSnackBar(context, message, tone: StatusTone.error);
+          if (Navigator.of(context).canPop()) {
+            Navigator.of(context).pop(false);
+          }
+          return;
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message), backgroundColor: context.appError),
         );

@@ -100,25 +100,45 @@ abstract final class SimulatedRegionalPriceReferences {
     ),
   ];
 
-  /// Busca una referencia dentro de una lista dada por tipo o nombre del cultivo.
+  /// Busca una referencia dentro de una lista dada estrictamente por tipo de cultivo (`crop_type`).
+  ///
+  /// Prioriza la comparación normalizada contra `cropType`, ignorando el campo
+  /// libre de título en la vinculación directa. `title` se mantiene opcional para
+  /// compatibilidad con pruebas preexistentes.
   static RegionalPriceReference? findInList({
     required List<RegionalPriceReference> references,
     required String cropType,
-    required String title,
+    String? title,
   }) {
     final normalizedType = _normalize(cropType);
-    final normalizedTitle = _normalize(title);
 
-    for (final reference in references) {
-      final normalizedName = _normalize(reference.cropName);
-      if (normalizedType == normalizedName || normalizedTitle == normalizedName) {
-        return reference;
-      }
-      for (final alias in reference.aliases) {
-        final normalizedAlias = _normalize(alias);
-        if (normalizedType == normalizedAlias ||
-            normalizedTitle == normalizedAlias) {
+    if (normalizedType.isNotEmpty) {
+      for (final reference in references) {
+        final normalizedName = _normalize(reference.cropName);
+        if (normalizedType == normalizedName) {
           return reference;
+        }
+        for (final alias in reference.aliases) {
+          final normalizedAlias = _normalize(alias);
+          if (normalizedType == normalizedAlias) {
+            return reference;
+          }
+        }
+      }
+    }
+
+    if (title != null && title.isNotEmpty) {
+      final normalizedTitle = _normalize(title);
+      for (final reference in references) {
+        final normalizedName = _normalize(reference.cropName);
+        if (normalizedTitle == normalizedName) {
+          return reference;
+        }
+        for (final alias in reference.aliases) {
+          final normalizedAlias = _normalize(alias);
+          if (normalizedTitle == normalizedAlias) {
+            return reference;
+          }
         }
       }
     }
@@ -126,10 +146,10 @@ abstract final class SimulatedRegionalPriceReferences {
     return null;
   }
 
-  /// Busca una referencia por tipo o nombre del cultivo en la lista local.
+  /// Busca una referencia por tipo de cultivo en la lista local.
   static RegionalPriceReference? findForCrop({
     required String cropType,
-    required String title,
+    String? title = '',
   }) {
     return findInList(
       references: all,

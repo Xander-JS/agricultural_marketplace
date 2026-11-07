@@ -162,6 +162,30 @@ abstract final class AppColors {
   static const Color infoDarkContainer = infoBgDark;
 
   // ---------------------------------------------------------
+  // Card Mosaic (Strictly Grayscale)
+  // ---------------------------------------------------------
+  /// Strictly achromatic grayscale palette (R == G == B, zero green/color tint)
+  /// for card mosaic backgrounds. Alternating weaker and stronger shades of
+  /// gray create depth while preserving WCAG AAA contrast for foreground text.
+  static const Color cardMosaicBaseLight = Color(0xFFFFFFFF);
+  static const List<Color> cardMosaicLightGrays = <Color>[
+    Color(0xFFF6F6F6), // weakest light gray
+    Color(0xFFF1F1F1), // soft light gray
+    Color(0xFFECECEC), // medium light gray
+    Color(0xFFE7E7E7), // stronger light gray
+    Color(0xFFE2E2E2), // deepest light gray
+  ];
+
+  static const Color cardMosaicBaseDark = Color(0xFF171717);
+  static const List<Color> cardMosaicDarkGrays = <Color>[
+    Color(0xFF1C1C1C), // weakest dark gray
+    Color(0xFF212121), // soft dark gray
+    Color(0xFF262626), // medium dark gray
+    Color(0xFF2B2B2B), // stronger dark gray
+    Color(0xFF303030), // deepest dark gray
+  ];
+
+  // ---------------------------------------------------------
   // Status badge tokens (light primitives; badges resolve per theme)
   // ---------------------------------------------------------
   static const Color statusPreventaBackground = warningBgLight;
@@ -328,8 +352,7 @@ extension AppThemeColors on BuildContext {
       : const Color(0xFF0B110E).withValues(alpha: 0.06);
 
   /// Selected segment of a sliding segmented control over [appSurfaceVariant].
-  Color get appSegmentThumb =>
-      appIsDark ? AppColors.darkSegmentThumb : appSurface;
+  Color get appSegmentThumb => appPrimary;
 
   /// Base and highlight for shimmer skeletons on regular surfaces.
   Color get appSkeletonBase => appSurfaceVariant;

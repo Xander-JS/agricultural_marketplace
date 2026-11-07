@@ -1928,7 +1928,7 @@ class _ContactAction extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 10),
             child: Column(
               children: [
-                Icon(icon, size: 20, color: context.appIconMocha),
+                Icon(icon, size: 20, color: context.appTextSecondary),
                 const SizedBox(height: 4),
                 Text(
                   label,

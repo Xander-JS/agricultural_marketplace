@@ -1,3 +1,5 @@
+import 'dart:ui' show PointerDeviceKind;
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -7,6 +9,7 @@ import 'core/localization/localization_config.dart';
 import 'core/services/app_preferences_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/utils/date_formatters.dart';
+import 'core/widgets/web/web_phone_frame.dart';
 import 'features/auth/widgets/auth_gate.dart';
 
 void main() async {
@@ -75,15 +78,28 @@ class AgriculturalMarketplaceApp extends StatelessWidget {
           localizationsDelegates: LocalizationConfig.localizationsDelegates,
           localeResolutionCallback: LocalizationConfig.localeResolutionCallback,
 
+          // Soporte para arrastre con mouse y táctil en Web y Escritorio
+          scrollBehavior: const MaterialScrollBehavior().copyWith(
+            dragDevices: {
+              PointerDeviceKind.touch,
+              PointerDeviceKind.mouse,
+              PointerDeviceKind.stylus,
+              PointerDeviceKind.trackpad,
+            },
+          ),
+
           // Tamaño de texto e iconos: multiplica la escala del sistema.
+          // En Web de escritorio (Vercel) presenta un simulador móvil centrado con proporciones perfectas.
           builder: (context, child) {
             final media = MediaQuery.of(context);
-            return MediaQuery(
-              data: media.copyWith(
-                textScaler: TextScaler.linear(
-                  media.textScaler.scale(1) * prefs.textSize.factor,
-                ),
+            final scaledMedia = media.copyWith(
+              textScaler: TextScaler.linear(
+                media.textScaler.scale(1) * prefs.textSize.factor,
               ),
+            );
+
+            return WebPhoneFrame(
+              scaledMedia: scaledMedia,
               child: child!,
             );
           },

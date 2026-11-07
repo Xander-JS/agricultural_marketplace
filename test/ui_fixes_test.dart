@@ -24,6 +24,7 @@ import 'package:agricultural_marketplace/features/purchases/widgets/purchase_car
 import 'package:agricultural_marketplace/core/theme/app_icons.dart';
 import 'package:agricultural_marketplace/features/costs/models/regional_price_reference.dart';
 import 'package:agricultural_marketplace/features/deals/models/negotiation_model.dart';
+import 'package:agricultural_marketplace/features/deals/models/negotiation_offer_model.dart';
 import 'package:agricultural_marketplace/features/deals/models/negotiation_status.dart';
 import 'package:agricultural_marketplace/features/deals/services/negotiation_service.dart';
 import 'package:agricultural_marketplace/features/deals/screens/deal_detail_screen.dart';
@@ -737,6 +738,91 @@ void main() {
       final Material mat = tester.widget(materialFinder);
       final borderSide = (mat.shape as RoundedRectangleBorder).side;
       expect(borderSide.color, AppColors.lightIconMocha);
+    });
+  });
+
+  group('11. Fondo Verde Corporativo en Tarjeta Principal de Trato (DealDetailScreen)', () {
+    testWidgets('Tarjeta principal superior usa fondo verde primario y contraste onPrimary en textos', (tester) async {
+      final crop = CropModel(
+        id: 'crop_deal_green_1',
+        farmerId: 'farmer_1',
+        title: 'Zanahoria Dulce',
+        description: 'Zanahoria fresca',
+        cropType: 'Zanahoria',
+        pricePerKg: 1800,
+        stockTotal: 300,
+        minOrderKg: 10,
+        department: 'Nariño',
+        municipality: 'Túquerres',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      final negotiation = NegotiationModel(
+        id: 'deal_green_1',
+        cropId: 'crop_deal_green_1',
+        buyerId: 'buyer_1',
+        currentResponder: 'comprador',
+        status: NegotiationStatus.acordada,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        crop: crop,
+        offers: [
+          NegotiationOfferModel(
+            id: 'offer_1',
+            negotiationId: 'deal_green_1',
+            senderId: 'buyer_1',
+            proposedPricePerKg: 1800,
+            quantityKg: 200,
+            deliveryMethod: 'pickup',
+            createdAt: DateTime.now(),
+          ),
+        ],
+      );
+
+      final contact = NegotiationContactInfo(
+        negotiationId: 'deal_green_1',
+        counterpartId: 'farmer_1',
+        counterpartName: 'Don Aurelio',
+        counterpartRole: 'agricultor',
+        status: 'acordada',
+        mySharePhone: true,
+        myShareLocation: true,
+        counterpartSharePhone: true,
+        counterpartShareLocation: true,
+      );
+
+      final service = _FakeNegotiationService(
+        negotiation: negotiation,
+        contactInfo: contact,
+      );
+
+      await tester.pumpWidget(
+        _wrapWithLocalization(
+          DealDetailScreen(
+            negotiationId: 'deal_green_1',
+            role: 'comprador',
+            initialNegotiation: negotiation,
+            service: service,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Verificar que la primera InsetGroupCard (tarjeta de resumen superior) tenga fondo verde primario
+      final summaryCardFinder = find.byWidgetPredicate(
+        (w) => w is InsetGroupCard && w.color == AppColors.lightBrandPrimary,
+      );
+      expect(summaryCardFinder, findsOneWidget);
+
+      // Verificar que el título del cultivo dentro de la tarjeta principal use onPrimary (blanco)
+      final titleFinder = find.descendant(
+        of: summaryCardFinder,
+        matching: find.text('Zanahoria Dulce'),
+      );
+      expect(titleFinder, findsOneWidget);
+      final Text titleText = tester.widget(titleFinder);
+      expect(titleText.style?.color, AppColors.onPrimary);
     });
   });
 }

@@ -429,13 +429,23 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        crop?.title ?? l10n.deals_unknown_crop,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.headlineMedium.copyWith(
-                          color: context.appTextPrimary,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              crop?.title ?? l10n.deals_unknown_crop,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTextStyles.headlineMedium.copyWith(
+                                color: context.appTextPrimary,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: AppDimensions.space8),
+                          NegotiationStatusBadge(status: n.status),
+                        ],
                       ),
                       if (cropLine.isNotEmpty) ...[
                         const SizedBox(height: 2),
@@ -449,8 +459,6 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                           ),
                         ),
                       ],
-                      const SizedBox(height: AppDimensions.space8),
-                      NegotiationStatusBadge(status: n.status),
                     ],
                   ),
                 ),

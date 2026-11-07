@@ -441,18 +441,16 @@ class _DealCard extends StatelessWidget {
         : (negotiation.buyerProfile?['full_name'] as String? ??
               l10n.deals_buyer);
 
-    // A deal waiting on this user lifts its hairline to the brand tone.
-    final borderColor = isMyTurn
-        ? context.appBrandTriad.border
-        : context.appBorder;
-
     return PressableScale(
       pressedScale: 0.985,
       child: Material(
         color: context.appSurface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: borderColor),
+          side: BorderSide(
+            color: context.appSmokedMocha,
+            width: 1.5,
+          ),
         ),
         clipBehavior: Clip.antiAlias,
         child: CustomPaint(

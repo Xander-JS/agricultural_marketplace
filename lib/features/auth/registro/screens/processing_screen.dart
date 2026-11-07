@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:agricultural_marketplace/core/localization/app_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../../core/widgets/brand/kus_brand_logo.dart';
 import '../../../../core/widgets/loading/app_loading.dart';
 import '../../../../core/widgets/loading/loading_content.dart';
 import '../../verificacion/screens/verification_status_screen.dart';
@@ -193,15 +192,11 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
         // the hand-off after submitting reads as one continuous path.
         workingVisual: ReviewRing(
           stage: 0,
+          size: 204,
           semanticsLabel: l10n.verification_status_ring_semantics(
             l10n.verification_status_track_received,
           ),
-          child: const KusBrandLogo(
-            variant: KusBrandLogoVariant.hero,
-            showWordmark: false,
-            onBrandStage: true,
-            markSize: 84,
-          ),
+          child: const SizedBox.shrink(),
         ),
       ),
     );

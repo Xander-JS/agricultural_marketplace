@@ -21,6 +21,7 @@ import '../../../core/utils/app_formatters.dart';
 import '../../../core/theme/app_motion.dart';
 import '../../../core/widgets/avatars/user_avatar.dart';
 import '../../../core/widgets/brand/kus_brand_logo.dart';
+import '../../../core/widgets/brand/topo_contours_painter.dart';
 import '../../../core/widgets/feedback/app_empty_state.dart';
 import '../../../core/widgets/inputs/app_segmented_control.dart';
 import '../../../core/widgets/loading/section_skeletons.dart';
@@ -454,11 +455,16 @@ class _DealCard extends StatelessWidget {
           side: BorderSide(color: borderColor),
         ),
         clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-            child: Column(
+        child: CustomPaint(
+          painter: TopoContoursPainter.card(
+            color: context.appPrimarySoft,
+            intensity: context.appIsDark ? 0.45 : 0.85,
+          ),
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+              child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Row(
@@ -610,6 +616,7 @@ class _DealCard extends StatelessWidget {
           ),
         ),
       ),
+    ),
     );
   }
 }

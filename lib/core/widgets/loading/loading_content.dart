@@ -7,9 +7,9 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_dimensions.dart';
 import '../../theme/app_motion.dart';
 import '../../theme/app_text_styles.dart';
-import '../brand/kus_brand_logo.dart';
 import '../misc/app_entrance.dart';
 import 'app_skeleton.dart';
+import 'loading_indicator.dart';
 
 /// Status content for the [AppLoading] stage while an account is being
 /// prepared.
@@ -78,10 +78,9 @@ class LoadingContent extends StatelessWidget {
         child: const _ProfileSkeletonCard(),
       );
     } else {
-      visual = const KusBrandLogo(
+      visual = const LoadingIndicator(
         key: ValueKey('loading_content_mark'),
-        variant: KusBrandLogoVariant.hero,
-        showWordmark: false,
+        isSpinning: false,
         onBrandStage: true,
       );
     }
@@ -109,7 +108,7 @@ class LoadingContent extends StatelessWidget {
           children: [
             if (working) ...[
               const CupertinoActivityIndicator(
-                radius: 9,
+                radius: 14,
                 color: AppColors.onBrand,
               ),
               const SizedBox(width: AppDimensions.space12),

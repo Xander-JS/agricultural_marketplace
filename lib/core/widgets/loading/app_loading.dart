@@ -23,19 +23,13 @@ class AppLoading extends StatelessWidget {
         statusBarColor: AppColors.transparent,
       ),
       child: Scaffold(
-        backgroundColor: context.appBrandStage,
+        backgroundColor: TopoContoursPainter.baseColor,
         body: Stack(
           children: [
-            // Ambient depth: the auth header's forest-to-deep-emerald field,
-            // so blocking states are never a flat slab of green.
-            Positioned.fill(
+            const Positioned.fill(
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: context.appAuthHeaderGradient,
-                  ),
+                  color: TopoContoursPainter.baseColor,
                 ),
               ),
             ),

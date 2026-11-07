@@ -416,11 +416,11 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen>
         children: [
           ReviewRing(
             stage: stage,
-            size: 152,
+            size: 184,
             semanticsLabel: l10n.verification_status_ring_semantics(
               stageLabels[stage],
             ),
-            child: _brandMark(size: 72),
+            child: const SizedBox.shrink(),
           ),
           const SizedBox(height: AppDimensions.space24),
           AppEntrance(

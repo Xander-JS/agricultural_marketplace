@@ -216,8 +216,7 @@ extension AppThemeColors on BuildContext {
   Color get appDivider => appColorScheme.outlineVariant;
 
   /// Ground for full-bleed brand moments (splash, blocking loaders).
-  Color get appBrandStage =>
-      appIsDark ? AppColors.darkBrandStage : AppColors.loadingBackground;
+  Color get appBrandStage => AppColors.loadingBackground;
 
   /// Top-to-bottom stops of the auth header gradient.
   List<Color> get appAuthHeaderGradient => appIsDark

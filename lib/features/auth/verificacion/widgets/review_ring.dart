@@ -27,7 +27,7 @@ class ReviewRing extends StatefulWidget {
     required this.semanticsLabel,
     required this.child,
     this.stageCount = 3,
-    this.size = 176,
+    this.size = 200,
   });
 
   @override
@@ -117,7 +117,7 @@ class _ReviewRingPainter extends CustomPainter {
     required this.current,
   }) : super(repaint: sweep);
 
-  static const double _stroke = 4;
+  static const double _stroke = 6;
   static const double _gapDegrees = 16;
 
   @override

@@ -753,7 +753,7 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(LucideIcons.scale, size: 15, color: context.appIconMocha),
+                  Icon(LucideIcons.scale, size: 15, color: triad.foreground),
                   const SizedBox(width: 6),
                   Flexible(
                     child: Text(
@@ -908,7 +908,7 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
       return OutlinedButton.icon(
         key: const Key('crop_detail_equivalences_action_button'),
         onPressed: () => _showEquivalencesModal(context),
-        icon: Icon(LucideIcons.scale, size: 18, color: context.appIconMocha),
+        icon: const Icon(LucideIcons.scale, size: 18),
         label: Text(l10n.crop_detail_view_equivalences),
       );
     }

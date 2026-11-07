@@ -19,6 +19,7 @@ import 'package:agricultural_marketplace/features/deals/models/negotiation_model
 import 'package:agricultural_marketplace/features/deals/models/negotiation_status.dart';
 import 'package:agricultural_marketplace/features/deals/services/negotiation_service.dart';
 import 'package:agricultural_marketplace/features/deals/screens/deal_detail_screen.dart';
+import 'package:agricultural_marketplace/features/deals/widgets/negotiation_status_badge.dart';
 
 Widget _wrapWithLocalization(Widget child) {
   return MaterialApp(
@@ -268,6 +269,9 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      // En la tarjeta principal de contacto no deben aparecer coordenadas crudas
+      expect(find.textContaining('Coordenadas:'), findsNothing);
+
       // Asegurar visibilidad y pulsar la fila de ubicación compartida
       final locationFinder = find.text('Ipiales, Nariño');
       await tester.ensureVisible(locationFinder);
@@ -293,10 +297,69 @@ void main() {
         findsNothing,
       );
       // El modal debe contener el botón estilizado "Abrir en Google Maps"
-      expect(
-        find.descendant(of: dialogFinder, matching: find.text('Abrir en Google Maps')),
-        findsOneWidget,
+      final mapsButtonFinder = find.descendant(of: dialogFinder, matching: find.text('Abrir en Google Maps'));
+      expect(mapsButtonFinder, findsOneWidget);
+
+      // Accionar el botón Abrir en Google Maps
+      await tester.tap(mapsButtonFinder);
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('Modal con solo municipio y departamento genera enlace a Google Maps sin fallar', (tester) async {
+      final negotiation = NegotiationModel(
+        id: 'deal_no_coords',
+        cropId: 'crop_1',
+        buyerId: 'buyer_1',
+        currentResponder: 'comprador',
+        status: NegotiationStatus.acordada,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
       );
+
+      final contact = NegotiationContactInfo(
+        negotiationId: 'deal_no_coords',
+        status: 'acordada',
+        mySharePhone: true,
+        myShareLocation: true,
+        counterpartSharePhone: true,
+        counterpartShareLocation: true,
+        counterpartId: 'counterpart_1',
+        counterpartName: 'Don Laureano',
+        counterpartRole: 'agricultor',
+        counterpartPhone: '3123456789',
+        counterpartDepartment: 'Nariño',
+        counterpartMunicipality: 'Ipiales',
+        counterpartLatitude: null,
+        counterpartLongitude: null,
+      );
+
+      final service = _FakeNegotiationService(
+        negotiation: negotiation,
+        contactInfo: contact,
+      );
+
+      await tester.pumpWidget(
+        _wrapWithLocalization(
+          DealDetailScreen(
+            negotiationId: 'deal_no_coords',
+            role: 'comprador',
+            initialNegotiation: negotiation,
+            service: service,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final locationFinder = find.text('Ipiales, Nariño');
+      await tester.ensureVisible(locationFinder);
+      await tester.pumpAndSettle();
+      await tester.tap(locationFinder);
+      await tester.pumpAndSettle();
+
+      final mapsBtn = find.text('Abrir en Google Maps');
+      expect(mapsBtn, findsOneWidget);
+      await tester.tap(mapsBtn);
+      await tester.pumpAndSettle();
     });
   });
 
@@ -338,6 +401,83 @@ void main() {
       // Verificar que el widget padre es un Row que contiene el título y el botón
       final buttonFinder = find.text('Ver costos');
       expect(buttonFinder, findsOneWidget);
+    });
+  });
+
+  group('7. Alineación Horizontal de la Insignia de Estado (DealDetailScreen)', () {
+    testWidgets('Insignia de estado se alinea horizontalmente con el título del cultivo en el mismo Row', (tester) async {
+      final crop = CropModel(
+        id: 'crop_deal_1',
+        farmerId: 'farmer_1',
+        title: 'Zanahoria Dulce',
+        description: 'Zanahoria fresca',
+        cropType: 'Zanahoria',
+        pricePerKg: 1800,
+        stockTotal: 300,
+        minOrderKg: 10,
+        department: 'Nariño',
+        municipality: 'Túquerres',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      final negotiation = NegotiationModel(
+        id: 'deal_status_1',
+        cropId: 'crop_deal_1',
+        buyerId: 'buyer_1',
+        currentResponder: 'comprador',
+        status: NegotiationStatus.acordada,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        crop: crop,
+      );
+
+      final contact = NegotiationContactInfo(
+        negotiationId: 'deal_status_1',
+        status: 'acordada',
+        mySharePhone: true,
+        myShareLocation: true,
+        counterpartSharePhone: true,
+        counterpartShareLocation: true,
+        counterpartId: 'farmer_1',
+        counterpartName: 'Don Aurelio',
+        counterpartRole: 'agricultor',
+        counterpartPhone: '3101234567',
+        counterpartDepartment: 'Nariño',
+        counterpartMunicipality: 'Túquerres',
+      );
+
+      final service = _FakeNegotiationService(
+        negotiation: negotiation,
+        contactInfo: contact,
+      );
+
+      await tester.pumpWidget(
+        _wrapWithLocalization(
+          DealDetailScreen(
+            negotiationId: 'deal_status_1',
+            role: 'comprador',
+            initialNegotiation: negotiation,
+            service: service,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final titleFinder = find.text('Zanahoria Dulce');
+      final badgeFinder = find.byType(NegotiationStatusBadge);
+
+      expect(titleFinder, findsOneWidget);
+      expect(badgeFinder, findsOneWidget);
+
+      // El título y la insignia de estado deben pertenecer a la misma fila Row
+      final rowAncestor = find.ancestor(of: titleFinder, matching: find.byType(Row)).first;
+      expect(find.descendant(of: rowAncestor, matching: badgeFinder), findsOneWidget);
+
+      // Comprobar que la diferencia vertical (dy) entre el título y la insignia sea mínima
+      final titleTop = tester.getTopLeft(titleFinder).dy;
+      final badgeTop = tester.getTopLeft(badgeFinder).dy;
+      expect((titleTop - badgeTop).abs(), lessThan(8.0));
     });
   });
 }

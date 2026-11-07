@@ -27,7 +27,7 @@ class TopoHeader extends StatelessWidget {
   /// Height for the [compact] header: the status bar plus a band that fits
   /// the header lockup above the wave.
   static double compactHeight(BuildContext context) =>
-      MediaQuery.paddingOf(context).top + 132;
+      MediaQuery.paddingOf(context).top + 156;
 
   @override
   Widget build(BuildContext context) {
@@ -48,12 +48,8 @@ class TopoHeader extends StatelessWidget {
       child: ClipPath(
         clipper: _HeaderWaveClipper(),
         child: DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: context.appAuthHeaderGradient,
-            ),
+          decoration: const BoxDecoration(
+            color: TopoContoursPainter.baseColor,
           ),
           child: Stack(
             fit: StackFit.expand,

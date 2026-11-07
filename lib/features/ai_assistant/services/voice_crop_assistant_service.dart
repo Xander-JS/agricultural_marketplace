@@ -240,31 +240,46 @@ abstract class AiCropExtractionService {
 
 /// Extracción mediante un endpoint compatible con OpenAI Chat Completions.
 ///
-/// La clave se lee de `AI_API_KEY` en dotenv. Esta integración es válida para
-/// el prototipo, pero una clave incluida en una app Flutter puede extraerse;
-/// para producción debe moverse a un backend o Edge Function.
+/// Por defecto usa DeepSeek. La clave se lee de `AI_API_KEY` en dotenv y, de
+/// forma opcional, `AI_ENDPOINT` y `AI_MODEL` permiten cambiar de proveedor.
+/// Esta integración es válida para el prototipo, pero una clave incluida en
+/// una app Flutter puede extraerse; para producción debe moverse a un backend
+/// o Edge Function.
 class OpenAiCropExtractionService implements AiCropExtractionService {
   static const String defaultEndpoint =
-      'https://api.openai.com/v1/chat/completions';
-  static const String defaultModel = 'gpt-4o-mini';
+      'https://api.deepseek.com/chat/completions';
+  static const String defaultModel = 'deepseek-chat';
 
   final http.Client? _client;
   final String? _apiKeyOverride;
-  final String endpoint;
-  final String model;
+  final String? _endpointOverride;
+  final String? _modelOverride;
 
   OpenAiCropExtractionService({
     http.Client? client,
     String? apiKey,
-    this.endpoint = defaultEndpoint,
-    this.model = defaultModel,
+    String? endpoint,
+    String? model,
   }) : _client = client, // ignore: prefer_initializing_formals
-       _apiKeyOverride = apiKey;
+       _apiKeyOverride = apiKey,
+       _endpointOverride = endpoint,
+       _modelOverride = model;
 
   String? get _apiKey {
     if (_apiKeyOverride != null) return _apiKeyOverride;
     if (!dotenv.isInitialized) return null;
     return dotenv.env['AI_API_KEY'];
+  }
+
+  String get endpoint =>
+      _endpointOverride ?? _envOr('AI_ENDPOINT', defaultEndpoint);
+
+  String get model => _modelOverride ?? _envOr('AI_MODEL', defaultModel);
+
+  static String _envOr(String name, String fallback) {
+    if (!dotenv.isInitialized) return fallback;
+    final value = dotenv.env[name]?.trim();
+    return value == null || value.isEmpty ? fallback : value;
   }
 
   @override
@@ -370,7 +385,7 @@ class OpenAiCropExtractionService implements AiCropExtractionService {
 
   static const String _systemPrompt =
       'Eres un asistente que extrae datos de una publicación agrícola en Colombia. '
-      'Devuelve SOLO un objeto JSON, sin texto adicional, con exactamente estas claves: '
+      'Devuelve SOLO un objeto json válido, sin texto adicional, con exactamente estas claves: '
       '{"cropType": string|null, "quantity": number|null, "unit": string|null, '
       '"priceValue": number|null, "priceUnit": string|null, "notes": string|null}. '
       'Usa null cuando el agricultor no haya expresado el dato; nunca inventes ni completes datos. '

@@ -52,7 +52,7 @@ class WelcomeScreen extends StatelessWidget {
             child: ClipPath(
               clipper: _WaveClipper(),
               child: ColoredBox(
-                color: context.appPrimarySoft,
+                color: TopoContoursPainter.baseColor,
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
@@ -69,7 +69,7 @@ class WelcomeScreen extends StatelessWidget {
                         child: const Center(
                           child: FittedBox(
                             fit: BoxFit.scaleDown,
-                            child: KusBrandLogo.hero(),
+                            child: KusBrandLogo.hero(onBrandStage: true),
                           ),
                         ),
                       ),

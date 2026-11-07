@@ -282,6 +282,7 @@ class _CostsScreenState extends State<CostsScreen> {
       padding: const EdgeInsets.only(bottom: AppDimensions.space12),
       child: InsetGroupCard(
         padding: EdgeInsets.zero,
+        showMosaic: true,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

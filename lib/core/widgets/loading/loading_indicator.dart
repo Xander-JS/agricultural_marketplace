@@ -1,13 +1,11 @@
 import 'package:flutter/cupertino.dart';
 
 import '../../theme/app_colors.dart';
-import '../../theme/app_dimensions.dart';
-import '../brand/kus_brand_logo.dart';
 
-/// Brand loader for the [AppLoading] stage: the KUS mark with an iOS
-/// activity indicator beneath it while [isSpinning].
+/// Brand loader for the [AppLoading] stage: a prominent iOS activity
+/// indicator while [isSpinning].
 ///
-/// When idle the indicator's slot stays reserved, so text below the mark
+/// When idle the indicator's slot stays reserved, so text below the spinner
 /// never jumps when work finishes, and no animation keeps running.
 class LoadingIndicator extends StatelessWidget {
   final bool isSpinning;
@@ -22,9 +20,7 @@ class LoadingIndicator extends StatelessWidget {
     this.onBrandStage = true,
   });
 
-  // Mark + gap + indicator = 80px, the loader's footprint across the app.
-  static const double _markSize = 56;
-  static const double _indicatorRadius = 8;
+  static const double _indicatorRadius = 22;
 
   @override
   Widget build(BuildContext context) {
@@ -32,27 +28,14 @@ class LoadingIndicator extends StatelessWidget {
         ? AppColors.onBrand
         : context.appPrimary;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        KusBrandLogo(
-          variant: KusBrandLogoVariant.hero,
-          markSize: _markSize,
-          showWordmark: false,
-          onBrandStage: onBrandStage,
-          animateEntrance: true,
-        ),
-        const SizedBox(height: AppDimensions.space8),
-        SizedBox.square(
-          dimension: _indicatorRadius * 2,
-          child: isSpinning
-              ? CupertinoActivityIndicator(
-                  radius: _indicatorRadius,
-                  color: indicatorColor,
-                )
-              : null,
-        ),
-      ],
+    return SizedBox.square(
+      dimension: _indicatorRadius * 2,
+      child: isSpinning
+          ? CupertinoActivityIndicator(
+              radius: _indicatorRadius,
+              color: indicatorColor,
+            )
+          : null,
     );
   }
 }

@@ -32,9 +32,15 @@ class KusBrandLogo extends StatelessWidget {
   /// Shows the "KUMPA SUMAQ" tagline. Defaults to on for header and hero.
   final bool? showTagline;
 
-  /// Inverts the lockup for the brand stage (splash, blocking loaders):
-  /// light squircle, stage-colored mark, light type.
+  /// Inverts the lockup for the brand stage (headers, splash, blocking loaders):
+  /// pure white mark directly on the mosaic (no container behind it) and
+  /// light type.
   final bool onBrandStage;
+
+  /// Whether to render the rounded-square container behind the mark.
+  /// Defaults to `false` when [onBrandStage] is `true` (so the pure white
+  /// mark sits directly on the mosaic) and `true` otherwise.
+  final bool? showContainer;
 
   /// Plays a one-time entrance (fade + settle). Used on rare brand moments.
   final bool animateEntrance;
@@ -48,6 +54,7 @@ class KusBrandLogo extends StatelessWidget {
     this.showWordmark = true,
     this.showTagline,
     this.onBrandStage = false,
+    this.showContainer,
     this.animateEntrance = false,
     this.markSize,
   });
@@ -56,6 +63,7 @@ class KusBrandLogo extends StatelessWidget {
     super.key,
     this.showWordmark = true,
     this.onBrandStage = false,
+    this.showContainer,
   }) : variant = KusBrandLogoVariant.compact,
        showTagline = false,
        animateEntrance = false,
@@ -66,6 +74,7 @@ class KusBrandLogo extends StatelessWidget {
     this.showWordmark = true,
     this.showTagline = true,
     this.onBrandStage = false,
+    this.showContainer,
     this.animateEntrance = true,
   }) : variant = KusBrandLogoVariant.hero,
        markSize = null;
@@ -79,10 +88,10 @@ class KusBrandLogo extends StatelessWidget {
       asset: 'assets/images/app_movil_only_sm.png',
     ),
     KusBrandLogoVariant.header => const _KusLogoMetrics(
-      mark: 44,
-      wordmark: 24,
-      tagline: 9.5,
-      gap: 12,
+      mark: 60,
+      wordmark: 32,
+      tagline: 11,
+      gap: 14,
       asset: 'assets/images/app_movil_only_lg.png',
     ),
     KusBrandLogoVariant.hero => const _KusLogoMetrics(
@@ -104,21 +113,29 @@ class KusBrandLogo extends StatelessWidget {
     final isHero = variant == KusBrandLogoVariant.hero;
     final tagline = showTagline ?? variant != KusBrandLogoVariant.compact;
 
+    final effectiveShowContainer = showContainer ?? false;
+
     final Color tile;
     final Color markColor;
     final Color tileBorder;
     final Color wordColor;
     final Color taglineColor;
     if (onBrandStage) {
-      tile = AppColors.onBrand;
-      markColor = context.appBrandStage;
+      tile = AppColors.transparent;
+      markColor = Colors.white;
       tileBorder = AppColors.transparent;
       wordColor = AppColors.onBrand;
       taglineColor = AppColors.onBrandSecondary;
-    } else {
+    } else if (effectiveShowContainer) {
       tile = context.appPrimary;
       markColor = context.appOnPrimary;
       tileBorder = context.appOnPrimary.withValues(alpha: 0.16);
+      wordColor = context.appTextPrimary;
+      taglineColor = context.appTextSecondary;
+    } else {
+      tile = AppColors.transparent;
+      markColor = context.appPrimary;
+      tileBorder = AppColors.transparent;
       wordColor = context.appTextPrimary;
       taglineColor = context.appTextSecondary;
     }
@@ -126,26 +143,35 @@ class KusBrandLogo extends StatelessWidget {
     // The 14px radius is specified at the 44px header size; other sizes keep
     // the same proportion so the squircle reads identically at every scale.
     final radius = m.mark * (14 / 44);
+    final imageHeight = effectiveShowContainer ? m.mark * 0.62 : m.mark;
 
-    Widget mark = Container(
-      width: m.mark,
-      height: m.mark,
-      decoration: BoxDecoration(
-        color: tile,
-        borderRadius: BorderRadius.circular(radius),
-        border: Border.all(color: tileBorder),
-      ),
-      alignment: Alignment.center,
-      child: Image.asset(
-        m.asset,
-        height: m.mark * 0.62,
-        color: markColor,
-        colorBlendMode: BlendMode.srcIn,
-        filterQuality: FilterQuality.medium,
-        errorBuilder: (context, error, stackTrace) =>
-            SizedBox(height: m.mark * 0.62, width: m.mark * 0.56),
-      ),
+    final Widget markImage = Image.asset(
+      m.asset,
+      height: imageHeight,
+      color: markColor,
+      colorBlendMode: BlendMode.srcIn,
+      filterQuality: FilterQuality.medium,
+      errorBuilder: (context, error, stackTrace) =>
+          SizedBox(height: imageHeight, width: imageHeight * 0.9),
     );
+
+    Widget mark = effectiveShowContainer
+        ? Container(
+            width: m.mark,
+            height: m.mark,
+            decoration: BoxDecoration(
+              color: tile,
+              borderRadius: BorderRadius.circular(radius),
+              border: Border.all(color: tileBorder),
+            ),
+            alignment: Alignment.center,
+            child: markImage,
+          )
+        : SizedBox(
+            width: m.mark,
+            height: m.mark,
+            child: Center(child: markImage),
+          );
 
     Widget? words;
     if (showWordmark && l10n != null) {

@@ -35,6 +35,7 @@ import '../../geo/models/simulated_location.dart';
 import '../../geo/services/geo_simulation_service.dart';
 import '../../../core/utils/app_formatters.dart';
 import '../widgets/unit_equivalences_sheet.dart';
+import '../widgets/regional_index_dumbbell_chart.dart';
 import '../../costs/models/regional_price_reference.dart';
 import '../../costs/data/simulated_regional_price_references.dart';
 import '../../costs/services/regional_price_reference_service.dart';
@@ -122,7 +123,6 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
         widget.initialRegionalReference ??
         SimulatedRegionalPriceReferences.findForCrop(
           cropType: _crop.cropType,
-          title: _crop.title,
         );
     _loadRegionalReference();
 
@@ -144,7 +144,6 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
     try {
       final ref = await _referenceService.findForCrop(
         cropType: _crop.cropType,
-        title: _crop.title,
       );
       if (mounted && ref != null) {
         setState(() {
@@ -709,9 +708,7 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
         context,
         LucideIcons.mapPin,
         l10n.crop_detail_location,
-        hasDistance
-            ? '${_crop.municipality}, ${_crop.department} (${_distanceEvaluation!.formatted})'
-            : '${_crop.municipality}, ${_crop.department}',
+        '${_crop.municipality}, ${_crop.department}',
       ),
       if (_isBuyer && hasDistance)
         _buildInfoRow(
@@ -1335,20 +1332,9 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
               ),
             ),
             const SizedBox(height: AppDimensions.space16),
-            Text(
-              comparisonText,
-              style: AppTextStyles.bodyMedium.copyWith(
-                fontWeight: FontWeight.w600,
-                color: sheetContext.appTextPrimary,
-                fontFeatures: AppTextStyles.tabularFigures,
-              ),
-            ),
-            const SizedBox(height: AppDimensions.space8),
-            Text(
-              l10n.profitability_reference_notice,
-              style: AppTextStyles.caption.copyWith(
-                color: sheetContext.appTextSecondary,
-              ),
+            RegionalIndexDumbbellChart(
+              referencePrice: ref.referencePricePerKg,
+              cropPrice: _crop.pricePerKg,
             ),
           ],
         ),

@@ -5662,7 +5662,7 @@ abstract class AppLocalizations {
   /// No description provided for @cost_msg_no_costs.
   ///
   /// In es, this message translates to:
-  /// **'Aún no hay costos registrados. Agrega un costo para calcular el costo por kg.'**
+  /// **'Aún no hay costos registrados'**
   String get cost_msg_no_costs;
 
   /// No description provided for @cost_msg_invalid_total.

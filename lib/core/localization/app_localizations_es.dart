@@ -3169,8 +3169,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get cost_msg_calculated => 'Costo estimado por kg';
 
   @override
-  String get cost_msg_no_costs =>
-      'Aún no hay costos registrados. Agrega un costo para calcular el costo por kg.';
+  String get cost_msg_no_costs => 'Aún no hay costos registrados';
 
   @override
   String get cost_msg_invalid_total =>

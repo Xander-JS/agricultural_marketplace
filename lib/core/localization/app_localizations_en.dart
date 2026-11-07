@@ -2450,7 +2450,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deal_detail_confirm_agreement => 'Confirm agreement';
 
   @override
-  String get deal_detail_my_permissions_title => 'My contact permissions';
+  String get deal_detail_my_permissions_title => 'Contact permissions';
 
   @override
   String get deal_detail_my_permissions_desc =>
@@ -3306,4 +3306,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profile_view_photo => 'View profile photo';
+
+  @override
+  String get crop_detail_point_reference => 'Nariño Reference';
+
+  @override
+  String get crop_detail_point_crop => 'This crop';
+
+  @override
+  String get deal_detail_open_google_maps => 'Open in Google Maps';
 }

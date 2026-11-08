@@ -79,7 +79,7 @@ class StatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppDimensions.space8 + 2,
-        vertical: AppDimensions.space4,
+        vertical: AppDimensions.space4 -2,
       ),
       decoration: BoxDecoration(
         color: triad.background,

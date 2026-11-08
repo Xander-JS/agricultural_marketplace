@@ -996,7 +996,7 @@
   "deal_detail_share_farm_location": "Share the farm location",
   "deal_detail_share_location_desc": "Allows viewing the municipality and coordinates to plan the delivery route.",
   "deal_detail_confirm_agreement": "Confirm agreement",
-  "deal_detail_my_permissions_title": "My contact permissions",
+  "deal_detail_my_permissions_title": "Contact permissions",
   "deal_detail_my_permissions_desc": "Control which private details you authorize the counterpart to see to coordinate this deal. You can revoke or grant permissions at any time:",
   "deal_detail_share_phone_desc_permission": "The counterpart will be able to see your number for calls or messages.",
   "deal_detail_share_location_desc_permission": "The counterpart will be able to see the municipality and coordinates for logistics.",
@@ -1341,5 +1341,8 @@
   "cost_category_fertilizers": "Fertilizers",
   "cost_category_transport": "Transport",
   "cost_category_other": "Other",
-  "profile_view_photo": "View profile photo"
+  "profile_view_photo": "View profile photo",
+  "crop_detail_point_reference": "Nariño Reference",
+  "crop_detail_point_crop": "This crop",
+  "deal_detail_open_google_maps": "Open in Google Maps"
 }

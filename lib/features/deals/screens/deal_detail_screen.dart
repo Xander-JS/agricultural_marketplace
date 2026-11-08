@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import '../../../core/theme/app_icons.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../models/negotiation_model.dart';
 import '../models/negotiation_offer_model.dart';
@@ -411,9 +412,16 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
       place,
     ].whereType<String>().where((s) => s.trim().isNotEmpty).join(' · ');
 
+    final cardBg = context.appPrimary;
+    final onPrimary = context.appOnPrimary;
+    final onPrimarySecondary = onPrimary.withValues(alpha: 0.85);
+    final dividerColor = onPrimary.withValues(alpha: 0.20);
+
     return InsetGroupCard(
       padding: EdgeInsets.zero,
-      showMosaic: true,
+      color: cardBg,
+      borderColor: AppColors.transparent,
+      showMosaic: false,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -428,13 +436,23 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        crop?.title ?? l10n.deals_unknown_crop,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.headlineMedium.copyWith(
-                          color: context.appTextPrimary,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              crop?.title ?? l10n.deals_unknown_crop,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTextStyles.headlineMedium.copyWith(
+                                color: onPrimary,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: AppDimensions.space8),
+                          NegotiationStatusBadge(status: n.status),
+                        ],
                       ),
                       if (cropLine.isNotEmpty) ...[
                         const SizedBox(height: 2),
@@ -444,19 +462,17 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                           overflow: TextOverflow.ellipsis,
                           style: AppTextStyles.bodySmall.copyWith(
                             fontSize: 13,
-                            color: context.appTextSecondary,
+                            color: onPrimarySecondary,
                           ),
                         ),
                       ],
-                      const SizedBox(height: AppDimensions.space8),
-                      NegotiationStatusBadge(status: n.status),
                     ],
                   ),
                 ),
               ],
             ),
           ),
-          Divider(height: 1, thickness: 1, color: context.appDivider),
+          Divider(height: 1, thickness: 1, color: dividerColor),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
             child: Row(
@@ -474,7 +490,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                       Text(
                         counterpartLabel,
                         style: AppTextStyles.caption.copyWith(
-                          color: context.appTextSecondary,
+                          color: onPrimarySecondary,
                         ),
                       ),
                       Text(
@@ -482,7 +498,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: AppTextStyles.titleMedium.copyWith(
-                          color: context.appTextPrimary,
+                          color: onPrimary,
                         ),
                       ),
                     ],
@@ -492,7 +508,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
             ),
           ),
           if (latestOffer != null) ...[
-            Divider(height: 1, thickness: 1, color: context.appDivider),
+            Divider(height: 1, thickness: 1, color: dividerColor),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
               child: IntrinsicHeight(
@@ -505,16 +521,20 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                           latestOffer.proposedPricePerKg,
                         ),
                         emphasized: true,
+                        labelColor: onPrimarySecondary,
+                        valueColor: onPrimary,
                       ),
                     ),
-                    VerticalDivider(width: 24, color: context.appDivider),
+                    VerticalDivider(width: 24, color: dividerColor),
                     Expanded(
                       child: _TermFigure(
                         label: l10n.deal_detail_quantity,
                         value: UnitFormatters.formatKg(latestOffer.quantityKg),
+                        labelColor: onPrimarySecondary,
+                        valueColor: onPrimary,
                       ),
                     ),
-                    VerticalDivider(width: 24, color: context.appDivider),
+                    VerticalDivider(width: 24, color: dividerColor),
                     Expanded(
                       child: _TermFigure(
                         label: l10n.deal_detail_total,
@@ -522,21 +542,35 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                           latestOffer.quantityKg *
                               latestOffer.proposedPricePerKg,
                         ),
+                        labelColor: onPrimarySecondary,
+                        valueColor: onPrimary,
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-            Divider(height: 1, thickness: 1, color: context.appDivider),
-            _buildDeliveryRow(latestOffer, l10n),
+            Divider(height: 1, thickness: 1, color: dividerColor),
+            _buildDeliveryRow(
+              latestOffer,
+              l10n,
+              textColor: onPrimary,
+              secondaryColor: onPrimarySecondary,
+              iconColor: onPrimary,
+            ),
           ],
         ],
       ),
     );
   }
 
-  Widget _buildDeliveryRow(NegotiationOfferModel offer, AppLocalizations l10n) {
+  Widget _buildDeliveryRow(
+    NegotiationOfferModel offer,
+    AppLocalizations l10n, {
+    Color? textColor,
+    Color? secondaryColor,
+    Color? iconColor,
+  }) {
     final presentation = deliveryPresentation(l10n, offer.deliveryMethod);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
@@ -545,7 +579,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
           Icon(
             presentation.icon,
             size: AppDimensions.iconSM,
-            color: context.appIconMocha,
+            color: iconColor ?? context.appIconMocha,
           ),
           const SizedBox(width: AppDimensions.space12),
           // Label and value share the line, so neither is squeezed into
@@ -554,7 +588,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
             child: Text(
               l10n.deal_detail_delivery_method,
               style: AppTextStyles.bodyMedium.copyWith(
-                color: context.appTextSecondary,
+                color: secondaryColor ?? context.appTextSecondary,
               ),
             ),
           ),
@@ -566,7 +600,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: AppTextStyles.titleSmall.copyWith(
-                color: context.appTextPrimary,
+                color: textColor ?? context.appTextPrimary,
               ),
             ),
           ),
@@ -856,19 +890,10 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
           contact.counterpartMunicipality,
           contact.counterpartDepartment,
         ].whereType<String>().where((s) => s.trim().isNotEmpty).join(', ');
-        final hasCoordinates =
-            contact.counterpartLatitude != null &&
-            contact.counterpartLongitude != null;
         rows.add(
           InsetGroupRow(
             leading: IconSquircle(icon: LucideIcons.mapPin, size: 30),
             title: place.isEmpty ? l10n.deal_detail_view_location : place,
-            subtitle: hasCoordinates
-                ? l10n.deal_detail_coordinates(
-                    contact.counterpartLatitude!.toStringAsFixed(6),
-                    contact.counterpartLongitude!.toStringAsFixed(6),
-                  )
-                : null,
             onTap: () => _showLocationDialog(contact),
           ),
         );
@@ -882,20 +907,11 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
       }
     }
 
-    // 3. Mis permisos configurados
-    final phoneStatus = contact?.mySharePhone == true
-        ? l10n.deal_detail_authorized
-        : l10n.deal_detail_private;
-    final locationStatus = contact?.myShareLocation == true
-        ? l10n.deal_detail_location_authorized_status
-        : l10n.deal_detail_location_private_status;
+    // 3. Permisos de contacto
     rows.add(
       InsetGroupRow(
         leading: IconSquircle(icon: LucideIcons.shieldCheck, size: 30),
         title: l10n.deal_detail_my_permissions_title,
-        subtitle:
-            '${l10n.deal_detail_phone_permission(phoneStatus)} · '
-            '${l10n.deal_detail_location_permission(locationStatus)}',
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1044,6 +1060,11 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
         final hasCoordinates =
             contact.counterpartLatitude != null &&
             contact.counterpartLongitude != null;
+        final placeParts = [
+          contact.counterpartMunicipality,
+          contact.counterpartDepartment,
+        ].whereType<String>().where((s) => s.trim().isNotEmpty).toList();
+        final place = placeParts.join(', ');
 
         return AlertDialog(
           icon: IconSquircle(icon: LucideIcons.mapPin, size: 48),
@@ -1052,55 +1073,67 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (contact.counterpartMunicipality != null ||
-                  contact.counterpartDepartment != null) ...[
+              if (place.isNotEmpty) ...[
                 Text(
                   l10n.deal_detail_municipality_department,
                   style: labelStyle,
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${contact.counterpartMunicipality ?? ""}, ${contact.counterpartDepartment ?? ""}',
+                  place,
                   style: AppTextStyles.titleMedium.copyWith(
                     color: ctx.appTextPrimary,
                   ),
                 ),
                 const SizedBox(height: 12),
               ],
-              if (hasCoordinates) ...[
-                Text(l10n.deal_detail_geo_coordinates, style: labelStyle),
-                const SizedBox(height: 4),
-                SelectableText(
-                  l10n.deal_detail_lat_lon(
-                    contact.counterpartLatitude!.toStringAsFixed(6),
-                    contact.counterpartLongitude!.toStringAsFixed(6),
-                  ),
-                  style: AppTextStyles.figureSmall.copyWith(
-                    color: ctx.appTextPrimary,
-                  ),
+              Text(
+                l10n.deal_detail_location_verified,
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: ctx.appTextSecondary,
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.deal_detail_location_verified,
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: ctx.appTextSecondary,
-                  ),
-                ),
-              ],
+              ),
             ],
           ),
           actions: [
-            if (hasCoordinates)
-              TextButton.icon(
-                onPressed: () {
-                  final coords =
-                      '${contact.counterpartLatitude},${contact.counterpartLongitude}';
-                  _copyToClipboard(coords, l10n.deal_detail_coordinates_label);
-                  Navigator.pop(ctx);
-                },
-                icon: const Icon(LucideIcons.copy, size: 16),
-                label: Text(l10n.deal_detail_copy_coordinates),
+            ElevatedButton.icon(
+              onPressed: () async {
+                final Uri mapsUri;
+                if (hasCoordinates) {
+                  mapsUri = Uri.parse(
+                    'https://www.google.com/maps/search/?api=1&query=${contact.counterpartLatitude},${contact.counterpartLongitude}',
+                  );
+                } else if (place.isNotEmpty) {
+                  mapsUri = Uri.parse(
+                    'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent('$place, Colombia')}',
+                  );
+                } else {
+                  return;
+                }
+
+                try {
+                  if (await canLaunchUrl(mapsUri)) {
+                    await launchUrl(mapsUri, mode: LaunchMode.externalApplication);
+                  } else {
+                    await launchUrl(mapsUri, mode: LaunchMode.platformDefault);
+                  }
+                } catch (_) {
+                  try {
+                    await launchUrl(mapsUri, mode: LaunchMode.platformDefault);
+                  } catch (_) {}
+                }
+              },
+              icon: const Icon(LucideIcons.mapPin, size: 16),
+              label: Text(l10n.deal_detail_open_google_maps),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.onBrand,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusControl),
+                ),
               ),
+            ),
             TextButton(
               onPressed: () => Navigator.pop(ctx),
               child: Text(l10n.common_close),
@@ -1456,11 +1489,15 @@ class _TermFigure extends StatelessWidget {
   final String label;
   final String value;
   final bool emphasized;
+  final Color? labelColor;
+  final Color? valueColor;
 
   const _TermFigure({
     required this.label,
     required this.value,
     this.emphasized = false,
+    this.labelColor,
+    this.valueColor,
   });
 
   @override
@@ -1475,7 +1512,7 @@ class _TermFigure extends StatelessWidget {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: AppTextStyles.caption.copyWith(
-            color: context.appTextSecondary,
+            color: labelColor ?? context.appTextSecondary,
           ),
         ),
         const SizedBox(height: 2),
@@ -1486,7 +1523,8 @@ class _TermFigure extends StatelessWidget {
             value,
             style: AppTextStyles.figureMedium.copyWith(
               fontSize: 16,
-              color: emphasized ? context.appPrimary : context.appTextPrimary,
+              color: valueColor ??
+                  (emphasized ? context.appPrimary : context.appTextPrimary),
             ),
           ),
         ),

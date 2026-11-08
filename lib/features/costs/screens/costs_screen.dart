@@ -283,126 +283,129 @@ class _CostsScreenState extends State<CostsScreen> {
       child: InsetGroupCard(
         padding: EdgeInsets.zero,
         showMosaic: true,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      _CropThumb(
-                        imageUrl: crop.imageUrls.isNotEmpty
-                            ? _cropService.getPublicImageUrl(
-                                crop.imageUrls.first,
-                              )
-                            : null,
-                      ),
-                      const SizedBox(width: AppDimensions.space12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              crop.title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppTextStyles.titleLarge.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: context.appTextPrimary,
-                              ),
-                            ),
-                            Text(
-                              crop.cropType,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppTextStyles.bodySmall.copyWith(
-                                color: context.appTextSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppDimensions.space16),
-                  Text(
-                    l10n.costs_total,
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: context.appTextSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    CurrencyFormatters.formatCop(totalCost),
-                    style: AppTextStyles.figureLarge.copyWith(
-                      fontSize: 26,
-                      color: context.appTextPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: AppDimensions.space8),
-                  Text(
-                    _perKgSummary(l10n, perKg),
-                    style: AppTextStyles.titleSmall.copyWith(
-                      color: perKg.isCalculated
-                          ? context.appPrimary
-                          : context.appTextSecondary,
-                      fontFeatures: AppTextStyles.tabularFigures,
-                    ),
-                  ),
-                  if (perKg.denominator != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 2),
-                      child: Text(
-                        '${UnitFormatters.formatKg(perKg.denominator)} · ${perKg.denominatorSource.localizedName(l10n)}',
-                        style: AppTextStyles.caption.copyWith(
-                          color: context.appTextSecondary,
-                          fontFeatures: AppTextStyles.tabularFigures,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            Divider(height: 1, color: context.appDivider),
-            InkWell(
-              onTap: () => _navigateToDetail(crop),
-              borderRadius: const BorderRadius.vertical(
-                bottom: Radius.circular(InsetGroupCard.radius),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppDimensions.space16,
-                  vertical: 14,
-                ),
-                child: Row(
+        borderColor: context.appSmokedMocha,
+        borderWidth: 1.5,
+        child: InkWell(
+          onTap: () => _navigateToDetail(crop),
+          borderRadius: BorderRadius.circular(InsetGroupCard.radius),
+          child: Padding(
+            padding: const EdgeInsets.all(AppDimensions.space16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      LucideIcons.receiptText,
-                      size: 18,
-                      color: context.appTextSecondary,
+                    _CropThumb(
+                      imageUrl: crop.imageUrls.isNotEmpty
+                          ? _cropService.getPublicImageUrl(
+                              crop.imageUrls.first,
+                            )
+                          : null,
                     ),
-                    const SizedBox(width: AppDimensions.space8),
+                    const SizedBox(width: AppDimensions.space12),
                     Expanded(
-                      child: Text(
-                        l10n.costs_view,
-                        style: AppTextStyles.buttonMedium.copyWith(
-                          color: context.appPrimary,
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  crop.title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTextStyles.titleLarge.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: context.appTextPrimary,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: AppDimensions.space8),
+                              InkWell(
+                                onTap: () => _navigateToDetail(crop),
+                                borderRadius: BorderRadius.circular(AppDimensions.radiusXS),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                    vertical: 2,
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        l10n.costs_view,
+                                        style: AppTextStyles.labelMedium.copyWith(
+                                          color: AppColors.primary,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      const Icon(
+                                        LucideIcons.arrowRight,
+                                        size: 14,
+                                        color: AppColors.primary,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Text(
+                            crop.cropType,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: context.appTextSecondary,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    Icon(
-                      LucideIcons.chevronRight,
-                      size: 18,
-                      color: context.appTextMuted,
                     ),
                   ],
                 ),
-              ),
+                const SizedBox(height: AppDimensions.space16),
+                Text(
+                  l10n.costs_total,
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: context.appTextSecondary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  CurrencyFormatters.formatCop(totalCost),
+                  style: AppTextStyles.figureLarge.copyWith(
+                    fontSize: 26,
+                    color: context.appTextPrimary,
+                  ),
+                ),
+                const SizedBox(height: AppDimensions.space8),
+                Text(
+                  _perKgSummary(l10n, perKg),
+                  style: AppTextStyles.titleSmall.copyWith(
+                    color: perKg.isCalculated
+                        ? context.appPrimary
+                        : context.appTextSecondary,
+                    fontFeatures: AppTextStyles.tabularFigures,
+                  ),
+                ),
+                if (perKg.denominator != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      '${UnitFormatters.formatKg(perKg.denominator)} · ${perKg.denominatorSource.localizedName(l10n)}',
+                      style: AppTextStyles.caption.copyWith(
+                        color: context.appTextSecondary,
+                        fontFeatures: AppTextStyles.tabularFigures,
+                      ),
+                    ),
+                  ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

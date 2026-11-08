@@ -77,7 +77,6 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
         widget.initialReference ??
         SimulatedRegionalPriceReferences.findForCrop(
           cropType: widget.crop.cropType,
-          title: widget.crop.title,
         );
     _loadRegionalReference();
 
@@ -99,7 +98,6 @@ class _CropProfitabilityScreenState extends State<CropProfitabilityScreen> {
     try {
       final ref = await _referenceService.findForCrop(
         cropType: widget.crop.cropType,
-        title: widget.crop.title,
       );
       if (mounted && ref != null) {
         setState(() {

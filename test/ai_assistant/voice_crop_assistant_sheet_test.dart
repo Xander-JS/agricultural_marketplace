@@ -68,6 +68,14 @@ class FakeSpeechRecognitionService implements SpeechRecognitionService {
     _onTranscript?.call(text, false);
   }
 
+  void emitFinal(String text) {
+    _onTranscript?.call(text, true);
+  }
+
+  void emitStatus(SpeechCaptureStatus status) {
+    _onStatus?.call(status);
+  }
+
   void emitError(String message) {
     _onError?.call(message);
   }
@@ -84,6 +92,7 @@ class FakeAiCropExtractionService implements AiCropExtractionService {
   VoiceCropDraft? draft;
   final List<Object> results;
   int calls = 0;
+  String? lastTranscript;
 
   @override
   bool get isConfigured => configured;
@@ -91,6 +100,7 @@ class FakeAiCropExtractionService implements AiCropExtractionService {
   @override
   Future<VoiceCropDraft> extract(String transcript) async {
     calls++;
+    lastTranscript = transcript;
     final result = results.isNotEmpty
         ? results.removeAt(0)
         : (draft ?? VoiceCropDraft(transcript: transcript));
@@ -393,4 +403,129 @@ void main() {
     expect(find.byKey(const Key('voice_crop_manual_button')), findsOneWidget);
     expect(ai.calls, isZero);
   });
+
+  testWidgets(
+    '9. Transcripción acumulativa: múltiples fragmentos separados por pausas conservan todo el texto',
+    (tester) async {
+      final speech = FakeSpeechRecognitionService();
+      final ai = FakeAiCropExtractionService();
+
+      await tester.pumpWidget(
+        buildHarness(speech: speech, ai: ai, onResult: (_) {}),
+      );
+      await tapVisible(tester, find.text('Abrir asistente'));
+      await tapVisible(tester, find.byKey(const Key('voice_crop_start_button')));
+      expect(find.text('Escuchando...'), findsOneWidget);
+
+      // Emisión de un primer fragmento en curso
+      speech.emitPartial('Tengo 20 bultos de cebolla');
+      await tester.pump();
+      expect(find.textContaining('Tengo 20 bultos de cebolla'), findsWidgets);
+
+      // Pausa del usuario / segmento finalizado
+      speech.emitFinal('Tengo 20 bultos de cebolla');
+      await tester.pump();
+      expect(find.text('Escuchando...'), findsOneWidget);
+      expect(find.textContaining('Tengo 20 bultos de cebolla'), findsWidgets);
+
+      // Emisión de un segundo fragmento posterior
+      speech.emitPartial('a 40000 la carga');
+      await tester.pump();
+      expect(
+        find.textContaining('Tengo 20 bultos de cebolla a 40000 la carga'),
+        findsWidgets,
+      );
+
+      // Pausa / finalización del segundo fragmento
+      speech.emitFinal('a 40000 la carga');
+      await tester.pump();
+
+      // Cierre de la sesión de escucha mediante botón Listo
+      await tapVisible(tester, find.byKey(const Key('voice_crop_stop_button')));
+      expect(
+        find.byKey(const Key('voice_crop_transcript_field')),
+        findsOneWidget,
+      );
+
+      // Comprobación de que el texto final consolidado contenga ambos fragmentos y no solo el segundo
+      expect(
+        find.text('Tengo 20 bultos de cebolla a 40000 la carga'),
+        findsOneWidget,
+      );
+
+      // Envío completo a interpretación AI
+      await tapVisible(
+        tester,
+        find.byKey(const Key('voice_crop_interpret_button')),
+      );
+      expect(ai.calls, equals(1));
+      expect(
+        ai.lastTranscript,
+        equals('Tengo 20 bultos de cebolla a 40000 la carga'),
+      );
+    },
+  );
+
+  testWidgets(
+    '10. Detención automática por silencio conserva transcripción y permite continuar dictando',
+    (tester) async {
+      final speech = FakeSpeechRecognitionService();
+      final ai = FakeAiCropExtractionService();
+
+      await tester.pumpWidget(
+        buildHarness(speech: speech, ai: ai, onResult: (_) {}),
+      );
+      await tapVisible(tester, find.text('Abrir asistente'));
+      await tapVisible(tester, find.byKey(const Key('voice_crop_start_button')));
+
+      // Dictado del primer fragmento
+      speech.emitPartial('Tengo 50 bultos de papa criolla');
+      speech.emitFinal('Tengo 50 bultos de papa criolla');
+      await tester.pump();
+
+      // Corte por tiempo de silencio (SpeechCaptureStatus.done)
+      speech.emitStatus(SpeechCaptureStatus.done);
+      await tester.pumpAndSettle();
+
+      // El texto acumulado debe permanecer intacto en la pantalla de revisión
+      expect(
+        find.byKey(const Key('voice_crop_transcript_field')),
+        findsOneWidget,
+      );
+      expect(
+        find.text('Tengo 50 bultos de papa criolla'),
+        findsOneWidget,
+      );
+
+      // El usuario decide continuar dictando para agregar el precio
+      await tapVisible(
+        tester,
+        find.byKey(const Key('voice_crop_record_again_button')),
+      );
+      expect(find.text('Escuchando...'), findsOneWidget);
+      expect(find.textContaining('Tengo 50 bultos de papa criolla'), findsWidgets);
+
+      // Emisión del precio tras retomar
+      speech.emitPartial('a 80000 cada uno');
+      speech.emitFinal('a 80000 cada uno');
+      await tester.pump();
+
+      // Detiene la sesión
+      await tapVisible(tester, find.byKey(const Key('voice_crop_stop_button')));
+      expect(
+        find.text('Tengo 50 bultos de papa criolla a 80000 cada uno'),
+        findsOneWidget,
+      );
+
+      // Verificación de extracción AI completa
+      await tapVisible(
+        tester,
+        find.byKey(const Key('voice_crop_interpret_button')),
+      );
+      expect(
+        ai.lastTranscript,
+        equals('Tengo 50 bultos de papa criolla a 80000 cada uno'),
+      );
+    },
+  );
 }

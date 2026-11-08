@@ -1031,7 +1031,7 @@
   "deal_detail_share_farm_location": "Compartir la ubicación de la finca",
   "deal_detail_share_location_desc": "Permite ver el municipio y coordenadas para planificar la ruta de entrega.",
   "deal_detail_confirm_agreement": "Confirmar acuerdo",
-  "deal_detail_my_permissions_title": "Mis permisos de contacto",
+  "deal_detail_my_permissions_title": "Permisos de contacto",
   "deal_detail_my_permissions_desc": "Controla qué datos privados autorizas ver a la contraparte para coordinar este trato. Puedes revocar o conceder permisos en cualquier momento:",
   "deal_detail_share_phone_desc_permission": "La contraparte podrá ver tu número para llamadas o mensajes.",
   "deal_detail_share_location_desc_permission": "La contraparte podrá ver municipio y coordenadas para la logística.",
@@ -1418,5 +1418,8 @@
   "cost_category_fertilizers": "Fertilizantes",
   "cost_category_transport": "Transporte",
   "cost_category_other": "Otros",
-  "profile_view_photo": "Ver foto de perfil"
+  "profile_view_photo": "Ver foto de perfil",
+  "crop_detail_point_reference": "Referencia Nariño",
+  "crop_detail_point_crop": "Esta cosecha",
+  "deal_detail_open_google_maps": "Abrir en Google Maps"
 }

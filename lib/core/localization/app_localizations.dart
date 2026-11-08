@@ -4480,7 +4480,7 @@ abstract class AppLocalizations {
   /// No description provided for @deal_detail_my_permissions_title.
   ///
   /// In es, this message translates to:
-  /// **'Mis permisos de contacto'**
+  /// **'Permisos de contacto'**
   String get deal_detail_my_permissions_title;
 
   /// No description provided for @deal_detail_my_permissions_desc.
@@ -5850,6 +5850,24 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Ver foto de perfil'**
   String get profile_view_photo;
+
+  /// No description provided for @crop_detail_point_reference.
+  ///
+  /// In es, this message translates to:
+  /// **'Referencia Nariño'**
+  String get crop_detail_point_reference;
+
+  /// No description provided for @crop_detail_point_crop.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta cosecha'**
+  String get crop_detail_point_crop;
+
+  /// No description provided for @deal_detail_open_google_maps.
+  ///
+  /// In es, this message translates to:
+  /// **'Abrir en Google Maps'**
+  String get deal_detail_open_google_maps;
 }
 
 class _AppLocalizationsDelegate

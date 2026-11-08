@@ -35,6 +35,7 @@ import '../../geo/models/simulated_location.dart';
 import '../../geo/services/geo_simulation_service.dart';
 import '../../../core/utils/app_formatters.dart';
 import '../widgets/unit_equivalences_sheet.dart';
+import '../widgets/regional_index_dumbbell_chart.dart';
 import '../../costs/models/regional_price_reference.dart';
 import '../../costs/data/simulated_regional_price_references.dart';
 import '../../costs/services/regional_price_reference_service.dart';
@@ -122,7 +123,6 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
         widget.initialRegionalReference ??
         SimulatedRegionalPriceReferences.findForCrop(
           cropType: _crop.cropType,
-          title: _crop.title,
         );
     _loadRegionalReference();
 
@@ -144,7 +144,6 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
     try {
       final ref = await _referenceService.findForCrop(
         cropType: _crop.cropType,
-        title: _crop.title,
       );
       if (mounted && ref != null) {
         setState(() {
@@ -709,9 +708,7 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
         context,
         LucideIcons.mapPin,
         l10n.crop_detail_location,
-        hasDistance
-            ? '${_crop.municipality}, ${_crop.department} (${_distanceEvaluation!.formatted})'
-            : '${_crop.municipality}, ${_crop.department}',
+        '${_crop.municipality}, ${_crop.department}',
       ),
       if (_isBuyer && hasDistance)
         _buildInfoRow(
@@ -1180,31 +1177,6 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
   /// accents: reference data, never alarm colors.
   Widget _buildRegionalReferenceBanner(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final ref = _regionalReference!;
-    final diff = _crop.pricePerKg - ref.referencePricePerKg;
-    final diffPercent = ref.referencePricePerKg > 0
-        ? (diff / ref.referencePricePerKg) * 100
-        : 0.0;
-    // Both the amount and the percentage are shown unsigned with one shared
-    // sign, so a price under the index reads "-\$ 700/kg (-15.6%)".
-    final sign = diff > 0 ? '+' : '-';
-    final summaryText = diff == 0
-        ? l10n.crop_detail_regional_at_par
-        : l10n.crop_detail_regional_delta(
-            sign,
-            CurrencyFormatters.formatCop(diff.abs()),
-            diffPercent.abs().toStringAsFixed(1),
-          );
-    final comparisonText = diff == 0
-        ? l10n.crop_detail_price_matches_reference(
-            CurrencyFormatters.formatCop(ref.referencePricePerKg),
-          )
-        : l10n.crop_detail_price_vs_reference(
-            sign,
-            CurrencyFormatters.formatCop(diff.abs()),
-            diffPercent.abs().toStringAsFixed(1),
-            CurrencyFormatters.formatCop(ref.referencePricePerKg),
-          );
     final brand = context.appBrandTriad;
     const radius = BorderRadius.all(Radius.circular(InsetGroupCard.radius));
 
@@ -1221,37 +1193,22 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
         ),
         child: InkWell(
           borderRadius: radius,
-          onTap: () => _showRegionalReferenceSheet(context, comparisonText),
+          onTap: () => _showRegionalReferenceSheet(context),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             child: Row(
               children: [
                 IconSquircle(icon: LucideIcons.trendingUp, size: 32),
                 const SizedBox(width: AppDimensions.space12),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l10n.crop_detail_regional_index_short,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.caption.copyWith(
-                          color: context.appTextSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        summaryText,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: context.appTextPrimary,
-                          fontFeatures: AppTextStyles.tabularFigures,
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    l10n.crop_detail_regional_index_short,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: context.appTextPrimary,
+                    ),
                   ),
                 ),
                 const SizedBox(width: AppDimensions.space8),
@@ -1272,10 +1229,7 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
 
   /// Full regional index detail: reference and asking price, the
   /// comparison sentence and the projection disclaimer.
-  void _showRegionalReferenceSheet(
-    BuildContext context,
-    String comparisonText,
-  ) {
+  void _showRegionalReferenceSheet(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final ref = _regionalReference!;
     final brand = context.appBrandTriad;
@@ -1335,20 +1289,9 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
               ),
             ),
             const SizedBox(height: AppDimensions.space16),
-            Text(
-              comparisonText,
-              style: AppTextStyles.bodyMedium.copyWith(
-                fontWeight: FontWeight.w600,
-                color: sheetContext.appTextPrimary,
-                fontFeatures: AppTextStyles.tabularFigures,
-              ),
-            ),
-            const SizedBox(height: AppDimensions.space8),
-            Text(
-              l10n.profitability_reference_notice,
-              style: AppTextStyles.caption.copyWith(
-                color: sheetContext.appTextSecondary,
-              ),
+            RegionalIndexDumbbellChart(
+              referencePrice: ref.referencePricePerKg,
+              cropPrice: _crop.pricePerKg,
             ),
           ],
         ),

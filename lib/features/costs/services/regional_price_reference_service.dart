@@ -59,10 +59,10 @@ class RegionalPriceReferenceService {
     return SimulatedRegionalPriceReferences.all;
   }
 
-  /// Busca la referencia correspondiente a un cultivo específico.
+  /// Busca la referencia correspondiente a un cultivo específico contra su `cropType`.
   Future<RegionalPriceReference?> findForCrop({
     required String cropType,
-    required String title,
+    String? title = '',
   }) async {
     try {
       final references = await getReferences();

@@ -61,7 +61,10 @@ class PurchaseCard extends StatelessWidget {
         color: context.appSurface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: context.appBorder),
+          side: BorderSide(
+            color: context.appSmokedMocha,
+            width: 1.5,
+          ),
         ),
         clipBehavior: Clip.antiAlias,
         child: CustomPaint(

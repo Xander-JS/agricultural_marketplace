@@ -414,10 +414,16 @@ class _SummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final cardBg = context.appPrimary;
+    final onPrimary = context.appOnPrimary;
+    final onPrimarySecondary = onPrimary.withValues(alpha: 0.85);
+    final dividerColor = onPrimary.withValues(alpha: 0.20);
 
     return InsetGroupCard(
       padding: EdgeInsets.zero,
-      showMosaic: true,
+      color: cardBg,
+      borderColor: AppColors.transparent,
+      showMosaic: false,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -429,6 +435,8 @@ class _SummaryCard extends StatelessWidget {
                 _KpiLabel(
                   icon: LucideIcons.wallet,
                   label: l10n.purchases_total_invested,
+                  color: onPrimarySecondary,
+                  iconColor: onPrimary,
                 ),
                 const SizedBox(height: 6),
                 FittedBox(
@@ -439,7 +447,7 @@ class _SummaryCard extends StatelessWidget {
                     style: AppTextStyles.figureLarge.copyWith(
                       fontSize: 32,
                       letterSpacing: -0.8,
-                      color: context.appTextPrimary,
+                      color: onPrimary,
                     ),
                   ),
                 ),
@@ -447,13 +455,13 @@ class _SummaryCard extends StatelessWidget {
                 Text(
                   l10n.purchases_total_caption(purchasesCount),
                   style: AppTextStyles.bodySmall.copyWith(
-                    color: context.appTextSecondary,
+                    color: onPrimarySecondary,
                   ),
                 ),
               ],
             ),
           ),
-          Divider(height: 1, thickness: 1, color: context.appDivider),
+          Divider(height: 1, thickness: 1, color: dividerColor),
           IntrinsicHeight(
             child: Row(
               children: [
@@ -462,18 +470,24 @@ class _SummaryCard extends StatelessWidget {
                     icon: LucideIcons.handshake,
                     label: l10n.purchases_total_agreed,
                     value: agreedCount.toString(),
+                    textColor: onPrimary,
+                    labelColor: onPrimarySecondary,
+                    iconColor: onPrimary,
                   ),
                 ),
                 VerticalDivider(
                   width: 1,
                   thickness: 1,
-                  color: context.appDivider,
+                  color: dividerColor,
                 ),
                 Expanded(
                   child: _SecondaryKpi(
                     icon: LucideIcons.scale,
                     label: l10n.purchases_total_volume,
                     value: UnitFormatters.formatKg(totalVolumeKg),
+                    textColor: onPrimary,
+                    labelColor: onPrimarySecondary,
+                    iconColor: onPrimary,
                   ),
                 ),
               ],
@@ -488,14 +502,24 @@ class _SummaryCard extends StatelessWidget {
 class _KpiLabel extends StatelessWidget {
   final IconData icon;
   final String label;
+  final Color? color;
+  final Color? iconColor;
 
-  const _KpiLabel({required this.icon, required this.label});
+  const _KpiLabel({
+    required this.icon,
+    required this.label,
+    this.color,
+    this.iconColor,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final textColor = color ?? context.appTextSecondary;
+    final icoColor = iconColor ?? color ?? context.appIconMocha;
+
     return Row(
       children: [
-        Icon(icon, size: 15, color: context.appIconMocha),
+        Icon(icon, size: 15, color: icoColor),
         const SizedBox(width: 6),
         // Two lines: "Acuerdos vigentes" wraps between words at large sizes.
         Flexible(
@@ -505,7 +529,7 @@ class _KpiLabel extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: AppTextStyles.labelMedium.copyWith(
               fontSize: 13,
-              color: context.appTextSecondary,
+              color: textColor,
             ),
           ),
         ),
@@ -518,11 +542,17 @@ class _SecondaryKpi extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
+  final Color? textColor;
+  final Color? labelColor;
+  final Color? iconColor;
 
   const _SecondaryKpi({
     required this.icon,
     required this.label,
     required this.value,
+    this.textColor,
+    this.labelColor,
+    this.iconColor,
   });
 
   @override
@@ -532,7 +562,12 @@ class _SecondaryKpi extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _KpiLabel(icon: icon, label: label),
+          _KpiLabel(
+            icon: icon,
+            label: label,
+            color: labelColor,
+            iconColor: iconColor,
+          ),
           const SizedBox(height: 4),
           FittedBox(
             fit: BoxFit.scaleDown,
@@ -541,7 +576,7 @@ class _SecondaryKpi extends StatelessWidget {
               value,
               style: AppTextStyles.figureMedium.copyWith(
                 fontSize: 20,
-                color: context.appTextPrimary,
+                color: textColor ?? context.appTextPrimary,
               ),
             ),
           ),

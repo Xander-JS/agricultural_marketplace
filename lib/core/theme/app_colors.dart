@@ -29,6 +29,7 @@ abstract final class AppColors {
   static const Color lightTextMuted = Color(0xFF6B7280);
   static const Color lightTextDisabled = lightTextMuted;
   static const Color lightIconMocha = Color(0xFF523A2E); // Smoked Mocha (Light)
+  static const Color smokedMocha = lightIconMocha;
 
   // ---------------------------------------------------------
   // Dark Palette
@@ -55,6 +56,7 @@ abstract final class AppColors {
   static const Color darkTextMuted = Color(0xFF6B7280);
   static const Color darkTextDisabled = darkTextMuted;
   static const Color darkIconMocha = Color(0xFFB59A88); // Smoked Mocha (Dark)
+  static const Color smokedMochaDark = darkIconMocha;
 
   // ---------------------------------------------------------
   // Legacy aliases (kept so existing screens compile unchanged)
@@ -73,6 +75,7 @@ abstract final class AppColors {
   // ---------------------------------------------------------
   /// Full-bleed brand ground for splash and blocking loaders. White text and
   /// marks ([onBrand]) keep AAA contrast on both stages.
+  static const Color primary = lightBrandPrimary;
   static const Color brandEmerald = lightBrandPrimary;
   static const Color loadingBackground = lightBrandPrimary;
   static const Color darkBrandStage = Color(0xFF0F2A1C);
@@ -91,8 +94,15 @@ abstract final class AppColors {
 
   // Text/icon colors used on top of brand or media backgrounds
   static const Color onBrand = Color(0xFFFFFFFF);
+  static const Color onPrimary = Color(0xFFFFFFFF);
   static const Color onBrandSecondary = Color(0xFFD1FAE5);
   static const Color transparent = Color(0x00000000);
+
+  /// Resolves the smoked mocha token according to current theme brightness.
+  static Color smokedMochaOf(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? darkIconMocha
+          : lightIconMocha;
 
   // WhatsApp brand color
   static const Color whatsapp = Color(0xFF25D366);
@@ -232,6 +242,7 @@ extension AppThemeColors on BuildContext {
   Color get appTextDisabled => appTextMuted;
   Color get appIconMocha =>
       appIsDark ? AppColors.darkIconMocha : AppColors.lightIconMocha;
+  Color get appSmokedMocha => appIconMocha;
   Color get appPrimary => appColorScheme.primary;
   Color get appOnPrimary => appColorScheme.onPrimary;
   Color get appPrimaryContainer => appColorScheme.primaryContainer;

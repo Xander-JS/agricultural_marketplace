@@ -38,15 +38,101 @@ abstract class SpeechRecognitionService {
   Future<void> dispose();
 }
 
+/// Buffer acumulativo de transcripción de voz para tolerar pausas al dictar
+/// y múltiples emisiones sin sobreescribir fragmentos dictados previamente.
+class VoiceTranscriptBuffer {
+  VoiceTranscriptBuffer({String initialText = ''})
+      : _committedText = initialText.trim(),
+        _currentPartial = '';
+
+  String _committedText;
+  String _currentPartial;
+
+  String get committedText => _committedText;
+  String get currentPartial => _currentPartial;
+
+  /// Retorna el texto consolidado combinando lo confirmado y lo parcial en tiempo real.
+  String get fullTranscript {
+    final committed = _committedText.trim();
+    final partial = _currentPartial.trim();
+
+    if (committed.isEmpty) return partial;
+    if (partial.isEmpty) return committed;
+
+    if (_alreadyIncludesCommitted(committed, partial)) {
+      return partial;
+    }
+
+    return '$committed $partial';
+  }
+
+  /// Procesa una nueva emisión de voz.
+  /// Si [isFinal] es true, consolida el segmento en el buffer confirmado.
+  /// Si es false, actualiza el segmento parcial en curso.
+  void onVoiceResult(String words, {required bool isFinal}) {
+    final trimmed = words.trim();
+    if (isFinal) {
+      if (trimmed.isNotEmpty) {
+        _committedText = _combineWithCommitted(trimmed);
+      }
+      _currentPartial = '';
+    } else {
+      _currentPartial = trimmed;
+    }
+  }
+
+  /// Permite establecer o sincronizar manualmente el texto comprometido
+  /// (por ejemplo, si el usuario edita o retoma la transcripción).
+  void setText(String text) {
+    _committedText = text.trim();
+    _currentPartial = '';
+  }
+
+  /// Limpia tanto el buffer comprometido como el parcial.
+  void clear() {
+    _committedText = '';
+    _currentPartial = '';
+  }
+
+  bool get isEmpty => fullTranscript.isEmpty;
+  bool get isNotEmpty => fullTranscript.isNotEmpty;
+
+  String _combineWithCommitted(String words) {
+    final committed = _committedText.trim();
+    final incoming = words.trim();
+    if (committed.isEmpty) return incoming;
+    if (incoming.isEmpty) return committed;
+
+    if (_alreadyIncludesCommitted(committed, incoming)) {
+      return incoming;
+    }
+
+    return '$committed $incoming';
+  }
+
+  static bool _alreadyIncludesCommitted(String committed, String incoming) {
+    if (incoming.isEmpty || committed.isEmpty) return false;
+    final c = committed.toLowerCase().replaceAll(RegExp(r'[^\w\s]'), '').trim();
+    final inc = incoming.toLowerCase().replaceAll(RegExp(r'[^\w\s]'), '').trim();
+    if (c.isEmpty || inc.isEmpty) return false;
+    return inc == c || inc.startsWith('$c ') || inc.startsWith(c);
+  }
+}
+
 /// Implementación real basada en el reconocimiento de voz del sistema
 /// operativo (`speech_to_text`). En Android/iOS el audio es gestionado por el
 /// servicio del dispositivo; la aplicación no sube archivos de audio a un
 /// proveedor propio.
 class DeviceSpeechRecognitionService implements SpeechRecognitionService {
-  DeviceSpeechRecognitionService({SpeechToText? speech})
-    : _speech = speech ?? SpeechToText();
+  DeviceSpeechRecognitionService({
+    SpeechToText? speech,
+    this.pauseFor = const Duration(seconds: 5),
+    this.listenFor = const Duration(seconds: 60),
+  })  : _speech = speech ?? SpeechToText();
 
   final SpeechToText _speech;
+  final Duration pauseFor;
+  final Duration listenFor;
   bool _initialized = false;
   bool _listening = false;
 
@@ -119,8 +205,8 @@ class DeviceSpeechRecognitionService implements SpeechRecognitionService {
         localeId: localeId,
         partialResults: true,
         cancelOnError: true,
-        listenFor: const Duration(seconds: 60),
-        pauseFor: const Duration(seconds: 5),
+        listenFor: listenFor,
+        pauseFor: pauseFor,
         listenMode: ListenMode.dictation,
       ),
     );

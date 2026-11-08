@@ -71,6 +71,7 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
       widget.aiService ?? OpenAiCropExtractionService();
 
   final _transcriptController = TextEditingController();
+  final _transcriptBuffer = VoiceTranscriptBuffer();
 
   _VoicePhase _phase = _VoicePhase.ready;
   _RetryAction _retryAction = _RetryAction.startListening;
@@ -104,9 +105,17 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
 
     setState(() {
       _phase = _VoicePhase.preparing;
-      _partialTranscript = '';
-      _transcript = '';
-      _transcriptController.clear();
+      final existingText = _transcriptController.text.trim();
+      if (existingText.isNotEmpty) {
+        _transcriptBuffer.setText(existingText);
+        _partialTranscript = existingText;
+        _transcript = existingText;
+      } else {
+        _transcriptBuffer.clear();
+        _partialTranscript = '';
+        _transcript = '';
+        _transcriptController.clear();
+      }
       _draft = null;
       _errorMessage = null;
       _retryAction = _RetryAction.startListening;
@@ -166,6 +175,23 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
     });
     try {
       await _speechService.stop();
+      if (!mounted || _disposed) return;
+      if (_phase == _VoicePhase.transcribing) {
+        final text = _transcriptBuffer.fullTranscript.trim();
+        if (text.isEmpty) {
+          setState(() {
+            _phase = _VoicePhase.error;
+            _retryAction = _RetryAction.startListening;
+            _errorMessage = _l10n.ai_error_no_speech_retry;
+          });
+        } else {
+          setState(() {
+            _transcript = text;
+            _transcriptController.text = text;
+            _phase = _VoicePhase.reviewingTranscript;
+          });
+        }
+      }
     } catch (_) {
       if (!mounted) return;
       setState(() {
@@ -178,7 +204,7 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
 
   void _handleTranscript(String text, bool isFinal) {
     if (!mounted || _disposed) return;
-    if (isFinal && text.trim().isEmpty) {
+    if (isFinal && text.trim().isEmpty && _transcriptBuffer.isEmpty) {
       setState(() {
         _phase = _VoicePhase.error;
         _retryAction = _RetryAction.startListening;
@@ -188,14 +214,14 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
     }
 
     setState(() {
-      _partialTranscript = text;
-      if (isFinal) {
-        _transcript = text;
-        _transcriptController.text = text;
-        if (_phase == _VoicePhase.listening ||
-            _phase == _VoicePhase.transcribing) {
-          _phase = _VoicePhase.reviewingTranscript;
-        }
+      _transcriptBuffer.onVoiceResult(text, isFinal: isFinal);
+      final consolidated = _transcriptBuffer.fullTranscript;
+      _partialTranscript = consolidated;
+      _transcript = consolidated;
+      _transcriptController.text = consolidated;
+
+      if (isFinal && _phase == _VoicePhase.transcribing) {
+        _phase = _VoicePhase.reviewingTranscript;
       }
     });
   }
@@ -207,7 +233,9 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
       return;
     }
 
-    final text = _transcript.isNotEmpty ? _transcript : _partialTranscript;
+    final text = _transcriptBuffer.fullTranscript.isNotEmpty
+        ? _transcriptBuffer.fullTranscript
+        : (_transcript.isNotEmpty ? _transcript : _partialTranscript);
     if (text.trim().isEmpty) {
       setState(() {
         _phase = _VoicePhase.error;
@@ -218,8 +246,9 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
     }
 
     setState(() {
-      _transcript = text;
-      _transcriptController.text = text;
+      _transcriptBuffer.setText(text.trim());
+      _transcript = text.trim();
+      _transcriptController.text = text.trim();
       _phase = _VoicePhase.reviewingTranscript;
     });
   }
@@ -300,6 +329,7 @@ class _VoiceCropAssistantSheetState extends State<VoiceCropAssistantSheet> {
       _phase = _VoicePhase.ready;
       _partialTranscript = '';
       _transcript = '';
+      _transcriptBuffer.clear();
       _transcriptController.clear();
       _draft = null;
       _errorMessage = null;

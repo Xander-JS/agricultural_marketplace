@@ -575,8 +575,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Debe mostrar el texto con la ubicación y la distancia formateada
-      expect(find.text('Ipiales, Nariño (A 59 km)'), findsOneWidget);
+      // Debe mostrar el texto con la ubicación territorial sin duplicar distancia
+      expect(find.text('Ipiales, Nariño'), findsOneWidget);
     });
 
     testWidgets('12. CropCard muestra discretamente municipio y distancia estimada en catálogo',
@@ -740,8 +740,8 @@ void main() {
       expect(find.text('Distancia estimada'), findsOneWidget);
       expect(find.text('59 km'), findsOneWidget);
 
-      // Y la fila de ubicación mantiene coherencia
-      expect(find.text('Ipiales, Nariño (A 59 km)'), findsOneWidget);
+      // Y la fila de ubicación mantiene solo información territorial
+      expect(find.text('Ipiales, Nariño'), findsOneWidget);
     });
 
     testWidgets('16. CropDetailScreen sin coordenadas válidas omite fila de distancia estimada',
@@ -847,7 +847,7 @@ void main() {
       expect(find.byType(CropDetailScreen), findsOneWidget);
       expect(find.text('Distancia estimada'), findsOneWidget);
       expect(find.text('59 km'), findsOneWidget);
-      expect(find.text('Ipiales, Nariño (A 59 km)'), findsOneWidget);
+      expect(find.text('Ipiales, Nariño'), findsOneWidget);
     });
 
     test('18. No calcula distancia si el usuario es el mismo agricultor que publicó el cultivo', () {
